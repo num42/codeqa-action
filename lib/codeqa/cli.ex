@@ -765,6 +765,7 @@ defmodule CodeQA.CLI do
           config: :string,
           detail: :string,
           top: :integer,
+          format: :string,
           progress: :boolean,
           workers: :integer,
           cache: :boolean,
@@ -819,6 +820,7 @@ defmodule CodeQA.CLI do
       })
 
     detail = parse_detail(opts[:detail])
+    format = parse_format(opts[:format])
     top_n = opts[:top] || 5
 
     report =
@@ -828,7 +830,7 @@ defmodule CodeQA.CLI do
         top: top_n
       )
 
-    markdown = CodeQA.HealthReport.to_markdown(report, detail)
+    markdown = CodeQA.HealthReport.to_markdown(report, detail, format)
 
     case opts[:output] do
       nil ->
@@ -850,6 +852,14 @@ defmodule CodeQA.CLI do
   defp parse_detail(other) do
     IO.puts(:stderr, "Warning: unknown detail level '#{other}', using 'default'")
     :default
+  end
+
+  defp parse_format(nil), do: :plain
+  defp parse_format("plain"), do: :plain
+  defp parse_format("github"), do: :github
+  defp parse_format(other) do
+    IO.puts(:stderr, "Warning: unknown format '#{other}', using 'plain'")
+    :plain
   end
 
   defp build_analyze_opts(opts) do
@@ -1060,6 +1070,7 @@ defmodule CodeQA.CLI do
       -o, --output FILE     Output file path (default: stdout)
       --config FILE         YAML config file for category/threshold overrides
       --detail MODE         Detail level: summary, default, or full (default: default)
+      --format FORMAT       Output format: plain or github (default: plain)
       --top N               Number of worst offenders per category (default: 5)
       --progress            Show per-file progress on stderr
       -w, --workers N       Number of parallel workers
