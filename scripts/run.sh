@@ -70,6 +70,25 @@ case "$INPUT_COMMAND" in
     ;;
 esac
 
+# Parse ignore-paths YAML list into --ignore-paths flag
+if [[ -n "$INPUT_IGNORE_PATHS" ]]; then
+  IGNORE_CSV=""
+  while IFS= read -r line; do
+    # Strip YAML list prefix "- " and surrounding whitespace
+    pattern=$(echo "$line" | sed 's/^[[:space:]]*-[[:space:]]*//' | sed 's/[[:space:]]*$//')
+    if [[ -n "$pattern" ]]; then
+      if [[ -n "$IGNORE_CSV" ]]; then
+        IGNORE_CSV="${IGNORE_CSV},${pattern}"
+      else
+        IGNORE_CSV="$pattern"
+      fi
+    fi
+  done <<< "$INPUT_IGNORE_PATHS"
+  if [[ -n "$IGNORE_CSV" ]]; then
+    ARGS+=("--ignore-paths" "$IGNORE_CSV")
+  fi
+fi
+
 # Append extra args (word-split intentionally)
 if [[ -n "$INPUT_EXTRA_ARGS" ]]; then
   # shellcheck disable=SC2206

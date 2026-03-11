@@ -17,7 +17,7 @@ defmodule CodeQA.CLI do
 
   defp handle_analyze(args) do
     {opts, [path], _} = OptionParser.parse(args,
-      strict: [output: :string, progress: :boolean, workers: :integer, cache: :boolean, cache_dir: :string, timeout: :integer, show_ncd: :boolean, ncd_top: :integer, ncd_paths: :string, show_files: :boolean, show_file_paths: :string, combinations: :boolean, telemetry: :boolean, experimental_stopwords: :boolean, stopwords_threshold: :float],
+      strict: [output: :string, progress: :boolean, workers: :integer, cache: :boolean, cache_dir: :string, timeout: :integer, show_ncd: :boolean, ncd_top: :integer, ncd_paths: :string, show_files: :boolean, show_file_paths: :string, combinations: :boolean, telemetry: :boolean, experimental_stopwords: :boolean, stopwords_threshold: :float, ignore_paths: :string],
       aliases: [o: :output, w: :workers, t: :timeout]
     )
 
@@ -28,7 +28,8 @@ defmodule CodeQA.CLI do
       exit({:shutdown, 1})
     end
 
-    files = CodeQA.Collector.collect_files(path)
+    ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
+    files = CodeQA.Collector.collect_files(path, ignore_patterns: ignore_patterns)
     if map_size(files) == 0 do
       IO.puts(:stderr, "Warning: no source files found in '#{path}'")
       exit({:shutdown, 1})
@@ -88,7 +89,8 @@ defmodule CodeQA.CLI do
         ncd_top: :integer, ncd_paths: :string,
         combinations: :boolean, telemetry: :boolean,
         experimental_stopwords: :boolean, stopwords_threshold: :float,
-        show_files: :boolean, show_file_paths: :string
+        show_files: :boolean, show_file_paths: :string,
+        ignore_paths: :string
       ],
       aliases: [w: :workers, t: :timeout]
     )
@@ -106,6 +108,8 @@ defmodule CodeQA.CLI do
       exit({:shutdown, 1})
     end
 
+    ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
+    opts = Keyword.put(opts, :ignore_patterns, ignore_patterns)
     {base_result, head_result, changes} = run_comparison(path, base_ref, head_ref, changes_only, opts)
 
     comparison =
@@ -127,7 +131,8 @@ defmodule CodeQA.CLI do
         timeout: :integer, show_ncd: :boolean,
         ncd_top: :integer, ncd_paths: :string,
         combinations: :boolean,
-        show_files: :boolean, show_file_paths: :string
+        show_files: :boolean, show_file_paths: :string,
+        ignore_paths: :string
       ],
       aliases: [n: :commits, o: :output_dir, w: :workers, t: :timeout]
     )
@@ -154,6 +159,7 @@ defmodule CodeQA.CLI do
     IO.puts(:stderr, "Found #{length(commits)} commits to analyze.")
 
     analyze_opts = build_analyze_opts(opts)
+    ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
 
     commits
     |> Enum.with_index(1)
@@ -164,6 +170,7 @@ defmodule CodeQA.CLI do
       current_opts = if opts[:progress], do: [{:on_progress, fn c, t, p, _tt -> progress_callback(c, t, p, start_time_progress) end} | analyze_opts], else: analyze_opts
 
       files = CodeQA.Git.collect_files_at_ref(path, commit)
+      files = CodeQA.Collector.reject_ignored_map(files, ignore_patterns)
       
       if map_size(files) == 0 do
         IO.puts(:stderr, "Warning: no source files found at commit #{commit}")
@@ -410,7 +417,9 @@ defmodule CodeQA.CLI do
   end
 
   defp run_comparison(path, base_ref, head_ref, changes_only, opts) do
+    ignore_patterns = opts[:ignore_patterns] || []
     changes = CodeQA.Git.changed_files(path, base_ref, head_ref)
+    changes = CodeQA.Collector.reject_ignored(changes, ignore_patterns, & &1.path)
 
     file_paths = if changes_only do
       IO.puts(:stderr, "Comparing #{length(changes)} changed files...")
@@ -422,6 +431,8 @@ defmodule CodeQA.CLI do
 
     base_files = CodeQA.Git.collect_files_at_ref(path, base_ref, file_paths)
     head_files = CodeQA.Git.collect_files_at_ref(path, head_ref, file_paths)
+    base_files = CodeQA.Collector.reject_ignored_map(base_files, ignore_patterns)
+    head_files = CodeQA.Collector.reject_ignored_map(head_files, ignore_patterns)
 
     if map_size(base_files) == 0 and map_size(head_files) == 0 do
       IO.puts(:stderr, "Warning: no source files found at either ref")
@@ -538,7 +549,7 @@ defmodule CodeQA.CLI do
 
   defp handle_stopwords(args) do
     {opts, [path], _} = OptionParser.parse(args,
-      strict: [workers: :integer, stopwords_threshold: :float, progress: :boolean],
+      strict: [workers: :integer, stopwords_threshold: :float, progress: :boolean, ignore_paths: :string],
       aliases: [w: :workers]
     )
 
@@ -547,7 +558,8 @@ defmodule CodeQA.CLI do
       exit({:shutdown, 1})
     end
 
-    files = CodeQA.Collector.collect_files(path)
+    ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
+    files = CodeQA.Collector.collect_files(path, ignore_patterns: ignore_patterns)
     if map_size(files) == 0 do
       IO.puts(:stderr, "Warning: no source files found in '#{path}'")
       exit({:shutdown, 1})
@@ -589,7 +601,8 @@ defmodule CodeQA.CLI do
         timeout: :integer, show_ncd: :boolean,
         ncd_top: :integer, ncd_paths: :string,
         combinations: :boolean, telemetry: :boolean,
-        experimental_stopwords: :boolean, stopwords_threshold: :float
+        experimental_stopwords: :boolean, stopwords_threshold: :float,
+        ignore_paths: :string
       ],
       aliases: [o: :output, w: :workers, t: :timeout]
     )
@@ -601,7 +614,8 @@ defmodule CodeQA.CLI do
       exit({:shutdown, 1})
     end
 
-    files = CodeQA.Collector.collect_files(path)
+    ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
+    files = CodeQA.Collector.collect_files(path, ignore_patterns: ignore_patterns)
     if map_size(files) == 0 do
       IO.puts(:stderr, "Warning: no source files found in '#{path}'")
       exit({:shutdown, 1})
@@ -680,6 +694,13 @@ defmodule CodeQA.CLI do
   # credo:disable-for-next-line Credo.Check.Warning.OperationOnSameValues
   defp nan?(x), do: x != x
 
+  defp parse_ignore_paths(nil), do: []
+  defp parse_ignore_paths(paths_string) do
+    paths_string
+    |> String.split(",", trim: true)
+    |> Enum.map(&String.trim/1)
+  end
+
   defp print_usage do
     IO.puts("""
     Usage: codeqa <command> [options]
@@ -704,6 +725,7 @@ defmodule CodeQA.CLI do
       --ncd-paths PATHS     Comma-separated list of paths to compute NCD for
       --show-files          Include individual file metrics in the output
       --show-file-paths P   Comma-separated list of paths to include in the output
+      --ignore-paths PATHS  Comma-separated list of path patterns to ignore (supports wildcards, e.g. "test/*,docs/*")
 
     Options for compare:
       --base-ref REF        Base git ref to compare from (required)
@@ -722,6 +744,7 @@ defmodule CodeQA.CLI do
       --ncd-paths PATHS     Comma-separated list of paths to compute NCD for
       --show-files          Include individual file metrics in the output
       --show-file-paths P   Comma-separated list of paths to include in the output
+      --ignore-paths PATHS  Comma-separated list of path patterns to ignore (supports wildcards, e.g. "test/*,docs/*")
 
     Options for history:
       -n, --commits N       Number of recent commits to analyze
@@ -737,6 +760,7 @@ defmodule CodeQA.CLI do
       --ncd-paths PATHS     Comma-separated list of paths to compute NCD for
       --show-files          Include individual file metrics in the output
       --show-file-paths P   Comma-separated list of paths to include in the output
+      --ignore-paths PATHS  Comma-separated list of path patterns to ignore (supports wildcards, e.g. "test/*,docs/*")
 
     Options for correlate:
       -t, --top N           Number of top correlations to show (default: 20)
@@ -757,6 +781,7 @@ defmodule CodeQA.CLI do
       --cache               Enable caching file metrics
       --cache-dir DIR       Directory to store cache (default: .codeqa_cache)
       -t, --timeout MS      Timeout for similarity analysis (default: 5000)
+      --ignore-paths PATHS  Comma-separated list of path patterns to ignore (supports wildcards, e.g. "test/*,docs/*")
     """)
   end
 end

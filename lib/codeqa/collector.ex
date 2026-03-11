@@ -13,9 +13,10 @@ defmodule CodeQA.Collector do
     .next coverage
   ])
 
-  @spec collect_files(String.t()) :: %{String.t() => String.t()}
-  def collect_files(root) do
+  @spec collect_files(String.t(), keyword()) :: %{String.t() => String.t()}
+  def collect_files(root, opts \\ []) do
     root_path = Path.expand(root)
+    ignore_patterns = Keyword.get(opts, :ignore_patterns, [])
 
     unless File.dir?(root_path) do
       raise File.Error, reason: :enoent, path: root, action: "find directory"
@@ -27,9 +28,48 @@ defmodule CodeQA.Collector do
       rel = Path.relative_to(path, root_path)
       {rel, File.read!(path)}
     end)
+    |> reject_ignored_map(ignore_patterns)
   end
 
   def source_extensions, do: @source_extensions
+
+  @doc false
+  def ignored?(path, patterns) do
+    Enum.any?(patterns, fn pattern ->
+      match_pattern?(path, pattern)
+    end)
+  end
+
+  @doc false
+  def reject_ignored_map(files_map, []), do: files_map
+  def reject_ignored_map(files_map, patterns) do
+    Map.reject(files_map, fn {path, _} -> ignored?(path, patterns) end)
+  end
+
+  @doc false
+  def reject_ignored(list, [], _key_fn), do: list
+  def reject_ignored(list, patterns, key_fn) do
+    Enum.reject(list, fn item -> ignored?(key_fn.(item), patterns) end)
+  end
+
+  defp match_pattern?(path, pattern) do
+    # Convert glob pattern to regex:
+    # - ** matches any number of directories
+    # - * matches anything except /
+    # - ? matches a single character except /
+    regex_str =
+      pattern
+      |> String.replace(".", "\\.")
+      |> String.replace("**", "\0GLOBSTAR\0")
+      |> String.replace("*", "[^/]*")
+      |> String.replace("?", "[^/]")
+      |> String.replace("\0GLOBSTAR\0", ".*")
+
+    case Regex.compile("^#{regex_str}$") do
+      {:ok, regex} -> Regex.match?(regex, path)
+      _ -> false
+    end
+  end
 
   defp walk_directory(dir) do
     dir

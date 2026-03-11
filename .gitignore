@@ -3,3 +3,9 @@
 /doc/
 erl_crash.dump
 *.ez
+
+# devenv
+.devenv
+.devenv.flake.nix
+.devenv.local.nix
+devenv.lock

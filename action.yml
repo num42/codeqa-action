@@ -42,6 +42,10 @@ inputs:
     description: "Path to .codeqa.yml config file"
     required: false
     default: ""
+  ignore-paths:
+    description: "YAML list of path patterns to ignore (supports wildcards, e.g. 'test/*')"
+    required: false
+    default: ""
   extra-args:
     description: "Additional CLI flags passed through to codeqa"
     required: false
@@ -78,6 +82,7 @@ runs:
         INPUT_TOP: ${{ inputs.top }}
         INPUT_FORMAT: ${{ inputs.format }}
         INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_IGNORE_PATHS: ${{ inputs.ignore-paths }}
         INPUT_EXTRA_ARGS: ${{ inputs.extra-args }}
         INPUT_BASE_REF: ${{ inputs.base-ref }}
         INPUT_VERSION: ${{ inputs.version }}
