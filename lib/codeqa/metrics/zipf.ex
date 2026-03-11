@@ -1,0 +1,45 @@
+defmodule CodeQA.Metrics.Zipf do
+  @moduledoc false
+
+  @behaviour CodeQA.Metrics.FileMetric
+
+  @impl true
+  def name, do: "zipf"
+
+  @impl true
+  def analyze(%{tokens: tokens, token_counts: _token_counts}) when tuple_size(tokens) == 0 do
+    %{"exponent" => 0.0, "r_squared" => 0.0, "vocab_size" => 0, "total_tokens" => 0}
+  end
+
+  def analyze(%{tokens: tokens, token_counts: token_counts}) do
+    frequencies = token_counts |> Map.values() |> Enum.sort(:desc)
+    vocab_size = length(frequencies)
+    total_tokens = tuple_size(tokens)
+
+    if vocab_size < 3 do
+      %{"exponent" => 0.0, "r_squared" => 0.0,
+        "vocab_size" => vocab_size, "total_tokens" => total_tokens}
+    else
+      {exponent, r_squared} = fit_zipf(frequencies, vocab_size)
+
+      %{
+        "exponent" => exponent,
+        "r_squared" => r_squared,
+        "vocab_size" => vocab_size,
+        "total_tokens" => total_tokens
+      }
+    end
+  end
+
+  defp fit_zipf(frequencies, vocab_size) do
+    ranks = 1..vocab_size |> Enum.map(&(&1 / 1)) |> Nx.tensor(type: :f64)
+    freqs = frequencies |> Enum.map(&(&1 / 1)) |> Nx.tensor(type: :f64)
+
+    log_ranks = Nx.log(ranks)
+    log_freqs = Nx.log(freqs)
+
+    {slope, _intercept, r_squared} = CodeQA.Math.linear_regression(log_ranks, log_freqs)
+
+    {-Nx.to_number(slope), Nx.to_number(r_squared)}
+  end
+end
