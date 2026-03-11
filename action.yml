@@ -1,0 +1,116 @@
+name: "CodeQA"
+description: "Run code quality analysis with codeqa CLI — health reports, comparisons, and raw metrics"
+author: "num42"
+
+branding:
+  icon: "bar-chart-2"
+  color: "blue"
+
+inputs:
+  command:
+    description: "Command to run: health-report, compare, or analyze"
+    required: true
+  path:
+    description: "Directory to analyze"
+    required: false
+    default: "."
+  comment:
+    description: "Post result as sticky PR comment"
+    required: false
+    default: "false"
+  fail-grade:
+    description: "Minimum acceptable grade for health-report (e.g. C). Fails if below"
+    required: false
+    default: ""
+  base-ref:
+    description: "Base git ref for compare (defaults to PR base SHA)"
+    required: false
+    default: ""
+  detail:
+    description: "Detail level for health-report: summary, default, or full"
+    required: false
+    default: "default"
+  top:
+    description: "Number of worst offenders per category"
+    required: false
+    default: "5"
+  format:
+    description: "Output format for compare: json or markdown"
+    required: false
+    default: "markdown"
+  config:
+    description: "Path to .codeqa.yml config file"
+    required: false
+    default: ""
+  extra-args:
+    description: "Additional CLI flags passed through to codeqa"
+    required: false
+    default: ""
+  version:
+    description: "Version of codeqa to download (defaults to latest)"
+    required: false
+    default: "latest"
+
+outputs:
+  report-file:
+    description: "Path to the output file"
+    value: ${{ steps.run.outputs.report-file }}
+  grade:
+    description: "Overall grade (health-report only)"
+    value: ${{ steps.run.outputs.grade }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run codeqa
+      id: run
+      shell: bash
+      env:
+        INPUT_COMMAND: ${{ inputs.command }}
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_DETAIL: ${{ inputs.detail }}
+        INPUT_TOP: ${{ inputs.top }}
+        INPUT_FORMAT: ${{ inputs.format }}
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_EXTRA_ARGS: ${{ inputs.extra-args }}
+        INPUT_BASE_REF: ${{ inputs.base-ref }}
+        INPUT_VERSION: ${{ inputs.version }}
+      run: ${{ github.action_path }}/scripts/run.sh
+
+    - name: Post PR comment
+      if: inputs.comment == 'true' && github.event_name == 'pull_request'
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: codeqa-${{ inputs.command }}
+        path: ${{ steps.run.outputs.report-file }}
+
+    - name: Check grade threshold
+      if: inputs.fail-grade != '' && inputs.command == 'health-report'
+      shell: bash
+      env:
+        ACTUAL_GRADE: ${{ steps.run.outputs.grade }}
+        MIN_GRADE: ${{ inputs.fail-grade }}
+      run: |
+        # Grade ordering from best to worst
+        GRADES=("A" "A-" "B+" "B" "B-" "C+" "C" "C-" "D+" "D" "D-" "F")
+
+        grade_index() {
+          local g="$1"
+          for i in "${!GRADES[@]}"; do
+            if [[ "${GRADES[$i]}" == "$g" ]]; then
+              echo "$i"
+              return
+            fi
+          done
+          echo "999"
+        }
+
+        actual_idx=$(grade_index "$ACTUAL_GRADE")
+        min_idx=$(grade_index "$MIN_GRADE")
+
+        if [[ "$actual_idx" -gt "$min_idx" ]]; then
+          echo "::error::Code health grade $ACTUAL_GRADE is below minimum $MIN_GRADE"
+          exit 1
+        else
+          echo "Grade $ACTUAL_GRADE meets minimum threshold $MIN_GRADE"
+        fi
