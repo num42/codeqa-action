@@ -1,0 +1,60 @@
+name: Build and Release codeqa
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version tag (e.g. v0.1.0)"
+        required: true
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout action repo
+        uses: actions/checkout@v4
+
+      - name: Checkout codeqa source
+        uses: actions/checkout@v4
+        with:
+          repository: num42/n42-agentic-helpers
+          path: .codeqa-source
+          sparse-checkout: code-quality-analyzer-ex
+          sparse-checkout-cone-mode: true
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: "27.3"
+          elixir-version: "1.19"
+
+      - name: Build escript
+        working-directory: .codeqa-source/code-quality-analyzer-ex
+        run: |
+          mix deps.get
+          mix escript.build
+          cp codeqa ../../codeqa
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "tag=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          files: codeqa
+          generate_release_notes: true
