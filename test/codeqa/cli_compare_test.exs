@@ -1,0 +1,61 @@
+defmodule CodeQA.CLI.CompareTest do
+  use ExUnit.Case, async: true
+
+  @moduletag :tmp_dir
+
+  setup %{tmp_dir: tmp_dir} do
+    # Initialize a git repo with one source file and one non-source file
+    System.cmd("git", ["init"], cd: tmp_dir)
+    System.cmd("git", ["config", "user.email", "test@test.com"], cd: tmp_dir)
+    System.cmd("git", ["config", "user.name", "Test"], cd: tmp_dir)
+
+    File.mkdir_p!(Path.join(tmp_dir, "lib"))
+    File.write!(Path.join(tmp_dir, "lib/app.ex"), "defmodule App do\nend")
+    System.cmd("git", ["add", "."], cd: tmp_dir)
+    System.cmd("git", ["commit", "-m", "initial"], cd: tmp_dir)
+
+    %{repo: tmp_dir}
+  end
+
+  describe "compare with no source file changes" do
+    test "exits 0 when only non-source files changed", %{repo: repo} do
+      # Create a branch, change only a .md file (not a source file)
+      File.write!(Path.join(repo, "README.md"), "# Hello")
+      System.cmd("git", ["add", "."], cd: repo)
+      System.cmd("git", ["commit", "-m", "add readme"], cd: repo)
+
+      # compare should succeed (not crash) when no source files changed
+      {base_ref, head_ref} = {"HEAD~1", "HEAD"}
+
+      changes = CodeQA.Git.changed_files(repo, base_ref, head_ref)
+      assert changes == [], "expected no source file changes, got: #{inspect(changes)}"
+
+      # Verify the CLI handles this gracefully by calling main
+      # Capture stderr to verify the message
+      output =
+        ExUnit.CaptureIO.capture_io(:stderr, fn ->
+          CodeQA.CLI.main(["compare", repo, "--base-ref", base_ref, "--format", "json"])
+        end)
+
+      assert output =~ "No source files changed"
+    end
+
+    test "outputs valid JSON with empty comparison", %{repo: repo} do
+      # Change only a non-source file
+      File.write!(Path.join(repo, "README.md"), "# Hello")
+      System.cmd("git", ["add", "."], cd: repo)
+      System.cmd("git", ["commit", "-m", "add readme"], cd: repo)
+
+      # Capture stdout (the JSON output) to verify it's valid
+      stdout =
+        ExUnit.CaptureIO.capture_io(fn ->
+          ExUnit.CaptureIO.capture_io(:stderr, fn ->
+            CodeQA.CLI.main(["compare", repo, "--base-ref", "HEAD~1", "--format", "json"])
+          end)
+        end)
+
+      assert {:ok, result} = Jason.decode(stdout)
+      assert result["metadata"]["total_files_compared"] == 0
+    end
+  end
+end
