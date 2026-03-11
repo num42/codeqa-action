@@ -80,6 +80,7 @@ runs:
         INPUT_PATH: ${{ inputs.path }}
         INPUT_DETAIL: ${{ inputs.detail }}
         INPUT_TOP: ${{ inputs.top }}
+        INPUT_COMMENT: ${{ inputs.comment }}
         INPUT_FORMAT: ${{ inputs.format }}
         INPUT_CONFIG: ${{ inputs.config }}
         INPUT_IGNORE_PATHS: ${{ inputs.ignore-paths }}

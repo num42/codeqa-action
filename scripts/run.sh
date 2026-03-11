@@ -49,6 +49,9 @@ case "$INPUT_COMMAND" in
     if [[ -n "$INPUT_CONFIG" ]]; then
       ARGS+=("--config" "$INPUT_CONFIG")
     fi
+    if [[ "${INPUT_COMMENT:-false}" == "true" ]]; then
+      ARGS+=("--format" "github")
+    fi
     ;;
   compare)
     BASE_REF="${INPUT_BASE_REF}"
@@ -106,7 +109,7 @@ fi
 # --- Extract grade (health-report only) ---
 GRADE=""
 if [[ "$INPUT_COMMAND" == "health-report" && -f "$OUTPUT_FILE" ]]; then
-  GRADE=$(grep -oP '## Overall: \K\S+' "$OUTPUT_FILE" || echo "")
+  GRADE=$(grep -oP '(?:## Overall: |## [🟢🟡🟠🔴] Code Health: )\K\S+' "$OUTPUT_FILE" || echo "")
 fi
 
 # --- Set outputs ---
