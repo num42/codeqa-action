@@ -1,5 +1,15 @@
 defmodule CodeQA.Metrics.Similarity do
-  @moduledoc false
+  @moduledoc """
+  Detects cross-file code duplication at the codebase level.
+
+  Uses winnowing fingerprints and locality-sensitive hashing (LSH) to identify
+  candidate pairs, then scores them with normalized compression distance (NCD).
+  Reports per-pair similarity scores and an overall cross-file density metric.
+
+  See [winnowing](https://theory.stanford.edu/~aiken/publications/papers/sigmod03.pdf),
+  [locality-sensitive hashing](https://en.wikipedia.org/wiki/Locality-sensitive_hashing),
+  and [normalized compression distance](https://en.wikipedia.org/wiki/Normalized_compression_distance).
+  """
 
   @behaviour CodeQA.Metrics.CodebaseMetric
 

@@ -1,5 +1,14 @@
 defmodule CodeQA.Metrics.Vocabulary do
-  @moduledoc false
+  @moduledoc """
+  Analyzes vocabulary diversity using type-token ratio (TTR) and MATTR.
+
+  TTR measures the ratio of unique identifiers to total identifiers. MATTR
+  (moving-average TTR) smooths this over a sliding window to reduce sensitivity
+  to file length. Also reports the sorted vocabulary list.
+
+  See [type-token ratio](https://en.wikipedia.org/wiki/Lexical_density)
+  and [MATTR](https://doi.org/10.3758/BRM.42.2.381).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 

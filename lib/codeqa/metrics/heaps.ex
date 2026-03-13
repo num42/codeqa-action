@@ -1,5 +1,13 @@
 defmodule CodeQA.Metrics.Heaps do
-  @moduledoc false
+  @moduledoc """
+  Fits Heaps' law to vocabulary growth in a file.
+
+  Samples the token stream at increasing sizes and fits a power-law curve
+  `V = k * N^beta` via log-linear regression. The beta exponent and R-squared
+  goodness-of-fit indicate how predictably new vocabulary is introduced.
+
+  See [Heaps' law](https://en.wikipedia.org/wiki/Heaps%27_law).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 

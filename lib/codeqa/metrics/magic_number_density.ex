@@ -1,5 +1,13 @@
 defmodule CodeQA.Metrics.MagicNumberDensity do
-  @moduledoc false
+  @moduledoc """
+  Measures the density of magic numbers in source code.
+
+  Counts numeric literals (excluding common constants 0, 1, 0.0, 1.0) as a
+  proportion of total tokens. A high density suggests unexplained constants
+  that should be extracted into named values.
+
+  See [magic number](<https://en.wikipedia.org/wiki/Magic_number_(programming)>).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 

@@ -1,5 +1,12 @@
 defmodule CodeQA.Metrics.SymbolDensity do
-  @moduledoc false
+  @moduledoc """
+  Measures the density of non-word, non-whitespace symbols in source code.
+
+  A high symbol density (brackets, operators, punctuation) relative to total
+  characters can indicate dense or hard-to-read expressions.
+
+  See [code readability](https://en.wikipedia.org/wiki/Computer_programming#Readability_of_source_code).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 

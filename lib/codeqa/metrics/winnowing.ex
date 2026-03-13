@@ -1,5 +1,9 @@
 defmodule CodeQA.Metrics.Winnowing do
-  @moduledoc "Generates structural fingerprints using k-grams."
+  @moduledoc """
+  Generates structural fingerprints using k-grams.
+
+  See [winnowing algorithm](https://theory.stanford.edu/~aiken/publications/papers/sigmod03.pdf).
+  """
 
   @doc "Slides a window of size `k` over the tokens and hashes each sequence."
   def kgrams(tokens, k \\ 5) do

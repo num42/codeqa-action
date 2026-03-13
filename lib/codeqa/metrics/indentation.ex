@@ -1,5 +1,12 @@
 defmodule CodeQA.Metrics.Indentation do
-  @moduledoc false
+  @moduledoc """
+  Analyzes indentation depth patterns across non-blank lines.
+
+  Reports mean depth, variance, and maximum depth. Deep or highly variable
+  indentation often correlates with complex control flow.
+
+  See [indentation style](https://en.wikipedia.org/wiki/Indentation_style).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 

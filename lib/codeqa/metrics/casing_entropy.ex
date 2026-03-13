@@ -1,5 +1,14 @@
 defmodule CodeQA.Metrics.CasingEntropy do
-  @moduledoc false
+  @moduledoc """
+  Measures Shannon entropy of identifier casing styles in a file.
+
+  Classifies each identifier as pascal_case, camelCase, snake_case, MACRO_CASE,
+  kebab-case, or other, then computes the entropy of that distribution. High
+  entropy indicates mixed conventions; low entropy indicates consistent naming.
+
+  See [Shannon entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory))
+  and [naming conventions](https://en.wikipedia.org/wiki/Naming_convention_(programming)).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 

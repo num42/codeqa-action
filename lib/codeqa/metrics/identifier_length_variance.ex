@@ -1,5 +1,14 @@
 defmodule CodeQA.Metrics.IdentifierLengthVariance do
-  @moduledoc false
+  @moduledoc """
+  Measures the mean, variance, and maximum length of identifiers.
+
+  High variance suggests inconsistent naming conventions (mixing very short
+  and very long names), while an extreme maximum may flag overly verbose
+  identifiers.
+
+  See [identifier naming](https://en.wikipedia.org/wiki/Identifier_(computer_languages))
+  and [variance](https://en.wikipedia.org/wiki/Variance).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 

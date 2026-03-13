@@ -1,5 +1,13 @@
 defmodule CodeQA.Metrics.VowelDensity do
-  @moduledoc false
+  @moduledoc """
+  Measures the density of vowels in identifiers.
+
+  Counts vowels (a, e, i, o, u, y) as a proportion of total identifier
+  characters. Low vowel density may indicate heavy abbreviation or
+  consonant-heavy naming that reduces readability.
+
+  See [identifier naming](https://en.wikipedia.org/wiki/Identifier_(computer_languages)).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 

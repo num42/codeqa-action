@@ -1,5 +1,13 @@
 defmodule CodeQA.Metrics.Entropy do
-  @moduledoc false
+  @moduledoc """
+  Computes Shannon entropy at both character and token levels.
+
+  Character entropy captures the randomness of the raw byte stream, while token
+  entropy measures the predictability of the lexical token sequence. Both values
+  are also reported as normalized (0..1) against their theoretical maxima.
+
+  See [Shannon entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 

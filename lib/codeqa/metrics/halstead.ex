@@ -1,5 +1,13 @@
 defmodule CodeQA.Metrics.Halstead do
-  @moduledoc false
+  @moduledoc """
+  Implements Halstead software-science complexity metrics.
+
+  Counts unique and total operators and operands, then derives volume,
+  difficulty, effort, and estimated bug count. Useful as a language-agnostic
+  proxy for cognitive complexity.
+
+  See [Halstead complexity measures](https://en.wikipedia.org/wiki/Halstead_complexity_measures).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 

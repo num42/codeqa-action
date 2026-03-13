@@ -1,5 +1,13 @@
 defmodule CodeQA.Metrics.Zipf do
-  @moduledoc false
+  @moduledoc """
+  Fits Zipf's law to the token frequency distribution.
+
+  Ranks tokens by frequency and fits a power-law curve via log-linear
+  regression. The exponent and R-squared indicate how closely the code's
+  token usage follows natural-language-like frequency patterns.
+
+  See [Zipf's law](https://en.wikipedia.org/wiki/Zipf%27s_law).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 

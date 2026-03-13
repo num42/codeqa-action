@@ -1,5 +1,14 @@
 defmodule CodeQA.Metrics.Readability do
-  @moduledoc false
+  @moduledoc """
+  Computes adapted Flesch and Fog readability indices for source code.
+
+  Treats tokens-per-line as words-per-sentence and uses identifier complexity
+  as a proxy for syllable count. Higher Flesch scores indicate more readable
+  code; higher Fog scores indicate more complex code.
+
+  See [Flesch reading ease](https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests)
+  and [Gunning fog index](https://en.wikipedia.org/wiki/Gunning_fog_index).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 
