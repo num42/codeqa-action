@@ -429,25 +429,31 @@ defmodule CodeQA.CLI do
       nil
     end
 
-    base_files = CodeQA.Git.collect_files_at_ref(path, base_ref, file_paths)
-    head_files = CodeQA.Git.collect_files_at_ref(path, head_ref, file_paths)
-    base_files = CodeQA.Collector.reject_ignored_map(base_files, ignore_patterns)
-    head_files = CodeQA.Collector.reject_ignored_map(head_files, ignore_patterns)
-
-    if map_size(base_files) == 0 and map_size(head_files) == 0 do
-      IO.puts(:stderr, "Warning: no source files found at either ref")
-      exit({:shutdown, 1})
-    end
-
-    print_compare_progress(opts, base_files, head_files)
-
-    analyze_opts = build_analyze_opts(opts)
     empty = %{"files" => %{}, "codebase" => %{"aggregate" => %{}, "similarity" => %{}}}
-    base_result = if map_size(base_files) > 0, do: CodeQA.Analyzer.analyze_codebase(base_files, analyze_opts), else: empty
-    head_result = if map_size(head_files) > 0, do: CodeQA.Analyzer.analyze_codebase(head_files, analyze_opts), else: empty
-    changes = if changes_only, do: changes, else: synthesize_changes(base_files, head_files)
 
-    {base_result, head_result, changes}
+    if changes_only and length(changes) == 0 do
+      IO.puts(:stderr, "No source files changed — nothing to compare.")
+      {empty, empty, []}
+    else
+      base_files = CodeQA.Git.collect_files_at_ref(path, base_ref, file_paths)
+      head_files = CodeQA.Git.collect_files_at_ref(path, head_ref, file_paths)
+      base_files = CodeQA.Collector.reject_ignored_map(base_files, ignore_patterns)
+      head_files = CodeQA.Collector.reject_ignored_map(head_files, ignore_patterns)
+
+      if map_size(base_files) == 0 and map_size(head_files) == 0 do
+        IO.puts(:stderr, "Warning: no source files found at either ref")
+        exit({:shutdown, 1})
+      end
+
+      print_compare_progress(opts, base_files, head_files)
+
+      analyze_opts = build_analyze_opts(opts)
+      base_result = if map_size(base_files) > 0, do: CodeQA.Analyzer.analyze_codebase(base_files, analyze_opts), else: empty
+      head_result = if map_size(head_files) > 0, do: CodeQA.Analyzer.analyze_codebase(head_files, analyze_opts), else: empty
+      changes = if changes_only, do: changes, else: synthesize_changes(base_files, head_files)
+
+      {base_result, head_result, changes}
+    end
   end
 
   defp print_compare_progress(opts, base_files, head_files) do

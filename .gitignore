@@ -9,3 +9,6 @@ erl_crash.dump
 .devenv.flake.nix
 .devenv.local.nix
 devenv.lock
+
+/docs/
+/tmp/
