@@ -1,21 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# --- Download codeqa binary ---
-REPO="num42/codeqa-action"
+# --- Obtain codeqa binary ---
 BINARY_NAME="codeqa"
 INSTALL_DIR="${RUNNER_TEMP:-/tmp}/codeqa-bin"
 mkdir -p "$INSTALL_DIR"
 
-if [[ "$INPUT_VERSION" == "latest" ]]; then
-  DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/${BINARY_NAME}"
+if [[ "${INPUT_BUILD:-release}" == "source" ]]; then
+  echo "Building codeqa from source..."
+  SOURCE_DIR="${GITHUB_ACTION_PATH:-.}"
+  (cd "$SOURCE_DIR" && mix deps.get && mix escript.build)
+  cp "${SOURCE_DIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
+  chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
 else
-  DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${INPUT_VERSION}/${BINARY_NAME}"
+  REPO="num42/codeqa-action"
+  if [[ "$INPUT_VERSION" == "latest" ]]; then
+    DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/${BINARY_NAME}"
+  else
+    DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${INPUT_VERSION}/${BINARY_NAME}"
+  fi
+  echo "Downloading codeqa from ${DOWNLOAD_URL}..."
+  curl -fsSL -o "${INSTALL_DIR}/${BINARY_NAME}" "$DOWNLOAD_URL"
+  chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
 fi
-
-echo "Downloading codeqa from ${DOWNLOAD_URL}..."
-curl -fsSL -o "${INSTALL_DIR}/${BINARY_NAME}" "$DOWNLOAD_URL"
-chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
 
 CODEQA="${INSTALL_DIR}/${BINARY_NAME}"
 
@@ -48,6 +55,9 @@ case "$INPUT_COMMAND" in
     ARGS+=("--top" "$INPUT_TOP")
     if [[ -n "$INPUT_CONFIG" ]]; then
       ARGS+=("--config" "$INPUT_CONFIG")
+    fi
+    if [[ "${INPUT_COMMENT:-false}" == "true" ]]; then
+      ARGS+=("--format" "github")
     fi
     ;;
   compare)
@@ -106,7 +116,7 @@ fi
 # --- Extract grade (health-report only) ---
 GRADE=""
 if [[ "$INPUT_COMMAND" == "health-report" && -f "$OUTPUT_FILE" ]]; then
-  GRADE=$(grep -oP '## Overall: \K\S+' "$OUTPUT_FILE" || echo "")
+  GRADE=$(grep -oP '(?:## Overall: |## [🟢🟡🟠🔴] Code Health: )\K\S+' "$OUTPUT_FILE" || echo "")
 fi
 
 # --- Set outputs ---
