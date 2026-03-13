@@ -8,7 +8,7 @@ branding:
 
 inputs:
   command:
-    description: "Command to run: health-report, compare, or analyze"
+    description: "Command to run: health-report, compare, analyze, or line-report"
     required: true
   path:
     description: "Directory to analyze"
@@ -46,6 +46,26 @@ inputs:
     description: "YAML list of path patterns to ignore (supports wildcards, e.g. 'test/*')"
     required: false
     default: ""
+  ref:
+    description: "Git ref/SHA to tag the report with (line-report only)"
+    required: false
+    default: ""
+  publish:
+    description: "Branch to deploy HTML reports to (e.g. 'gh-pages'). Enables GitHub Pages publishing."
+    required: false
+    default: ""
+  pages-path:
+    description: "Path prefix within the deploy branch for reports (default: codeqa)"
+    required: false
+    default: "codeqa"
+  max-reports:
+    description: "Maximum number of reports to keep (prunes oldest). Default: unlimited."
+    required: false
+    default: ""
+  output-dir:
+    description: "Output directory for HTML line reports (default: line_report_html)"
+    required: false
+    default: "line_report_html"
   extra-args:
     description: "Additional CLI flags passed through to codeqa"
     required: false
@@ -62,6 +82,9 @@ outputs:
   grade:
     description: "Overall grade (health-report only)"
     value: ${{ steps.run.outputs.grade }}
+  report-dir:
+    description: "Directory containing the generated HTML report (line-report only)"
+    value: ${{ steps.run.outputs.report-dir }}
 
 runs:
   using: "composite"
@@ -86,7 +109,24 @@ runs:
         INPUT_EXTRA_ARGS: ${{ inputs.extra-args }}
         INPUT_BASE_REF: ${{ inputs.base-ref }}
         INPUT_VERSION: ${{ inputs.version }}
+        INPUT_REF: ${{ inputs.ref }}
+        INPUT_PUBLISH: ${{ inputs.publish }}
+        INPUT_PAGES_PATH: ${{ inputs.pages-path }}
+        INPUT_MAX_REPORTS: ${{ inputs.max-reports }}
+        INPUT_OUTPUT_DIR: ${{ inputs.output-dir }}
       run: ${{ github.action_path }}/scripts/run.sh
+
+    - name: Deploy to GitHub Pages
+      if: inputs.publish != ''
+      shell: bash
+      env:
+        PUBLISH_BRANCH: ${{ inputs.publish }}
+        PAGES_PATH: ${{ inputs.pages-path }}
+        DEPLOY_DIR: ${{ steps.run.outputs.report-dir }}
+        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        INPUT_REF: ${{ inputs.ref }}
+      run: ${{ github.action_path }}/scripts/deploy-pages.sh
 
     - name: Post PR comment
       if: inputs.comment == 'true' && github.event_name == 'pull_request'

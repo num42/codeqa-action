@@ -31,8 +31,9 @@ case "$INPUT_COMMAND" in
     fi
     ;;
   analyze) OUTPUT_FILE="${OUTPUT_FILE}.json" ;;
+  line-report) OUTPUT_FILE="" ;; # line-report writes to a directory, not a file
   *)
-    echo "::error::Unknown command: $INPUT_COMMAND. Must be health-report, compare, or analyze."
+    echo "::error::Unknown command: $INPUT_COMMAND. Must be health-report, compare, analyze, or line-report."
     exit 1
     ;;
 esac
@@ -67,6 +68,20 @@ case "$INPUT_COMMAND" in
     ;;
   analyze)
     ARGS+=("--output" "$OUTPUT_FILE")
+    ;;
+  line-report)
+    REPORT_DIR="${INPUT_OUTPUT_DIR:-line_report_html}"
+    ARGS+=("--format" "${INPUT_FORMAT:-html}")
+    ARGS+=("--output-dir" "$REPORT_DIR")
+    if [[ -n "${INPUT_REF:-}" ]]; then
+      ARGS+=("--ref" "$INPUT_REF")
+    fi
+    if [[ -n "${INPUT_MAX_REPORTS:-}" ]]; then
+      ARGS+=("--max-reports" "$INPUT_MAX_REPORTS")
+    fi
+    if [[ -n "${INPUT_CONFIG:-}" ]]; then
+      ARGS+=("--config" "$INPUT_CONFIG")
+    fi
     ;;
 esac
 
@@ -110,10 +125,19 @@ if [[ "$INPUT_COMMAND" == "health-report" && -f "$OUTPUT_FILE" ]]; then
 fi
 
 # --- Set outputs ---
-echo "report-file=${OUTPUT_FILE}" >> "$GITHUB_OUTPUT"
+if [[ -n "$OUTPUT_FILE" ]]; then
+  echo "report-file=${OUTPUT_FILE}" >> "$GITHUB_OUTPUT"
+fi
 echo "grade=${GRADE}" >> "$GITHUB_OUTPUT"
 
-echo "Output written to ${OUTPUT_FILE}"
+# Set report-dir output for line-report
+if [[ "$INPUT_COMMAND" == "line-report" ]]; then
+  echo "report-dir=${REPORT_DIR}" >> "$GITHUB_OUTPUT"
+  echo "Report written to ${REPORT_DIR}/"
+else
+  echo "Output written to ${OUTPUT_FILE}"
+fi
+
 if [[ -n "$GRADE" ]]; then
   echo "Overall grade: ${GRADE}"
 fi

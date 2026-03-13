@@ -1,0 +1,28 @@
+name: Line Report → GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  line-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate & publish line report
+        uses: n42org/codeqa-action@main
+        with:
+          command: line-report
+          format: html
+          ref: ${{ github.sha }}
+          publish: gh-pages
+          pages-path: codeqa
+          max-reports: "20"
+          ignore-paths: |
+            - test/*
+            - docs/*
