@@ -12,3 +12,6 @@ devenv.lock
 
 /docs/
 /tmp/
+
+# git worktrees
+.worktrees/
