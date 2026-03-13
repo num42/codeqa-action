@@ -80,6 +80,7 @@ defmodule CodeQA.HealthReport.Formatter do
 
   defp worst_offenders_section(cat, _detail) do
     offenders = Map.get(cat, :worst_offenders, [])
+
     if offenders == [] do
       []
     else

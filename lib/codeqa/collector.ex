@@ -42,12 +42,14 @@ defmodule CodeQA.Collector do
 
   @doc false
   def reject_ignored_map(files_map, []), do: files_map
+
   def reject_ignored_map(files_map, patterns) do
     Map.reject(files_map, fn {path, _} -> ignored?(path, patterns) end)
   end
 
   @doc false
   def reject_ignored(list, [], _key_fn), do: list
+
   def reject_ignored(list, patterns, key_fn) do
     Enum.reject(list, fn item -> ignored?(key_fn.(item), patterns) end)
   end
@@ -91,5 +93,7 @@ defmodule CodeQA.Collector do
   end
 
   defp skip_dir?(name), do: MapSet.member?(@skip_dirs, name) or String.starts_with?(name, ".")
-  defp source_file?(name), do: MapSet.member?(@source_extensions, Path.extname(name) |> String.downcase())
+
+  defp source_file?(name),
+    do: MapSet.member?(@source_extensions, Path.extname(name) |> String.downcase())
 end

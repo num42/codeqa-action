@@ -7,7 +7,8 @@ defmodule CodeQA.Comparator do
 
     {file_comparisons, status_counts} =
       changes
-      |> Enum.reduce({%{}, %{"added" => 0, "modified" => 0, "deleted" => 0}}, fn change, {files, counts} ->
+      |> Enum.reduce({%{}, %{"added" => 0, "modified" => 0, "deleted" => 0}}, fn change,
+                                                                                 {files, counts} ->
         base_data = Map.get(base_files, change.path)
         head_data = Map.get(head_files, change.path)
         delta = compute_file_delta(base_data, head_data)
@@ -19,8 +20,7 @@ defmodule CodeQA.Comparator do
           "delta" => delta
         }
 
-        {Map.put(files, change.path, file_entry),
-         Map.update!(counts, change.status, &(&1 + 1))}
+        {Map.put(files, change.path, file_entry), Map.update!(counts, change.status, &(&1 + 1))}
       end)
 
     base_agg = get_in(base_result, ["codebase", "aggregate"]) || %{}
@@ -87,14 +87,20 @@ defmodule CodeQA.Comparator do
       case {Map.get(base, key), Map.get(head, key)} do
         {b, h} when is_number(b) and is_number(h) ->
           Map.put(acc, key, Float.round((h - b) / 1, 4))
-        _ -> acc
+
+        _ ->
+          acc
       end
     end)
   end
 
   defp build_summary(counts) do
     parts =
-      [{"added", counts["added"]}, {"modified", counts["modified"]}, {"deleted", counts["deleted"]}]
+      [
+        {"added", counts["added"]},
+        {"modified", counts["modified"]},
+        {"deleted", counts["deleted"]}
+      ]
       |> Enum.filter(fn {_, c} -> c > 0 end)
       |> Enum.map(fn {status, count} -> "#{count} #{status}" end)
 

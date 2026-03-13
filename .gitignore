@@ -12,3 +12,9 @@ devenv.lock
 
 /docs/
 /tmp/
+
+# Built escript
+/codeqa
+
+# Git worktrees
+.worktrees/

@@ -12,8 +12,12 @@ defmodule CodeQA.Git do
 
   def changed_files(repo_path, base_ref, head_ref) do
     {output, 0} =
-      System.cmd("git", ["diff", "--name-status", "--diff-filter=ADM", "#{base_ref}..#{head_ref}"],
-        cd: repo_path, stderr_to_stdout: false)
+      System.cmd(
+        "git",
+        ["diff", "--name-status", "--diff-filter=ADM", "#{base_ref}..#{head_ref}"],
+        cd: repo_path,
+        stderr_to_stdout: false
+      )
 
     output
     |> String.trim()
@@ -45,7 +49,9 @@ defmodule CodeQA.Git do
       [status_code, path] when byte_size(status_code) > 0 ->
         status = Map.get(@status_map, String.first(status_code), "modified")
         if source_file?(path), do: [%ChangedFile{path: path, status: status}], else: []
-      _ -> []
+
+      _ ->
+        []
     end
   end
 

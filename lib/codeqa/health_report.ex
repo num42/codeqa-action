@@ -51,6 +51,7 @@ defmodule CodeQA.HealthReport do
 
   defp build_metadata(analysis_results) do
     meta = Map.get(analysis_results, "metadata", %{})
+
     %{
       path: meta["path"] || "unknown",
       timestamp: meta["timestamp"] || DateTime.utc_now() |> DateTime.to_iso8601(),

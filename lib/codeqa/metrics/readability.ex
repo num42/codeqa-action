@@ -1,5 +1,14 @@
 defmodule CodeQA.Metrics.Readability do
-  @moduledoc false
+  @moduledoc """
+  Computes adapted Flesch and Fog readability indices for source code.
+
+  Treats tokens-per-line as words-per-sentence and uses identifier complexity
+  as a proxy for syllable count. Higher Flesch scores indicate more readable
+  code; higher Fog scores indicate more complex code.
+
+  See [Flesch reading ease](https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests)
+  and [Gunning fog index](https://en.wikipedia.org/wiki/Gunning_fog_index).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 
@@ -17,9 +26,14 @@ defmodule CodeQA.Metrics.Readability do
       end)
 
     if lines == [] do
-      %{"avg_tokens_per_line" => 0.0, "avg_line_length" => 0.0,
-        "avg_sub_words_per_id" => 0.0, "flesch_adapted" => 0.0,
-        "fog_adapted" => 0.0, "total_lines" => 0}
+      %{
+        "avg_tokens_per_line" => 0.0,
+        "avg_line_length" => 0.0,
+        "avg_sub_words_per_id" => 0.0,
+        "flesch_adapted" => 0.0,
+        "fog_adapted" => 0.0,
+        "total_lines" => 0
+      }
     else
       compute_readability(ctx, lines)
     end
@@ -72,9 +86,11 @@ defmodule CodeQA.Metrics.Readability do
 
   defp split_camel_case([], acc), do: Enum.reverse(acc)
   defp split_camel_case([char | rest], []), do: split_camel_case(rest, [[char]])
+
   defp split_camel_case([char | rest], [current | acc_rest]) do
     # If current char is uppercase and previous (head of current) was lowercase, start new part
     prev = hd(current)
+
     if char in ?A..?Z and prev in ?a..?z do
       split_camel_case(rest, [[char] | [Enum.reverse(current) | acc_rest]])
     else

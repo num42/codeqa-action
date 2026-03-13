@@ -1,5 +1,14 @@
 defmodule CodeQA.Metrics.Compression do
-  @moduledoc false
+  @moduledoc """
+  Measures file redundancy via zlib compression ratio.
+
+  Compresses the raw source with zlib and compares compressed size to the
+  original. A high compression ratio signals repetitive or boilerplate-heavy
+  code.
+
+  See [Kolmogorov complexity](https://en.wikipedia.org/wiki/Kolmogorov_complexity)
+  and [data compression ratio](https://en.wikipedia.org/wiki/Data_compression_ratio).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 
@@ -8,8 +17,7 @@ defmodule CodeQA.Metrics.Compression do
 
   @impl true
   def analyze(%{content: "", byte_count: 0}) do
-    %{"raw_bytes" => 0, "zlib_bytes" => 0,
-      "zlib_ratio" => 0.0, "redundancy" => 0.0}
+    %{"raw_bytes" => 0, "zlib_bytes" => 0, "zlib_ratio" => 0.0, "redundancy" => 0.0}
   end
 
   def analyze(ctx) do

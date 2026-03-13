@@ -1,5 +1,9 @@
 defmodule CodeQA.Metrics.TokenNormalizer do
-  @moduledoc "Abstracts raw source code into language-agnostic structural tokens."
+  @moduledoc """
+  Abstracts raw source code into language-agnostic structural tokens.
+
+  See [lexical analysis](https://en.wikipedia.org/wiki/Lexical_analysis).
+  """
 
   # Note for future: This module can be extended with a second parameter
   # normalize(code, language \ :agnostic) to load specific regex dictionaries.
@@ -19,6 +23,7 @@ defmodule CodeQA.Metrics.TokenNormalizer do
   end
 
   defp split_punctuation(token) when token in ["<STR>", "<NUM>", "<ID>"], do: [token]
+
   defp split_punctuation(text) do
     text
     |> String.graphemes()

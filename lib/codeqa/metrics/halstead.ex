@@ -1,5 +1,13 @@
 defmodule CodeQA.Metrics.Halstead do
-  @moduledoc false
+  @moduledoc """
+  Implements Halstead software-science complexity metrics.
+
+  Counts unique and total operators and operands, then derives volume,
+  difficulty, effort, and estimated bug count. Useful as a language-agnostic
+  proxy for cognitive complexity.
+
+  See [Halstead complexity measures](https://en.wikipedia.org/wiki/Halstead_complexity_measures).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 
@@ -27,6 +35,7 @@ defmodule CodeQA.Metrics.Halstead do
 
   defp compute(content) do
     operators = scan_frequencies(@operator_re, content)
+
     operands =
       @operand_re
       |> scan_frequencies(content)
@@ -45,13 +54,21 @@ defmodule CodeQA.Metrics.Halstead do
       volume = length * :math.log2(vocabulary)
       difficulty = if n2 > 0, do: n1 / 2 * (big_n2 / n2), else: 0.0
       effort = difficulty * volume
+      estimated_bugs = volume / 3000
+      time_to_implement_seconds = effort / 18
 
       %{
-        "n1_unique_operators" => n1, "n2_unique_operands" => n2,
-        "N1_total_operators" => big_n1, "N2_total_operands" => big_n2,
-        "vocabulary" => vocabulary, "length" => length,
-        "volume" => volume, "difficulty" => difficulty,
-        "effort" => effort, "estimated_bugs" => volume / 3000
+        "n1_unique_operators" => n1,
+        "n2_unique_operands" => n2,
+        "N1_total_operators" => big_n1,
+        "N2_total_operands" => big_n2,
+        "vocabulary" => vocabulary,
+        "length" => length,
+        "volume" => volume,
+        "difficulty" => difficulty,
+        "effort" => effort,
+        "estimated_bugs" => estimated_bugs,
+        "time_to_implement_seconds" => time_to_implement_seconds
       }
     end
   end
@@ -61,16 +78,32 @@ defmodule CodeQA.Metrics.Halstead do
   end
 
   defp zero_result do
-    %{"n1_unique_operators" => 0, "n2_unique_operands" => 0,
-      "N1_total_operators" => 0, "N2_total_operands" => 0,
-      "vocabulary" => 0, "length" => 0,
-      "volume" => 0.0, "difficulty" => 0.0, "effort" => 0.0, "estimated_bugs" => 0.0}
+    %{
+      "n1_unique_operators" => 0,
+      "n2_unique_operands" => 0,
+      "N1_total_operators" => 0,
+      "N2_total_operands" => 0,
+      "vocabulary" => 0,
+      "length" => 0,
+      "volume" => 0.0,
+      "difficulty" => 0.0,
+      "effort" => 0.0,
+      "estimated_bugs" => 0.0
+    }
   end
 
   defp base_result(n1, n2, big_n1, big_n2, vocabulary, length) do
-    %{"n1_unique_operators" => n1, "n2_unique_operands" => n2,
-      "N1_total_operators" => big_n1, "N2_total_operands" => big_n2,
-      "vocabulary" => vocabulary, "length" => length,
-      "volume" => 0.0, "difficulty" => 0.0, "effort" => 0.0, "estimated_bugs" => 0.0}
+    %{
+      "n1_unique_operators" => n1,
+      "n2_unique_operands" => n2,
+      "N1_total_operators" => big_n1,
+      "N2_total_operands" => big_n2,
+      "vocabulary" => vocabulary,
+      "length" => length,
+      "volume" => 0.0,
+      "difficulty" => 0.0,
+      "effort" => 0.0,
+      "estimated_bugs" => 0.0
+    }
   end
 end

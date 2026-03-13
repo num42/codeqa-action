@@ -1,5 +1,9 @@
 defmodule CodeQA.Metrics.Inflector do
-  @moduledoc "Utility for detecting identifier casing styles."
+  @moduledoc """
+  Utility for detecting identifier casing styles.
+
+  See [naming conventions](https://en.wikipedia.org/wiki/Naming_convention_(programming)).
+  """
 
   def detect_casing(identifier) do
     cond do

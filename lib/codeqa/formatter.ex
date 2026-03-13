@@ -22,7 +22,8 @@ defmodule CodeQA.Formatter do
   end
 
   defp build_report(metadata, files, codebase, output_mode) do
-    codebase_summary = CodeQA.Summarizer.summarize_codebase(%{"files" => files, "codebase" => codebase})
+    codebase_summary =
+      CodeQA.Summarizer.summarize_codebase(%{"files" => files, "codebase" => codebase})
 
     lines = [
       "## Code Quality: PR Comparison",
@@ -31,36 +32,50 @@ defmodule CodeQA.Formatter do
       ""
     ]
 
-    lines = if output_mode in ["auto", "summary"] do
-      lines ++ ["> #{codebase_summary["gist"]}", ""]
-    else
-      lines
-    end
+    lines =
+      if output_mode in ["auto", "summary"] do
+        lines ++ ["> #{codebase_summary["gist"]}", ""]
+      else
+        lines
+      end
 
-    lines = if output_mode in ["auto", "changes"] do
-      file_summaries = Map.new(files, fn {path, data} -> {path, CodeQA.Summarizer.summarize_file(path, data)} end)
-      lines ++ format_file_table(files, file_summaries) ++ [""]
-    else
-      lines
-    end
+    lines =
+      if output_mode in ["auto", "changes"] do
+        file_summaries =
+          Map.new(files, fn {path, data} ->
+            {path, CodeQA.Summarizer.summarize_file(path, data)}
+          end)
 
-    lines = if output_mode in ["auto", "summary"] do
-      lines ++ format_aggregate_table(codebase)
-    else
-      lines
-    end
+        lines ++ format_file_table(files, file_summaries) ++ [""]
+      else
+        lines
+      end
+
+    lines =
+      if output_mode in ["auto", "summary"] do
+        lines ++ format_aggregate_table(codebase)
+      else
+        lines
+      end
 
     Enum.join(lines, "\n")
   end
 
   defp format_file_table(files, file_summaries) do
     columns = detect_columns(files)
-    if columns == [], do: ["No metric data available."], else: build_file_rows(files, file_summaries, columns)
+
+    if columns == [],
+      do: ["No metric data available."],
+      else: build_file_rows(files, file_summaries, columns)
   end
 
   defp build_file_rows(files, file_summaries, columns) do
-    header = "| File | Status | Summary | " <> Enum.map_join(columns, " | ", fn {_, _, label} -> label end) <> " |"
-    separator = "|------|--------|---------|" <> Enum.map_join(columns, "", fn _ -> "--------|" end)
+    header =
+      "| File | Status | Summary | " <>
+        Enum.map_join(columns, " | ", fn {_, _, label} -> label end) <> " |"
+
+    separator =
+      "|------|--------|---------|" <> Enum.map_join(columns, "", fn _ -> "--------|" end)
 
     rows =
       files
@@ -111,11 +126,18 @@ defmodule CodeQA.Formatter do
     head_agg = get_in(codebase, ["head", "aggregate"]) || %{}
     delta_agg = get_in(codebase, ["delta", "aggregate"]) || %{}
 
-    if base_agg == %{} and head_agg == %{}, do: [], else: build_aggregate_rows(base_agg, head_agg, delta_agg)
+    if base_agg == %{} and head_agg == %{},
+      do: [],
+      else: build_aggregate_rows(base_agg, head_agg, delta_agg)
   end
 
   defp build_aggregate_rows(base_agg, head_agg, delta_agg) do
-    header = ["### Aggregate Metrics", "", "| Metric | Base | Head | Delta |", "|--------|------|------|-------|"]
+    header = [
+      "### Aggregate Metrics",
+      "",
+      "| Metric | Base | Head | Delta |",
+      "|--------|------|------|-------|"
+    ]
 
     rows =
       MapSet.new(Map.keys(base_agg) ++ Map.keys(head_agg))
@@ -145,7 +167,10 @@ defmodule CodeQA.Formatter do
   end
 
   defp format_delta(nil), do: "—"
-  defp format_delta(value) when value > 0, do: "+#{:erlang.float_to_binary(value / 1, decimals: 2)}"
+
+  defp format_delta(value) when value > 0,
+    do: "+#{:erlang.float_to_binary(value / 1, decimals: 2)}"
+
   defp format_delta(value) when value < 0, do: :erlang.float_to_binary(value / 1, decimals: 2)
   defp format_delta(_), do: "0.00"
 

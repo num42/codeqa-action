@@ -23,7 +23,7 @@ defmodule CodeQA.Parallel do
       start_time = System.monotonic_time(:millisecond)
 
       result = maybe_cached_analyze(content, cache_dir, opts)
-        
+
       end_time = System.monotonic_time(:millisecond)
       time_taken = end_time - start_time
 
@@ -65,8 +65,16 @@ defmodule CodeQA.Parallel do
 
   defp analyze_single_file(content, opts) do
     registry = CodeQA.Analyzer.build_registry()
-    ctx = CodeQA.Telemetry.time(:pipeline_build_context, fn -> CodeQA.Pipeline.build_file_context(content, opts) end)
-    metrics = CodeQA.Telemetry.time(:registry_run_metrics, fn -> CodeQA.Registry.run_file_metrics(registry, ctx, opts) end)
+
+    ctx =
+      CodeQA.Telemetry.time(:pipeline_build_context, fn ->
+        CodeQA.Pipeline.build_file_context(content, opts)
+      end)
+
+    metrics =
+      CodeQA.Telemetry.time(:registry_run_metrics, fn ->
+        CodeQA.Registry.run_file_metrics(registry, ctx, opts)
+      end)
 
     %{
       "bytes" => ctx.byte_count,

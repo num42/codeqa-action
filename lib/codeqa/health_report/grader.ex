@@ -46,6 +46,7 @@ defmodule CodeQA.HealthReport.Grader do
 
   defp interpolate_between(val, bound_a, score_a, bound_b, score_b) do
     range = bound_b - bound_a
+
     if range == 0 do
       score_a
     else
@@ -56,6 +57,7 @@ defmodule CodeQA.HealthReport.Grader do
 
   # Value beyond D threshold (low is good): score degrades below 30
   defp interpolate_below_d(_val, threshold_d, _score_at_d) when threshold_d == 0, do: 0
+
   defp interpolate_below_d(val, threshold_d, score_at_d) do
     overshoot = (val - threshold_d) / threshold_d
     round(Kernel.max(0, score_at_d - overshoot * score_at_d))
@@ -63,6 +65,7 @@ defmodule CodeQA.HealthReport.Grader do
 
   # Value below D threshold (high is good): score degrades below 30
   defp interpolate_below_d_high(_val, threshold_d, _score_at_d) when threshold_d == 0, do: 0
+
   defp interpolate_below_d_high(val, threshold_d, score_at_d) do
     undershoot = (threshold_d - val) / threshold_d
     round(Kernel.max(0, score_at_d - undershoot * score_at_d))
@@ -83,14 +86,24 @@ defmodule CodeQA.HealthReport.Grader do
   Returns `%{key, name, score, grade, metric_scores}`.
   """
   @spec grade_category(map(), map(), [{number(), String.t()}]) :: map()
-  def grade_category(category, file_metrics, scale \\ CodeQA.HealthReport.Categories.default_grade_scale()) do
+  def grade_category(
+        category,
+        file_metrics,
+        scale \\ CodeQA.HealthReport.Categories.default_grade_scale()
+      ) do
     scored =
       category.metrics
       |> Enum.map(fn metric_def ->
         value = get_in(file_metrics, [metric_def.source, metric_def.name])
+
         if value do
-          %{name: metric_def.name, source: metric_def.source, weight: metric_def.weight,
-            value: value, score: score_metric(metric_def, value)}
+          %{
+            name: metric_def.name,
+            source: metric_def.source,
+            weight: metric_def.weight,
+            value: value,
+            score: score_metric(metric_def, value)
+          }
         end
       end)
       |> Enum.reject(&is_nil/1)
@@ -119,7 +132,11 @@ defmodule CodeQA.HealthReport.Grader do
   `file_metrics` is the `%{"entropy" => %{...}, "halstead" => %{...}}` map from analysis.
   """
   @spec grade_file(list(), map(), [{number(), String.t()}]) :: list()
-  def grade_file(categories, file_metrics, scale \\ CodeQA.HealthReport.Categories.default_grade_scale()) do
+  def grade_file(
+        categories,
+        file_metrics,
+        scale \\ CodeQA.HealthReport.Categories.default_grade_scale()
+      ) do
     Enum.map(categories, &grade_category(&1, file_metrics, scale))
   end
 
@@ -127,7 +144,11 @@ defmodule CodeQA.HealthReport.Grader do
   Grade codebase aggregate metrics. Uses mean_ values from aggregate.
   """
   @spec grade_aggregate(list(), map(), [{number(), String.t()}]) :: list()
-  def grade_aggregate(categories, aggregate, scale \\ CodeQA.HealthReport.Categories.default_grade_scale()) do
+  def grade_aggregate(
+        categories,
+        aggregate,
+        scale \\ CodeQA.HealthReport.Categories.default_grade_scale()
+      ) do
     # Convert aggregate format (mean_X keys) to file-metric-like format
     file_like =
       Map.new(aggregate, fn {source, stats} ->
@@ -144,11 +165,17 @@ defmodule CodeQA.HealthReport.Grader do
 
   @doc "Compute overall score as average of category scores."
   @spec overall_score(list(), [{number(), String.t()}]) :: {integer(), String.t()}
-  def overall_score(category_grades, scale \\ CodeQA.HealthReport.Categories.default_grade_scale()) do
+  def overall_score(
+        category_grades,
+        scale \\ CodeQA.HealthReport.Categories.default_grade_scale()
+      ) do
     if category_grades == [] do
       {0, "F"}
     else
-      avg = Enum.reduce(category_grades, 0, fn g, acc -> acc + g.score end) |> div(length(category_grades))
+      avg =
+        Enum.reduce(category_grades, 0, fn g, acc -> acc + g.score end)
+        |> div(length(category_grades))
+
       {avg, grade_letter(avg, scale)}
     end
   end
@@ -158,7 +185,12 @@ defmodule CodeQA.HealthReport.Grader do
   `all_file_metrics` is `%{"path" => %{"metrics" => %{...}}}` from analysis results.
   """
   @spec worst_offenders(map(), map(), integer(), [{number(), String.t()}]) :: list()
-  def worst_offenders(category, all_file_metrics, top_n, scale \\ CodeQA.HealthReport.Categories.default_grade_scale()) do
+  def worst_offenders(
+        category,
+        all_file_metrics,
+        top_n,
+        scale \\ CodeQA.HealthReport.Categories.default_grade_scale()
+      ) do
     all_file_metrics
     |> Enum.map(fn {path, file_data} ->
       metrics = Map.get(file_data, "metrics", %{})

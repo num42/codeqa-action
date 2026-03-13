@@ -14,9 +14,11 @@ defmodule CodeQA.Registry do
   end
 
   def run_file_metrics(%__MODULE__{} = reg, ctx, opts \\ []) do
-    base_metrics = Map.new(reg.file_metrics, fn mod -> 
-      {mod.name(), CodeQA.Telemetry.time(String.to_atom("metric_" <> mod.name()), fn -> mod.analyze(ctx) end)} 
-    end)
+    base_metrics =
+      Map.new(reg.file_metrics, fn mod ->
+        {mod.name(),
+         CodeQA.Telemetry.time(String.to_atom("metric_" <> mod.name()), fn -> mod.analyze(ctx) end)}
+      end)
 
     if Keyword.get(opts, :combinations, false) do
       CodeQA.Telemetry.time(:registry_combinations, fn ->
@@ -36,6 +38,7 @@ defmodule CodeQA.Registry do
   end
 
   defp generate_combinations([], acc), do: acc
+
   defp generate_combinations([{k1, v1} | rest], acc) do
     # Generate all pairs for the head with the rest of the list
     new_acc =
@@ -49,9 +52,10 @@ defmodule CodeQA.Registry do
           "div_a_b" => if(v2 == 0.0, do: 0.0, else: v1 / v2),
           "div_b_a" => if(v1 == 0.0, do: 0.0, else: v2 / v1)
         }
+
         [{"#{k1},#{k2}", combined} | current_acc]
       end)
-      
+
     generate_combinations(rest, new_acc)
   end
 

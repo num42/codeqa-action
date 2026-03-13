@@ -17,19 +17,21 @@ defmodule CodeQA.Stopwords do
     start_time = System.monotonic_time(:millisecond)
 
     files
-    |> Task.async_stream(fn {_path, content} ->
-      res = content
-      |> extractor.()
-      |> MapSet.new()
+    |> Task.async_stream(
+      fn {_path, content} ->
+        res =
+          content
+          |> extractor.()
+          |> MapSet.new()
 
-      if has_progress do
-        :counters.add(counter, 1, 1)
-        completed = :counters.get(counter, 1)
-        print_progress(completed, total_docs, start_time, label)
-      end
+        if has_progress do
+          :counters.add(counter, 1, 1)
+          completed = :counters.get(counter, 1)
+          print_progress(completed, total_docs, start_time, label)
+        end
 
-      res
-    end, max_concurrency: workers, timeout: :infinity)
+        res
+      end, max_concurrency: workers, timeout: :infinity)
     |> Enum.reduce(%{}, fn {:ok, unique_items_in_file}, doc_freqs ->
       Enum.reduce(unique_items_in_file, doc_freqs, fn item, acc ->
         Map.update(acc, item, 1, &(&1 + 1))
@@ -46,10 +48,11 @@ defmodule CodeQA.Stopwords do
     avg_time = elapsed / completed
     eta_ms = round((total - completed) * avg_time)
 
-    output = CodeQA.CLI.UI.progress_bar(completed, total,
-      eta: CodeQA.CLI.UI.format_eta(eta_ms),
-      label: label
-    )
+    output =
+      CodeQA.CLI.UI.progress_bar(completed, total,
+        eta: CodeQA.CLI.UI.format_eta(eta_ms),
+        label: label
+      )
 
     IO.write(:stderr, "\r" <> output)
 

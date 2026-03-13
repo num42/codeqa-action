@@ -1,5 +1,14 @@
 defmodule CodeQA.Metrics.Ngram do
-  @moduledoc false
+  @moduledoc """
+  Computes bigram and trigram statistics over the token stream.
+
+  Reports total count, unique count, repetition rate, and hapax fraction
+  (tokens appearing exactly once) for both n-gram sizes. High repetition rates
+  may indicate boilerplate or copy-paste patterns.
+
+  See [n-gram](https://en.wikipedia.org/wiki/N-gram)
+  and [hapax legomenon](https://en.wikipedia.org/wiki/Hapax_legomenon).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 

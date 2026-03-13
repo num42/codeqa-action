@@ -1,5 +1,13 @@
 defmodule CodeQA.Metrics.Zipf do
-  @moduledoc false
+  @moduledoc """
+  Fits Zipf's law to the token frequency distribution.
+
+  Ranks tokens by frequency and fits a power-law curve via log-linear
+  regression. The exponent and R-squared indicate how closely the code's
+  token usage follows natural-language-like frequency patterns.
+
+  See [Zipf's law](https://en.wikipedia.org/wiki/Zipf%27s_law).
+  """
 
   @behaviour CodeQA.Metrics.FileMetric
 
@@ -17,8 +25,12 @@ defmodule CodeQA.Metrics.Zipf do
     total_tokens = tuple_size(tokens)
 
     if vocab_size < 3 do
-      %{"exponent" => 0.0, "r_squared" => 0.0,
-        "vocab_size" => vocab_size, "total_tokens" => total_tokens}
+      %{
+        "exponent" => 0.0,
+        "r_squared" => 0.0,
+        "vocab_size" => vocab_size,
+        "total_tokens" => total_tokens
+      }
     else
       {exponent, r_squared} = fit_zipf(frequencies, vocab_size)
 
