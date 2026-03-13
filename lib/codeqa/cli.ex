@@ -11,7 +11,6 @@ defmodule CodeQA.CLI do
       ["correlate" | rest] -> handle_correlate(rest)
       ["stopwords" | rest] -> handle_stopwords(rest)
       ["health-report" | rest] -> handle_health_report(rest)
-      ["line-report" | rest] -> handle_line_report(rest)
       _ -> print_usage()
     end
   end
@@ -908,93 +907,6 @@ defmodule CodeQA.CLI do
     |> Enum.map(&String.trim/1)
   end
 
-  defp handle_line_report(args) do
-    {opts, paths, _} =
-      OptionParser.parse(args,
-        strict: [
-          format: :string,
-          output_dir: :string,
-          ref: :string,
-          max_reports: :integer,
-          config: :string,
-          lines: :string,
-          hide_lines: :boolean,
-          ignore_paths: :string,
-          workers: :integer,
-          progress: :boolean
-        ],
-        aliases: [o: :output_dir, w: :workers]
-      )
-
-    path = List.first(paths) || "."
-
-    unless File.exists?(path) do
-      IO.puts(:stderr, "Error: '#{path}' does not exist")
-      exit({:shutdown, 1})
-    end
-
-    format = opts[:format] || "table"
-    ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
-
-    results =
-      if File.dir?(path) do
-        CodeQA.LineReport.analyze_path(path,
-          workers: opts[:workers] || System.schedulers_online(),
-          config: opts[:config],
-          ignore_patterns: ignore_patterns,
-          progress: opts[:progress] || false
-        )
-      else
-        content = File.read!(path)
-        data = CodeQA.LineReport.analyze_file(content, config: opts[:config])
-        %{path => data}
-      end
-
-    line_ranges = parse_line_ranges(opts[:lines])
-
-    case format do
-      "html" ->
-        output_dir = opts[:output_dir] || "line_report_html"
-
-        html_opts = [
-          config: opts[:config],
-          ref: opts[:ref],
-          max_reports: opts[:max_reports],
-          line_ranges: line_ranges,
-          hide_lines: opts[:hide_lines] || false
-        ]
-
-        CodeQA.LineReport.HtmlFormatter.generate(results, output_dir, html_opts)
-        IO.puts(:stderr, "HTML report written to #{output_dir}/")
-
-      "json" ->
-        IO.puts(Jason.encode!(results, pretty: true))
-
-      "table" ->
-        Enum.each(results, fn {file_path, data} ->
-          IO.puts("== #{file_path} ==")
-          IO.puts(CodeQA.LineReport.format_table(data))
-        end)
-
-      other ->
-        IO.puts(:stderr, "Error: unknown format '#{other}'. Use table, html, or json.")
-        exit({:shutdown, 1})
-    end
-  end
-
-  defp parse_line_ranges(nil), do: []
-
-  defp parse_line_ranges(str) do
-    str
-    |> String.split(",", trim: true)
-    |> Enum.map(fn range ->
-      case String.split(range, "-", parts: 2) do
-        [a, b] -> {String.to_integer(String.trim(a)), String.to_integer(String.trim(b))}
-        [a] -> {String.to_integer(String.trim(a)), String.to_integer(String.trim(a))}
-      end
-    end)
-  end
-
   defp print_usage do
     IO.puts("""
     Usage: codeqa <command> [options]
@@ -1006,8 +918,6 @@ defmodule CodeQA.CLI do
       correlate <dir>   Find metric correlations in a directory of history JSONs
       stopwords <path>  Print codebase-specific stopwords based on frequency
       health-report <path>  Generate a graded health report for a codebase
-      line-report [path]    Per-line metric impact analysis (default: current dir)
-
     Options for analyze:
       -o, --output FILE     Output file path (default: stdout)
       --progress            Show per-file progress on stderr
@@ -1079,17 +989,6 @@ defmodule CodeQA.CLI do
       -t, --timeout MS      Timeout for similarity analysis (default: 5000)
       --ignore-paths PATHS  Comma-separated list of path patterns to ignore (supports wildcards, e.g. "test/*,docs/*")
 
-    Options for line-report:
-      --format FORMAT       Output format: table (default), html, or json
-      -o, --output-dir DIR  Output directory for HTML reports (default: line_report_html)
-      --ref REF             Git ref/SHA for report tagging (used with html format)
-      --max-reports N       Maximum number of HTML reports to keep
-      --config FILE         Path to .codeqa.yml config file
-      --lines RANGES        Line ranges to include (e.g. "1-10,20-30")
-      --hide-lines          Hide matching lines instead of showing only
-      --ignore-paths PATHS  Comma-separated list of path patterns to ignore
-      -w, --workers N       Number of parallel workers
-      --progress            Show progress on stderr
     """)
   end
 end
