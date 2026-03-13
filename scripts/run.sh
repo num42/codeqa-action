@@ -1,21 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# --- Download codeqa binary ---
-REPO="num42/codeqa-action"
+# --- Obtain codeqa binary ---
 BINARY_NAME="codeqa"
 INSTALL_DIR="${RUNNER_TEMP:-/tmp}/codeqa-bin"
 mkdir -p "$INSTALL_DIR"
 
-if [[ "$INPUT_VERSION" == "latest" ]]; then
-  DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/${BINARY_NAME}"
+if [[ "${INPUT_BUILD:-release}" == "source" ]]; then
+  echo "Building codeqa from source..."
+  SOURCE_DIR="${GITHUB_ACTION_PATH:-.}"
+  (cd "$SOURCE_DIR" && mix local.hex --force --if-missing >/dev/null 2>&1 && mix deps.get --only prod >/dev/null 2>&1 && mix escript.build >/dev/null 2>&1)
+  cp "${SOURCE_DIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
+  chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
 else
-  DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${INPUT_VERSION}/${BINARY_NAME}"
+  REPO="num42/codeqa-action"
+  if [[ "$INPUT_VERSION" == "latest" ]]; then
+    DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/${BINARY_NAME}"
+  else
+    DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${INPUT_VERSION}/${BINARY_NAME}"
+  fi
+  echo "Downloading codeqa from ${DOWNLOAD_URL}..."
+  curl -fsSL -o "${INSTALL_DIR}/${BINARY_NAME}" "$DOWNLOAD_URL"
+  chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
 fi
-
-echo "Downloading codeqa from ${DOWNLOAD_URL}..."
-curl -fsSL -o "${INSTALL_DIR}/${BINARY_NAME}" "$DOWNLOAD_URL"
-chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
 
 CODEQA="${INSTALL_DIR}/${BINARY_NAME}"
 

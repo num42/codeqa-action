@@ -54,6 +54,10 @@ inputs:
     description: "Version of codeqa to download (defaults to latest)"
     required: false
     default: "latest"
+  build:
+    description: "How to obtain codeqa: 'release' downloads a prebuilt binary, 'source' builds from the action repo"
+    required: false
+    default: "release"
 
 outputs:
   report-file:
@@ -87,6 +91,8 @@ runs:
         INPUT_EXTRA_ARGS: ${{ inputs.extra-args }}
         INPUT_BASE_REF: ${{ inputs.base-ref }}
         INPUT_VERSION: ${{ inputs.version }}
+        INPUT_BUILD: ${{ inputs.build }}
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
       run: ${{ github.action_path }}/scripts/run.sh
 
     - name: Post PR comment
