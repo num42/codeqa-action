@@ -56,7 +56,9 @@ defmodule CodeQA.LineReport.HtmlFormatterTest do
 
   describe "generate/2" do
     setup do
-      tmp_dir = Path.join(System.tmp_dir!(), "codeqa_html_test_#{System.unique_integer([:positive])}")
+      tmp_dir =
+        Path.join(System.tmp_dir!(), "codeqa_html_test_#{System.unique_integer([:positive])}")
+
       on_exit(fn -> File.rm_rf!(tmp_dir) end)
       %{tmp_dir: tmp_dir}
     end
@@ -248,12 +250,16 @@ defmodule CodeQA.LineReport.HtmlFormatterTest do
 
   describe "generate/2 computed columns" do
     setup do
-      tmp_dir = Path.join(System.tmp_dir!(), "codeqa_html_test_#{System.unique_integer([:positive])}")
+      tmp_dir =
+        Path.join(System.tmp_dir!(), "codeqa_html_test_#{System.unique_integer([:positive])}")
+
       on_exit(fn -> File.rm_rf!(tmp_dir) end)
       %{tmp_dir: tmp_dir}
     end
 
-    test "per-file HTML embeds computed column definitions in window.__COMPUTED__", %{tmp_dir: tmp_dir} do
+    test "per-file HTML embeds computed column definitions in window.__COMPUTED__", %{
+      tmp_dir: tmp_dir
+    } do
       :ok = HtmlFormatter.generate(@sample_results, tmp_dir)
 
       html = File.read!(Path.join(tmp_dir, "lib/foo.ex.html"))
@@ -324,7 +330,9 @@ defmodule CodeQA.LineReport.HtmlFormatterTest do
 
   describe "generate/3 with ref option" do
     setup do
-      tmp_dir = Path.join(System.tmp_dir!(), "codeqa_ref_test_#{System.unique_integer([:positive])}")
+      tmp_dir =
+        Path.join(System.tmp_dir!(), "codeqa_ref_test_#{System.unique_integer([:positive])}")
+
       on_exit(fn -> File.rm_rf!(tmp_dir) end)
       %{tmp_dir: tmp_dir}
     end
@@ -383,7 +391,9 @@ defmodule CodeQA.LineReport.HtmlFormatterTest do
       assert "def5678" in refs
     end
 
-    test "without ref option writes directly to output_dir (backwards compat)", %{tmp_dir: tmp_dir} do
+    test "without ref option writes directly to output_dir (backwards compat)", %{
+      tmp_dir: tmp_dir
+    } do
       :ok = HtmlFormatter.generate(@sample_results, tmp_dir)
       assert File.exists?(Path.join([tmp_dir, "lib", "foo.ex.html"]))
       assert File.exists?(Path.join(tmp_dir, "index.html"))
@@ -421,6 +431,46 @@ defmodule CodeQA.LineReport.HtmlFormatterTest do
 
       manifest = Path.join(tmp_dir, "manifest.json") |> File.read!() |> Jason.decode!()
       assert length(manifest["reports"]) == 5
+    end
+  end
+
+  describe "generate/3 host app scaffolding" do
+    setup do
+      tmp_dir =
+        Path.join(System.tmp_dir!(), "codeqa_host_test_#{System.unique_integer([:positive])}")
+
+      on_exit(fn -> File.rm_rf!(tmp_dir) end)
+      %{tmp_dir: tmp_dir}
+    end
+
+    test "creates index.html, app.css, app.js when ref is provided", %{tmp_dir: tmp_dir} do
+      :ok = HtmlFormatter.generate(@sample_results, tmp_dir, ref: "abc1234")
+      assert File.exists?(Path.join(tmp_dir, "index.html"))
+      assert File.exists?(Path.join(tmp_dir, "app.css"))
+      assert File.exists?(Path.join(tmp_dir, "app.js"))
+    end
+
+    test "host index.html references app.css and app.js", %{tmp_dir: tmp_dir} do
+      :ok = HtmlFormatter.generate(@sample_results, tmp_dir, ref: "abc1234")
+      html = File.read!(Path.join(tmp_dir, "index.html"))
+      assert html =~ ~s(href="app.css")
+      assert html =~ ~s(src="app.js")
+    end
+
+    test "host app.js fetches manifest.json", %{tmp_dir: tmp_dir} do
+      :ok = HtmlFormatter.generate(@sample_results, tmp_dir, ref: "abc1234")
+      js = File.read!(Path.join(tmp_dir, "app.js"))
+      assert js =~ "manifest.json"
+      assert js =~ "file-tree"
+    end
+
+    test "does not scaffold host app when ref is not provided", %{tmp_dir: tmp_dir} do
+      :ok = HtmlFormatter.generate(@sample_results, tmp_dir)
+      refute File.exists?(Path.join(tmp_dir, "app.css"))
+      refute File.exists?(Path.join(tmp_dir, "app.js"))
+      html = File.read!(Path.join(tmp_dir, "index.html"))
+      assert html =~ "window.__INDEX__"
+      refute html =~ "app.css"
     end
   end
 

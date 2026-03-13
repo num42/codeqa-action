@@ -29,6 +29,7 @@ defmodule CodeQA.LineReport.HtmlFormatter do
             "" -> path
             prefix -> String.trim_leading(path, prefix)
           end
+
         html_path = relative <> ".html"
         {path, relative, html_path, data}
       end)
@@ -43,13 +44,23 @@ defmodule CodeQA.LineReport.HtmlFormatter do
       data_json = Jason.encode!(data)
       meta_json = Jason.encode!(%{relativePath: relative, indexLink: index_link})
 
-      html = file_page_html(data_json, directions_json, meta_json, computed_json, grade_scale_json, filter_json)
+      html =
+        file_page_html(
+          data_json,
+          directions_json,
+          meta_json,
+          computed_json,
+          grade_scale_json,
+          filter_json
+        )
+
       File.write!(dest, html)
     end)
 
     if ref do
       write_manifest(output_dir, ref, file_entries)
       if opts[:max_reports], do: prune_reports(output_dir, opts[:max_reports])
+      scaffold_host_app(output_dir)
     else
       index_data =
         Enum.map(file_entries, fn {_path, relative, html_path, data} ->
@@ -73,8 +84,13 @@ defmodule CodeQA.LineReport.HtmlFormatter do
         name: name,
         metrics:
           Enum.map(metrics, fn %{name: n, source: s, weight: w, good: g, thresholds: t} ->
-            %{name: n, source: s, weight: w, good: Atom.to_string(g),
-              thresholds: %{a: t.a, b: t.b, c: t.c, d: t.d}}
+            %{
+              name: n,
+              source: s,
+              weight: w,
+              good: Atom.to_string(g),
+              thresholds: %{a: t.a, b: t.b, c: t.c, d: t.d}
+            }
           end)
       }
     end)
@@ -92,7 +108,8 @@ defmodule CodeQA.LineReport.HtmlFormatter do
   end
 
   @doc "Returns an RGBA color tuple for an impact value given its good direction."
-  @spec impact_color(number(), :high | :low, number()) :: {non_neg_integer(), non_neg_integer(), non_neg_integer(), float()}
+  @spec impact_color(number(), :high | :low, number()) ::
+          {non_neg_integer(), non_neg_integer(), non_neg_integer(), float()}
   def impact_color(value, _direction, _max_abs) when value == 0 or value == 0.0 do
     {0, 0, 0, 0.0}
   end
@@ -115,6 +132,180 @@ defmodule CodeQA.LineReport.HtmlFormatter do
   end
 
   def impact_color(_value, _direction, _max_abs), do: {0, 0, 0, 0.0}
+
+  # --- Host App Scaffolding ---
+
+  defp scaffold_host_app(output_dir) do
+    File.write!(Path.join(output_dir, "index.html"), host_index_html())
+    File.write!(Path.join(output_dir, "app.css"), host_app_css())
+    File.write!(Path.join(output_dir, "app.js"), host_app_js())
+  end
+
+  defp host_index_html do
+    """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>CodeQA Report Viewer</title>
+      <link rel="stylesheet" href="app.css">
+    </head>
+    <body>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="sidebar-header">
+            <h1>CodeQA</h1>
+            <select id="ref-selector"></select>
+          </div>
+          <div id="file-tree" class="file-tree"></div>
+        </aside>
+        <main class="main">
+          <div class="viewer">
+            <div id="empty-state" class="empty-state">Select a file to view</div>
+            <iframe id="report-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
+        </main>
+      </div>
+      <script src="app.js"></script>
+    </body>
+    </html>
+    """
+  end
+
+  defp host_app_css do
+    ~S"""
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace; background: #1e1e2e; color: #cdd6f4; height: 100vh; overflow: hidden; }
+    .layout { display: grid; grid-template-columns: 260px 1fr; height: 100vh; }
+    .sidebar { background: #181825; border-right: 1px solid #45475a; display: flex; flex-direction: column; overflow: hidden; }
+    .sidebar-header { padding: 12px; border-bottom: 1px solid #45475a; }
+    .sidebar-header h1 { font-size: 1em; margin-bottom: 8px; color: #cba6f7; }
+    #ref-selector { width: 100%; background: #313244; border: 1px solid #45475a; border-radius: 4px; color: #cdd6f4; padding: 6px 8px; font-size: 0.85em; }
+    .file-tree { flex: 1; overflow-y: auto; padding: 8px 0; font-size: 0.85em; }
+    .tree-dir { cursor: pointer; padding: 3px 8px; color: #a6adc8; user-select: none; }
+    .tree-dir:hover { background: #313244; }
+    .tree-dir::before { content: '\25B6'; display: inline-block; width: 1em; font-size: 0.7em; transition: transform 0.15s; }
+    .tree-dir.open::before { transform: rotate(90deg); }
+    .tree-children { padding-left: 16px; display: none; }
+    .tree-dir.open + .tree-children { display: block; }
+    .tree-file { padding: 3px 8px 3px 24px; cursor: pointer; color: #cdd6f4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tree-file:hover { background: #313244; }
+    .tree-file.active { background: #45475a; color: #89b4fa; }
+    .main { display: flex; flex-direction: column; overflow: hidden; }
+    .viewer { flex: 1; overflow: hidden; position: relative; }
+    .viewer iframe { width: 100%; height: 100%; border: none; background: #1e1e2e; }
+    .empty-state { display: flex; align-items: center; justify-content: center; height: 100%; color: #585b70; font-size: 1.1em; position: absolute; inset: 0; }
+    """
+  end
+
+  defp host_app_js do
+    ~S"""
+    (function () {
+      var refSelector = document.getElementById('ref-selector');
+      var fileTree = document.getElementById('file-tree');
+      var frame = document.getElementById('report-frame');
+      var emptyState = document.getElementById('empty-state');
+      var manifest = null;
+      var currentRef = null;
+
+      async function init() {
+        try {
+          var resp = await fetch('manifest.json');
+          manifest = await resp.json();
+        } catch (e) {
+          fileTree.innerHTML = '<div class="empty-state">No manifest.json found.</div>';
+          return;
+        }
+        if (!manifest.reports || manifest.reports.length === 0) {
+          fileTree.innerHTML = '<div class="empty-state">No reports in manifest.</div>';
+          return;
+        }
+        manifest.reports.sort(function (a, b) {
+          return (b.generated_at || '').localeCompare(a.generated_at || '');
+        });
+        for (var i = 0; i < manifest.reports.length; i++) {
+          var opt = document.createElement('option');
+          opt.value = manifest.reports[i].ref;
+          opt.textContent = manifest.reports[i].ref.substring(0, 12);
+          refSelector.appendChild(opt);
+        }
+        refSelector.addEventListener('change', function () { selectRef(this.value); });
+        selectRef(manifest.reports[0].ref);
+      }
+
+      function selectRef(ref) {
+        currentRef = ref;
+        var report = manifest.reports.find(function (r) { return r.ref === ref; });
+        if (!report) return;
+        buildTree(report.files);
+        frame.src = 'about:blank';
+        emptyState.style.display = 'flex';
+      }
+
+      function buildTree(files) {
+        fileTree.innerHTML = '';
+        var root = {};
+        for (var i = 0; i < files.length; i++) {
+          var parts = files[i].path.split('/');
+          var node = root;
+          for (var j = 0; j < parts.length - 1; j++) {
+            if (!node[parts[j]]) node[parts[j]] = {};
+            node = node[parts[j]];
+          }
+          node[parts[parts.length - 1]] = files[i];
+        }
+        fileTree.appendChild(renderNode(root));
+      }
+
+      function renderNode(node) {
+        var frag = document.createDocumentFragment();
+        var dirs = [], files = [];
+        for (var name in node) {
+          if (node[name] && typeof node[name] === 'object' && !node[name].path) {
+            dirs.push([name, node[name]]);
+          } else {
+            files.push([name, node[name]]);
+          }
+        }
+        dirs.sort(function (a, b) { return a[0].localeCompare(b[0]); });
+        files.sort(function (a, b) { return a[0].localeCompare(b[0]); });
+        for (var d = 0; d < dirs.length; d++) {
+          var dir = document.createElement('div');
+          dir.className = 'tree-dir';
+          dir.textContent = dirs[d][0];
+          dir.addEventListener('click', function (e) { e.stopPropagation(); this.classList.toggle('open'); });
+          frag.appendChild(dir);
+          var children = document.createElement('div');
+          children.className = 'tree-children';
+          children.appendChild(renderNode(dirs[d][1]));
+          frag.appendChild(children);
+        }
+        for (var f = 0; f < files.length; f++) {
+          (function(fileData) {
+            var el = document.createElement('div');
+            el.className = 'tree-file';
+            el.textContent = fileData.path.split('/').pop();
+            el.title = fileData.path;
+            el.addEventListener('click', function () { selectFile(fileData, this); });
+            frag.appendChild(el);
+          })(files[f][1]);
+        }
+        return frag;
+      }
+
+      function selectFile(fileData, el) {
+        var prev = fileTree.querySelector('.tree-file.active');
+        if (prev) prev.classList.remove('active');
+        el.classList.add('active');
+        frame.src = 'reports/' + currentRef + '/' + fileData.htmlPath;
+        emptyState.style.display = 'none';
+      }
+
+      init();
+    })();
+    """
+  end
 
   # --- Manifest ---
 
@@ -169,7 +360,10 @@ defmodule CodeQA.LineReport.HtmlFormatter do
         File.rm_rf!(report_dir)
       end)
 
-      File.write!(manifest_path, Jason.encode!(%{"schemaVersion" => 1, "reports" => to_keep}, pretty: true))
+      File.write!(
+        manifest_path,
+        Jason.encode!(%{"schemaVersion" => 1, "reports" => to_keep}, pretty: true)
+      )
     end
   end
 
@@ -177,7 +371,14 @@ defmodule CodeQA.LineReport.HtmlFormatter do
 
   # --- HTML Templates ---
 
-  defp file_page_html(data_json, directions_json, meta_json, computed_json, grade_scale_json, filter_json) do
+  defp file_page_html(
+         data_json,
+         directions_json,
+         meta_json,
+         computed_json,
+         grade_scale_json,
+         filter_json
+       ) do
     """
     <!DOCTYPE html>
     <html lang="en">
