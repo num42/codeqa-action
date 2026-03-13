@@ -140,14 +140,14 @@ defmodule CodeQA.HealthReport.Formatter.Github do
             |> Enum.map(fn m -> "#{m.name}=#{format_num(m.value)}" end)
             |> Enum.join(", ")
 
-          "| `#{f.path}` | #{f.grade} | #{issues} |"
+          "| `#{f.path}` | #{f.grade} | #{f.score} | #{issues} |"
         end)
 
       [
         "**Worst Offenders**",
         "",
-        "| File | Grade | Issues |",
-        "|------|-------|--------|"
+        "| File | Grade | Score | Issues |",
+        "|------|-------|-------|--------|"
         | rows
       ]
     end
