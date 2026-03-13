@@ -15,3 +15,6 @@ devenv.lock
 
 # Built escript
 /codeqa
+
+# Git worktrees
+.worktrees/
