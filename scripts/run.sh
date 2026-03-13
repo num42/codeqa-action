@@ -9,7 +9,7 @@ mkdir -p "$INSTALL_DIR"
 if [[ "${INPUT_BUILD:-release}" == "source" ]]; then
   echo "Building codeqa from source..."
   SOURCE_DIR="${GITHUB_ACTION_PATH:-.}"
-  (cd "$SOURCE_DIR" && mix local.hex --force --if-missing >/dev/null 2>&1 && mix deps.get --only prod >/dev/null 2>&1 && mix escript.build >/dev/null 2>&1)
+  (cd "$SOURCE_DIR" && mix deps.get && mix escript.build)
   cp "${SOURCE_DIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
   chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
 else
