@@ -8,8 +8,7 @@ defmodule CodeQA.Metrics.Compression do
 
   @impl true
   def analyze(%{content: "", byte_count: 0}) do
-    %{"raw_bytes" => 0, "zlib_bytes" => 0,
-      "zlib_ratio" => 0.0, "redundancy" => 0.0}
+    %{"raw_bytes" => 0, "zlib_bytes" => 0, "zlib_ratio" => 0.0, "redundancy" => 0.0}
   end
 
   def analyze(ctx) do

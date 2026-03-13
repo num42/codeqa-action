@@ -18,7 +18,8 @@ defmodule CodeQA.CLI.UI do
     counts = "(#{completed}/#{total})" |> String.pad_trailing(12)
 
     # On completion, we hide the label (e.g. filename) to leave a clean final state
-    label_to_show = if completed == total and Keyword.get(opts, :clear_label_on_done, true), do: "", else: label
+    label_to_show =
+      if completed == total and Keyword.get(opts, :clear_label_on_done, true), do: "", else: label
 
     eta_str = if eta != "", do: " | ETA: #{String.pad_trailing(eta, 6)}", else: ""
     label_str = if label_to_show != "", do: " | #{label_to_show}", else: ""

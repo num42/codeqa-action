@@ -11,7 +11,8 @@ defmodule CodeQA.Metrics.Entropy do
     Map.merge(char_entropy(ctx.content), token_entropy(ctx))
   end
 
-  defp char_entropy(""), do: %{"char_entropy" => 0.0, "char_max_entropy" => 0.0, "char_normalized" => 0.0}
+  defp char_entropy(""),
+    do: %{"char_entropy" => 0.0, "char_max_entropy" => 0.0, "char_normalized" => 0.0}
 
   defp char_entropy(content) do
     counts = content |> String.graphemes() |> Enum.frequencies()
@@ -19,9 +20,15 @@ defmodule CodeQA.Metrics.Entropy do
     compute_entropy(counts, total, "char")
   end
 
-  defp token_entropy(%{tokens: tokens, token_counts: _token_counts}) when tuple_size(tokens) == 0 do
-    %{"token_entropy" => 0.0, "token_max_entropy" => 0.0, "token_normalized" => 0.0,
-      "vocab_size" => 0, "total_tokens" => 0}
+  defp token_entropy(%{tokens: tokens, token_counts: _token_counts})
+       when tuple_size(tokens) == 0 do
+    %{
+      "token_entropy" => 0.0,
+      "token_max_entropy" => 0.0,
+      "token_normalized" => 0.0,
+      "vocab_size" => 0,
+      "total_tokens" => 0
+    }
   end
 
   defp token_entropy(%{tokens: tokens, token_counts: token_counts}) do

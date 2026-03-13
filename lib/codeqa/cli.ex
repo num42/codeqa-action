@@ -11,15 +11,34 @@ defmodule CodeQA.CLI do
       ["correlate" | rest] -> handle_correlate(rest)
       ["stopwords" | rest] -> handle_stopwords(rest)
       ["health-report" | rest] -> handle_health_report(rest)
+      ["line-report" | rest] -> handle_line_report(rest)
       _ -> print_usage()
     end
   end
 
   defp handle_analyze(args) do
-    {opts, [path], _} = OptionParser.parse(args,
-      strict: [output: :string, progress: :boolean, workers: :integer, cache: :boolean, cache_dir: :string, timeout: :integer, show_ncd: :boolean, ncd_top: :integer, ncd_paths: :string, show_files: :boolean, show_file_paths: :string, combinations: :boolean, telemetry: :boolean, experimental_stopwords: :boolean, stopwords_threshold: :float, ignore_paths: :string],
-      aliases: [o: :output, w: :workers, t: :timeout]
-    )
+    {opts, [path], _} =
+      OptionParser.parse(args,
+        strict: [
+          output: :string,
+          progress: :boolean,
+          workers: :integer,
+          cache: :boolean,
+          cache_dir: :string,
+          timeout: :integer,
+          show_ncd: :boolean,
+          ncd_top: :integer,
+          ncd_paths: :string,
+          show_files: :boolean,
+          show_file_paths: :string,
+          combinations: :boolean,
+          telemetry: :boolean,
+          experimental_stopwords: :boolean,
+          stopwords_threshold: :float,
+          ignore_paths: :string
+        ],
+        aliases: [o: :output, w: :workers, t: :timeout]
+      )
 
     if opts[:telemetry], do: CodeQA.Telemetry.setup()
 
@@ -30,6 +49,7 @@ defmodule CodeQA.CLI do
 
     ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
     files = CodeQA.Collector.collect_files(path, ignore_patterns: ignore_patterns)
+
     if map_size(files) == 0 do
       IO.puts(:stderr, "Warning: no source files found in '#{path}'")
       exit({:shutdown, 1})
@@ -50,25 +70,28 @@ defmodule CodeQA.CLI do
 
     IO.puts(:stderr, "Analysis completed in #{end_time - start_time}ms")
 
-    total_bytes = results["files"] |> Map.values() |> Enum.map(&(&1["bytes"])) |> Enum.sum()
+    total_bytes = results["files"] |> Map.values() |> Enum.map(& &1["bytes"]) |> Enum.sum()
 
     results = filter_files_for_output(results, opts)
 
-    report = %{
-      "metadata" => %{
-        "path" => Path.expand(path),
-        "timestamp" => DateTime.utc_now() |> DateTime.to_iso8601(),
-        "total_files" => map_size(files),
-        "total_bytes" => total_bytes,
-        "version" => @version
+    report =
+      %{
+        "metadata" => %{
+          "path" => Path.expand(path),
+          "timestamp" => DateTime.utc_now() |> DateTime.to_iso8601(),
+          "total_files" => map_size(files),
+          "total_bytes" => total_bytes,
+          "version" => @version
+        }
       }
-    }
-    |> Map.merge(results)
+      |> Map.merge(results)
 
     json = Jason.encode!(report, pretty: true)
 
     case opts[:output] do
-      nil -> IO.puts(json)
+      nil ->
+        IO.puts(json)
+
       file ->
         File.write!(file, json)
         IO.puts(:stderr, "Report written to #{file}")
@@ -78,22 +101,33 @@ defmodule CodeQA.CLI do
   end
 
   defp handle_compare(args) do
-    {opts, [path], _} = OptionParser.parse(args,
-      strict: [
-        base_ref: :string, head_ref: :string,
-        changes_only: :boolean, all_files: :boolean,
-        format: :string, output: :string,
-        progress: :boolean, workers: :integer,
-        cache: :boolean, cache_dir: :string,
-        timeout: :integer, show_ncd: :boolean,
-        ncd_top: :integer, ncd_paths: :string,
-        combinations: :boolean, telemetry: :boolean,
-        experimental_stopwords: :boolean, stopwords_threshold: :float,
-        show_files: :boolean, show_file_paths: :string,
-        ignore_paths: :string
-      ],
-      aliases: [w: :workers, t: :timeout]
-    )
+    {opts, [path], _} =
+      OptionParser.parse(args,
+        strict: [
+          base_ref: :string,
+          head_ref: :string,
+          changes_only: :boolean,
+          all_files: :boolean,
+          format: :string,
+          output: :string,
+          progress: :boolean,
+          workers: :integer,
+          cache: :boolean,
+          cache_dir: :string,
+          timeout: :integer,
+          show_ncd: :boolean,
+          ncd_top: :integer,
+          ncd_paths: :string,
+          combinations: :boolean,
+          telemetry: :boolean,
+          experimental_stopwords: :boolean,
+          stopwords_threshold: :float,
+          show_files: :boolean,
+          show_file_paths: :string,
+          ignore_paths: :string
+        ],
+        aliases: [w: :workers, t: :timeout]
+      )
 
     if opts[:telemetry], do: CodeQA.Telemetry.setup()
 
@@ -110,7 +144,9 @@ defmodule CodeQA.CLI do
 
     ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
     opts = Keyword.put(opts, :ignore_patterns, ignore_patterns)
-    {base_result, head_result, changes} = run_comparison(path, base_ref, head_ref, changes_only, opts)
+
+    {base_result, head_result, changes} =
+      run_comparison(path, base_ref, head_ref, changes_only, opts)
 
     comparison =
       CodeQA.Comparator.compare_results(base_result, head_result, changes)
@@ -123,19 +159,27 @@ defmodule CodeQA.CLI do
   end
 
   defp handle_history(args) do
-    {opts, [path], _} = OptionParser.parse(args,
-      strict: [
-        commits: :integer, commit_list: :string, output_dir: :string,
-        progress: :boolean, workers: :integer,
-        cache: :boolean, cache_dir: :string,
-        timeout: :integer, show_ncd: :boolean,
-        ncd_top: :integer, ncd_paths: :string,
-        combinations: :boolean,
-        show_files: :boolean, show_file_paths: :string,
-        ignore_paths: :string
-      ],
-      aliases: [n: :commits, o: :output_dir, w: :workers, t: :timeout]
-    )
+    {opts, [path], _} =
+      OptionParser.parse(args,
+        strict: [
+          commits: :integer,
+          commit_list: :string,
+          output_dir: :string,
+          progress: :boolean,
+          workers: :integer,
+          cache: :boolean,
+          cache_dir: :string,
+          timeout: :integer,
+          show_ncd: :boolean,
+          ncd_top: :integer,
+          ncd_paths: :string,
+          combinations: :boolean,
+          show_files: :boolean,
+          show_file_paths: :string,
+          ignore_paths: :string
+        ],
+        aliases: [n: :commits, o: :output_dir, w: :workers, t: :timeout]
+      )
 
     output_dir = opts[:output_dir] || raise "Missing --output-dir"
 
@@ -146,15 +190,20 @@ defmodule CodeQA.CLI do
 
     File.mkdir_p!(output_dir)
 
-    commits = cond do
-      opts[:commit_list] ->
-        String.split(opts[:commit_list], ",")
-      opts[:commits] ->
-        {commits_output, 0} = System.cmd("git", ["log", "-n", to_string(opts[:commits]), "--format=%H"], cd: path)
-        commits_output |> String.split("\n", trim: true) |> Enum.reverse()
-      true ->
-        raise "Must provide either --commits N or --commit-list C1,C2"
-    end
+    commits =
+      cond do
+        opts[:commit_list] ->
+          String.split(opts[:commit_list], ",")
+
+        opts[:commits] ->
+          {commits_output, 0} =
+            System.cmd("git", ["log", "-n", to_string(opts[:commits]), "--format=%H"], cd: path)
+
+          commits_output |> String.split("\n", trim: true) |> Enum.reverse()
+
+        true ->
+          raise "Must provide either --commits N or --commit-list C1,C2"
+      end
 
     IO.puts(:stderr, "Found #{length(commits)} commits to analyze.")
 
@@ -167,11 +216,18 @@ defmodule CodeQA.CLI do
       IO.puts(:stderr, "[#{index}/#{length(commits)}] Analyzing commit #{commit}...")
 
       start_time_progress = System.monotonic_time(:millisecond)
-      current_opts = if opts[:progress], do: [{:on_progress, fn c, t, p, _tt -> progress_callback(c, t, p, start_time_progress) end} | analyze_opts], else: analyze_opts
+
+      current_opts =
+        if opts[:progress],
+          do: [
+            {:on_progress, fn c, t, p, _tt -> progress_callback(c, t, p, start_time_progress) end}
+            | analyze_opts
+          ],
+          else: analyze_opts
 
       files = CodeQA.Git.collect_files_at_ref(path, commit)
       files = CodeQA.Collector.reject_ignored_map(files, ignore_patterns)
-      
+
       if map_size(files) == 0 do
         IO.puts(:stderr, "Warning: no source files found at commit #{commit}")
       else
@@ -181,34 +237,44 @@ defmodule CodeQA.CLI do
 
         IO.puts(:stderr, "  Analysis completed in #{end_time - start_time}ms")
 
-        total_bytes = results["files"] |> Map.values() |> Enum.map(&(&1["bytes"])) |> Enum.sum()
+        total_bytes = results["files"] |> Map.values() |> Enum.map(& &1["bytes"]) |> Enum.sum()
         results = filter_files_for_output(results, opts)
 
-        report = %{
-          "metadata" => %{
-            "path" => Path.expand(path),
-            "commit" => commit,
-            "timestamp" => DateTime.utc_now() |> DateTime.to_iso8601(),
-            "total_files" => map_size(files),
-            "total_bytes" => total_bytes,
-            "version" => @version
+        report =
+          %{
+            "metadata" => %{
+              "path" => Path.expand(path),
+              "commit" => commit,
+              "timestamp" => DateTime.utc_now() |> DateTime.to_iso8601(),
+              "total_files" => map_size(files),
+              "total_bytes" => total_bytes,
+              "version" => @version
+            }
           }
-        }
-        |> Map.merge(results)
+          |> Map.merge(results)
 
         out_file = Path.join(output_dir, "#{commit}.json")
         File.write!(out_file, Jason.encode!(report, pretty: true))
       end
     end)
-    
+
     IO.puts(:stderr, "Done writing history to #{output_dir}")
   end
 
   defp handle_correlate(args) do
-    {opts, [path], _} = OptionParser.parse(args,
-      strict: [top: :integer, hide_exact: :boolean, all_groups: :boolean, min: :float, max: :float, combined_only: :boolean, max_steps: :integer],
-      aliases: [t: :top]
-    )
+    {opts, [path], _} =
+      OptionParser.parse(args,
+        strict: [
+          top: :integer,
+          hide_exact: :boolean,
+          all_groups: :boolean,
+          min: :float,
+          max: :float,
+          combined_only: :boolean,
+          max_steps: :integer
+        ],
+        aliases: [t: :top]
+      )
 
     unless File.dir?(path) do
       IO.puts(:stderr, "Error: '#{path}' is not a directory")
@@ -218,7 +284,11 @@ defmodule CodeQA.CLI do
     files = File.ls!(path) |> Enum.filter(&String.ends_with?(&1, ".json")) |> Enum.sort()
 
     if length(files) < 2 do
-      IO.puts(:stderr, "Error: Need at least 2 JSON history files in '#{path}' to calculate correlations.")
+      IO.puts(
+        :stderr,
+        "Error: Need at least 2 JSON history files in '#{path}' to calculate correlations."
+      )
+
       exit({:shutdown, 1})
     end
 
@@ -236,7 +306,8 @@ defmodule CodeQA.CLI do
 
     IO.puts(:stderr, "Calculating correlations for #{total_pairs} pairs...")
 
-    correlations = compute_correlations(pairs_stream, total_pairs, total_start, series, category_map, opts)
+    correlations =
+      compute_correlations(pairs_stream, total_pairs, total_start, series, category_map, opts)
 
     total_end = System.monotonic_time(:millisecond)
 
@@ -253,31 +324,38 @@ defmodule CodeQA.CLI do
 
   defp extract_metric_series(path, files) do
     t_extract_start = System.monotonic_time(:millisecond)
-    extracted = Enum.map(files, fn file ->
-      data = Path.join(path, file) |> File.read!() |> Jason.decode!()
 
-      data
-      |> Map.get("codebase", %{})
-      |> Map.get("aggregate", %{})
-      |> flatten_aggregate_metrics()
-      |> Map.new()
-    end)
+    extracted =
+      Enum.map(files, fn file ->
+        data = Path.join(path, file) |> File.read!() |> Jason.decode!()
+
+        data
+        |> Map.get("codebase", %{})
+        |> Map.get("aggregate", %{})
+        |> flatten_aggregate_metrics()
+        |> Map.new()
+      end)
+
     t_extract_end = System.monotonic_time(:millisecond)
     IO.puts(:stderr, "  Extraction took #{t_extract_end - t_extract_start}ms")
 
     t_keys_start = System.monotonic_time(:millisecond)
-    keys = extracted
+
+    keys =
+      extracted
       |> Enum.reduce(MapSet.new(), fn m, acc -> MapSet.union(acc, MapSet.new(Map.keys(m))) end)
       |> Enum.to_list()
       |> Enum.sort()
+
     t_keys_end = System.monotonic_time(:millisecond)
     IO.puts(:stderr, "  Keys resolution took #{t_keys_end - t_keys_start}ms")
 
     t_series_start = System.monotonic_time(:millisecond)
     # Collect time series for each key, filtering out metrics that are completely constant
-    series = keys
+    series =
+      keys
       |> Enum.map(fn key ->
-        values = Enum.map(extracted, &(Map.get(&1, key, 0.0)))
+        values = Enum.map(extracted, &Map.get(&1, key, 0.0))
         min = Enum.min(values)
         max = Enum.max(values)
         {key, values, min != max}
@@ -285,20 +363,26 @@ defmodule CodeQA.CLI do
       |> Enum.filter(fn {_, _, has_variance} -> has_variance end)
       |> Enum.map(fn {key, values, _} -> {key, values} end)
       |> Map.new()
+
     t_series_end = System.monotonic_time(:millisecond)
     IO.puts(:stderr, "  Series building took #{t_series_end - t_series_start}ms")
 
     active_keys = Map.keys(series) |> Enum.sort()
 
     t_cats_start = System.monotonic_time(:millisecond)
-    category_map = Map.new(active_keys, fn key ->
-      cats = key
-             |> String.split(".")
-             |> List.first()
-             |> String.split(",")
-             |> Enum.flat_map(&String.split(&1, "_"))
-      {key, MapSet.new(cats)}
-    end)
+
+    category_map =
+      Map.new(active_keys, fn key ->
+        cats =
+          key
+          |> String.split(".")
+          |> List.first()
+          |> String.split(",")
+          |> Enum.flat_map(&String.split(&1, "_"))
+
+        {key, MapSet.new(cats)}
+      end)
+
     t_cats_end = System.monotonic_time(:millisecond)
     IO.puts(:stderr, "  Category precomputation took #{t_cats_end - t_cats_start}ms")
 
@@ -314,23 +398,30 @@ defmodule CodeQA.CLI do
   defp build_correlation_pairs(active_keys, num_keys, opts) do
     max_steps = opts[:max_steps] || -1
 
-    pairs_to_process = if opts[:combined_only] do
-      combined_pairs_stream(active_keys)
-    else
-      all_pairs_stream(active_keys)
-    end
+    pairs_to_process =
+      if opts[:combined_only] do
+        combined_pairs_stream(active_keys)
+      else
+        all_pairs_stream(active_keys)
+      end
 
-    pairs_stream = if max_steps > 0, do: Stream.take(pairs_to_process, max_steps), else: pairs_to_process
+    pairs_stream =
+      if max_steps > 0, do: Stream.take(pairs_to_process, max_steps), else: pairs_to_process
 
     # Use exact count if max_steps is set, otherwise approximate based on the cartesian or triangular formula
-    total_pairs = cond do
-      max_steps > 0 -> max_steps
-      opts[:combined_only] ->
-        normal_count = Enum.count(active_keys, &(not String.contains?(&1, ",")))
-        combined_count = Enum.count(active_keys, &String.contains?(&1, ","))
-        normal_count * combined_count
-      true -> div(num_keys * (num_keys - 1), 2)
-    end
+    total_pairs =
+      cond do
+        max_steps > 0 ->
+          max_steps
+
+        opts[:combined_only] ->
+          normal_count = Enum.count(active_keys, &(not String.contains?(&1, ",")))
+          combined_count = Enum.count(active_keys, &String.contains?(&1, ","))
+          normal_count * combined_count
+
+        true ->
+          div(num_keys * (num_keys - 1), 2)
+      end
 
     {pairs_stream, total_pairs}
   end
@@ -363,7 +454,16 @@ defmodule CodeQA.CLI do
 
     pairs_stream
     |> Task.async_stream(
-      &correlate_pair(&1, counter, total_pairs, update_interval, total_start, series, category_map, opts),
+      &correlate_pair(
+        &1,
+        counter,
+        total_pairs,
+        update_interval,
+        total_start,
+        series,
+        category_map,
+        opts
+      ),
       max_concurrency: System.schedulers_online(),
       timeout: :infinity
     )
@@ -371,12 +471,23 @@ defmodule CodeQA.CLI do
     |> Enum.reject(&is_nil/1)
   end
 
-  defp correlate_pair({k1, k2}, counter, total_pairs, update_interval, total_start, series, category_map, opts) do
+  defp correlate_pair(
+         {k1, k2},
+         counter,
+         total_pairs,
+         update_interval,
+         total_start,
+         series,
+         category_map,
+         opts
+       ) do
     :counters.add(counter, 1, 1)
     current = :counters.get(counter, 1)
     correlate_progress_callback(current, total_pairs, update_interval, total_start, opts)
 
-    cross_valid = opts[:all_groups] || MapSet.disjoint?(Map.fetch!(category_map, k1), Map.fetch!(category_map, k2))
+    cross_valid =
+      opts[:all_groups] ||
+        MapSet.disjoint?(Map.fetch!(category_map, k1), Map.fetch!(category_map, k2))
 
     if cross_valid do
       corr = CodeQA.Math.pearson_correlation_list(Map.fetch!(series, k1), Map.fetch!(series, k2))
@@ -404,9 +515,8 @@ defmodule CodeQA.CLI do
       avg_time = elapsed / current
       eta_ms = round((total_pairs - current) * avg_time)
 
-      output = CodeQA.CLI.UI.progress_bar(current, total_pairs,
-        eta: CodeQA.CLI.UI.format_eta(eta_ms)
-      )
+      output =
+        CodeQA.CLI.UI.progress_bar(current, total_pairs, eta: CodeQA.CLI.UI.format_eta(eta_ms))
 
       IO.write(:stderr, "\r" <> output)
 
@@ -421,13 +531,14 @@ defmodule CodeQA.CLI do
     changes = CodeQA.Git.changed_files(path, base_ref, head_ref)
     changes = CodeQA.Collector.reject_ignored(changes, ignore_patterns, & &1.path)
 
-    file_paths = if changes_only do
-      IO.puts(:stderr, "Comparing #{length(changes)} changed files...")
-      Enum.map(changes, & &1.path)
-    else
-      IO.puts(:stderr, "Comparing all source files...")
-      nil
-    end
+    file_paths =
+      if changes_only do
+        IO.puts(:stderr, "Comparing #{length(changes)} changed files...")
+        Enum.map(changes, & &1.path)
+      else
+        IO.puts(:stderr, "Comparing all source files...")
+        nil
+      end
 
     empty = %{"files" => %{}, "codebase" => %{"aggregate" => %{}, "similarity" => %{}}}
 
@@ -448,8 +559,17 @@ defmodule CodeQA.CLI do
       print_compare_progress(opts, base_files, head_files)
 
       analyze_opts = build_analyze_opts(opts)
-      base_result = if map_size(base_files) > 0, do: CodeQA.Analyzer.analyze_codebase(base_files, analyze_opts), else: empty
-      head_result = if map_size(head_files) > 0, do: CodeQA.Analyzer.analyze_codebase(head_files, analyze_opts), else: empty
+
+      base_result =
+        if map_size(base_files) > 0,
+          do: CodeQA.Analyzer.analyze_codebase(base_files, analyze_opts),
+          else: empty
+
+      head_result =
+        if map_size(head_files) > 0,
+          do: CodeQA.Analyzer.analyze_codebase(head_files, analyze_opts),
+          else: empty
+
       changes = if changes_only, do: changes, else: synthesize_changes(base_files, head_files)
 
       {base_result, head_result, changes}
@@ -459,9 +579,16 @@ defmodule CodeQA.CLI do
   defp print_compare_progress(opts, base_files, head_files) do
     if opts[:progress] do
       step_prefix = if opts[:show_ncd], do: "1/5 ", else: "1/1 "
-      IO.puts(:stderr, "  #{step_prefix}Analyzing base (#{map_size(base_files)} files) and head (#{map_size(head_files)} files)...")
+
+      IO.puts(
+        :stderr,
+        "  #{step_prefix}Analyzing base (#{map_size(base_files)} files) and head (#{map_size(head_files)} files)..."
+      )
     else
-      IO.puts(:stderr, "Analyzing base (#{map_size(base_files)} files) and head (#{map_size(head_files)} files)...")
+      IO.puts(
+        :stderr,
+        "Analyzing base (#{map_size(base_files)} files) and head (#{map_size(head_files)} files)..."
+      )
     end
   end
 
@@ -480,10 +607,17 @@ defmodule CodeQA.CLI do
 
   defp output_comparison(comparison, _format, output_mode) do
     codebase_summary = CodeQA.Summarizer.summarize_codebase(comparison)
-    file_summaries = Map.new(Map.get(comparison, "files", %{}), fn {path, data} ->
-      {path, CodeQA.Summarizer.summarize_file(path, data)}
-    end)
-    IO.puts(Jason.encode!(build_json_output(comparison, codebase_summary, file_summaries, output_mode), pretty: true))
+
+    file_summaries =
+      Map.new(Map.get(comparison, "files", %{}), fn {path, data} ->
+        {path, CodeQA.Summarizer.summarize_file(path, data)}
+      end)
+
+    IO.puts(
+      Jason.encode!(build_json_output(comparison, codebase_summary, file_summaries, output_mode),
+        pretty: true
+      )
+    )
   end
 
   defp synthesize_changes(base_files, head_files) do
@@ -492,11 +626,13 @@ defmodule CodeQA.CLI do
     all_paths
     |> Enum.sort()
     |> Enum.map(fn path ->
-      status = cond do
-        Map.has_key?(base_files, path) and Map.has_key?(head_files, path) -> "modified"
-        Map.has_key?(head_files, path) -> "added"
-        true -> "deleted"
-      end
+      status =
+        cond do
+          Map.has_key?(base_files, path) and Map.has_key?(head_files, path) -> "modified"
+          Map.has_key?(head_files, path) -> "added"
+          true -> "deleted"
+        end
+
       %CodeQA.Git.ChangedFile{path: path, status: status}
     end)
   end
@@ -505,10 +641,15 @@ defmodule CodeQA.CLI do
     cond do
       opts[:show_files] ->
         results
+
       opts[:show_file_paths] ->
         target_paths = String.split(opts[:show_file_paths], ",") |> MapSet.new()
-        filtered = Map.filter(results["files"], fn {path, _} -> MapSet.member?(target_paths, path) end)
+
+        filtered =
+          Map.filter(results["files"], fn {path, _} -> MapSet.member?(target_paths, path) end)
+
         Map.put(results, "files", filtered)
+
       true ->
         Map.delete(results, "files")
     end
@@ -517,16 +658,21 @@ defmodule CodeQA.CLI do
   defp build_json_output(comparison, codebase_summary, file_summaries, output_mode) do
     result = %{"metadata" => comparison["metadata"]}
 
-    result = if output_mode in ["auto", "summary"] do
-      result |> Map.put("summary", codebase_summary) |> Map.put("codebase", comparison["codebase"])
-    else
-      result
-    end
+    result =
+      if output_mode in ["auto", "summary"] do
+        result
+        |> Map.put("summary", codebase_summary)
+        |> Map.put("codebase", comparison["codebase"])
+      else
+        result
+      end
 
     if output_mode in ["auto", "changes"] and Map.has_key?(comparison, "files") do
-      files_with_summaries = Map.new(comparison["files"], fn {path, data} ->
-        {path, Map.put(data, "summary", Map.get(file_summaries, path, %{}))}
-      end)
+      files_with_summaries =
+        Map.new(comparison["files"], fn {path, data} ->
+          {path, Map.put(data, "summary", Map.get(file_summaries, path, %{}))}
+        end)
+
       Map.put(result, "files", files_with_summaries)
     else
       result
@@ -538,26 +684,33 @@ defmodule CodeQA.CLI do
     elapsed = max(now - start_time, 1)
     avg_time = elapsed / completed
     eta_ms = round((total - completed) * avg_time)
-    
+
     label = if String.length(path) > 30, do: "..." <> String.slice(path, -27..-1), else: path
-    
-    output = CodeQA.CLI.UI.progress_bar(completed, total, 
-      eta: CodeQA.CLI.UI.format_eta(eta_ms),
-      label: label
-    )
-    
+
+    output =
+      CodeQA.CLI.UI.progress_bar(completed, total,
+        eta: CodeQA.CLI.UI.format_eta(eta_ms),
+        label: label
+      )
+
     IO.write(:stderr, "\r" <> output)
-    
+
     if completed == total do
       IO.puts(:stderr, "")
     end
   end
 
   defp handle_stopwords(args) do
-    {opts, [path], _} = OptionParser.parse(args,
-      strict: [workers: :integer, stopwords_threshold: :float, progress: :boolean, ignore_paths: :string],
-      aliases: [w: :workers]
-    )
+    {opts, [path], _} =
+      OptionParser.parse(args,
+        strict: [
+          workers: :integer,
+          stopwords_threshold: :float,
+          progress: :boolean,
+          ignore_paths: :string
+        ],
+        aliases: [w: :workers]
+      )
 
     unless File.dir?(path) do
       IO.puts(:stderr, "Error: '#{path}' is not a directory")
@@ -566,6 +719,7 @@ defmodule CodeQA.CLI do
 
     ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
     files = CodeQA.Collector.collect_files(path, ignore_patterns: ignore_patterns)
+
     if map_size(files) == 0 do
       IO.puts(:stderr, "Warning: no source files found in '#{path}'")
       exit({:shutdown, 1})
@@ -573,20 +727,26 @@ defmodule CodeQA.CLI do
 
     IO.puts(:stderr, "Extracting stopwords for #{map_size(files)} files...")
     start_time = System.monotonic_time(:millisecond)
-    
-    word_extractor = fn content -> Regex.scan(~r/\b[a-zA-Z_]\w*\b/u, content) |> List.flatten() end
+
+    word_extractor = fn content ->
+      Regex.scan(~r/\b[a-zA-Z_]\w*\b/u, content) |> List.flatten()
+    end
+
     opts_word = Keyword.put(opts, :progress_label, "Words")
     word_stopwords = CodeQA.Stopwords.find_stopwords(files, word_extractor, opts_word)
-    
-    fp_extractor = fn content -> CodeQA.Metrics.TokenNormalizer.normalize(content) |> CodeQA.Metrics.Winnowing.kgrams(5) end
+
+    fp_extractor = fn content ->
+      CodeQA.Metrics.TokenNormalizer.normalize(content) |> CodeQA.Metrics.Winnowing.kgrams(5)
+    end
+
     opts_fp = Keyword.put(opts, :progress_label, "Fingerprints")
     fp_stopwords = CodeQA.Stopwords.find_stopwords(files, fp_extractor, opts_fp)
-    
+
     end_time = System.monotonic_time(:millisecond)
 
     IO.puts(:stderr, "\nAnalysis completed in #{end_time - start_time}ms")
     IO.puts(:stderr, "\n--- Word Stopwords (#{MapSet.size(word_stopwords)}) ---")
-    
+
     word_stopwords
     |> MapSet.to_list()
     |> Enum.sort()
@@ -598,20 +758,29 @@ defmodule CodeQA.CLI do
   end
 
   defp handle_health_report(args) do
-    {opts, [path], _} = OptionParser.parse(args,
-      strict: [
-        output: :string, config: :string,
-        detail: :string, top: :integer,
-        progress: :boolean, workers: :integer,
-        cache: :boolean, cache_dir: :string,
-        timeout: :integer, show_ncd: :boolean,
-        ncd_top: :integer, ncd_paths: :string,
-        combinations: :boolean, telemetry: :boolean,
-        experimental_stopwords: :boolean, stopwords_threshold: :float,
-        ignore_paths: :string
-      ],
-      aliases: [o: :output, w: :workers, t: :timeout]
-    )
+    {opts, [path], _} =
+      OptionParser.parse(args,
+        strict: [
+          output: :string,
+          config: :string,
+          detail: :string,
+          top: :integer,
+          progress: :boolean,
+          workers: :integer,
+          cache: :boolean,
+          cache_dir: :string,
+          timeout: :integer,
+          show_ncd: :boolean,
+          ncd_top: :integer,
+          ncd_paths: :string,
+          combinations: :boolean,
+          telemetry: :boolean,
+          experimental_stopwords: :boolean,
+          stopwords_threshold: :float,
+          ignore_paths: :string
+        ],
+        aliases: [o: :output, w: :workers, t: :timeout]
+      )
 
     if opts[:telemetry], do: CodeQA.Telemetry.setup()
 
@@ -622,6 +791,7 @@ defmodule CodeQA.CLI do
 
     ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
     files = CodeQA.Collector.collect_files(path, ignore_patterns: ignore_patterns)
+
     if map_size(files) == 0 do
       IO.puts(:stderr, "Warning: no source files found in '#{path}'")
       exit({:shutdown, 1})
@@ -638,27 +808,32 @@ defmodule CodeQA.CLI do
     IO.puts(:stderr, "Analysis completed in #{end_time - start_time}ms")
 
     # Add metadata to results for the report
-    total_bytes = results["files"] |> Map.values() |> Enum.map(&(&1["bytes"])) |> Enum.sum()
-    results = Map.put(results, "metadata", %{
-      "path" => Path.expand(path),
-      "timestamp" => DateTime.utc_now() |> DateTime.to_iso8601(),
-      "total_files" => map_size(files),
-      "total_bytes" => total_bytes
-    })
+    total_bytes = results["files"] |> Map.values() |> Enum.map(& &1["bytes"]) |> Enum.sum()
+
+    results =
+      Map.put(results, "metadata", %{
+        "path" => Path.expand(path),
+        "timestamp" => DateTime.utc_now() |> DateTime.to_iso8601(),
+        "total_files" => map_size(files),
+        "total_bytes" => total_bytes
+      })
 
     detail = parse_detail(opts[:detail])
     top_n = opts[:top] || 5
 
-    report = CodeQA.HealthReport.generate(results,
-      config: opts[:config],
-      detail: detail,
-      top: top_n
-    )
+    report =
+      CodeQA.HealthReport.generate(results,
+        config: opts[:config],
+        detail: detail,
+        top: top_n
+      )
 
     markdown = CodeQA.HealthReport.to_markdown(report, detail)
 
     case opts[:output] do
-      nil -> IO.puts(markdown)
+      nil ->
+        IO.puts(markdown)
+
       file ->
         File.write!(file, markdown)
         IO.puts(:stderr, "Health report written to #{file}")
@@ -671,6 +846,7 @@ defmodule CodeQA.CLI do
   defp parse_detail("summary"), do: :summary
   defp parse_detail("default"), do: :default
   defp parse_detail("full"), do: :full
+
   defp parse_detail(other) do
     IO.puts(:stderr, "Warning: unknown detail level '#{other}', using 'default'")
     :default
@@ -679,13 +855,27 @@ defmodule CodeQA.CLI do
   defp build_analyze_opts(opts) do
     start_time_progress = System.monotonic_time(:millisecond)
 
-    passthrough_keys = [:workers, :show_ncd, :ncd_top, :combinations, :telemetry, :experimental_stopwords, :stopwords_threshold]
+    passthrough_keys = [
+      :workers,
+      :show_ncd,
+      :ncd_top,
+      :combinations,
+      :telemetry,
+      :experimental_stopwords,
+      :stopwords_threshold
+    ]
 
     base =
       [{:timeout, opts[:timeout] || 5000}]
-      |> maybe_add(opts[:progress], {:on_progress, fn c, t, p, _tt -> progress_callback(c, t, p, start_time_progress) end})
+      |> maybe_add(
+        opts[:progress],
+        {:on_progress, fn c, t, p, _tt -> progress_callback(c, t, p, start_time_progress) end}
+      )
       |> maybe_add(opts[:cache], {:cache_dir, opts[:cache_dir] || ".codeqa_cache"})
-      |> maybe_add(opts[:ncd_paths], {:ncd_paths, opts[:ncd_paths] && String.split(opts[:ncd_paths], ",")})
+      |> maybe_add(
+        opts[:ncd_paths],
+        {:ncd_paths, opts[:ncd_paths] && String.split(opts[:ncd_paths], ",")}
+      )
 
     Enum.reduce(passthrough_keys, base, fn key, acc ->
       if opts[key], do: [{key, opts[key]} | acc], else: acc
@@ -701,10 +891,98 @@ defmodule CodeQA.CLI do
   defp nan?(x), do: x != x
 
   defp parse_ignore_paths(nil), do: []
+
   defp parse_ignore_paths(paths_string) do
     paths_string
     |> String.split(",", trim: true)
     |> Enum.map(&String.trim/1)
+  end
+
+  defp handle_line_report(args) do
+    {opts, paths, _} =
+      OptionParser.parse(args,
+        strict: [
+          format: :string,
+          output_dir: :string,
+          ref: :string,
+          max_reports: :integer,
+          config: :string,
+          lines: :string,
+          hide_lines: :boolean,
+          ignore_paths: :string,
+          workers: :integer,
+          progress: :boolean
+        ],
+        aliases: [o: :output_dir, w: :workers]
+      )
+
+    path = List.first(paths) || "."
+
+    unless File.exists?(path) do
+      IO.puts(:stderr, "Error: '#{path}' does not exist")
+      exit({:shutdown, 1})
+    end
+
+    format = opts[:format] || "table"
+    ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
+
+    results =
+      if File.dir?(path) do
+        CodeQA.LineReport.analyze_path(path,
+          workers: opts[:workers] || System.schedulers_online(),
+          config: opts[:config],
+          ignore_patterns: ignore_patterns,
+          progress: opts[:progress] || false
+        )
+      else
+        content = File.read!(path)
+        data = CodeQA.LineReport.analyze_file(content, config: opts[:config])
+        %{path => data}
+      end
+
+    line_ranges = parse_line_ranges(opts[:lines])
+
+    case format do
+      "html" ->
+        output_dir = opts[:output_dir] || "line_report_html"
+
+        html_opts = [
+          config: opts[:config],
+          ref: opts[:ref],
+          max_reports: opts[:max_reports],
+          line_ranges: line_ranges,
+          hide_lines: opts[:hide_lines] || false
+        ]
+
+        CodeQA.LineReport.HtmlFormatter.generate(results, output_dir, html_opts)
+        IO.puts(:stderr, "HTML report written to #{output_dir}/")
+
+      "json" ->
+        IO.puts(Jason.encode!(results, pretty: true))
+
+      "table" ->
+        Enum.each(results, fn {file_path, data} ->
+          IO.puts("== #{file_path} ==")
+          IO.puts(CodeQA.LineReport.format_table(data))
+        end)
+
+      other ->
+        IO.puts(:stderr, "Error: unknown format '#{other}'. Use table, html, or json.")
+        exit({:shutdown, 1})
+    end
+  end
+
+  defp parse_line_ranges(nil), do: []
+
+  defp parse_line_ranges(str) do
+    str
+    |> String.split(",", trim: true)
+    |> Enum.map(fn range ->
+      case String.split(range, "-", parts: 2) do
+        [a, b] -> {String.to_integer(String.trim(a)), String.to_integer(String.trim(b))}
+        [a] -> {String.to_integer(String.trim(a)), String.to_integer(String.trim(a))}
+      end
+    end)
   end
 
   defp print_usage do
@@ -718,6 +996,7 @@ defmodule CodeQA.CLI do
       correlate <dir>   Find metric correlations in a directory of history JSONs
       stopwords <path>  Print codebase-specific stopwords based on frequency
       health-report <path>  Generate a graded health report for a codebase
+      line-report [path]    Per-line metric impact analysis (default: current dir)
 
     Options for analyze:
       -o, --output FILE     Output file path (default: stdout)
@@ -788,6 +1067,18 @@ defmodule CodeQA.CLI do
       --cache-dir DIR       Directory to store cache (default: .codeqa_cache)
       -t, --timeout MS      Timeout for similarity analysis (default: 5000)
       --ignore-paths PATHS  Comma-separated list of path patterns to ignore (supports wildcards, e.g. "test/*,docs/*")
+
+    Options for line-report:
+      --format FORMAT       Output format: table (default), html, or json
+      -o, --output-dir DIR  Output directory for HTML reports (default: line_report_html)
+      --ref REF             Git ref/SHA for report tagging (used with html format)
+      --max-reports N       Maximum number of HTML reports to keep
+      --config FILE         Path to .codeqa.yml config file
+      --lines RANGES        Line ranges to include (e.g. "1-10,20-30")
+      --hide-lines          Hide matching lines instead of showing only
+      --ignore-paths PATHS  Comma-separated list of path patterns to ignore
+      -w, --workers N       Number of parallel workers
+      --progress            Show progress on stderr
     """)
   end
 end

@@ -4,7 +4,8 @@ defmodule CodeQA.HealthReport.Config do
   alias CodeQA.HealthReport.Categories
 
   @spec load(String.t() | nil) :: %{categories: [map()], grade_scale: [{number(), String.t()}]}
-  def load(nil), do: %{categories: Categories.defaults(), grade_scale: Categories.default_grade_scale()}
+  def load(nil),
+    do: %{categories: Categories.defaults(), grade_scale: Categories.default_grade_scale()}
 
   def load(path) do
     yaml = YamlElixir.read_from_file!(path)
@@ -59,6 +60,7 @@ defmodule CodeQA.HealthReport.Config do
     override_metrics = Map.get(override, "metrics", [])
     name = Map.get(override, "name", default.name)
     merged_metrics = merge_metrics(default.metrics, override_metrics)
+
     %{default | name: name, metrics: merged_metrics}
     |> maybe_put_top(override)
   end

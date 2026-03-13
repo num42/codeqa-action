@@ -32,6 +32,7 @@ defmodule CodeQA.Metrics.Heaps do
     |> Enum.with_index(1)
     |> Enum.reduce({MapSet.new(), []}, fn {token, i}, {seen, points} ->
       seen = MapSet.put(seen, token)
+
       if rem(i, interval) == 0 do
         {seen, [{i, MapSet.size(seen)} | points]}
       else

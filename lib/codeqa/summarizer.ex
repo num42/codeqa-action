@@ -92,19 +92,30 @@ defmodule CodeQA.Summarizer do
   end
 
   defp build_file_gist(directions) do
-    parts = directions |> Enum.reject(fn {_, d} -> d == "stable" end) |> Enum.map(fn {k, d} -> "#{k} #{d}" end)
+    parts =
+      directions
+      |> Enum.reject(fn {_, d} -> d == "stable" end)
+      |> Enum.map(fn {k, d} -> "#{k} #{d}" end)
+
     if parts == [], do: "all metrics stable", else: Enum.join(parts, ", ")
   end
 
   defp build_codebase_gist(file_counts, directions) do
     file_parts =
-      [{"added", file_counts["added"]}, {"modified", file_counts["modified"]}, {"deleted", file_counts["deleted"]}]
+      [
+        {"added", file_counts["added"]},
+        {"modified", file_counts["modified"]},
+        {"deleted", file_counts["deleted"]}
+      ]
       |> Enum.filter(fn {_, c} -> c > 0 end)
       |> Enum.map(fn {s, c} -> "#{c} #{s}" end)
 
     file_summary = if file_parts == [], do: "no changes", else: Enum.join(file_parts, ", ")
 
-    dir_parts = directions |> Enum.reject(fn {_, d} -> d == "stable" end) |> Enum.map(fn {k, d} -> "#{k} #{d}" end)
+    dir_parts =
+      directions
+      |> Enum.reject(fn {_, d} -> d == "stable" end)
+      |> Enum.map(fn {k, d} -> "#{k} #{d}" end)
 
     if dir_parts == [] do
       "#{file_summary} — all metrics stable"

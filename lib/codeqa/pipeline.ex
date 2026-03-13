@@ -3,8 +3,17 @@ defmodule CodeQA.Pipeline do
 
   defmodule FileContext do
     @moduledoc "Immutable pre-computed data shared across all file metrics."
-    @enforce_keys [:content, :tokens, :token_counts, :words, :identifiers,
-                   :lines, :encoded, :byte_count, :line_count]
+    @enforce_keys [
+      :content,
+      :tokens,
+      :token_counts,
+      :words,
+      :identifiers,
+      :lines,
+      :encoded,
+      :byte_count,
+      :line_count
+    ]
     defstruct @enforce_keys
   end
 
@@ -28,11 +37,13 @@ defmodule CodeQA.Pipeline do
     tokens = content |> String.split() |> List.to_tuple()
     token_list = Tuple.to_list(tokens)
     token_counts = Enum.frequencies(token_list)
-    words = 
-      Regex.scan(@word_re, content) 
-      |> List.flatten() 
+
+    words =
+      Regex.scan(@word_re, content)
+      |> List.flatten()
       |> Enum.reject(&MapSet.member?(stopwords, &1))
       |> List.to_tuple()
+
     word_list = Tuple.to_list(words)
     identifiers = word_list |> Enum.reject(&MapSet.member?(@keywords, &1)) |> List.to_tuple()
     lines = content |> String.split("\n") |> trim_trailing_empty() |> List.to_tuple()

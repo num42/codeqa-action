@@ -19,6 +19,7 @@ defmodule CodeQA.Metrics.TokenNormalizer do
   end
 
   defp split_punctuation(token) when token in ["<STR>", "<NUM>", "<ID>"], do: [token]
+
   defp split_punctuation(text) do
     text
     |> String.graphemes()

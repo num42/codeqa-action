@@ -9,7 +9,7 @@ defmodule CodeQA.Metrics.CasingEntropy do
   @impl true
   def analyze(%{identifiers: identifiers}) do
     identifiers_list = Tuple.to_list(identifiers)
-    
+
     if identifiers_list == [] do
       %{"entropy" => 0.0}
     else

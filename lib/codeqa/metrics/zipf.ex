@@ -17,8 +17,12 @@ defmodule CodeQA.Metrics.Zipf do
     total_tokens = tuple_size(tokens)
 
     if vocab_size < 3 do
-      %{"exponent" => 0.0, "r_squared" => 0.0,
-        "vocab_size" => vocab_size, "total_tokens" => total_tokens}
+      %{
+        "exponent" => 0.0,
+        "r_squared" => 0.0,
+        "vocab_size" => vocab_size,
+        "total_tokens" => total_tokens
+      }
     else
       {exponent, r_squared} = fit_zipf(frequencies, vocab_size)
 

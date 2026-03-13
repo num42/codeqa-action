@@ -30,16 +30,32 @@ defmodule CodeQA.Analyzer do
       if Keyword.get(opts, :experimental_stopwords, false) do
         has_progress = Keyword.get(opts, :on_progress)
 
-        if has_progress, do: IO.puts(:stderr, "  Analyzing Stopwords (Tokens and Fingerprints)...")
+        if has_progress,
+          do: IO.puts(:stderr, "  Analyzing Stopwords (Tokens and Fingerprints)...")
 
-        word_extractor = fn content -> Regex.scan(~r/\b[a-zA-Z_]\w*\b/u, content) |> List.flatten() end
-        word_stopwords = CodeQA.Telemetry.time(:stopwords_words, fn -> CodeQA.Stopwords.find_stopwords(files, word_extractor, opts) end)
-        
-        fp_extractor = fn content -> CodeQA.Metrics.TokenNormalizer.normalize(content) |> CodeQA.Metrics.Winnowing.kgrams(5) end
-        fp_stopwords = CodeQA.Telemetry.time(:stopwords_fingerprints, fn -> CodeQA.Stopwords.find_stopwords(files, fp_extractor, opts) end)
+        word_extractor = fn content ->
+          Regex.scan(~r/\b[a-zA-Z_]\w*\b/u, content) |> List.flatten()
+        end
+
+        word_stopwords =
+          CodeQA.Telemetry.time(:stopwords_words, fn ->
+            CodeQA.Stopwords.find_stopwords(files, word_extractor, opts)
+          end)
+
+        fp_extractor = fn content ->
+          CodeQA.Metrics.TokenNormalizer.normalize(content) |> CodeQA.Metrics.Winnowing.kgrams(5)
+        end
+
+        fp_stopwords =
+          CodeQA.Telemetry.time(:stopwords_fingerprints, fn ->
+            CodeQA.Stopwords.find_stopwords(files, fp_extractor, opts)
+          end)
 
         if has_progress do
-          IO.puts(:stderr, "  Found #{MapSet.size(word_stopwords)} common word stopwords and #{MapSet.size(fp_stopwords)} common fingerprint stopwords.")
+          IO.puts(
+            :stderr,
+            "  Found #{MapSet.size(word_stopwords)} common word stopwords and #{MapSet.size(fp_stopwords)} common fingerprint stopwords."
+          )
         end
 
         opts
@@ -80,12 +96,15 @@ defmodule CodeQA.Analyzer do
     |> Enum.reduce(%{}, fn {{metric, key}, values}, acc ->
       stats = compute_stats(values)
       metric_agg = Map.get(acc, metric, %{})
-      updated = Map.merge(metric_agg, %{
-        "mean_#{key}" => stats.mean,
-        "std_#{key}" => stats.std,
-        "min_#{key}" => stats.min,
-        "max_#{key}" => stats.max
-      })
+
+      updated =
+        Map.merge(metric_agg, %{
+          "mean_#{key}" => stats.mean,
+          "std_#{key}" => stats.std,
+          "min_#{key}" => stats.min,
+          "max_#{key}" => stats.max
+        })
+
       Map.put(acc, metric, updated)
     end)
   end
