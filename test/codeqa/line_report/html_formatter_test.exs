@@ -389,6 +389,39 @@ defmodule CodeQA.LineReport.HtmlFormatterTest do
       assert File.exists?(Path.join(tmp_dir, "index.html"))
       refute File.exists?(Path.join(tmp_dir, "manifest.json"))
     end
+
+    test "max_reports prunes oldest entries from manifest", %{tmp_dir: tmp_dir} do
+      :ok = HtmlFormatter.generate(@sample_results, tmp_dir, ref: "ref1")
+      :ok = HtmlFormatter.generate(@sample_results, tmp_dir, ref: "ref2")
+      :ok = HtmlFormatter.generate(@sample_results, tmp_dir, ref: "ref3")
+      :ok = HtmlFormatter.generate(@sample_results, tmp_dir, max_reports: 2, ref: "ref4")
+
+      manifest = Path.join(tmp_dir, "manifest.json") |> File.read!() |> Jason.decode!()
+      assert length(manifest["reports"]) == 2
+      refs = Enum.map(manifest["reports"], & &1["ref"])
+      refute "ref1" in refs
+      refute "ref2" in refs
+      assert "ref3" in refs
+      assert "ref4" in refs
+    end
+
+    test "max_reports deletes pruned report directories", %{tmp_dir: tmp_dir} do
+      :ok = HtmlFormatter.generate(@sample_results, tmp_dir, ref: "old_ref")
+      assert File.exists?(Path.join([tmp_dir, "reports", "old_ref"]))
+
+      :ok = HtmlFormatter.generate(@sample_results, tmp_dir, ref: "new_ref", max_reports: 1)
+      refute File.exists?(Path.join([tmp_dir, "reports", "old_ref"]))
+      assert File.exists?(Path.join([tmp_dir, "reports", "new_ref"]))
+    end
+
+    test "max_reports is ignored when not set", %{tmp_dir: tmp_dir} do
+      for i <- 1..5 do
+        :ok = HtmlFormatter.generate(@sample_results, tmp_dir, ref: "ref#{i}")
+      end
+
+      manifest = Path.join(tmp_dir, "manifest.json") |> File.read!() |> Jason.decode!()
+      assert length(manifest["reports"]) == 5
+    end
   end
 
   describe "impact_color/3" do

@@ -49,6 +49,7 @@ defmodule CodeQA.LineReport.HtmlFormatter do
 
     if ref do
       write_manifest(output_dir, ref, file_entries)
+      if opts[:max_reports], do: prune_reports(output_dir, opts[:max_reports])
     else
       index_data =
         Enum.map(file_entries, fn {_path, relative, html_path, data} ->
@@ -153,6 +154,26 @@ defmodule CodeQA.LineReport.HtmlFormatter do
       Jason.encode!(%{"schemaVersion" => 1, "reports" => reports}, pretty: true)
     )
   end
+
+  defp prune_reports(output_dir, max) when is_integer(max) and max > 0 do
+    manifest_path = Path.join(output_dir, "manifest.json")
+    manifest = manifest_path |> File.read!() |> Jason.decode!()
+    reports = manifest["reports"]
+
+    if length(reports) > max do
+      sorted = Enum.sort_by(reports, & &1["generated_at"])
+      {to_remove, to_keep} = Enum.split(sorted, length(sorted) - max)
+
+      Enum.each(to_remove, fn report ->
+        report_dir = Path.join([output_dir, "reports", report["ref"]])
+        File.rm_rf!(report_dir)
+      end)
+
+      File.write!(manifest_path, Jason.encode!(%{"schemaVersion" => 1, "reports" => to_keep}, pretty: true))
+    end
+  end
+
+  defp prune_reports(_output_dir, _max), do: :ok
 
   # --- HTML Templates ---
 
