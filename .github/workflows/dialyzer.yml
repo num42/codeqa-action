@@ -1,0 +1,62 @@
+name: Dialyzer
+
+on:
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: dialyzer-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  dialyzer:
+    name: Dialyzer (zero warnings)
+    runs-on: ubuntu-latest
+
+    env:
+      MIX_ENV: dev
+      ELIXIR_VERSION: "1.19"
+      OTP_VERSION: "27.3"
+
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          otp-version: ${{ env.OTP_VERSION }}
+
+      - name: Cache deps
+        uses: actions/cache@v4
+        with:
+          path: deps
+          key: deps-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            deps-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-
+
+      - name: Cache build
+        uses: actions/cache@v4
+        with:
+          path: _build
+          key: build-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            build-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-
+
+      - name: Cache PLT
+        uses: actions/cache@v4
+        with:
+          path: priv/plts
+          key: plt-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            plt-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-
+
+      - name: Install deps
+        run: mix deps.get
+
+      - name: Compile
+        run: mix compile
+
+      - name: Dialyzer
+        run: mix dialyzer
