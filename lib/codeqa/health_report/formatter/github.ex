@@ -133,11 +133,17 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     if offenders == [] do
       []
     else
+      averages = Map.new(cat.metric_scores, &{&1.name, &1.value})
+
       rows =
         Enum.map(offenders, fn f ->
           issues =
             f.metric_scores
-            |> Enum.map(fn m -> "#{direction(m.good)}#{m.name}=#{format_num(m.value)}" end)
+            |> Enum.map(fn m ->
+              avg = Map.get(averages, m.name)
+              avg_str = if avg, do: " (avg: #{format_num(avg)})", else: ""
+              "#{direction(m.good)}#{m.name}=#{format_num(m.value)}#{avg_str}"
+            end)
             |> Enum.join("<br>")
 
           "| `#{f.path}` | #{f.grade} | #{f.score} | #{format_lines(f[:lines])} | #{format_size(f[:bytes])} | #{issues} |"

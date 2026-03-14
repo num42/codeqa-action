@@ -15,7 +15,7 @@ defmodule CodeQA.HealthReport.FormatterTest do
         grade: "A",
         summary: "Excellent",
         metric_scores: [
-          %{name: "flesch_adapted", source: "readability", weight: 0.4, value: 102.5, score: 100}
+          %{name: "flesch_adapted", source: "readability", weight: 0.4, good: :high, value: 102.5, score: 100}
         ],
         worst_offenders: [
           %{path: "lib/foo.ex", score: 75, grade: "B+", lines: 120, bytes: 3840,
@@ -65,7 +65,7 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert result =~ "`lib/foo.ex`"
       assert result =~ "| Lines | Size |"
       assert result =~ "| 120 | 3.8 KB |"
-      assert result =~ "↑ flesch_adapted=65.00"
+      assert result =~ "↑ flesch_adapted=65.00 (avg: 102.50)"
       refute result =~ "↑ flesch_adapted=65.00, "
     end
 
