@@ -1,9 +1,30 @@
 defmodule CodeQA.CLI.Stopwords do
   @moduledoc false
 
+  @behaviour CodeQA.CLI.Command
+
   alias CodeQA.CLI.Options
 
-  @spec run(list(String.t())) :: :ok
+  @impl CodeQA.CLI.Command
+  def usage do
+    """
+    Usage: codeqa stopwords <path> [options]
+
+      Print codebase-specific stopwords based on frequency analysis.
+
+    Options:
+      --stopwords-threshold FLOAT  Frequency threshold for stopword detection
+      --progress                   Show per-file progress on stderr
+      -w, --workers N              Number of parallel workers
+      --ignore-paths PATHS         Comma-separated list of path patterns to ignore (supports wildcards, e.g. "test/*,docs/*")
+    """
+  end
+
+  @impl CodeQA.CLI.Command
+  def run(args) when args in [["--help"], ["-h"]] do
+    IO.puts(usage())
+  end
+
   def run(args) do
     {opts, [path], _} =
       OptionParser.parse(args,

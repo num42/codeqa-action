@@ -1,11 +1,45 @@
 defmodule CodeQA.CLI.Compare do
   @moduledoc false
 
+  @behaviour CodeQA.CLI.Command
+
   alias CodeQA.CLI.Options
 
   @version "0.1.0"
 
-  @spec run(list(String.t())) :: :ok
+  @impl CodeQA.CLI.Command
+  def usage do
+    """
+    Usage: codeqa compare <path> [options]
+
+      Compare code quality metrics between two git refs.
+
+    Options:
+      --base-ref REF        Base git ref to compare from (required)
+      --head-ref REF        Head git ref to compare to (default: HEAD)
+      --changes-only        Only analyze changed files (default)
+      --all-files           Analyze all source files
+      --format FORMAT       Output format: json, markdown, or github (default: json)
+      --output MODE         Output mode: auto, summary, or changes (default: auto)
+      --progress            Show per-file progress on stderr
+      -w, --workers N       Number of parallel workers
+      --cache               Enable caching file metrics
+      --cache-dir DIR       Directory to store cache (default: .codeqa_cache)
+      -t, --timeout MS      Timeout for similarity analysis (default: 5000)
+      --show-ncd            Compute and show NCD similarity metric
+      --ncd-top N           Number of top similar files to show per file
+      --ncd-paths PATHS     Comma-separated list of paths to compute NCD for
+      --show-files          Include individual file metrics in the output
+      --show-file-paths P   Comma-separated list of paths to include in the output
+      --ignore-paths PATHS  Comma-separated list of path patterns to ignore (supports wildcards, e.g. "test/*,docs/*")
+    """
+  end
+
+  @impl CodeQA.CLI.Command
+  def run(args) when args in [["--help"], ["-h"]] do
+    IO.puts(usage())
+  end
+
   def run(args) do
     {opts, [path], _} =
       Options.parse(args,

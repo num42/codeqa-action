@@ -1,9 +1,33 @@
 defmodule CodeQA.CLI.Correlate do
   @moduledoc false
 
+  @behaviour CodeQA.CLI.Command
+
   alias CodeQA.CLI.Options
 
-  @spec run(list(String.t())) :: :ok
+  @impl CodeQA.CLI.Command
+  def usage do
+    """
+    Usage: codeqa correlate <dir> [options]
+
+      Find metric correlations in a directory of history JSON files.
+
+    Options:
+      -t, --top N           Number of top correlations to show (default: 20)
+      --hide-exact          Hide correlations that are exactly 1.0 or -1.0
+      --all-groups          Include correlations between metrics in the same group
+      --combined-only       Only show correlations where exactly one metric is a combined metric (e.g. a/b)
+      --min FLOAT           Only show correlations greater than or equal to this value
+      --max FLOAT           Only show correlations less than or equal to this value
+      --max-steps N         Maximum number of correlation pairs to evaluate (for debugging)
+    """
+  end
+
+  @impl CodeQA.CLI.Command
+  def run(args) when args in [["--help"], ["-h"]] do
+    IO.puts(usage())
+  end
+
   def run(args) do
     {opts, [path], _} =
       OptionParser.parse(args,

@@ -1,9 +1,37 @@
 defmodule CodeQA.CLI.HealthReport do
   @moduledoc false
 
+  @behaviour CodeQA.CLI.Command
+
   alias CodeQA.CLI.Options
 
-  @spec run(list(String.t())) :: :ok
+  @impl CodeQA.CLI.Command
+  def usage do
+    """
+    Usage: codeqa health-report <path> [options]
+
+      Generate a graded health report for a codebase.
+
+    Options:
+      -o, --output FILE     Output file path (default: stdout)
+      --config FILE         YAML config file for category/threshold overrides
+      --detail MODE         Detail level: summary, default, or full (default: default)
+      --format FORMAT       Output format: plain or github (default: plain)
+      --top N               Number of worst offenders per category (default: 5)
+      --progress            Show per-file progress on stderr
+      -w, --workers N       Number of parallel workers
+      --cache               Enable caching file metrics
+      --cache-dir DIR       Directory to store cache (default: .codeqa_cache)
+      -t, --timeout MS      Timeout for similarity analysis (default: 5000)
+      --ignore-paths PATHS  Comma-separated list of path patterns to ignore (supports wildcards, e.g. "test/*,docs/*")
+    """
+  end
+
+  @impl CodeQA.CLI.Command
+  def run(args) when args in [["--help"], ["-h"]] do
+    IO.puts(usage())
+  end
+
   def run(args) do
     {opts, [path], _} =
       Options.parse(args,
