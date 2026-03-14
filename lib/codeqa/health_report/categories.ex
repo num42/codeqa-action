@@ -16,6 +16,9 @@ defmodule CodeQA.HealthReport.Categories do
       {42, "D+"},
       {35, "D"},
       {25, "D-"},
+      {18, "E+"},
+      {12, "E"},
+      {6, "E-"},
       {0, "F"}
     ]
   end

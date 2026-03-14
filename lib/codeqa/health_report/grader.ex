@@ -101,6 +101,7 @@ defmodule CodeQA.HealthReport.Grader do
             name: metric_def.name,
             source: metric_def.source,
             weight: metric_def.weight,
+            good: metric_def.good,
             value: value,
             score: score_metric(metric_def, value)
           }
@@ -195,7 +196,14 @@ defmodule CodeQA.HealthReport.Grader do
     |> Enum.map(fn {path, file_data} ->
       metrics = Map.get(file_data, "metrics", %{})
       graded = grade_category(category, metrics, scale)
-      %{path: path, score: graded.score, grade: graded.grade, metric_scores: graded.metric_scores}
+      %{
+        path: path,
+        score: graded.score,
+        grade: graded.grade,
+        metric_scores: graded.metric_scores,
+        lines: file_data["lines"],
+        bytes: file_data["bytes"]
+      }
     end)
     |> Enum.filter(fn f -> f.metric_scores != [] end)
     |> Enum.sort_by(& &1.score, :asc)

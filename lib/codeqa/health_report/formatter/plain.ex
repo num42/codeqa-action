@@ -84,14 +84,20 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     if offenders == [] do
       []
     else
+      averages = Map.new(cat.metric_scores, &{&1.name, &1.value})
+
       rows =
         Enum.map(offenders, fn f ->
           issues =
             f.metric_scores
-            |> Enum.map(fn m -> "#{m.name}=#{format_num(m.value)}" end)
-            |> Enum.join(", ")
+            |> Enum.map(fn m ->
+              avg = Map.get(averages, m.name)
+              avg_str = if avg, do: " (avg: #{format_num(avg)})", else: ""
+              "#{direction(m.good)}#{m.name}=#{format_num(m.value)}#{avg_str}"
+            end)
+            |> Enum.join("<br>")
 
-          "| `#{f.path}` | #{f.grade} | #{issues} |"
+          "| #{format_path(f.path)}<br>#{format_lines(f[:lines])} lines · #{format_size(f[:bytes])} | #{f.grade} | #{issues} |"
         end)
 
       [
@@ -103,6 +109,25 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
       ] ++ [""]
     end
   end
+
+  defp format_path(path) when byte_size(path) < 80, do: "`#{path}`"
+
+  defp format_path(path) do
+    case String.split(path, "/") do
+      [file] -> "`#{file}`"
+      parts -> Enum.join(Enum.drop(parts, -1), "/") <> "/<br>`#{List.last(parts)}`"
+    end
+  end
+
+  defp direction(:high), do: "↑ "
+  defp direction(_), do: "↓ "
+
+  defp format_lines(nil), do: "—"
+  defp format_lines(n), do: to_string(n)
+
+  defp format_size(nil), do: "—"
+  defp format_size(bytes) when bytes < 1024, do: "#{bytes} B"
+  defp format_size(bytes), do: "#{Float.round(bytes / 1024, 1)} KB"
 
   defp format_num(value) when is_float(value), do: :erlang.float_to_binary(value, decimals: 2)
   defp format_num(value) when is_integer(value), do: to_string(value)
