@@ -1,0 +1,121 @@
+name: Dialyzer Diff
+
+on:
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: dialyzer-diff-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  dialyzer-diff:
+    name: Dialyzer (no new warnings)
+    runs-on: ubuntu-latest
+
+    env:
+      MIX_ENV: dev
+      ELIXIR_VERSION: "1.19"
+      OTP_VERSION: "27.3"
+
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          otp-version: ${{ env.OTP_VERSION }}
+
+      - name: Determine merge base
+        id: merge-base
+        run: |
+          BASE_SHA=$(git merge-base origin/${{ github.base_ref }} HEAD)
+          echo "sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+          echo "Merge base: $BASE_SHA"
+
+      # --- Caching ---
+
+      - name: Cache deps
+        uses: actions/cache@v4
+        with:
+          path: deps
+          key: deps-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            deps-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-
+
+      - name: Cache build
+        uses: actions/cache@v4
+        with:
+          path: _build
+          key: build-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            build-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-
+
+      - name: Cache PLT
+        uses: actions/cache@v4
+        with:
+          path: priv/plts
+          key: plt-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            plt-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-
+
+      # --- HEAD run ---
+
+      - name: Deps & compile (HEAD)
+        run: |
+          mix deps.get
+          mix compile
+
+      - name: Dialyzer (HEAD)
+        run: |
+          mix dialyzer --format short --quiet 2>&1 | grep '^lib/' > /tmp/dialyzer_head.txt || true
+          echo "HEAD warnings: $(wc -l < /tmp/dialyzer_head.txt)"
+
+      # --- BASE run ---
+
+      - name: Checkout merge base
+        run: git checkout ${{ steps.merge-base.outputs.sha }}
+
+      - name: Deps & compile (BASE)
+        run: |
+          mix deps.get
+          mix compile
+
+      - name: Dialyzer (BASE)
+        run: |
+          mix dialyzer --format short --quiet 2>&1 | grep '^lib/' > /tmp/dialyzer_base.txt || true
+          echo "BASE warnings: $(wc -l < /tmp/dialyzer_base.txt)"
+
+      # --- Diff ---
+
+      - name: Checkout PR head (for diff script)
+        run: git checkout ${{ github.event.pull_request.head.sha }}
+
+      - name: Compare warnings
+        run: elixir .github/scripts/dialyzer_diff.exs /tmp/dialyzer_base.txt /tmp/dialyzer_head.txt /tmp/dialyzer_summary.md
+
+      - name: Upsert PR comment
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          MARKER="<!-- dialyzer-diff-comment -->"
+
+          # Find existing comment by marker
+          COMMENT_ID=$(gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
+            --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id" | head -1)
+
+          BODY=$(cat /tmp/dialyzer_summary.md)
+
+          if [ -n "$COMMENT_ID" ]; then
+            gh api "repos/${{ github.repository }}/issues/comments/${COMMENT_ID}" \
+              --method PATCH \
+              -f body="$BODY"
+          else
+            gh pr comment "$PR_NUMBER" --body-file /tmp/dialyzer_summary.md
+          fi
