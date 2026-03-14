@@ -89,7 +89,7 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
           issues =
             f.metric_scores
             |> Enum.map(fn m -> "#{direction(m.good)}#{m.name}=#{format_num(m.value)}" end)
-            |> Enum.join(", ")
+            |> Enum.join("<br>")
 
           "| `#{f.path}` | #{f.grade} | #{format_lines(f[:lines])} | #{format_size(f[:bytes])} | #{issues} |"
         end)

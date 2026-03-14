@@ -66,6 +66,7 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert result =~ "| Lines | Size |"
       assert result =~ "| 120 | 3.8 KB |"
       assert result =~ "↑ flesch_adapted=65.00"
+      refute result =~ "↑ flesch_adapted=65.00, "
     end
 
     test "summary detail omits category sections" do
