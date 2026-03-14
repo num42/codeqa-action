@@ -1,0 +1,29 @@
+name: Code Quality Comparison
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get fork point
+        id: fork-point
+        run: |
+          echo "sha=$(git merge-base HEAD ${{ github.event.pull_request.base.sha }})" >> "$GITHUB_OUTPUT"
+
+      - uses: ./
+        with:
+          command: compare
+          base-ref: ${{ steps.fork-point.outputs.sha }}
+          comment: true
+          build: source
