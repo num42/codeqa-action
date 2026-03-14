@@ -41,4 +41,17 @@ defmodule CodeQA.Metrics.NearDuplicateBlocks do
     val = min(elem(prev, j) + 1, min(elem(curr, j - 1) + 1, elem(prev, j - 1) + cost))
     levenshtein_cols(b, lb, prev, i, ai, Tuple.insert_at(curr, tuple_size(curr), val))
   end
+
+  @doc "Extract overlapping token blocks with 50% stride. Returns [{block_tokens, token_offset}]."
+  @spec extract_blocks([String.t()], pos_integer()) :: [{[String.t()], non_neg_integer()}]
+  def extract_blocks(tokens, block_size) when length(tokens) < block_size, do: []
+
+  def extract_blocks(tokens, block_size) do
+    stride = max(1, div(block_size, 2))
+
+    tokens
+    |> Enum.chunk_every(block_size, stride, :discard)
+    |> Enum.with_index()
+    |> Enum.map(fn {block, idx} -> {block, idx * stride} end)
+  end
 end

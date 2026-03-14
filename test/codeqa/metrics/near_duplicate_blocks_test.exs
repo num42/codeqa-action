@@ -30,4 +30,30 @@ defmodule CodeQA.Metrics.NearDuplicateBlocksTest do
       assert NDB.token_edit_distance(a, b) == NDB.token_edit_distance(b, a)
     end
   end
+
+  describe "extract_blocks/2" do
+    test "returns empty for token list shorter than block size" do
+      assert NDB.extract_blocks(~w[a b c], 8) == []
+    end
+
+    test "returns one block when tokens exactly equal block size" do
+      tokens = Enum.map(1..8, &"t#{&1}")
+      [{block, offset}] = NDB.extract_blocks(tokens, 8)
+      assert block == tokens
+      assert offset == 0
+    end
+
+    test "stride is block_size div 2" do
+      tokens = Enum.map(1..16, &"t#{&1}")
+      blocks = NDB.extract_blocks(tokens, 8)
+      offsets = Enum.map(blocks, &elem(&1, 1))
+      assert offsets == [0, 4, 8]
+    end
+
+    test "each block has exactly block_size tokens" do
+      tokens = Enum.map(1..32, &"t#{&1}")
+      blocks = NDB.extract_blocks(tokens, 8)
+      assert Enum.all?(blocks, fn {block, _} -> length(block) == 8 end)
+    end
+  end
 end
