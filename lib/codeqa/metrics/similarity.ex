@@ -13,6 +13,21 @@ defmodule CodeQA.Metrics.Similarity do
 
   @behaviour CodeQA.Metrics.CodebaseMetric
 
+  # Number of tokens per k-gram window used in Winnowing fingerprinting.
+  @kgram_size 5
+
+  # Jaccard similarity threshold below which a candidate pair is discarded before NCD.
+  @default_ncd_threshold 0.20
+
+  # Decimal places for NCD scores.
+  @ncd_precision 4
+
+  # Progress is printed every 1/@progress_steps of total work (5% increments).
+  @progress_steps 20
+
+  # NCD progress is printed every 1/100 of pairs (1% increments).
+  @ncd_progress_steps 100
+
   @impl true
   def name, do: "similarity"
 
@@ -43,7 +58,7 @@ defmodule CodeQA.Metrics.Similarity do
     target_paths = if target_paths in [nil, []], do: names, else: target_paths
     target_set = MapSet.new(target_paths)
     top_n = Keyword.get(opts, :ncd_top)
-    threshold = Keyword.get(opts, :ncd_threshold, 0.20)
+    threshold = Keyword.get(opts, :ncd_threshold, @default_ncd_threshold)
     workers = Keyword.get(opts, :workers, System.schedulers_online())
     has_progress = Keyword.has_key?(opts, :on_progress)
 
@@ -68,17 +83,15 @@ defmodule CodeQA.Metrics.Similarity do
   defp generate_fingerprints(contents, opts, workers, has_progress) do
     if has_progress, do: IO.puts(:stderr, "  2/5 Computing Winnowing fingerprints...")
 
+    total = length(contents)
+
     result =
       CodeQA.Telemetry.time(:ncd_fingerprinting, fn ->
         contents
         |> Enum.with_index()
-        |> Task.async_stream(
-          fn {content, i} ->
-            fp = compute_fingerprints(content, opts)
-            {i, fp}
-          end, max_concurrency: workers, timeout: :infinity)
+        |> Task.async_stream(&fingerprint_indexed_content(&1, opts), max_concurrency: workers, timeout: :infinity)
         |> Enum.map(fn {:ok, {i, fp}} ->
-          maybe_print_fingerprint_progress(has_progress, i, length(contents))
+          maybe_print_fingerprint_progress(has_progress, i, total)
           {i, fp}
         end)
         |> Map.new()
@@ -88,13 +101,10 @@ defmodule CodeQA.Metrics.Similarity do
     result
   end
 
-  defp maybe_print_fingerprint_progress(false, _i, _total), do: :ok
+  defp fingerprint_indexed_content({content, i}, opts), do: {i, compute_fingerprints(content, opts)}
 
-  defp maybe_print_fingerprint_progress(true, i, total) do
-    if rem(i + 1, max(1, div(total, 20))) == 0 do
-      IO.write(:stderr, "\r" <> CodeQA.CLI.UI.progress_bar(i + 1, total, label: "Fingerprinting"))
-    end
-  end
+  defp maybe_print_fingerprint_progress(has_progress, i, total),
+    do: maybe_print_step_progress(has_progress, i + 1, total, "Fingerprinting")
 
   defp build_inverted_index(fingerprints_by_id, has_progress) do
     if has_progress, do: IO.puts(:stderr, "  3/5 Building inverted index...")
@@ -105,8 +115,8 @@ defmodule CodeQA.Metrics.Similarity do
       CodeQA.Telemetry.time(:ncd_build_index, fn ->
         fingerprints_by_id
         |> Enum.with_index()
-        |> Enum.reduce(%{}, fn {{i, set}, idx}, acc ->
-          maybe_print_index_progress(has_progress, idx, total)
+        |> Enum.reduce(%{}, fn {{i, set}, index}, acc ->
+          maybe_print_index_progress(has_progress, index, total)
           index_fingerprint_set(set, i, acc)
         end)
       end)
@@ -115,19 +125,15 @@ defmodule CodeQA.Metrics.Similarity do
     result
   end
 
+  # Maps each fingerprint hash → list of doc_ids that contain it, for fast collision lookup.
   defp index_fingerprint_set(set, doc_id, acc) do
     Enum.reduce(set, acc, fn fp, idx_acc ->
       Map.update(idx_acc, fp, [doc_id], &[doc_id | &1])
     end)
   end
 
-  defp maybe_print_index_progress(false, _idx, _total), do: :ok
-
-  defp maybe_print_index_progress(true, idx, total) do
-    if rem(idx + 1, max(1, div(total, 20))) == 0 do
-      IO.write(:stderr, "\r" <> CodeQA.CLI.UI.progress_bar(idx + 1, total, label: "Indexing"))
-    end
-  end
+  defp maybe_print_index_progress(has_progress, index, total),
+    do: maybe_print_step_progress(has_progress, index + 1, total, "Indexing")
 
   defp find_candidate_pairs(
          fingerprints_by_id,
@@ -147,22 +153,10 @@ defmodule CodeQA.Metrics.Similarity do
         fingerprints_by_id
         |> Enum.with_index()
         |> Task.async_stream(
-          fn {{i, set}, idx} ->
-            valid_pairs =
-              collect_valid_pairs(
-                i,
-                set,
-                inverted_index,
-                fingerprints_by_id,
-                names,
-                target_set,
-                threshold
-              )
-
-            {idx, valid_pairs}
-          end, max_concurrency: workers, timeout: :infinity)
-        |> Enum.reduce(%{}, fn {:ok, {idx, valid_pairs}}, acc ->
-          maybe_print_lsh_progress(has_progress, idx, total)
+          &pairs_for_indexed_doc(&1, inverted_index, fingerprints_by_id, names, target_set, threshold),
+          max_concurrency: workers, timeout: :infinity)
+        |> Enum.reduce(%{}, fn {:ok, {index, valid_pairs}}, acc ->
+          maybe_print_lsh_progress(has_progress, index, total)
           merge_valid_pairs(valid_pairs, acc)
         end)
       end)
@@ -174,6 +168,11 @@ defmodule CodeQA.Metrics.Similarity do
     end)
   end
 
+  defp pairs_for_indexed_doc({{i, set}, index}, inverted_index, fingerprints_by_id, names, target_set, threshold) do
+    {index, collect_valid_pairs(i, set, inverted_index, fingerprints_by_id, names, target_set, threshold)}
+  end
+
+  # For document i, finds all documents j > i that share fingerprints and meet the Jaccard threshold.
   defp collect_valid_pairs(
          i,
          set,
@@ -192,26 +191,33 @@ defmodule CodeQA.Metrics.Similarity do
 
     collisions
     |> Enum.filter(fn {j, _} -> is_target_a or MapSet.member?(target_set, Enum.at(names, j)) end)
-    |> Enum.reduce([], fn {j, intersection}, acc_pairs ->
-      jaccard = compute_jaccard(size_a, MapSet.size(Map.get(fingerprints_by_id, j)), intersection)
-      if jaccard >= threshold, do: [{{i, j}, jaccard} | acc_pairs], else: acc_pairs
-    end)
+    |> Enum.reduce([], &add_pair_if_above_threshold(&1, &2, i, size_a, fingerprints_by_id, threshold))
   end
+
+  defp add_pair_if_above_threshold({j, intersection}, acc_pairs, i, size_a, fingerprints_by_id, threshold) do
+    jaccard = compute_jaccard(size_a, MapSet.size(Map.get(fingerprints_by_id, j)), intersection)
+    if jaccard >= threshold, do: [{{i, j}, jaccard} | acc_pairs], else: acc_pairs
+  end
+
+  defp compute_jaccard(size_a, size_b, intersection) when size_a + size_b - intersection == 0,
+    do: 0.0
 
   defp compute_jaccard(size_a, size_b, intersection) do
-    union = size_a + size_b - intersection
-    if union == 0, do: 0.0, else: intersection / union
+    intersection / (size_a + size_b - intersection)
   end
 
+  # Returns a map of doc_id → shared fingerprint count for all docs that share at least one fingerprint with doc i.
   defp count_collisions(set, inverted_index, i) do
     Enum.reduce(set, %{}, fn fp, coll_acc ->
       inverted_index |> Map.get(fp, []) |> count_forward_docs(i, coll_acc)
     end)
   end
 
+  # Only counts doc_ids greater than i to avoid double-counting pairs (i, j) and (j, i).
   defp count_forward_docs(docs, i, acc) do
-    Enum.reduce(docs, acc, fn doc_id, c_acc ->
-      if doc_id > i, do: Map.update(c_acc, doc_id, 1, &(&1 + 1)), else: c_acc
+    Enum.reduce(docs, acc, fn
+      doc_id, c_acc when doc_id > i -> Map.update(c_acc, doc_id, 1, &(&1 + 1))
+      _doc_id, c_acc -> c_acc
     end)
   end
 
@@ -221,11 +227,15 @@ defmodule CodeQA.Metrics.Similarity do
     end)
   end
 
-  defp maybe_print_lsh_progress(false, _idx, _total), do: :ok
+  defp maybe_print_lsh_progress(has_progress, index, total),
+    do: maybe_print_step_progress(has_progress, index + 1, total, "LSH Filter")
 
-  defp maybe_print_lsh_progress(true, idx, total) do
-    if rem(idx + 1, max(1, div(total, 20))) == 0 do
-      IO.write(:stderr, "\r" <> CodeQA.CLI.UI.progress_bar(idx + 1, total, label: "LSH Filter"))
+  # Prints a single-line progress bar at every @progress_steps interval.
+  defp maybe_print_step_progress(false, _current, _total, _label), do: :ok
+
+  defp maybe_print_step_progress(true, current, total, label) do
+    if rem(current, max(1, div(total, @progress_steps))) == 0 do
+      IO.write(:stderr, "\r" <> CodeQA.CLI.UI.progress_bar(current, total, label: label))
     end
   end
 
@@ -247,13 +257,16 @@ defmodule CodeQA.Metrics.Similarity do
     CodeQA.Telemetry.time(:ncd_exact_compression_phase, fn ->
       filtered_pairs
       |> Task.async_stream(
-        fn {name_a, i, name_b, j, _jaccard} ->
-          ncd = compute_single_ncd(precomputed, i, j)
-          maybe_print_ncd_progress(has_progress, counter, total_pairs, start_time_ncd)
-          {name_a, name_b, ncd}
-        end, max_concurrency: workers, timeout: :infinity)
+        &compute_ncd_pair(&1, precomputed, has_progress, counter, total_pairs, start_time_ncd),
+        max_concurrency: workers, timeout: :infinity)
       |> Enum.map(fn {:ok, res} -> res end)
     end)
+  end
+
+  defp compute_ncd_pair({name_a, i, name_b, j, _jaccard}, precomputed, has_progress, counter, total_pairs, start_time) do
+    ncd = compute_single_ncd(precomputed, i, j)
+    maybe_print_ncd_progress(has_progress, counter, total_pairs, start_time)
+    {name_a, name_b, ncd}
   end
 
   defp compute_single_ncd(precomputed, i, j) do
@@ -262,7 +275,7 @@ defmodule CodeQA.Metrics.Similarity do
       {b, cb} = elem(precomputed, j)
       cab = byte_size(:zlib.compress([a, b]))
       ncd = if max(ca, cb) > 0, do: (cab - min(ca, cb)) / max(ca, cb), else: 0.0
-      Float.round(ncd, 4)
+      Float.round(ncd, @ncd_precision)
     end)
   end
 
@@ -272,22 +285,16 @@ defmodule CodeQA.Metrics.Similarity do
     :counters.add(counter, 1, 1)
     c = :counters.get(counter, 1)
 
-    if rem(c, max(1, div(total_pairs, 100))) == 0 or c == total_pairs do
-      now = System.monotonic_time(:millisecond)
-      elapsed = max(now - start_time_ncd, 1)
-      avg_time = elapsed / c
-      eta_ms = round((total_pairs - c) * avg_time)
-
-      output =
-        CodeQA.CLI.UI.progress_bar(c, total_pairs,
-          eta: CodeQA.CLI.UI.format_eta(eta_ms),
-          label: "NCD Compression"
-        )
-
-      IO.write(:stderr, "\r" <> output)
-
+    if rem(c, max(1, div(total_pairs, @ncd_progress_steps))) == 0 or c == total_pairs do
+      IO.write(:stderr, "\r" <> render_ncd_bar(c, total_pairs, start_time_ncd))
       if c == total_pairs, do: IO.puts(:stderr, "")
     end
+  end
+
+  defp render_ncd_bar(c, total_pairs, start_time) do
+    elapsed = max(System.monotonic_time(:millisecond) - start_time, 1)
+    eta_ms = round((total_pairs - c) * (elapsed / c))
+    CodeQA.CLI.UI.progress_bar(c, total_pairs, eta: CodeQA.CLI.UI.format_eta(eta_ms), label: "NCD Compression")
   end
 
   defp build_results_map(computed_ncd, target_paths, target_set, top_n) do
@@ -299,12 +306,15 @@ defmodule CodeQA.Metrics.Similarity do
 
     target_paths
     |> Enum.map(fn path ->
-      similarities = Map.get(results, path, [])
-      sorted = Enum.sort_by(similarities, & &1["score"])
-      sorted = if top_n, do: Enum.take(sorted, top_n), else: sorted
+      sorted =
+        results
+        |> Map.get(path, [])
+        |> Enum.sort_by(& &1["score"])
+        |> then(&if top_n, do: Enum.take(&1, top_n), else: &1)
+
       {path, sorted}
     end)
-    |> Enum.into(%{})
+    |> Map.new()
   end
 
   defp maybe_add_similarity(acc, path, other_path, ncd, target_set) do
@@ -325,11 +335,12 @@ defmodule CodeQA.Metrics.Similarity do
 
     content
     |> CodeQA.Metrics.TokenNormalizer.normalize()
-    |> CodeQA.Metrics.Winnowing.kgrams(5)
+    |> CodeQA.Metrics.Winnowing.kgrams(@kgram_size)
     |> Enum.reject(&MapSet.member?(fp_stopwords, &1))
     |> MapSet.new()
   end
 
+  # Compresses all files individually and combined; ratio > 1 means shared content across files.
   defp cross_file_density(contents) do
     individual_sum =
       contents
