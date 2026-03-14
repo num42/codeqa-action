@@ -156,4 +156,58 @@ defmodule CodeQA.Metrics.NearDuplicateBlocks do
 
   defp maybe_append(list, _pair, max) when is_integer(max) and length(list) >= max, do: list
   defp maybe_append(list, pair, _max), do: [pair | list]
+
+  @doc """
+  Run near-duplicate block analysis across a list of labeled token streams.
+
+  `labeled_files` is `[{label, [token]}]`.
+  Returns a flat map with count keys `near_dup_B_dD` and pair keys `near_dup_B_dD_pairs`.
+  """
+  @spec analyze([{term(), [String.t()]}], [pos_integer()], keyword()) :: map()
+  def analyze(labeled_files, block_sizes, opts) do
+    sizes = if block_sizes == [], do: @block_sizes, else: block_sizes
+    workers = Keyword.get(opts, :workers, System.schedulers_online())
+
+    sizes
+    |> Task.async_stream(&analyze_block_size(&1, labeled_files, opts),
+      max_concurrency: workers,
+      timeout: :infinity)
+    |> Enum.flat_map(fn {:ok, kv_list} -> kv_list end)
+    |> Map.new()
+    |> fill_zeros(sizes)
+  end
+
+  defp analyze_block_size(block_size, labeled_files, opts) do
+    labeled_blocks =
+      Enum.flat_map(labeled_files, fn {label, tokens} ->
+        tokens
+        |> extract_blocks(block_size)
+        |> Enum.map(fn {block, offset} -> {block, {label, offset}} end)
+      end)
+
+    buckets = find_pairs(labeled_blocks, opts)
+
+    for d <- 1..@max_distance do
+      bucket = Map.get(buckets, {block_size, d}, %{count: 0, pairs: []})
+      pairs_key = "near_dup_#{block_size}_d#{d}_pairs"
+      count_key = "near_dup_#{block_size}_d#{d}"
+      [{count_key, bucket.count}, {pairs_key, format_pairs(bucket.pairs)}]
+    end
+    |> List.flatten()
+  end
+
+  defp format_pairs(pairs) do
+    Enum.map(pairs, fn {{label_a, offset_a}, {label_b, offset_b}} ->
+      %{"source_a" => label_a, "offset_a" => offset_a,
+        "source_b" => label_b, "offset_b" => offset_b}
+    end)
+  end
+
+  defp fill_zeros(result, block_sizes) do
+    Enum.reduce(block_sizes, result, fn b, acc ->
+      Enum.reduce(1..@max_distance, acc, fn d, inner ->
+        Map.put_new(inner, "near_dup_#{b}_d#{d}", 0)
+      end)
+    end)
+  end
 end

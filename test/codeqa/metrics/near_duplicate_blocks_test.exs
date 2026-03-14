@@ -92,4 +92,26 @@ defmodule CodeQA.Metrics.NearDuplicateBlocksTest do
       assert length(bucket.pairs) <= 2
     end
   end
+
+  describe "analyze/3" do
+    test "returns zero counts for a file with too few tokens" do
+      result = NDB.analyze([{"short", ~w[a b c]}], [], [])
+      assert Map.get(result, "near_dup_8_d1") == 0
+    end
+
+    test "detects within-file near-duplicate blocks" do
+      block   = ~w[a b c d e f g h]
+      variant = ~w[a b c d e f g x]
+      tokens  = block ++ variant
+      result = NDB.analyze([{"file.ex", tokens}], [], max_pairs_per_bucket: nil)
+      assert Enum.any?(result, fn {k, v} -> String.contains?(k, "near_dup_8_d") and v > 0 end)
+    end
+
+    test "output map contains all expected count keys" do
+      result = NDB.analyze([{"f", ~w[a b c d e f g h]}], [], [])
+      for b <- [8, 16, 32, 64, 128, 256], d <- 1..8 do
+        assert Map.has_key?(result, "near_dup_#{b}_d#{d}")
+      end
+    end
+  end
 end
