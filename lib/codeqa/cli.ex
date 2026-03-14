@@ -604,6 +604,10 @@ defmodule CodeQA.CLI do
     IO.puts(CodeQA.Formatter.format_markdown(comparison, output_mode))
   end
 
+  defp output_comparison(comparison, "github", output_mode) do
+    IO.puts(CodeQA.Formatter.format_github(comparison, output_mode))
+  end
+
   defp output_comparison(comparison, _format, output_mode) do
     codebase_summary = CodeQA.Summarizer.summarize_codebase(comparison)
 

@@ -72,7 +72,11 @@ case "$INPUT_COMMAND" in
       BASE_REF="origin/${BASE_REF}"
     fi
     ARGS+=("--base-ref" "$BASE_REF")
-    ARGS+=("--format" "$INPUT_FORMAT")
+    if [[ "${INPUT_COMMENT:-false}" == "true" ]]; then
+      ARGS+=("--format" "github")
+    else
+      ARGS+=("--format" "$INPUT_FORMAT")
+    fi
     CAPTURE_STDOUT=true
     ;;
   analyze)
