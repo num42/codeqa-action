@@ -114,7 +114,7 @@ defmodule CodeQA.Formatter do
 
   defp aggregate_details(codebase) do
     inner =
-      format_aggregate_table(codebase)
+      format_aggregate_table(codebase, build_direction_map())
       |> Enum.join("\n")
 
     if inner == "" do
@@ -260,17 +260,17 @@ defmodule CodeQA.Formatter do
     end
   end
 
-  defp format_aggregate_table(codebase) do
+  defp format_aggregate_table(codebase, direction_map \\ %{}) do
     base_agg = get_in(codebase, ["base", "aggregate"]) || %{}
     head_agg = get_in(codebase, ["head", "aggregate"]) || %{}
     delta_agg = get_in(codebase, ["delta", "aggregate"]) || %{}
 
     if base_agg == %{} and head_agg == %{},
       do: [],
-      else: build_aggregate_rows(base_agg, head_agg, delta_agg)
+      else: build_aggregate_rows(base_agg, head_agg, delta_agg, direction_map)
   end
 
-  defp build_aggregate_rows(base_agg, head_agg, delta_agg) do
+  defp build_aggregate_rows(base_agg, head_agg, delta_agg, direction_map) do
     header = [
       "### Aggregate Metrics",
       "",
@@ -289,12 +289,37 @@ defmodule CodeQA.Formatter do
         MapSet.new(Map.keys(base_m) ++ Map.keys(head_m))
         |> Enum.sort()
         |> Enum.map(fn key ->
-          "| #{metric_name}.#{key} | #{format_value(base_m[key])} | #{format_value(head_m[key])} | #{format_delta(delta_m[key])} |"
+          direction = Map.get(direction_map, "#{metric_name}.#{key}")
+          delta_cell = format_delta_with_direction(delta_m[key], direction)
+          "| #{metric_name}.#{key} | #{format_value(base_m[key])} | #{format_value(head_m[key])} | #{delta_cell} |"
         end)
       end)
 
     header ++ rows
   end
+
+  defp build_direction_map do
+    CodeQA.HealthReport.Categories.defaults()
+    |> Enum.flat_map(fn cat ->
+      Enum.map(cat.metrics, fn m -> {"#{m.source}.mean_#{m.name}", m.good} end)
+    end)
+    |> Map.new()
+  end
+
+  defp format_delta_with_direction(nil, _direction), do: "—"
+
+  defp format_delta_with_direction(value, direction) do
+    formatted = format_delta(value)
+    emoji = delta_emoji(value, direction)
+    if emoji, do: "#{emoji} #{formatted}", else: formatted
+  end
+
+  defp delta_emoji(_value, nil), do: nil
+  defp delta_emoji(value, :high) when value > 0, do: "🟢"
+  defp delta_emoji(value, :high) when value < 0, do: "🔴"
+  defp delta_emoji(value, :low) when value < 0, do: "🟢"
+  defp delta_emoji(value, :low) when value > 0, do: "🔴"
+  defp delta_emoji(_value, _direction), do: nil
 
   defp detect_columns(files) do
     Enum.filter(@summary_metrics, fn {metric_name, key, _label} ->

@@ -63,7 +63,22 @@ defmodule CodeQA.FormatterTest do
           }
         }
       },
-      "delta" => %{"aggregate" => %{}}
+      "delta" => %{
+        "aggregate" => %{
+          "readability" => %{
+            "mean_flesch_adapted" => 10.0,
+            "mean_fog_adapted" => -1.0,
+            "mean_avg_tokens_per_line" => -1.0,
+            "mean_avg_line_length" => -3.0
+          },
+          "halstead" => %{
+            "mean_difficulty" => -3.0,
+            "mean_effort" => -2000.0,
+            "mean_volume" => -100.0,
+            "mean_estimated_bugs" => -0.05
+          }
+        }
+      }
     }
   }
 
@@ -95,6 +110,28 @@ defmodule CodeQA.FormatterTest do
       comparison = put_in(@sample_comparison, ["metadata", "total_files_compared"], 0)
       result = Formatter.format_github(comparison)
       assert result =~ "No file changes detected"
+    end
+
+    test "shows 🟢 in aggregate delta for improving high-is-better metric" do
+      # flesch_adapted is good: :high, delta +10.0 → improvement
+      result = Formatter.format_github(@sample_comparison)
+      assert result =~ "🟢 +10.00"
+    end
+
+    test "shows 🔴 in aggregate delta for worsening low-is-better metric" do
+      # halstead.volume is good: :low, delta +300 → regression
+      worsening =
+        put_in(
+          @sample_comparison,
+          ["codebase", "head", "aggregate", "halstead", "mean_volume"],
+          800.0
+        )
+        |> put_in(["codebase", "delta", "aggregate"], %{
+          "halstead" => %{"mean_volume" => 300.0}
+        })
+
+      result = Formatter.format_github(worsening)
+      assert result =~ "🔴 +300.00"
     end
   end
 end
