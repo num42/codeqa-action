@@ -9,9 +9,148 @@ defmodule CodeQA.Formatter do
     {"compression", "redundancy", "Redundancy"}
   ]
 
+  @bar_width 20
+  @filled "█"
+  @empty "░"
+
+  def format_github(comparison, output_mode \\ "auto") do
+    metadata = comparison["metadata"]
+    files = comparison["files"] || %{}
+    codebase = comparison["codebase"] || %{}
+
+    if metadata["total_files_compared"] == 0 do
+      "## Code Quality: PR Comparison\n\nNo file changes detected."
+    else
+      build_github_report(metadata, files, codebase, output_mode)
+    end
+  end
+
+  defp build_github_report(metadata, files, codebase, output_mode) do
+    categories = CodeQA.HealthReport.Categories.defaults()
+    scale = CodeQA.HealthReport.Categories.default_grade_scale()
+
+    base_agg = get_in(codebase, ["base", "aggregate"]) || %{}
+    head_agg = get_in(codebase, ["head", "aggregate"]) || %{}
+
+    base_grades = CodeQA.HealthReport.Grader.grade_aggregate(categories, base_agg, scale)
+    head_grades = CodeQA.HealthReport.Grader.grade_aggregate(categories, head_agg, scale)
+
+    paired = Enum.zip(base_grades, head_grades)
+
+    lines =
+      [
+        "## Code Quality: PR Comparison",
+        "",
+        "**#{metadata["total_files_compared"]} files compared** (#{metadata["summary"]})",
+        ""
+      ] ++
+        mermaid_chart(head_grades) ++
+        progress_bars(paired) ++
+        [""] ++
+        file_details(files, output_mode) ++
+        aggregate_details(codebase)
+
+    Enum.join(lines, "\n")
+  end
+
+  defp mermaid_chart(head_grades) do
+    names = Enum.map(head_grades, fn g -> ~s("#{g.name}") end) |> Enum.join(", ")
+    scores = Enum.map(head_grades, fn g -> to_string(g.score) end) |> Enum.join(", ")
+
+    [
+      "```mermaid",
+      "%%{init: {'theme': 'neutral'}}%%",
+      "xychart-beta",
+      "    title \"Code Health After PR\"",
+      "    x-axis [#{names}]",
+      "    y-axis \"Score\" 0 --> 100",
+      "    bar [#{scores}]",
+      "```",
+      ""
+    ]
+  end
+
+  defp progress_bars(paired) do
+    max_name_len =
+      Enum.reduce(paired, 0, fn {_base, head}, acc ->
+        max(acc, String.length(head.name))
+      end)
+
+    rows =
+      Enum.map(paired, fn {base, head} ->
+        name = String.pad_trailing(head.name, max_name_len)
+        base_bar = build_bar(base.score)
+        head_bar = build_bar(head.score)
+        emoji = grade_emoji(head.grade)
+        delta = head.score - base.score
+        delta_str = if delta >= 0, do: "+#{delta}", else: to_string(delta)
+        "#{name}  #{base_bar} #{base.score} → #{head_bar} #{head.score}  #{emoji} #{delta_str}"
+      end)
+
+    ["```"] ++ rows ++ ["```"]
+  end
+
+  defp file_details(files, _output_mode) do
+    codebase_summary = CodeQA.Summarizer.summarize_codebase(%{"files" => files, "codebase" => %{}})
+
+    file_summaries =
+      Map.new(files, fn {path, data} ->
+        {path, CodeQA.Summarizer.summarize_file(path, data)}
+      end)
+
+    inner =
+      (format_file_table(files, file_summaries) ++ [""])
+      |> Enum.join("\n")
+
+    [
+      "<details>",
+      "<summary><strong>File changes — #{codebase_summary["gist"]}</strong></summary>",
+      "",
+      inner,
+      "</details>",
+      ""
+    ]
+  end
+
+  defp aggregate_details(codebase) do
+    inner =
+      format_aggregate_table(codebase, build_direction_map())
+      |> Enum.join("\n")
+
+    if inner == "" do
+      []
+    else
+      [
+        "<details>",
+        "<summary><strong>Aggregate metrics</strong></summary>",
+        "",
+        inner,
+        "",
+        "</details>",
+        ""
+      ]
+    end
+  end
+
+  defp build_bar(score) do
+    filled = round(score / 100 * @bar_width)
+    filled = min(max(filled, 0), @bar_width)
+    empty = @bar_width - filled
+    String.duplicate(@filled, filled) <> String.duplicate(@empty, empty)
+  end
+
+  defp grade_emoji(grade) do
+    cond do
+      grade in ["A", "A-"] -> "🟢"
+      grade in ["B+", "B", "B-"] -> "🟡"
+      grade in ["C+", "C", "C-"] -> "🟠"
+      true -> "🔴"
+    end
+  end
+
   def format_markdown(comparison, output_mode \\ "auto") do
     metadata = comparison["metadata"]
-    files = comparison["files"]
+    files = comparison["files"] || %{}
     codebase = comparison["codebase"]
 
     if metadata["total_files_compared"] == 0 do
@@ -121,17 +260,17 @@ defmodule CodeQA.Formatter do
     end
   end
 
-  defp format_aggregate_table(codebase) do
+  defp format_aggregate_table(codebase, direction_map \\ %{}) do
     base_agg = get_in(codebase, ["base", "aggregate"]) || %{}
     head_agg = get_in(codebase, ["head", "aggregate"]) || %{}
     delta_agg = get_in(codebase, ["delta", "aggregate"]) || %{}
 
     if base_agg == %{} and head_agg == %{},
       do: [],
-      else: build_aggregate_rows(base_agg, head_agg, delta_agg)
+      else: build_aggregate_rows(base_agg, head_agg, delta_agg, direction_map)
   end
 
-  defp build_aggregate_rows(base_agg, head_agg, delta_agg) do
+  defp build_aggregate_rows(base_agg, head_agg, delta_agg, direction_map) do
     header = [
       "### Aggregate Metrics",
       "",
@@ -150,12 +289,37 @@ defmodule CodeQA.Formatter do
         MapSet.new(Map.keys(base_m) ++ Map.keys(head_m))
         |> Enum.sort()
         |> Enum.map(fn key ->
-          "| #{metric_name}.#{key} | #{format_value(base_m[key])} | #{format_value(head_m[key])} | #{format_delta(delta_m[key])} |"
+          direction = Map.get(direction_map, "#{metric_name}.#{key}")
+          delta_cell = format_delta_with_direction(delta_m[key], direction)
+          "| #{metric_name}.#{key} | #{format_value(base_m[key])} | #{format_value(head_m[key])} | #{delta_cell} |"
         end)
       end)
 
     header ++ rows
   end
+
+  defp build_direction_map do
+    CodeQA.HealthReport.Categories.defaults()
+    |> Enum.flat_map(fn cat ->
+      Enum.map(cat.metrics, fn m -> {"#{m.source}.mean_#{m.name}", m.good} end)
+    end)
+    |> Map.new()
+  end
+
+  defp format_delta_with_direction(nil, _direction), do: "—"
+
+  defp format_delta_with_direction(value, direction) do
+    formatted = format_delta(value)
+    emoji = delta_emoji(value, direction)
+    if emoji, do: "#{emoji} #{formatted}", else: formatted
+  end
+
+  defp delta_emoji(_value, nil), do: nil
+  defp delta_emoji(value, :high) when value > 0, do: "🟢"
+  defp delta_emoji(value, :high) when value < 0, do: "🔴"
+  defp delta_emoji(value, :low) when value < 0, do: "🟢"
+  defp delta_emoji(value, :low) when value > 0, do: "🔴"
+  defp delta_emoji(_value, _direction), do: nil
 
   defp detect_columns(files) do
     Enum.filter(@summary_metrics, fn {metric_name, key, _label} ->

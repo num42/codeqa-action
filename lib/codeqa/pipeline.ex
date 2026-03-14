@@ -19,15 +19,40 @@ defmodule CodeQA.Pipeline do
 
   @word_re ~r/\b[a-zA-Z_]\w*\b/u
 
+  # Reserved words and keywords for:
+  # Python, Ruby, JavaScript, Elixir, C#,
+  # Java, C++, Go, Rust, PHP, Swift, Shell, Kotlin
   @keywords MapSet.new(~w[
-    if else elif for while return import from class def and or not in is
-    None True False try except finally with as raise pass yield break
-    continue lambda del global nonlocal assert var let const function new
-    this typeof instanceof void null undefined async await static public
-    private protected interface type enum struct match case switch default
-    do goto throw throws catch final abstract extends implements package
-    int float double long short byte char boolean string bool fn pub mod
-    use crate impl trait where self Self super mut ref move
+    if else elif elsif unless
+    for foreach while until do
+    return break continue yield pass
+    try except finally rescue ensure after catch throw raise begin end throws
+    case when switch cond match default fallthrough
+    with as and or not in is
+    import from require use using alias namespace package
+    class def defp defmodule defmacro defmacrop defprotocol defimpl defguard defdelegate
+    module interface struct enum delegate event protocol extension
+    function fn func fun new delete typeof instanceof void
+    var let val const static public private protected internal
+    sealed override virtual abstract final readonly open
+    async await receive suspend
+    self super this Self
+    extends implements
+    null undefined nil None nullptr
+    true false True False
+    bool int float double long short byte char boolean string decimal object dynamic
+    ref out params get set value inout
+    lambda del global nonlocal assert
+    type typealias
+    synchronized volatile transient native strictfp
+    auto register extern signed unsigned typedef sizeof union
+    template typename operator inline friend explicit mutable constexpr decltype noexcept
+    func chan go select defer range
+    mut impl trait pub mod crate dyn unsafe loop where move
+    echo print array list mixed never
+    actor init deinit lazy open some any rethrows willSet didSet
+    then fi done esac local export source unset declare
+    fun val object data companion reified infix vararg expect actual
   ])
 
   @spec build_file_context(String.t(), keyword()) :: FileContext.t()

@@ -8,15 +8,12 @@ defmodule CodeQA.HealthReport.Grader do
   For `good: :high`, higher values are better (above A threshold = 100).
   """
   @spec score_metric(map(), number()) :: integer()
-  def score_metric(%{good: good, thresholds: t}, value) do
-    score =
-      if good == :high do
-        score_high_is_good(value, t)
-      else
-        score_low_is_good(value, t)
-      end
+  def score_metric(%{good: :high, thresholds: t}, value) do
+    value |> score_high_is_good(t) |> clamp(0, 100)
+  end
 
-    clamp(score, 0, 100)
+  def score_metric(%{good: _, thresholds: t}, value) do
+    value |> score_low_is_good(t) |> clamp(0, 100)
   end
 
   # Lower values are better: below A = 100, A = 90, A-B = 70-90, etc.

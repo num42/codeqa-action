@@ -17,6 +17,8 @@ defmodule CodeQA.Analyzer do
     |> Registry.register_file_metric(Metrics.CasingEntropy)
     |> Registry.register_file_metric(Metrics.IdentifierLengthVariance)
     |> Registry.register_file_metric(Metrics.Indentation)
+    |> Registry.register_file_metric(Metrics.Branching)
+    |> Registry.register_file_metric(Metrics.FunctionMetrics)
     |> Registry.register_file_metric(Metrics.MagicNumberDensity)
     |> Registry.register_file_metric(Metrics.SymbolDensity)
     |> Registry.register_file_metric(Metrics.VowelDensity)
