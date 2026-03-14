@@ -503,7 +503,7 @@ defmodule CodeQA.CLI do
   end
 
   defp keep_correlation?(corr, opts) do
-    valid = is_float(corr) and not nan?(corr) and corr != 0.0
+    valid = corr != 0.0
     valid = if opts[:hide_exact], do: valid and abs(corr) != 1.0, else: valid
     valid = if valid and opts[:min], do: corr >= opts[:min], else: valid
     if valid and opts[:max], do: corr <= opts[:max], else: valid
@@ -899,13 +899,9 @@ defmodule CodeQA.CLI do
     end)
   end
 
-  defp maybe_add(opts, nil, _item), do: opts
-  defp maybe_add(opts, false, _item), do: opts
-  defp maybe_add(opts, _truthy, item), do: [item | opts]
-
-  # IEEE 754: NaN != NaN — Credo false positive (comparison IS meaningful for NaN)
-  # credo:disable-for-next-line Credo.Check.Warning.OperationOnSameValues
-  defp nan?(x), do: x != x
+  defp maybe_add(opts, val, item) do
+    if val, do: [item | opts], else: opts
+  end
 
   defp parse_ignore_paths(nil), do: []
 
