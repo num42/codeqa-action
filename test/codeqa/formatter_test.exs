@@ -118,6 +118,18 @@ defmodule CodeQA.FormatterTest do
       assert result =~ "🟢 +10.00"
     end
 
+    test "file changes section shows actual file counts, not 'no changes'" do
+      result = Formatter.format_github(@sample_comparison)
+      assert result =~ "File changes — 1 modified"
+      refute result =~ "File changes — no changes"
+    end
+
+    test "file changes section reflects metric directions from codebase data" do
+      result = Formatter.format_github(@sample_comparison)
+      # halstead.mean_volume drops 100/500 = 20% → "decreased"; readability rises 10/65 ≈ 15% → "increased slightly"
+      refute result =~ "File changes — 1 modified — all metrics stable"
+    end
+
     test "shows 🔴 in aggregate delta for worsening low-is-better metric" do
       # halstead.volume is good: :low, delta +300 → regression
       worsening =
