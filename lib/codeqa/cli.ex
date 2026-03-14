@@ -71,7 +71,7 @@ defmodule CodeQA.CLI do
 
     total_bytes = results["files"] |> Map.values() |> Enum.map(& &1["bytes"]) |> Enum.sum()
 
-    results = filter_files_for_output(results, opts)
+    results = filter_files_for_output(results, opts, "json")
 
     report =
       %{
@@ -150,7 +150,7 @@ defmodule CodeQA.CLI do
     comparison =
       CodeQA.Comparator.compare_results(base_result, head_result, changes)
       |> enrich_comparison_metadata(base_ref, head_ref, changes_only)
-      |> filter_files_for_output(opts)
+      |> filter_files_for_output(opts, format)
 
     output_comparison(comparison, format, output_mode)
 
@@ -237,7 +237,7 @@ defmodule CodeQA.CLI do
         IO.puts(:stderr, "  Analysis completed in #{end_time - start_time}ms")
 
         total_bytes = results["files"] |> Map.values() |> Enum.map(& &1["bytes"]) |> Enum.sum()
-        results = filter_files_for_output(results, opts)
+        results = filter_files_for_output(results, opts, "json")
 
         report =
           %{
@@ -640,7 +640,10 @@ defmodule CodeQA.CLI do
     end)
   end
 
-  defp filter_files_for_output(results, opts) do
+  defp filter_files_for_output(results, _opts, format) when format in ["github", "markdown"],
+    do: results
+
+  defp filter_files_for_output(results, opts, _format) do
     cond do
       opts[:show_files] ->
         results
