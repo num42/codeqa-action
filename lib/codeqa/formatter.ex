@@ -11,7 +11,7 @@ defmodule CodeQA.Formatter do
 
   def format_markdown(comparison, output_mode \\ "auto") do
     metadata = comparison["metadata"]
-    files = comparison["files"]
+    files = comparison["files"] || %{}
     codebase = comparison["codebase"]
 
     if metadata["total_files_compared"] == 0 do
