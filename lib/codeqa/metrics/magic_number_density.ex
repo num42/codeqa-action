@@ -2,9 +2,13 @@ defmodule CodeQA.Metrics.MagicNumberDensity do
   @moduledoc """
   Measures the density of magic numbers in source code.
 
-  Counts numeric literals (excluding common constants 0, 1, 0.0, 1.0) as a
-  proportion of total tokens. A high density suggests unexplained constants
-  that should be extracted into named values.
+  Counts numeric literals as a proportion of total tokens. A high density
+  suggests unexplained constants that should be extracted into named values.
+
+  The following are excluded as idiomatic, low-semantic constants:
+  - `0`, `1`, `2` — boundary and off-by-one values
+  - `0.0`, `1.0`, `0.5` — common floating-point constants
+  - Module attribute values (`@name value`) — already named by definition
 
   See [magic number](<https://en.wikipedia.org/wiki/Magic_number_(programming)>).
   """
@@ -31,13 +35,14 @@ defmodule CodeQA.Metrics.MagicNumberDensity do
         @number_re
         |> Regex.scan(String.replace(content, @module_attr_re, ""))
         |> List.flatten()
-        |> Enum.reject(&(&1 in ["0", "1", "0.0", "1.0", "-1", "-1.0"]))
+        |> Enum.reject(&(&1 in ["0", "1", "2", "0.0", "1.0", "0.5"]))
 
       magic_count = length(numbers)
 
       %{
         "density" => Float.round(magic_count / total_tokens, 4),
-        "magic_number_count" => magic_count
+        "magic_number_count" => magic_count,
+        "magic_numbers" => Enum.uniq(numbers)
       }
     end
   end
