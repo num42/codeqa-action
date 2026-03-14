@@ -23,6 +23,8 @@ defmodule CodeQA.Analyzer do
     |> Registry.register_file_metric(Metrics.SymbolDensity)
     |> Registry.register_file_metric(Metrics.VowelDensity)
     |> Registry.register_codebase_metric(Metrics.Similarity)
+    |> Registry.register_file_metric(Metrics.NearDuplicateBlocksFile)
+    |> Registry.register_codebase_metric(Metrics.NearDuplicateBlocksCodebase)
   end
 
   def analyze_codebase(files, opts \\ []) do
@@ -73,10 +75,7 @@ defmodule CodeQA.Analyzer do
 
     %{
       "files" => file_results,
-      "codebase" => %{
-        "aggregate" => aggregate,
-        "similarity" => Map.get(codebase_metrics, "similarity", %{})
-      }
+      "codebase" => Map.put(codebase_metrics, "aggregate", aggregate)
     }
   end
 
