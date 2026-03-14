@@ -15,6 +15,18 @@ defmodule CodeQA.Pipeline do
       :line_count
     ]
     defstruct @enforce_keys
+
+    @type t :: %__MODULE__{
+      content: String.t(),
+      tokens: tuple(),
+      token_counts: map(),
+      words: tuple(),
+      identifiers: tuple(),
+      lines: tuple(),
+      encoded: String.t(),
+      byte_count: non_neg_integer(),
+      line_count: non_neg_integer()
+    }
   end
 
   @word_re ~r/\b[a-zA-Z_]\w*\b/u
