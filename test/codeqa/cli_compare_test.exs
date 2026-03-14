@@ -17,6 +17,30 @@ defmodule CodeQA.CLI.CompareTest do
     %{repo: tmp_dir}
   end
 
+  describe "compare with github format" do
+    test "file changes section shows actual file count when source files changed", %{repo: repo} do
+      File.write!(Path.join(repo, "lib/app.ex"), """
+      defmodule App do
+        def hello, do: :world
+        def goodbye, do: :world
+      end
+      """)
+
+      System.cmd("git", ["add", "."], cd: repo)
+      System.cmd("git", ["commit", "-m", "update app"], cd: repo)
+
+      stdout =
+        ExUnit.CaptureIO.capture_io(fn ->
+          ExUnit.CaptureIO.capture_io(:stderr, fn ->
+            CodeQA.CLI.main(["compare", repo, "--base-ref", "HEAD~1", "--format", "github"])
+          end)
+        end)
+
+      assert stdout =~ "File changes — 1 modified"
+      refute stdout =~ "File changes — no changes"
+    end
+  end
+
   describe "compare with no source file changes" do
     test "exits 0 when only non-source files changed", %{repo: repo} do
       # Create a branch, change only a .md file (not a source file)
