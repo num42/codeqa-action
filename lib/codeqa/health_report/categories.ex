@@ -104,42 +104,42 @@ defmodule CodeQA.HealthReport.Categories do
             source: "branching",
             weight: 0.25,
             good: :low,
-            thresholds: %{a: 0.1, b: 0.2, c: 0.35, d: 0.5}
+            thresholds: %{a: 0.08, b: 0.17, c: 0.30, d: 0.45}
           },
           %{
             name: "mean_depth",
             source: "indentation",
             weight: 0.2,
             good: :low,
-            thresholds: %{a: 4, b: 8, c: 12, d: 18}
+            thresholds: %{a: 3.5, b: 7, c: 10, d: 15}
           },
           %{
             name: "avg_function_lines",
             source: "function_metrics",
             weight: 0.2,
             good: :low,
-            thresholds: %{a: 10, b: 20, c: 40, d: 80}
+            thresholds: %{a: 8, b: 15, c: 30, d: 65}
           },
           %{
             name: "max_depth",
             source: "indentation",
             weight: 0.1,
             good: :low,
-            thresholds: %{a: 12, b: 20, c: 30, d: 40}
+            thresholds: %{a: 8, b: 16, c: 25, d: 35}
           },
           %{
             name: "max_function_lines",
             source: "function_metrics",
             weight: 0.1,
             good: :low,
-            thresholds: %{a: 25, b: 60, c: 120, d: 250}
+            thresholds: %{a: 20, b: 50, c: 100, d: 200}
           },
           %{
             name: "variance",
             source: "indentation",
             weight: 0.1,
             good: :low,
-            thresholds: %{a: 10, b: 25, c: 50, d: 80}
+            thresholds: %{a: 7, b: 20, c: 40, d: 65}
           },
           %{
             name: "avg_param_count",
