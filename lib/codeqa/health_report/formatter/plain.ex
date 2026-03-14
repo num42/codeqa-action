@@ -97,16 +97,23 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
             end)
             |> Enum.join("<br>")
 
-          "| `#{f.path}` | #{f.grade} | #{format_lines(f[:lines])} | #{format_size(f[:bytes])} | #{issues} |"
+          "| #{format_path(f.path)}<br>#{format_lines(f[:lines])} lines · #{format_size(f[:bytes])} | #{f.grade} | #{issues} |"
         end)
 
       [
         "### Worst Offenders",
         "",
-        "| File | Grade | Lines | Size | Issues |",
-        "|------|-------|-------|------|--------|"
+        "| File | Grade | Issues |",
+        "|------|-------|--------|"
         | rows
       ] ++ [""]
+    end
+  end
+
+  defp format_path(path) do
+    case String.split(path, "/") do
+      [file] -> "`#{file}`"
+      parts -> Enum.join(Enum.drop(parts, -1), "/") <> "/<br>`#{List.last(parts)}`"
     end
   end
 

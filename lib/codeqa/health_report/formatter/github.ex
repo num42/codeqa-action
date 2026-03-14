@@ -146,14 +146,14 @@ defmodule CodeQA.HealthReport.Formatter.Github do
             end)
             |> Enum.join("<br>")
 
-          "| `#{f.path}` | #{f.grade} | #{f.score} | #{format_lines(f[:lines])} | #{format_size(f[:bytes])} | #{issues} |"
+          "| #{format_path(f.path)}<br>#{format_lines(f[:lines])} lines · #{format_size(f[:bytes])} | #{f.grade} | #{f.score} | #{issues} |"
         end)
 
       [
         "**Worst Offenders**",
         "",
-        "| File | Grade | Score | Lines | Size | Issues |",
-        "|------|-------|-------|-------|------|--------|"
+        "| File | Grade | Score | Issues |",
+        "|------|-------|-------|--------|"
         | rows
       ]
     end
@@ -178,6 +178,13 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   end
 
   defp extract_project_name(_), do: "unknown"
+
+  defp format_path(path) do
+    case String.split(path, "/") do
+      [file] -> "`#{file}`"
+      parts -> Enum.join(Enum.drop(parts, -1), "/") <> "/<br>`#{List.last(parts)}`"
+    end
+  end
 
   defp direction(:high), do: "↑ "
   defp direction(_), do: "↓ "
