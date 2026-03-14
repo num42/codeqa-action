@@ -18,7 +18,7 @@ defmodule CodeQA.HealthReport.FormatterTest do
           %{name: "flesch_adapted", source: "readability", weight: 0.4, value: 102.5, score: 100}
         ],
         worst_offenders: [
-          %{path: "lib/foo.ex", score: 75, grade: "B+",
+          %{path: "lib/foo.ex", score: 75, grade: "B+", lines: 120, bytes: 3840,
             metric_scores: [%{name: "flesch_adapted", source: "readability", value: 65.0, score: 75}]}
         ]
       },
@@ -63,6 +63,8 @@ defmodule CodeQA.HealthReport.FormatterTest do
       result = Formatter.format_markdown(@sample_report, :default, :plain)
       assert result =~ "### Worst Offenders"
       assert result =~ "`lib/foo.ex`"
+      assert result =~ "| Lines | Size |"
+      assert result =~ "| 120 | 3.8 KB |"
     end
 
     test "summary detail omits category sections" do

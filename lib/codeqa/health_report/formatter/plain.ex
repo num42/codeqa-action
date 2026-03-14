@@ -91,18 +91,25 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
             |> Enum.map(fn m -> "#{m.name}=#{format_num(m.value)}" end)
             |> Enum.join(", ")
 
-          "| `#{f.path}` | #{f.grade} | #{issues} |"
+          "| `#{f.path}` | #{f.grade} | #{format_lines(f[:lines])} | #{format_size(f[:bytes])} | #{issues} |"
         end)
 
       [
         "### Worst Offenders",
         "",
-        "| File | Grade | Issues |",
-        "|------|-------|--------|"
+        "| File | Grade | Lines | Size | Issues |",
+        "|------|-------|-------|------|--------|"
         | rows
       ] ++ [""]
     end
   end
+
+  defp format_lines(nil), do: "—"
+  defp format_lines(n), do: to_string(n)
+
+  defp format_size(nil), do: "—"
+  defp format_size(bytes) when bytes < 1024, do: "#{bytes} B"
+  defp format_size(bytes), do: "#{Float.round(bytes / 1024, 1)} KB"
 
   defp format_num(value) when is_float(value), do: :erlang.float_to_binary(value, decimals: 2)
   defp format_num(value) when is_integer(value), do: to_string(value)
