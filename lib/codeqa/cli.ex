@@ -62,6 +62,8 @@ defmodule CodeQA.CLI do
     end
 
     analyze_opts = build_analyze_opts(opts)
+    codeqa_config = load_codeqa_config(path)
+    analyze_opts = analyze_opts ++ codeqa_config
 
     start_time = System.monotonic_time(:millisecond)
     results = CodeQA.Analyzer.analyze_codebase(files, analyze_opts)
@@ -207,7 +209,9 @@ defmodule CodeQA.CLI do
     IO.puts(:stderr, "Found #{length(commits)} commits to analyze.")
 
     analyze_opts = build_analyze_opts(opts)
-    ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
+    codeqa_config = load_codeqa_config(path)
+    analyze_opts = analyze_opts ++ codeqa_config
+    ignore_patterns = parse_ignore_paths(opts[:ignore_paths]) ++ load_config_ignore_paths(path)
 
     commits
     |> Enum.with_index(1)
@@ -558,6 +562,8 @@ defmodule CodeQA.CLI do
       print_compare_progress(opts, base_files, head_files)
 
       analyze_opts = build_analyze_opts(opts)
+      codeqa_config = load_codeqa_config(path)
+      analyze_opts = analyze_opts ++ codeqa_config
 
       base_result =
         if map_size(base_files) > 0,
@@ -804,6 +810,8 @@ defmodule CodeQA.CLI do
     IO.puts(:stderr, "Analyzing #{map_size(files)} files for health report...")
 
     analyze_opts = build_analyze_opts(opts)
+    codeqa_config = load_codeqa_config(path)
+    analyze_opts = analyze_opts ++ codeqa_config
 
     start_time = System.monotonic_time(:millisecond)
     results = CodeQA.Analyzer.analyze_codebase(files, analyze_opts)
@@ -906,6 +914,47 @@ defmodule CodeQA.CLI do
     |> String.split(",", trim: true)
     |> Enum.map(&String.trim/1)
   end
+
+  defp load_config_ignore_paths(path) do
+    config_file = Path.join(path, ".codeqa.yml")
+
+    case File.read(config_file) do
+      {:ok, contents} ->
+        case YamlElixir.read_from_string(contents) do
+          {:ok, %{"ignore_paths" => patterns}} when is_list(patterns) -> patterns
+          _ -> []
+        end
+
+      {:error, _} ->
+        []
+    end
+  end
+
+  defp load_codeqa_config(path) do
+    config_file = Path.join(path, ".codeqa.yml")
+
+    case File.read(config_file) do
+      {:ok, contents} ->
+        case YamlElixir.read_from_string(contents) do
+          {:ok, yaml} -> parse_codeqa_config(yaml)
+          _ -> []
+        end
+
+      {:error, _} ->
+        []
+    end
+  end
+
+  defp parse_codeqa_config(yaml) do
+    case Map.get(yaml, "near_duplicate_blocks") do
+      %{"max_pairs_per_bucket" => n} when is_integer(n) ->
+        [near_duplicate_blocks: [max_pairs_per_bucket: n]]
+
+      _ ->
+        []
+    end
+  end
+
 
   defp print_usage do
     IO.puts("""
