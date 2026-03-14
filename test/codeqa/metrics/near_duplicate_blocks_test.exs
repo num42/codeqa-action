@@ -56,4 +56,40 @@ defmodule CodeQA.Metrics.NearDuplicateBlocksTest do
       assert Enum.all?(blocks, fn {block, _} -> length(block) == 8 end)
     end
   end
+
+  describe "find_pairs/2" do
+    test "finds no pairs when all blocks are identical (edit distance 0)" do
+      block = ~w[a b c d e f g h]
+      labeled = [{block, 0}, {block, 4}]
+      result = NDB.find_pairs(labeled, max_distance: 8, max_pairs_per_bucket: nil)
+      assert result == %{}
+    end
+
+    test "finds a pair at edit distance 1" do
+      base  = ~w[a b c d e f g h]
+      near  = ~w[a b c d e f g x]
+      labeled = [{base, 0}, {near, 4}]
+      result = NDB.find_pairs(labeled, max_distance: 8, max_pairs_per_bucket: nil)
+      assert Map.get(result, {8, 1}) != nil
+      assert Map.get(result, {8, 1}).count == 1
+    end
+
+    test "does not report pairs with edit distance > max_distance" do
+      a = ~w[a b c d e f g h]
+      b = ~w[1 2 3 4 5 6 7 8]
+      labeled = [{a, 0}, {b, 4}]
+      result = NDB.find_pairs(labeled, max_distance: 3, max_pairs_per_bucket: nil)
+      assert result == %{}
+    end
+
+    test "caps pairs list at max_pairs_per_bucket" do
+      base = ~w[a b c d e f g h]
+      variants = for i <- 1..6, do: {List.replace_at(base, 7, "x#{i}"), i * 4}
+      labeled = [{base, 0} | variants]
+      result = NDB.find_pairs(labeled, max_distance: 8, max_pairs_per_bucket: 2)
+      bucket = Map.get(result, {8, 1})
+      assert bucket.count >= 2
+      assert length(bucket.pairs) <= 2
+    end
+  end
 end

@@ -54,4 +54,106 @@ defmodule CodeQA.Metrics.NearDuplicateBlocks do
     |> Enum.with_index()
     |> Enum.map(fn {block, idx} -> {block, idx * stride} end)
   end
+
+  @doc """
+  Find near-duplicate pairs across a list of labeled blocks.
+
+  `labeled_blocks` is `[{token_list, label}]` where label is any term stored in pair sources.
+  Returns `%{{block_size, distance} => %{count: integer, pairs: [pair]}}`.
+  """
+  @spec find_pairs([{[String.t()], term()}], keyword()) :: map()
+  def find_pairs(labeled_blocks, opts) do
+    max_distance = Keyword.get(opts, :max_distance, @max_distance)
+    max_pairs = Keyword.get(opts, :max_pairs_per_bucket, nil)
+    workers = Keyword.get(opts, :workers, System.schedulers_online())
+
+    total = length(labeled_blocks)
+
+    if total < 2 do
+      %{}
+    else
+      exact_index = build_exact_index(labeled_blocks)
+      shingle_index = build_shingle_index(labeled_blocks)
+
+      labeled_blocks
+      |> Enum.with_index()
+      |> Task.async_stream(
+        &find_pairs_for_block(&1, labeled_blocks, exact_index, shingle_index, max_distance),
+        max_concurrency: workers,
+        timeout: :infinity
+      )
+      |> Enum.flat_map(fn {:ok, pairs} -> pairs end)
+      |> bucket_pairs(max_pairs)
+    end
+  end
+
+  defp build_exact_index(labeled_blocks) do
+    labeled_blocks
+    |> Enum.with_index()
+    |> Enum.reduce(%{}, fn {{tokens, _label}, idx}, acc ->
+      h = :erlang.phash2(tokens)
+      Map.update(acc, h, [idx], &[idx | &1])
+    end)
+  end
+
+  defp build_shingle_index(labeled_blocks) do
+    labeled_blocks
+    |> Enum.with_index()
+    |> Enum.reduce(%{}, fn {{tokens, _label}, idx}, acc ->
+      tokens
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.reduce(acc, fn bigram, sh_acc ->
+        h = :erlang.phash2(bigram)
+        Map.update(sh_acc, h, [idx], &[idx | &1])
+      end)
+    end)
+  end
+
+  defp find_pairs_for_block({{tokens_a, label_a}, i}, labeled_blocks, exact_index, shingle_index, max_distance) do
+    block_size = length(tokens_a)
+    hash_a = :erlang.phash2(tokens_a)
+    exact_set = MapSet.new(Map.get(exact_index, hash_a, []))
+
+    min_shared = max(0, block_size - max_distance * 2)
+
+    candidates =
+      tokens_a
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.reduce(%{}, fn bigram, acc ->
+        h = :erlang.phash2(bigram)
+        Map.get(shingle_index, h, [])
+        |> Enum.reduce(acc, fn j, cnt ->
+          if j > i, do: Map.update(cnt, j, 1, &(&1 + 1)), else: cnt
+        end)
+      end)
+      |> Enum.filter(fn {_, count} -> count >= min_shared end)
+      |> Enum.map(&elem(&1, 0))
+
+    for j <- candidates,
+        not MapSet.member?(exact_set, j) do
+      {tokens_b, label_b} = Enum.at(labeled_blocks, j)
+      ed = token_edit_distance(tokens_a, tokens_b)
+
+      if ed >= 1 and ed <= max_distance do
+        {{block_size, ed}, {label_a, label_b}}
+      else
+        nil
+      end
+    end
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp bucket_pairs(raw_pairs, max_pairs) do
+    Enum.reduce(raw_pairs, %{}, fn {key, pair}, acc ->
+      Map.update(acc, key, %{count: 1, pairs: maybe_append([], pair, max_pairs)}, fn existing ->
+        %{
+          count: existing.count + 1,
+          pairs: maybe_append(existing.pairs, pair, max_pairs)
+        }
+      end)
+    end)
+  end
+
+  defp maybe_append(list, _pair, max) when is_integer(max) and length(list) >= max, do: list
+  defp maybe_append(list, pair, _max), do: [pair | list]
 end
