@@ -36,6 +36,7 @@ defmodule CodeQA.Metrics.Halstead do
     actor init object companion
   ])
 
+  @spec analyze(map()) :: map()
   @impl true
   def analyze(%{content: content}) when content == "" or content == nil do
     zero_result()
@@ -67,7 +68,9 @@ defmodule CodeQA.Metrics.Halstead do
       volume = length * :math.log2(vocabulary)
       difficulty = if n2 > 0, do: n1 / 2 * (big_n2 / n2), else: 0.0
       effort = difficulty * volume
+      # Halstead's bug prediction formula: B = V / 3000
       estimated_bugs = volume / 3000
+      # Stroud's constant: 18 mental discriminations per second
       time_to_implement_seconds = effort / 18
 
       %{
@@ -101,7 +104,8 @@ defmodule CodeQA.Metrics.Halstead do
       "volume" => 0.0,
       "difficulty" => 0.0,
       "effort" => 0.0,
-      "estimated_bugs" => 0.0
+      "estimated_bugs" => 0.0,
+      "time_to_implement_seconds" => 0.0
     }
   end
 

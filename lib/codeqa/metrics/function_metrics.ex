@@ -39,6 +39,7 @@ defmodule CodeQA.Metrics.FunctionMetrics do
   @impl true
   def name, do: "function_metrics"
 
+  @spec analyze(map()) :: map()
   @impl true
   def analyze(%{lines: lines}) do
     lines_list = Tuple.to_list(lines)
@@ -55,6 +56,7 @@ defmodule CodeQA.Metrics.FunctionMetrics do
 
     if func_indices == [] do
       %{
+        "function_count" => 0,
         "avg_function_lines" => 0.0,
         "max_function_lines" => 0,
         "avg_param_count" => 0.0,
@@ -75,6 +77,7 @@ defmodule CodeQA.Metrics.FunctionMetrics do
       max_params = Enum.max(param_counts)
 
       %{
+        "function_count" => n,
         "avg_function_lines" => avg_len,
         "max_function_lines" => max_len,
         "avg_param_count" => avg_params,
@@ -87,10 +90,24 @@ defmodule CodeQA.Metrics.FunctionMetrics do
     case Regex.run(~r/\(([^)]*)\)/, line) do
       [_, args] ->
         args = String.trim(args)
-        if args == "", do: 0, else: length(String.split(args, ","))
+        if args == "", do: 0, else: count_top_level_commas(args) + 1
 
       _ ->
         0
     end
+  end
+
+  defp count_top_level_commas(args) do
+    args
+    |> String.graphemes()
+    |> Enum.reduce({0, 0}, fn char, {depth, commas} ->
+      case char do
+        c when c in ["(", "[", "{"] -> {depth + 1, commas}
+        c when c in [")", "]", "}"] -> {max(0, depth - 1), commas}
+        "," when depth == 0 -> {depth, commas + 1}
+        _ -> {depth, commas}
+      end
+    end)
+    |> elem(1)
   end
 end

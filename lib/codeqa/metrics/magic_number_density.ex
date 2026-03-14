@@ -6,6 +6,9 @@ defmodule CodeQA.Metrics.MagicNumberDensity do
   proportion of total tokens. A high density suggests unexplained constants
   that should be extracted into named values.
 
+  Note: negative numbers (e.g. `-42`) are not detected since the minus sign
+  is a separate token.
+
   See [magic number](<https://en.wikipedia.org/wiki/Magic_number_(programming)>).
   """
 
@@ -15,7 +18,9 @@ defmodule CodeQA.Metrics.MagicNumberDensity do
   def name, do: "magic_number_density"
 
   @number_re ~r/\b\d+\.?\d*(?:[eE][+-]?\d+)?\b/
+  @idiomatic_constants ~w[0 1 2 0.0 1.0 0.5]
 
+  @spec analyze(map()) :: map()
   @impl true
   def analyze(%{content: content, tokens: tokens}) do
     token_list = Tuple.to_list(tokens)
@@ -28,7 +33,7 @@ defmodule CodeQA.Metrics.MagicNumberDensity do
         @number_re
         |> Regex.scan(content)
         |> List.flatten()
-        |> Enum.reject(&(&1 in ["0", "1", "0.0", "1.0"]))
+        |> Enum.reject(&(&1 in @idiomatic_constants))
 
       magic_count = length(numbers)
 

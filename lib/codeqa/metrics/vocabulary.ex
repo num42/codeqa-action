@@ -6,6 +6,10 @@ defmodule CodeQA.Metrics.Vocabulary do
   (moving-average TTR) smooths this over a sliding window to reduce sensitivity
   to file length. Also reports the sorted vocabulary list.
 
+  `ctx.identifiers` contains raw identifier strings (e.g. `fooBar`); `ctx.words`
+  contains the extracted sub-word tokens (e.g. `foo`, `bar`) used for vocabulary
+  building.
+
   See [type-token ratio](https://en.wikipedia.org/wiki/Lexical_density)
   and [MATTR](https://doi.org/10.3758/BRM.42.2.381).
   """
@@ -17,6 +21,7 @@ defmodule CodeQA.Metrics.Vocabulary do
 
   @window_size 100
 
+  @spec analyze(map()) :: map()
   @impl true
   def analyze(ctx) do
     identifiers = Tuple.to_list(ctx.identifiers)
@@ -69,11 +74,11 @@ defmodule CodeQA.Metrics.Vocabulary do
     sum / count / @window_size
   end
 
-  defp slide_window([], _trailing, _freqs, _unique, sum, count), do: {sum, count}
+  defp slide_window([], _outgoing_list, _freqs, _unique, sum, count), do: {sum, count}
 
   defp slide_window(
          [incoming | rest_incoming],
-         [outgoing | rest_trailing],
+         [outgoing | rest_outgoing],
          freqs,
          unique,
          sum,
@@ -94,7 +99,7 @@ defmodule CodeQA.Metrics.Vocabulary do
 
     slide_window(
       rest_incoming,
-      rest_trailing,
+      rest_outgoing,
       final_freqs,
       final_unique,
       sum + final_unique,
