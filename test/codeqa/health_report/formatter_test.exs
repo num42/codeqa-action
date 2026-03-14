@@ -62,8 +62,8 @@ defmodule CodeQA.HealthReport.FormatterTest do
     test "includes worst offenders section" do
       result = Formatter.format_markdown(@sample_report, :default, :plain)
       assert result =~ "### Worst Offenders"
-      assert result =~ "lib/<br>`foo.ex`"
-      assert result =~ "lib/<br>`foo.ex`"
+      refute result =~ "lib/<br>`foo.ex`"
+      assert result =~ "`lib/foo.ex`"
       assert result =~ "120 lines · 3.8 KB"
       assert result =~ "↑ flesch_adapted=65.00 (avg: 102.50)"
       refute result =~ "↑ flesch_adapted=65.00, "

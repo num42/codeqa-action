@@ -179,6 +179,8 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
   defp extract_project_name(_), do: "unknown"
 
+  defp format_path(path) when byte_size(path) < 80, do: "`#{path}`"
+
   defp format_path(path) do
     case String.split(path, "/") do
       [file] -> "`#{file}`"

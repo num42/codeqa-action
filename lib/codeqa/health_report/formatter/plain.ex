@@ -110,6 +110,8 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     end
   end
 
+  defp format_path(path) when byte_size(path) < 80, do: "`#{path}`"
+
   defp format_path(path) do
     case String.split(path, "/") do
       [file] -> "`#{file}`"
