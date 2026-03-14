@@ -123,7 +123,8 @@ defmodule CodeQA.CLI do
           stopwords_threshold: :float,
           show_files: :boolean,
           show_file_paths: :string,
-          ignore_paths: :string
+          ignore_paths: :string,
+          watch_files: :string
         ],
         aliases: [w: :workers, t: :timeout]
       )
@@ -152,7 +153,8 @@ defmodule CodeQA.CLI do
       |> enrich_comparison_metadata(base_ref, head_ref, changes_only)
       |> filter_files_for_output(opts)
 
-    output_comparison(comparison, format, output_mode)
+    watch_files = parse_watch_files(opts[:watch_files])
+    output_comparison(comparison, format, output_mode, watch_files)
 
     if opts[:telemetry], do: CodeQA.Telemetry.print_report()
   end
@@ -600,15 +602,15 @@ defmodule CodeQA.CLI do
     |> put_in(["metadata", "timestamp"], DateTime.utc_now() |> DateTime.to_iso8601())
   end
 
-  defp output_comparison(comparison, "markdown", output_mode) do
-    IO.puts(CodeQA.Formatter.format_markdown(comparison, output_mode))
+  defp output_comparison(comparison, "markdown", output_mode, watch_files) do
+    IO.puts(CodeQA.Formatter.format_markdown(comparison, output_mode, watch_files: watch_files))
   end
 
-  defp output_comparison(comparison, "github", output_mode) do
-    IO.puts(CodeQA.Formatter.format_github(comparison, output_mode))
+  defp output_comparison(comparison, "github", output_mode, watch_files) do
+    IO.puts(CodeQA.Formatter.format_github(comparison, output_mode, watch_files: watch_files))
   end
 
-  defp output_comparison(comparison, _format, output_mode) do
+  defp output_comparison(comparison, _format, output_mode, _watch_files) do
     codebase_summary = CodeQA.Summarizer.summarize_codebase(comparison)
 
     file_summaries =
@@ -781,7 +783,8 @@ defmodule CodeQA.CLI do
           telemetry: :boolean,
           experimental_stopwords: :boolean,
           stopwords_threshold: :float,
-          ignore_paths: :string
+          ignore_paths: :string,
+          watch_files: :string
         ],
         aliases: [o: :output, w: :workers, t: :timeout]
       )
@@ -825,6 +828,7 @@ defmodule CodeQA.CLI do
     detail = parse_detail(opts[:detail])
     format = parse_format(opts[:format])
     top_n = opts[:top] || 5
+    watch_files = parse_watch_files(opts[:watch_files])
 
     report =
       CodeQA.HealthReport.generate(results,
@@ -833,7 +837,7 @@ defmodule CodeQA.CLI do
         top: top_n
       )
 
-    markdown = CodeQA.HealthReport.to_markdown(report, detail, format)
+    markdown = CodeQA.HealthReport.to_markdown(report, detail, format, watch_files: watch_files)
 
     case opts[:output] do
       nil ->
@@ -909,6 +913,15 @@ defmodule CodeQA.CLI do
     paths_string
     |> String.split(",", trim: true)
     |> Enum.map(&String.trim/1)
+  end
+
+  defp parse_watch_files(nil), do: MapSet.new()
+
+  defp parse_watch_files(paths_string) do
+    paths_string
+    |> String.split([",", "\n"], trim: true)
+    |> Enum.map(&String.trim/1)
+    |> MapSet.new()
   end
 
   defp print_usage do

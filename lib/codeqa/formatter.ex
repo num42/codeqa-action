@@ -13,19 +13,20 @@ defmodule CodeQA.Formatter do
   @filled "█"
   @empty "░"
 
-  def format_github(comparison, output_mode \\ "auto") do
+  def format_github(comparison, output_mode \\ "auto", opts \\ []) do
     metadata = comparison["metadata"]
     files = comparison["files"] || %{}
     codebase = comparison["codebase"] || %{}
+    watch_files = Keyword.get(opts, :watch_files, MapSet.new())
 
     if metadata["total_files_compared"] == 0 do
       "## Code Quality: PR Comparison\n\nNo file changes detected."
     else
-      build_github_report(metadata, files, codebase, output_mode)
+      build_github_report(metadata, files, codebase, output_mode, watch_files)
     end
   end
 
-  defp build_github_report(metadata, files, codebase, output_mode) do
+  defp build_github_report(metadata, files, codebase, output_mode, watch_files) do
     categories = CodeQA.HealthReport.Categories.defaults()
     scale = CodeQA.HealthReport.Categories.default_grade_scale()
 
@@ -47,7 +48,7 @@ defmodule CodeQA.Formatter do
         mermaid_chart(head_grades) ++
         progress_bars(paired) ++
         [""] ++
-        file_details(files, output_mode) ++
+        file_details(files, output_mode, watch_files) ++
         aggregate_details(codebase)
 
     Enum.join(lines, "\n")
@@ -90,7 +91,7 @@ defmodule CodeQA.Formatter do
     ["```"] ++ rows ++ ["```"]
   end
 
-  defp file_details(files, _output_mode) do
+  defp file_details(files, _output_mode, watch_files) do
     codebase_summary = CodeQA.Summarizer.summarize_codebase(%{"files" => files, "codebase" => %{}})
 
     file_summaries =
@@ -99,7 +100,7 @@ defmodule CodeQA.Formatter do
       end)
 
     inner =
-      (format_file_table(files, file_summaries) ++ [""])
+      (format_file_table(files, file_summaries, watch_files) ++ [""])
       |> Enum.join("\n")
 
     [
@@ -148,19 +149,20 @@ defmodule CodeQA.Formatter do
     end
   end
 
-  def format_markdown(comparison, output_mode \\ "auto") do
+  def format_markdown(comparison, output_mode \\ "auto", opts \\ []) do
     metadata = comparison["metadata"]
     files = comparison["files"] || %{}
     codebase = comparison["codebase"]
+    watch_files = Keyword.get(opts, :watch_files, MapSet.new())
 
     if metadata["total_files_compared"] == 0 do
       "## Code Quality: PR Comparison\n\nNo file changes detected."
     else
-      build_report(metadata, files, codebase, output_mode)
+      build_report(metadata, files, codebase, output_mode, watch_files)
     end
   end
 
-  defp build_report(metadata, files, codebase, output_mode) do
+  defp build_report(metadata, files, codebase, output_mode, watch_files) do
     codebase_summary =
       CodeQA.Summarizer.summarize_codebase(%{"files" => files, "codebase" => codebase})
 
@@ -185,7 +187,7 @@ defmodule CodeQA.Formatter do
             {path, CodeQA.Summarizer.summarize_file(path, data)}
           end)
 
-        lines ++ format_file_table(files, file_summaries) ++ [""]
+        lines ++ format_file_table(files, file_summaries, watch_files) ++ [""]
       else
         lines
       end
@@ -200,15 +202,15 @@ defmodule CodeQA.Formatter do
     Enum.join(lines, "\n")
   end
 
-  defp format_file_table(files, file_summaries) do
+  defp format_file_table(files, file_summaries, watch_files) do
     columns = detect_columns(files)
 
     if columns == [],
       do: ["No metric data available."],
-      else: build_file_rows(files, file_summaries, columns)
+      else: build_file_rows(files, file_summaries, columns, watch_files)
   end
 
-  defp build_file_rows(files, file_summaries, columns) do
+  defp build_file_rows(files, file_summaries, columns, watch_files) do
     header =
       "| File | Status | Summary | " <>
         Enum.map_join(columns, " | ", fn {_, _, label} -> label end) <> " |"
@@ -220,9 +222,10 @@ defmodule CodeQA.Formatter do
       files
       |> Enum.sort_by(fn {path, _} -> path end)
       |> Enum.map(fn {path, data} ->
+        alert = if MapSet.member?(watch_files, path), do: "⚠️ ", else: ""
         gist = get_in(file_summaries, [path, "gist"]) || ""
         cells = format_file_row(data, columns)
-        "| `#{path}` | #{data["status"]} | #{gist} | " <> Enum.join(cells, " | ") <> " |"
+        "| #{alert}`#{path}` | #{data["status"]} | #{gist} | " <> Enum.join(cells, " | ") <> " |"
       end)
 
     [header, separator | rows]

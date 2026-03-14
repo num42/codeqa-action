@@ -137,4 +137,45 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert result =~ "████"
     end
   end
+
+  describe "watch_files alerts — plain format" do
+    test "marks watched file in worst offenders table" do
+      result = Formatter.format_markdown(@sample_report, :default, :plain, watch_files: MapSet.new(["lib/foo.ex"]))
+      assert result =~ "⚠️"
+    end
+
+    test "includes alerts section when watched file is in worst offenders" do
+      result = Formatter.format_markdown(@sample_report, :default, :plain, watch_files: MapSet.new(["lib/foo.ex"]))
+      assert result =~ "⚠️ File Alerts"
+      assert result =~ "Readability"
+    end
+
+    test "no alerts section when watched file not in worst offenders" do
+      result = Formatter.format_markdown(@sample_report, :default, :plain, watch_files: MapSet.new(["lib/other.ex"]))
+      refute result =~ "⚠️ File Alerts"
+    end
+
+    test "no alerts section when watch_files not provided" do
+      result = Formatter.format_markdown(@sample_report, :default, :plain)
+      refute result =~ "⚠️ File Alerts"
+    end
+  end
+
+  describe "watch_files alerts — github format" do
+    test "marks watched file in worst offenders table" do
+      result = Formatter.format_markdown(@sample_report, :default, :github, watch_files: MapSet.new(["lib/foo.ex"]))
+      assert result =~ "⚠️ `lib/foo.ex`"
+    end
+
+    test "includes alerts section when watched file is in worst offenders" do
+      result = Formatter.format_markdown(@sample_report, :default, :github, watch_files: MapSet.new(["lib/foo.ex"]))
+      assert result =~ "⚠️ File Alerts"
+      assert result =~ "Readability"
+    end
+
+    test "no alerts section when watched file not in worst offenders" do
+      result = Formatter.format_markdown(@sample_report, :default, :github, watch_files: MapSet.new(["lib/other.ex"]))
+      refute result =~ "⚠️ File Alerts"
+    end
+  end
 end

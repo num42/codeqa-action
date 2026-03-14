@@ -133,5 +133,27 @@ defmodule CodeQA.FormatterTest do
       result = Formatter.format_github(worsening)
       assert result =~ "🔴 +300.00"
     end
+
+    test "marks watched file with alert emoji" do
+      result = Formatter.format_github(@sample_comparison, "auto", watch_files: MapSet.new(["lib/foo.ex"]))
+      assert result =~ "⚠️"
+    end
+
+    test "no alert emoji when watched file not in comparison" do
+      result = Formatter.format_github(@sample_comparison, "auto", watch_files: MapSet.new(["lib/other.ex"]))
+      refute result =~ "⚠️"
+    end
+  end
+
+  describe "format_markdown/3 watch_files" do
+    test "marks watched file with alert emoji" do
+      result = Formatter.format_markdown(@sample_comparison, "auto", watch_files: MapSet.new(["lib/foo.ex"]))
+      assert result =~ "⚠️"
+    end
+
+    test "no alert emoji when watched file not in comparison" do
+      result = Formatter.format_markdown(@sample_comparison, "auto", watch_files: MapSet.new(["lib/other.ex"]))
+      refute result =~ "⚠️"
+    end
   end
 end

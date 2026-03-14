@@ -1,12 +1,16 @@
 defmodule CodeQA.HealthReport.Formatter.Plain do
   @moduledoc "Renders health report as plain markdown."
 
-  @spec render(map(), atom()) :: String.t()
-  def render(report, detail) do
+  @spec render(map(), atom(), keyword()) :: String.t()
+  def render(report, detail, opts \\ []) do
+    watch_files = Keyword.get(opts, :watch_files, MapSet.new())
+    alerts = collect_alerts(report.categories, watch_files)
+
     [
       header(report),
       overall_table(report),
-      category_sections(report.categories, detail)
+      alerts_section(alerts),
+      category_sections(report.categories, detail, watch_files)
     ]
     |> List.flatten()
     |> Enum.join("\n")
@@ -37,11 +41,29 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     ] ++ [""]
   end
 
-  defp category_sections(_categories, :summary), do: []
+  defp alerts_section([]), do: []
 
-  defp category_sections(categories, detail) do
+  defp alerts_section(alerts) do
+    rows = Enum.map(alerts, fn a ->
+      "| `#{a.path}` | #{a.category} | #{a.grade} |"
+    end)
+
+    [
+      "## ⚠️ File Alerts",
+      "",
+      "#{length(alerts)} watched file(s) found in worst offenders:",
+      "",
+      "| File | Category | Grade |",
+      "|------|----------|-------|"
+      | rows
+    ] ++ [""]
+  end
+
+  defp category_sections(_categories, :summary, _watch_files), do: []
+
+  defp category_sections(categories, detail, watch_files) do
     Enum.flat_map(categories, fn cat ->
-      section_header(cat) ++ metric_detail(cat) ++ worst_offenders_section(cat, detail)
+      section_header(cat) ++ metric_detail(cat) ++ worst_offenders_section(cat, detail, watch_files)
     end)
   end
 
@@ -76,9 +98,9 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     end
   end
 
-  defp worst_offenders_section(_cat, :summary), do: []
+  defp worst_offenders_section(_cat, :summary, _watch_files), do: []
 
-  defp worst_offenders_section(cat, _detail) do
+  defp worst_offenders_section(cat, _detail, watch_files) do
     offenders = Map.get(cat, :worst_offenders, [])
 
     if offenders == [] do
@@ -88,6 +110,8 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
 
       rows =
         Enum.map(offenders, fn f ->
+          alert = if MapSet.member?(watch_files, f.path), do: "⚠️ ", else: ""
+
           issues =
             f.metric_scores
             |> Enum.map(fn m ->
@@ -97,7 +121,7 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
             end)
             |> Enum.join("<br>")
 
-          "| #{format_path(f.path)}<br>#{format_lines(f[:lines])} lines · #{format_size(f[:bytes])} | #{f.grade} | #{issues} |"
+          "| #{alert}#{format_path(f.path)}<br>#{format_lines(f[:lines])} lines · #{format_size(f[:bytes])} | #{f.grade} | #{issues} |"
         end)
 
       [
@@ -108,6 +132,16 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
         | rows
       ] ++ [""]
     end
+  end
+
+  defp collect_alerts(_categories, watch_files) when watch_files == %MapSet{}, do: []
+
+  defp collect_alerts(categories, watch_files) do
+    Enum.flat_map(categories, fn cat ->
+      cat.worst_offenders
+      |> Enum.filter(fn f -> MapSet.member?(watch_files, f.path) end)
+      |> Enum.map(fn f -> %{path: f.path, category: cat.name, grade: f.grade} end)
+    end)
   end
 
   defp format_path(path) when byte_size(path) < 80, do: "`#{path}`"

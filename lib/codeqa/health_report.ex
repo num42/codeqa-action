@@ -44,9 +44,9 @@ defmodule CodeQA.HealthReport do
     }
   end
 
-  @spec to_markdown(map(), atom(), atom()) :: String.t()
-  def to_markdown(report, detail \\ :default, format \\ :plain) do
-    Formatter.format_markdown(report, detail, format)
+  @spec to_markdown(map(), atom(), atom(), keyword()) :: String.t()
+  def to_markdown(report, detail \\ :default, format \\ :plain, opts \\ []) do
+    Formatter.format_markdown(report, detail, format, opts)
   end
 
   defp build_metadata(analysis_results) do
