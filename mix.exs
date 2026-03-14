@@ -29,7 +29,8 @@ defmodule CodeQA.MixProject do
       {:flow, "~> 1.2"},
       {:yaml_elixir, "~> 2.11"},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
-      {:credo, "~> 1.7", only: :dev, runtime: false}
+      {:credo, "~> 1.7", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.4", only: :dev, runtime: false}
     ]
   end
 end
