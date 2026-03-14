@@ -14,13 +14,26 @@ defmodule CodeQA.Metrics.Halstead do
   @impl true
   def name, do: "halstead"
 
-  @operator_re ~r/\b(?:if|else|elif|for|while|do|return|break|continue|import|from|class|def|lambda|yield|pass|raise|try|except|finally|with|as|and|or|not|in|is)\b|(?:==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/=|%=|&=|\|=|\^=|\*\*=|<<=|>>=|->|:=|\.\.\.)|[+\-*\/%&|^~<>=!(){}\[\];:,.]/
+  # Keyword operators for:
+  # Python, Ruby, JavaScript, Elixir, C#,
+  # Java, C++, Go, Rust, PHP, Swift, Shell, Kotlin
+  @operator_re ~r/\b(?:if|else|elif|elsif|unless|for|foreach|while|until|do|fallthrough|return|break|continue|import|from|require|use|using|alias|namespace|package|class|def|defp|defmodule|defmacro|defmacrop|defprotocol|defimpl|function|func|fun|fn|module|protocol|extension|lambda|yield|pass|raise|throws|throw|try|except|rescue|finally|ensure|after|with|as|begin|end|and|or|not|in|is|typeof|instanceof|sizeof|new|delete|async|await|suspend|defer|go|select|range|case|when|switch|cond|match|impl|trait|pub|mod|dyn|unsafe|loop|where|move|echo|print|guard|then|fi|done|esac|local|export|declare|actor|init|object|companion)\b|(?:==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/=|%=|&=|\|=|\^=|\*\*=|<<=|>>=|->|:=|\.\.\.)|[+\-*\/%&|^~<>=!(){}\[\];:,.]/
 
   @operand_re ~r/\b[a-zA-Z_]\w*\b|\b\d+\.?\d*(?:[eE][+-]?\d+)?\b|"[^"]*"|'[^']*'/u
 
+  # Must mirror the keyword alternation in @operator_re — used to filter
+  # keyword tokens out of the operand scan.
   @operator_keywords MapSet.new(~w[
-    if else elif for while do return break continue import from class def
-    lambda yield pass raise try except finally with as and or not in is
+    if else elif elsif unless for foreach while until do fallthrough
+    return break continue import from require use using alias namespace package
+    class def defp defmodule defmacro defmacrop defprotocol defimpl function func fun fn
+    module protocol extension lambda yield pass raise throws throw
+    try except rescue finally ensure after with as begin end
+    and or not in is typeof instanceof sizeof new delete async await suspend
+    defer go select range case when switch cond match
+    impl trait pub mod dyn unsafe loop where move
+    echo print guard then fi done esac local export declare
+    actor init object companion
   ])
 
   @impl true
