@@ -46,7 +46,7 @@ defmodule CodeQA.CLI do
       exit({:shutdown, 1})
     end
 
-    ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
+    ignore_patterns = parse_ignore_paths(opts[:ignore_paths]) ++ load_config_ignore_paths(path)
     files = CodeQA.Collector.collect_files(path, ignore_patterns: ignore_patterns)
 
     if map_size(files) == 0 do
@@ -141,7 +141,7 @@ defmodule CodeQA.CLI do
       exit({:shutdown, 1})
     end
 
-    ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
+    ignore_patterns = parse_ignore_paths(opts[:ignore_paths]) ++ load_config_ignore_paths(path)
     opts = Keyword.put(opts, :ignore_patterns, ignore_patterns)
 
     {base_result, head_result, changes} =
@@ -207,7 +207,7 @@ defmodule CodeQA.CLI do
     IO.puts(:stderr, "Found #{length(commits)} commits to analyze.")
 
     analyze_opts = build_analyze_opts(opts)
-    ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
+    ignore_patterns = parse_ignore_paths(opts[:ignore_paths]) ++ load_config_ignore_paths(path)
 
     commits
     |> Enum.with_index(1)
@@ -720,7 +720,7 @@ defmodule CodeQA.CLI do
       exit({:shutdown, 1})
     end
 
-    ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
+    ignore_patterns = parse_ignore_paths(opts[:ignore_paths]) ++ load_config_ignore_paths(path)
     files = CodeQA.Collector.collect_files(path, ignore_patterns: ignore_patterns)
 
     if map_size(files) == 0 do
@@ -793,7 +793,7 @@ defmodule CodeQA.CLI do
       exit({:shutdown, 1})
     end
 
-    ignore_patterns = parse_ignore_paths(opts[:ignore_paths])
+    ignore_patterns = parse_ignore_paths(opts[:ignore_paths]) ++ load_config_ignore_paths(path)
     files = CodeQA.Collector.collect_files(path, ignore_patterns: ignore_patterns)
 
     if map_size(files) == 0 do
@@ -905,6 +905,21 @@ defmodule CodeQA.CLI do
     paths_string
     |> String.split(",", trim: true)
     |> Enum.map(&String.trim/1)
+  end
+
+  defp load_config_ignore_paths(path) do
+    config_file = Path.join(path, ".codeqa.yml")
+
+    case File.read(config_file) do
+      {:ok, contents} ->
+        case YamlElixir.read_from_string(contents) do
+          {:ok, %{"ignore_paths" => patterns}} when is_list(patterns) -> patterns
+          _ -> []
+        end
+
+      {:error, _} ->
+        []
+    end
   end
 
   defp print_usage do
