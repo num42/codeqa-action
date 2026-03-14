@@ -146,14 +146,14 @@ defmodule CodeQA.HealthReport.Formatter.Github do
             end)
             |> Enum.join("<br>")
 
-          "| #{format_path(f.path)}<br>#{format_lines(f[:lines])} lines · #{format_size(f[:bytes])} | #{f.grade} | #{f.score} | #{issues} |"
+          "| #{format_path(f.path)}<br>#{format_lines(f[:lines])} lines · #{format_size(f[:bytes])} | #{f.grade} (#{f.score}) | #{issues} |"
         end)
 
       [
         "**Worst Offenders**",
         "",
-        "| File | Grade | Score | Issues |",
-        "|------|-------|-------|--------|"
+        "| File | Grade | Issues |",
+        "|------|-------|--------|"
         | rows
       ]
     end
