@@ -3,7 +3,9 @@ defmodule CodeQA.Metrics.Indentation do
   Analyzes indentation depth patterns across non-blank lines.
 
   Reports mean depth, variance, and maximum depth. Deep or highly variable
-  indentation often correlates with complex control flow.
+  indentation often correlates with complex control flow. Tab characters
+  count as 1 unit of depth; files mixing tabs and spaces may report
+  inaccurate depth values.
 
   See [indentation style](https://en.wikipedia.org/wiki/Indentation_style).
   """
@@ -13,9 +15,12 @@ defmodule CodeQA.Metrics.Indentation do
   @impl true
   def name, do: "indentation"
 
+  @spec analyze(map()) :: map()
   @impl true
   def analyze(%{lines: lines}) do
     lines_list = Tuple.to_list(lines)
+
+    uses_tabs = Enum.any?(lines_list, &String.match?(&1, ~r/^\t/))
 
     depths =
       lines_list
@@ -26,7 +31,7 @@ defmodule CodeQA.Metrics.Indentation do
       end)
 
     if depths == [] do
-      %{"mean_depth" => 0.0, "max_depth" => 0, "variance" => 0.0}
+      %{"mean_depth" => 0.0, "max_depth" => 0, "variance" => 0.0, "uses_tabs" => uses_tabs}
     else
       n = length(depths)
       mean = Enum.sum(depths) / n
@@ -39,7 +44,8 @@ defmodule CodeQA.Metrics.Indentation do
       %{
         "mean_depth" => Float.round(mean, 4),
         "variance" => Float.round(variance, 4),
-        "max_depth" => Enum.max(depths)
+        "max_depth" => Enum.max(depths),
+        "uses_tabs" => uses_tabs
       }
     end
   end
