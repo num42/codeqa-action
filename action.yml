@@ -110,7 +110,7 @@ runs:
         MIN_GRADE: ${{ inputs.fail-grade }}
       run: |
         # Grade ordering from best to worst
-        GRADES=("A" "A-" "B+" "B" "B-" "C+" "C" "C-" "D+" "D" "D-" "F")
+        GRADES=("A" "A-" "B+" "B" "B-" "C+" "C" "C-" "D+" "D" "D-" "E+" "E" "E-" "F")
 
         grade_index() {
           local g="$1"
