@@ -101,6 +101,7 @@ defmodule CodeQA.HealthReport.Grader do
             name: metric_def.name,
             source: metric_def.source,
             weight: metric_def.weight,
+            good: metric_def.good,
             value: value,
             score: score_metric(metric_def, value)
           }

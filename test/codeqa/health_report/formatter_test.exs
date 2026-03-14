@@ -19,7 +19,7 @@ defmodule CodeQA.HealthReport.FormatterTest do
         ],
         worst_offenders: [
           %{path: "lib/foo.ex", score: 75, grade: "B+", lines: 120, bytes: 3840,
-            metric_scores: [%{name: "flesch_adapted", source: "readability", value: 65.0, score: 75}]}
+            metric_scores: [%{name: "flesch_adapted", source: "readability", good: :high, value: 65.0, score: 75}]}
         ]
       },
       %{
@@ -65,6 +65,7 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert result =~ "`lib/foo.ex`"
       assert result =~ "| Lines | Size |"
       assert result =~ "| 120 | 3.8 KB |"
+      assert result =~ "↑ flesch_adapted=65.00"
     end
 
     test "summary detail omits category sections" do

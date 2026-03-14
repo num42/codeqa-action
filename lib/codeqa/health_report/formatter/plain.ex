@@ -88,7 +88,7 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
         Enum.map(offenders, fn f ->
           issues =
             f.metric_scores
-            |> Enum.map(fn m -> "#{m.name}=#{format_num(m.value)}" end)
+            |> Enum.map(fn m -> "#{direction(m.good)}#{m.name}=#{format_num(m.value)}" end)
             |> Enum.join(", ")
 
           "| `#{f.path}` | #{f.grade} | #{format_lines(f[:lines])} | #{format_size(f[:bytes])} | #{issues} |"
@@ -103,6 +103,9 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
       ] ++ [""]
     end
   end
+
+  defp direction(:high), do: "↑ "
+  defp direction(_), do: "↓ "
 
   defp format_lines(nil), do: "—"
   defp format_lines(n), do: to_string(n)
