@@ -3,6 +3,11 @@ name: Dialyzer
 on:
   pull_request:
     branches: ["main"]
+    paths:
+      - "**/*.ex"
+      - "**/*.exs"
+      - "mix.exs"
+      - "mix.lock"
 
 concurrency:
   group: dialyzer-${{ github.head_ref }}
