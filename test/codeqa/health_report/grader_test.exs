@@ -185,7 +185,6 @@ defmodule CodeQA.HealthReport.GraderTest do
         assert Map.has_key?(cat, :name), "missing :name"
         assert Map.has_key?(cat, :score), "missing :score"
         assert Map.has_key?(cat, :grade), "missing :grade"
-        assert Map.has_key?(cat, :impact), "missing :impact"
         assert Map.has_key?(cat, :behaviors), "missing :behaviors"
       end
     end
@@ -209,9 +208,9 @@ defmodule CodeQA.HealthReport.GraderTest do
       for cat <- result, do: assert(is_binary(cat.grade))
     end
 
-    test "impact defaults to 1", %{aggregate: aggregate} do
+    test "impact key is absent (HealthReport.generate/2 is responsible for embedding impact)", %{aggregate: aggregate} do
       result = Grader.grade_cosine_categories(aggregate, %{}, @default_scale)
-      for cat <- result, do: assert(cat.impact == 1)
+      for cat <- result, do: refute(Map.has_key?(cat, :impact))
     end
 
     test "name is humanized from key", %{aggregate: aggregate} do

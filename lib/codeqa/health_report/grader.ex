@@ -266,7 +266,6 @@ defmodule CodeQA.HealthReport.Grader do
         name: humanize_category(category),
         score: category_score,
         grade: grade_letter(category_score, scale),
-        impact: 1,
         behaviors: behavior_entries
       }
     end)
