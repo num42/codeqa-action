@@ -5,3 +5,21 @@
 
 ignore_paths:
   - priv/combined_metrics/samples/**
+  - tools/**
+
+# Impact weights for overall score calculation.
+# Combined metric categories default to 1 (can be overridden here).
+impact:
+  complexity: 5
+  file_structure: 4
+  function_design: 4
+  code_smells: 3
+  naming_conventions: 2
+  error_handling: 2
+  consistency: 2
+  documentation: 1
+  testing: 1
+  # combined categories override example:
+  # variable_naming: 2
+
+combined_top: 2   # worst offender files per combined-metric behavior
