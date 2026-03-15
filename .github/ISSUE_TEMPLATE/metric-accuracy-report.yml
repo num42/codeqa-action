@@ -1,0 +1,63 @@
+# SYNC REQUIRED: structural changes must be mirrored in bot-metric-accuracy-report.yml
+name: Metric Accuracy Report
+description: Report that a metric is producing incorrect scores for a language or file
+labels: ["bug", "metrics"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template if you believe a metric is scoring files incorrectly.
+  - type: dropdown
+    id: metric
+    attributes:
+      label: Metric name
+      options:
+        - entropy
+        - halstead
+        - compression_ratio
+        - branching_density
+        - vocabulary_ttr
+        - Other / not listed
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - Python
+        - TypeScript
+        - Elixir
+        - Go
+        - Rust
+        - Other / not listed
+    validations:
+      required: true
+  - type: input
+    id: expected_value
+    attributes:
+      label: Expected value (approximate)
+      placeholder: e.g. 0.85
+    validations:
+      required: false
+  - type: input
+    id: actual_value
+    attributes:
+      label: Actual value
+      placeholder: e.g. 0.12
+    validations:
+      required: false
+  - type: input
+    id: reproduction_path
+    attributes:
+      label: File or path to reproduce
+      placeholder: e.g. path/to/file.py
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Explain what you expected and what you observed.
+    validations:
+      required: true

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions
+    url: https://github.com/num42/codeqa-action/discussions
+    about: Questions and ideas that don't fit an issue template

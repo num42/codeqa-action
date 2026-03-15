@@ -1,0 +1,58 @@
+# SYNC REQUIRED: mirrors bug-report.yml — keep field set and dropdowns aligned
+name: "[Bot] Bug Report"
+description: Automated bug report from a CI/agent run
+labels: ["bug", "bot", "type:bug-report", "schema:v1"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- AGENT-SCHEMA: {"version":"1.0","type":"bug-report","required":["agent_type","agent_version","affected_area","reproduction_path","description"]} -->
+        **Note:** `agent_type` and `agent_version` are public free-text fields. Any downstream automation passing these values into an LLM prompt must sanitize them first.
+  - type: input
+    id: agent_type
+    attributes:
+      label: Agent type
+      description: Logical bot type, e.g. `codeqa-health-reporter` (stable across versions).
+      placeholder: e.g. codeqa-health-reporter
+    validations:
+      required: true
+  - type: input
+    id: agent_version
+    attributes:
+      label: Agent version
+      description: Semver of the bot, e.g. `1.2.3`.
+      placeholder: e.g. 1.2.3
+    validations:
+      required: true
+  - type: input
+    id: agent_run_id
+    attributes:
+      label: Agent run ID (optional)
+      description: GitHub Actions `${{ github.run_id }}` for workflow traceability. Leave blank if filing from outside GitHub Actions.
+    validations:
+      required: false
+  - type: dropdown
+    id: affected_area
+    attributes:
+      label: Affected area
+      options:
+        - CLI
+        - GitHub Action
+        - metrics
+        - output formatting
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: reproduction_path
+    attributes:
+      label: Reproduction path
+      placeholder: e.g. path/to/file.py or workflow run URL
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+    validations:
+      required: true
