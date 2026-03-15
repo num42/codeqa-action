@@ -1,5 +1,5 @@
 defmodule CodeQA.CombinedMetrics.FileScorerTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias CodeQA.CombinedMetrics.FileScorer
 
