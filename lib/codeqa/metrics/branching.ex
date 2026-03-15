@@ -43,6 +43,7 @@ defmodule CodeQA.Metrics.Branching do
   @impl true
   def name, do: "branching"
 
+  @spec analyze(map()) :: map()
   @impl true
   def analyze(%{lines: lines, tokens: tokens}) do
     non_blank_count =
@@ -60,6 +61,10 @@ defmodule CodeQA.Metrics.Branching do
         do: Float.round(branch_count / non_blank_count, 4),
         else: 0.0
 
-    %{"branching_density" => density}
+    %{
+      "branching_density" => density,
+      "branch_count" => branch_count,
+      "non_blank_count" => non_blank_count
+    }
   end
 end

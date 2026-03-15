@@ -15,6 +15,7 @@ defmodule CodeQA.Metrics.Readability do
   @impl true
   def name, do: "readability"
 
+  @spec analyze(map()) :: map()
   @impl true
   def analyze(ctx) do
     lines =
@@ -61,11 +62,11 @@ defmodule CodeQA.Metrics.Readability do
     fog = 0.4 * (avg_tokens + 100 * complex_fraction)
 
     %{
-      "avg_tokens_per_line" => avg_tokens,
-      "avg_line_length" => avg_line_length,
-      "avg_sub_words_per_id" => avg_sub_words,
-      "flesch_adapted" => flesch,
-      "fog_adapted" => fog,
+      "avg_tokens_per_line" => Float.round(avg_tokens, 4),
+      "avg_line_length" => Float.round(avg_line_length, 4),
+      "avg_sub_words_per_id" => Float.round(avg_sub_words, 4),
+      "flesch_adapted" => Float.round(flesch, 4),
+      "fog_adapted" => Float.round(fog, 4),
       "total_lines" => total_lines
     }
   end
@@ -84,7 +85,8 @@ defmodule CodeQA.Metrics.Readability do
     |> Enum.reject(&(&1 == ""))
   end
 
-  defp split_camel_case([], acc), do: Enum.reverse(acc)
+  defp split_camel_case([], []), do: []
+  defp split_camel_case([], [current | rest]), do: Enum.reverse([Enum.reverse(current) | rest])
   defp split_camel_case([char | rest], []), do: split_camel_case(rest, [[char]])
 
   defp split_camel_case([char | rest], [current | acc_rest]) do

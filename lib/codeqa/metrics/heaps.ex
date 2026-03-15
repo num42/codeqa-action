@@ -16,6 +16,7 @@ defmodule CodeQA.Metrics.Heaps do
 
   @max_samples 50
 
+  @spec analyze(map()) :: map()
   @impl true
   def analyze(%{tokens: tokens}) when tuple_size(tokens) == 0 do
     %{"k" => 0.0, "beta" => 0.0, "r_squared" => 0.0}
@@ -53,8 +54,8 @@ defmodule CodeQA.Metrics.Heaps do
 
   defp fit_heaps(data_points) do
     # log(V) = log(k) + β * log(n)  →  linear regression in log-space
-    ns = Enum.map(data_points, fn {n, _v} -> n / 1 end)
-    vs = Enum.map(data_points, fn {_n, v} -> v / 1 end)
+    ns = Enum.map(data_points, &elem(&1, 0))
+    vs = Enum.map(data_points, &elem(&1, 1))
 
     log_ns = Nx.tensor(ns, type: :f64) |> Nx.log()
     log_vs = Nx.tensor(vs, type: :f64) |> Nx.log()
@@ -65,6 +66,10 @@ defmodule CodeQA.Metrics.Heaps do
     beta = Nx.to_number(slope)
     r_sq = Nx.to_number(r_squared)
 
-    %{"k" => k, "beta" => beta, "r_squared" => r_sq}
+    %{
+      "k" => Float.round(k, 4),
+      "beta" => Float.round(beta, 4),
+      "r_squared" => Float.round(r_sq, 4)
+    }
   end
 end

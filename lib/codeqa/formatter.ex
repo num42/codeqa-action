@@ -48,7 +48,7 @@ defmodule CodeQA.Formatter do
         mermaid_chart(head_grades) ++
         progress_bars(paired) ++
         [""] ++
-        file_details(files, output_mode, watch_files) ++
+        file_details(files, codebase, output_mode, watch_files) ++
         aggregate_details(codebase)
 
     Enum.join(lines, "\n")
@@ -91,8 +91,8 @@ defmodule CodeQA.Formatter do
     ["```"] ++ rows ++ ["```"]
   end
 
-  defp file_details(files, _output_mode, watch_files) do
-    codebase_summary = CodeQA.Summarizer.summarize_codebase(%{"files" => files, "codebase" => %{}})
+  defp file_details(files, codebase, _output_mode, watch_files) do
+    codebase_summary = CodeQA.Summarizer.summarize_codebase(%{"files" => files, "codebase" => codebase})
 
     file_summaries =
       Map.new(files, fn {path, data} ->

@@ -1,0 +1,7 @@
+# CodeQA configuration for this repository
+#
+# ignore_paths is automatically loaded by the CLI from this file.
+# Patterns here are merged with any --ignore-paths passed on the command line.
+
+ignore_paths:
+  - priv/combined_metrics/samples/**
