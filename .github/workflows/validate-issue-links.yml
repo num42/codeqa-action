@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - "README.md"
-      - "AGENT.md"
+      - "AUTOMATION.md"
       - ".github/ISSUE_TEMPLATE/**"
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
           set -euo pipefail
 
           TEMPLATE_DIR=".github/ISSUE_TEMPLATE"
-          FILES_TO_CHECK="README.md AGENT.md"
+          FILES_TO_CHECK="README.md AUTOMATION.md"
           broken=0
 
           for file in $FILES_TO_CHECK; do
