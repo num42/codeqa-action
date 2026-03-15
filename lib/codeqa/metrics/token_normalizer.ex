@@ -22,6 +22,42 @@ defmodule CodeQA.Metrics.TokenNormalizer do
     |> Enum.flat_map(&split_punctuation/1)
   end
 
+  @doc """
+  Like normalize/1 but preserves newlines as <NL> and leading whitespace
+  as <WS> tokens (one per 2-space / 1-tab indentation unit).
+  Used for structural block detection.
+  """
+  @spec normalize_structural(String.t()) :: [String.t()]
+  def normalize_structural(code) do
+    code
+    |> String.split("\n")
+    |> Enum.map(&normalize_structural_line/1)
+    |> Enum.intersperse(["<NL>"])
+    |> Enum.concat()
+    |> Enum.reject(&(&1 == ""))
+  end
+
+  defp normalize_structural_line(line) do
+    indent_units =
+      line
+      |> String.graphemes()
+      |> Enum.take_while(&(&1 in [" ", "\t"]))
+      |> Enum.reduce(0, fn "\t", acc -> acc + 2; " ", acc -> acc + 1 end)
+      |> div(2)
+
+    ws_tokens = List.duplicate("<WS>", indent_units)
+
+    content_tokens =
+      line
+      |> String.replace(~r/".*?"|'.*?'/, " <STR> ")
+      |> String.replace(~r/\b\d+(\.\d+)?\b/, " <NUM> ")
+      |> String.replace(~r/(?<!<)\b[a-zA-Z_]\w*\b(?!>)/, " <ID> ")
+      |> String.split(~r/\s+/, trim: true)
+      |> Enum.flat_map(&split_punctuation/1)
+
+    ws_tokens ++ content_tokens
+  end
+
   defp split_punctuation(token) when token in ["<STR>", "<NUM>", "<ID>"], do: [token]
 
   defp split_punctuation(text) do
