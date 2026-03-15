@@ -64,7 +64,7 @@ defmodule CodeQA.CLI.Compare do
 
     Options.validate_dir!(path)
 
-    ignore_patterns = Options.parse_ignore_paths(opts[:ignore_paths])
+    ignore_patterns = Options.parse_ignore_paths(opts[:ignore_paths]) ++ Options.load_config_ignore_paths(path)
     opts = Keyword.put(opts, :ignore_patterns, ignore_patterns)
 
     {base_result, head_result, changes} =

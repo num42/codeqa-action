@@ -54,6 +54,22 @@ defmodule CodeQA.CLI.Options do
     |> Enum.map(&String.trim/1)
   end
 
+  @spec load_config_ignore_paths(String.t()) :: [String.t()]
+  def load_config_ignore_paths(path) do
+    config_file = Path.join(path, ".codeqa.yml")
+
+    case File.read(config_file) do
+      {:ok, contents} ->
+        case YamlElixir.read_from_string(contents) do
+          {:ok, %{"ignore_paths" => patterns}} when is_list(patterns) -> patterns
+          _ -> []
+        end
+
+      {:error, _} ->
+        []
+    end
+  end
+
   @spec build_analyze_opts(keyword()) :: keyword()
   def build_analyze_opts(opts) do
     start_time_progress = System.monotonic_time(:millisecond)

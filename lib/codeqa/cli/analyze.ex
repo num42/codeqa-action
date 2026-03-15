@@ -43,7 +43,7 @@ defmodule CodeQA.CLI.Analyze do
 
     Options.validate_dir!(path)
 
-    ignore_patterns = Options.parse_ignore_paths(opts[:ignore_paths])
+    ignore_patterns = Options.parse_ignore_paths(opts[:ignore_paths]) ++ Options.load_config_ignore_paths(path)
     files = CodeQA.Collector.collect_files(path, ignore_patterns: ignore_patterns)
 
     if map_size(files) == 0 do

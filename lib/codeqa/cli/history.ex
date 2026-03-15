@@ -57,7 +57,7 @@ defmodule CodeQA.CLI.History do
     IO.puts(:stderr, "Found #{length(commits)} commits to analyze.")
 
     analyze_opts = Options.build_analyze_opts(opts)
-    ignore_patterns = Options.parse_ignore_paths(opts[:ignore_paths])
+    ignore_patterns = Options.parse_ignore_paths(opts[:ignore_paths]) ++ Options.load_config_ignore_paths(path)
 
     commits
     |> Enum.with_index(1)
