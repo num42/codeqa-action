@@ -8,18 +8,65 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   @spec render(map(), atom(), keyword()) :: String.t()
   def render(report, detail, opts \\ []) do
     chart? = Keyword.get(opts, :chart, true)
+    display_categories = merge_cosine_categories(report.categories)
 
     [
       header(report),
       cosine_legend(),
-      if(chart?, do: mermaid_chart(report.categories), else: []),
-      progress_bars(report.categories),
+      if(chart?, do: mermaid_chart(display_categories), else: []),
+      progress_bars(display_categories),
       top_issues_section(Map.get(report, :top_issues, []), detail),
-      category_sections(report.categories, detail),
+      category_sections(display_categories, detail),
       footer()
     ]
     |> List.flatten()
     |> Enum.join("\n")
+  end
+
+  defp merge_cosine_categories(categories) do
+    {cosine, threshold} = Enum.split_with(categories, &(&1.type == :cosine))
+
+    case cosine do
+      [] ->
+        threshold
+
+      _ ->
+        total_impact = Enum.sum(Enum.map(cosine, & &1.impact))
+
+        combined_score =
+          round(
+            Enum.sum(Enum.map(cosine, &(&1.score * &1.impact))) / max(total_impact, 1)
+          )
+
+        combined = %{
+          type: :cosine_group,
+          key: "combined_metrics",
+          name: "Combined Metrics",
+          score: combined_score,
+          grade: grade_letter_from_score(combined_score),
+          categories: cosine
+        }
+
+        threshold ++ [combined]
+    end
+  end
+
+  defp grade_letter_from_score(score) do
+    cond do
+      score >= 97 -> "A+"
+      score >= 93 -> "A"
+      score >= 90 -> "A-"
+      score >= 87 -> "B+"
+      score >= 83 -> "B"
+      score >= 80 -> "B-"
+      score >= 77 -> "C+"
+      score >= 73 -> "C"
+      score >= 70 -> "C-"
+      score >= 67 -> "D+"
+      score >= 63 -> "D"
+      score >= 60 -> "D-"
+      true -> "F"
+    end
   end
 
   defp header(report) do
@@ -89,6 +136,26 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     Enum.flat_map(categories, &render_category(&1, detail))
   end
 
+  defp render_category(%{type: :cosine_group} = group, detail) do
+    emoji = grade_emoji(group.grade)
+    summary_line = "#{emoji} #{group.name} — #{group.grade} (#{group.score}/100)"
+
+    inner =
+      cosine_group_content(group, detail)
+      |> List.flatten()
+      |> Enum.join("\n")
+
+    [
+      "<details>",
+      "<summary><strong>#{summary_line}</strong></summary>",
+      "",
+      inner,
+      "",
+      "</details>",
+      ""
+    ]
+  end
+
   defp render_category(%{type: :cosine} = cat, detail) do
     emoji = grade_emoji(cat.grade)
     summary_line = "#{emoji} #{cat.name} — #{cat.grade} (#{cat.score}/100)"
@@ -127,6 +194,41 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       "</details>",
       ""
     ]
+  end
+
+  defp cosine_group_content(group, detail) do
+    rows =
+      Enum.map(group.categories, fn cat ->
+        emoji = grade_emoji(cat.grade)
+        "| #{cat.name} | #{cat.score} | #{emoji} #{cat.grade} |"
+      end)
+
+    summary_table = [
+      "| Category | Score | Grade |",
+      "|----------|-------|-------|"
+      | rows
+    ]
+
+    sub_sections =
+      Enum.flat_map(group.categories, fn cat ->
+        emoji = grade_emoji(cat.grade)
+        inner =
+          cosine_section_content(cat, detail)
+          |> List.flatten()
+          |> Enum.join("\n")
+
+        [
+          "<details>",
+          "<summary>#{emoji} #{cat.name} — #{cat.grade} (#{cat.score}/100)</summary>",
+          "",
+          inner,
+          "",
+          "</details>",
+          ""
+        ]
+      end)
+
+    summary_table ++ [""] ++ sub_sections
   end
 
   defp cosine_section_content(cat, detail) do
