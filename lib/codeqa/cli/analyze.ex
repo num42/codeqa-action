@@ -62,7 +62,7 @@ defmodule CodeQA.CLI.Analyze do
     IO.puts(:stderr, "Analysis completed in #{end_time - start_time}ms")
 
     total_bytes = results["files"] |> Map.values() |> Enum.map(& &1["bytes"]) |> Enum.sum()
-    results = filter_files_for_output(results, opts)
+    results = filter_files_for_output(results, opts, "json")
 
     report =
       %{
@@ -99,7 +99,10 @@ defmodule CodeQA.CLI.Analyze do
     end
   end
 
-  defp filter_files_for_output(results, opts) do
+  defp filter_files_for_output(results, _opts, format) when format in ["github", "markdown"],
+    do: results
+
+  defp filter_files_for_output(results, opts, _format) do
     cond do
       opts[:show_files] ->
         results

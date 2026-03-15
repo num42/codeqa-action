@@ -73,7 +73,7 @@ defmodule CodeQA.CLI.Compare do
     comparison =
       CodeQA.Comparator.compare_results(base_result, head_result, changes)
       |> enrich_metadata(base_ref, head_ref, changes_only)
-      |> filter_files_for_output(opts)
+      |> filter_files_for_output(opts, format)
 
     output_comparison(comparison, format, output_mode)
 
@@ -219,7 +219,10 @@ defmodule CodeQA.CLI.Compare do
     end)
   end
 
-  defp filter_files_for_output(results, opts) do
+  defp filter_files_for_output(results, _opts, format) when format in ["github", "markdown"],
+    do: results
+
+  defp filter_files_for_output(results, opts, _format) do
     cond do
       opts[:show_files] ->
         results
