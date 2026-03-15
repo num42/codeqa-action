@@ -27,7 +27,7 @@ jobs:
             fi
 
             # Extract all ?template=X.yml references
-            templates=$(grep -oP '(?<=\?template=)[^\s")\x27>]+' "$file" || true)
+            templates=$(grep -oP '(?<=\?template=)[^\s")\x27>\x60]+' "$file" || true)
 
             for tmpl in $templates; do
               if [ ! -f "$TEMPLATE_DIR/$tmpl" ]; then
