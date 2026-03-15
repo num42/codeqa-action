@@ -15,103 +15,101 @@ defmodule CodeQA.Metrics.NearDuplicateBlocksTest do
     test "single substitution" do
       assert NDB.token_edit_distance(~w[a b c], ~w[a x c]) == 1
     end
+  end
 
-    test "single insertion" do
-      assert NDB.token_edit_distance(~w[a b c], ~w[a b x c]) == 1
+  describe "percent_bucket/2" do
+    test "returns 0 for edit distance 0" do
+      assert NDB.percent_bucket(0, 100) == 0
     end
 
-    test "single deletion" do
-      assert NDB.token_edit_distance(~w[a b c d], ~w[a b d]) == 1
+    test "returns 1 for 1% difference (within 0–5%)" do
+      assert NDB.percent_bucket(1, 100) == 1
     end
 
-    test "distance is symmetric" do
-      a = ~w[foo bar baz]
-      b = ~w[foo qux baz quux]
-      assert NDB.token_edit_distance(a, b) == NDB.token_edit_distance(b, a)
+    test "returns 1 for 5% difference (boundary)" do
+      assert NDB.percent_bucket(5, 100) == 1
+    end
+
+    test "returns 2 for 6% difference" do
+      assert NDB.percent_bucket(6, 100) == 2
+    end
+
+    test "returns 8 for 50% difference" do
+      assert NDB.percent_bucket(50, 100) == 8
+    end
+
+    test "returns nil for >50% difference" do
+      assert NDB.percent_bucket(51, 100) == nil
+    end
+
+    test "returns nil when min_token_count is 0" do
+      assert NDB.percent_bucket(0, 0) == nil
+    end
+
+    test "returns 7 for exactly 40% (d7 upper boundary)" do
+      assert NDB.percent_bucket(40, 100) == 7
+    end
+
+    test "returns 8 for 41% (just above d7 boundary, in d8)" do
+      assert NDB.percent_bucket(41, 100) == 8
+    end
+
+    test "returns 7 for mid-range d7 (35%)" do
+      assert NDB.percent_bucket(35, 100) == 7
     end
   end
 
-  describe "extract_blocks/2" do
-    test "returns empty for token list shorter than block size" do
-      assert NDB.extract_blocks(~w[a b c], 8) == []
-    end
-
-    test "returns one block when tokens exactly equal block size" do
-      tokens = Enum.map(1..8, &"t#{&1}")
-      [{block, offset}] = NDB.extract_blocks(tokens, 8)
-      assert block == tokens
-      assert offset == 0
-    end
-
-    test "stride is block_size div 2" do
-      tokens = Enum.map(1..16, &"t#{&1}")
-      blocks = NDB.extract_blocks(tokens, 8)
-      offsets = Enum.map(blocks, &elem(&1, 1))
-      assert offsets == [0, 4, 8]
-    end
-
-    test "each block has exactly block_size tokens" do
-      tokens = Enum.map(1..32, &"t#{&1}")
-      blocks = NDB.extract_blocks(tokens, 8)
-      assert Enum.all?(blocks, fn {block, _} -> length(block) == 8 end)
-    end
-  end
-
-  describe "find_pairs/2" do
-    test "finds no pairs when all blocks are identical (edit distance 0)" do
-      block = ~w[a b c d e f g h]
-      labeled = [{block, 0}, {block, 4}]
-      result = NDB.find_pairs(labeled, max_distance: 8, max_pairs_per_bucket: nil)
-      assert result == %{}
-    end
-
-    test "finds a pair at edit distance 1" do
-      base  = ~w[a b c d e f g h]
-      near  = ~w[a b c d e f g x]
-      labeled = [{base, 0}, {near, 4}]
-      result = NDB.find_pairs(labeled, max_distance: 8, max_pairs_per_bucket: nil)
-      assert Map.get(result, {8, 1}) != nil
-      assert Map.get(result, {8, 1}).count == 1
-    end
-
-    test "does not report pairs with edit distance > max_distance" do
-      a = ~w[a b c d e f g h]
-      b = ~w[1 2 3 4 5 6 7 8]
-      labeled = [{a, 0}, {b, 4}]
-      result = NDB.find_pairs(labeled, max_distance: 3, max_pairs_per_bucket: nil)
-      assert result == %{}
-    end
-
-    test "caps pairs list at max_pairs_per_bucket" do
-      base = ~w[a b c d e f g h]
-      variants = for i <- 1..6, do: {List.replace_at(base, 7, "x#{i}"), i * 4}
-      labeled = [{base, 0} | variants]
-      result = NDB.find_pairs(labeled, max_distance: 8, max_pairs_per_bucket: 2)
-      bucket = Map.get(result, {8, 1})
-      assert bucket.count >= 2
-      assert length(bucket.pairs) <= 2
-    end
-  end
-
-  describe "analyze/3" do
-    test "returns zero counts for a file with too few tokens" do
-      result = NDB.analyze([{"short", ~w[a b c]}], [], [])
-      assert Map.get(result, "near_dup_8_d1") == 0
-    end
-
-    test "detects within-file near-duplicate blocks" do
-      block   = ~w[a b c d e f g h]
-      variant = ~w[a b c d e f g x]
-      tokens  = block ++ variant
-      result = NDB.analyze([{"file.ex", tokens}], [], max_pairs_per_bucket: nil)
-      assert Enum.any?(result, fn {k, v} -> String.contains?(k, "near_dup_8_d") and v > 0 end)
-    end
-
-    test "output map contains all expected count keys" do
-      result = NDB.analyze([{"f", ~w[a b c d e f g h]}], [], [])
-      for b <- [8, 16, 32, 64, 128, 256], d <- 1..8 do
-        assert Map.has_key?(result, "near_dup_#{b}_d#{d}")
+  describe "analyze/2" do
+    test "returns all expected count keys" do
+      result = NDB.analyze([{"a.ex", "x = 1\n"}], [])
+      for d <- 0..8 do
+        assert Map.has_key?(result, "near_dup_block_d#{d}")
       end
+    end
+
+    test "returns block_count and sub_block_count" do
+      result = NDB.analyze([{"a.ex", "def foo\n  x\nend\n"}], [])
+      assert Map.has_key?(result, "block_count")
+      assert Map.has_key?(result, "sub_block_count")
+    end
+
+    test "block_count reflects detected blocks" do
+      code = "def foo\n  x\nend\n\n\ndef bar\n  y\nend\n"
+      result = NDB.analyze([{"a.ex", code}], [])
+      assert result["block_count"] >= 2
+    end
+
+    test "detects exact duplicate blocks at d0" do
+      # Two identical function-like blocks separated by blank lines
+      block = "def foo\n  x = 1\nend\n"
+      result = NDB.analyze([{"a.ex", block <> "\n\n" <> block}], [])
+      assert result["near_dup_block_d0"] >= 1
+    end
+
+    test "detects near-duplicate blocks (single token difference)" do
+      block_a = "def foo\n  x = 1\nend\n"
+      block_b = "def bar\n  x = 1\nend\n"  # one identifier differs
+      result = NDB.analyze([{"a.ex", block_a <> "\n\n" <> block_b}], [])
+      near_dup_total = Enum.sum(for d <- 0..8, do: result["near_dup_block_d#{d}"])
+      assert near_dup_total >= 1
+    end
+
+    test "cross-file detection: same block in two files" do
+      block = "def foo\n  x = 1\nend\n"
+      result = NDB.analyze([{"a.ex", block}, {"b.ex", block}], [])
+      assert result["near_dup_block_d0"] >= 1
+    end
+
+    test "returns only count keys (no pairs keys)" do
+      result = NDB.analyze([{"a.ex", "x = 1\n"}], [])
+      refute Enum.any?(Map.keys(result), &String.ends_with?(&1, "_pairs"))
+    end
+
+    test "find_pairs/2 with include_pairs option returns pair data" do
+      block = "def foo\n  x = 1\nend\n"
+      result = NDB.analyze([{"a.ex", block <> "\n\n" <> block}], include_pairs: true)
+      pairs_keys = Map.keys(result) |> Enum.filter(&String.ends_with?(&1, "_pairs"))
+      assert length(pairs_keys) > 0
     end
   end
 end

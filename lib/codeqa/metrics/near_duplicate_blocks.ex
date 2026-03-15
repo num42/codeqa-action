@@ -1,15 +1,21 @@
 defmodule CodeQA.Metrics.NearDuplicateBlocks do
   @moduledoc """
-  Core logic for near-duplicate block detection.
+  Near-duplicate block detection using natural code blocks.
 
-  Extracts token blocks from a normalized token stream, filters candidates
-  using a bigram shingle index, and computes token-level Levenshtein distance.
+  Detects blocks via blank-line boundaries and sub-blocks via bracket/indentation rules.
+  Compares structurally similar blocks by token-level edit distance, bucketed as a
+  percentage of the smaller block's token count.
 
-  See [edit distance](https://en.wikipedia.org/wiki/Edit_distance).
+  Distance buckets:
+    d0 = exact (0%), d1 ≤ 5%, d2 ≤ 10%, d3 ≤ 15%, d4 ≤ 20%,
+    d5 ≤ 25%, d6 ≤ 30%, d7 ≤ 40%, d8 ≤ 50%
   """
 
-  @block_sizes [8, 16, 32, 64, 128, 256]
-  @max_distance 8
+  alias CodeQA.Metrics.{Block, BlockDetector, TokenNormalizer}
+
+  @max_bucket 8
+  @bucket_thresholds [{0, 0.0}, {1, 0.05}, {2, 0.10}, {3, 0.15}, {4, 0.20},
+                      {5, 0.25}, {6, 0.30}, {7, 0.40}, {8, 0.50}]
 
   @doc "Standard Levenshtein distance between two token lists."
   @spec token_edit_distance([String.t()], [String.t()]) :: non_neg_integer()
@@ -42,43 +48,80 @@ defmodule CodeQA.Metrics.NearDuplicateBlocks do
     levenshtein_cols(b, lb, prev, i, ai, Tuple.insert_at(curr, tuple_size(curr), val))
   end
 
-  @doc "Extract overlapping token blocks with 50% stride. Returns [{block_tokens, token_offset}]."
-  @spec extract_blocks([String.t()], pos_integer()) :: [{[String.t()], non_neg_integer()}]
-  def extract_blocks(tokens, block_size) when length(tokens) < block_size, do: []
+  @doc "Map an edit distance and min token count to a percentage bucket 0–8, or nil if > 50%."
+  @spec percent_bucket(non_neg_integer(), non_neg_integer()) :: 0..8 | nil
+  def percent_bucket(_ed, 0), do: nil
+  def percent_bucket(0, _min_count), do: 0
 
-  def extract_blocks(tokens, block_size) do
-    stride = max(1, div(block_size, 2))
-
-    tokens
-    |> Enum.chunk_every(block_size, stride, :discard)
-    |> Enum.with_index()
-    |> Enum.map(fn {block, idx} -> {block, idx * stride} end)
+  def percent_bucket(ed, min_count) do
+    pct = ed / min_count
+    @bucket_thresholds
+    |> Enum.find(fn {bucket, threshold} -> bucket > 0 and pct <= threshold end)
+    |> case do
+      {bucket, _} -> bucket
+      nil -> nil
+    end
   end
 
   @doc """
-  Find near-duplicate pairs across a list of labeled blocks.
-
-  `labeled_blocks` is `[{token_list, label}]` where label is any term stored in pair sources.
-  Returns `%{{block_size, distance} => %{count: integer, pairs: [pair]}}`.
+  Analyze a list of `{path, content}` pairs for near-duplicate blocks.
+  Returns count keys `near_dup_block_d0..d8`, `block_count`, `sub_block_count`.
+  With `include_pairs: true` in opts, also returns `_pairs` keys.
   """
-  @spec find_pairs([{[String.t()], term()}], keyword()) :: map()
-  def find_pairs(labeled_blocks, opts) do
-    max_distance = Keyword.get(opts, :max_distance, @max_distance)
-    max_pairs = Keyword.get(opts, :max_pairs_per_bucket, nil)
+  @spec analyze([{String.t(), String.t()}], keyword()) :: map()
+  def analyze(labeled_content, opts) do
     workers = Keyword.get(opts, :workers, System.schedulers_online())
+    max_pairs = Keyword.get(opts, :max_pairs_per_bucket, nil)
+    include_pairs = Keyword.get(opts, :include_pairs, false)
 
-    total = length(labeled_blocks)
+    # Detect blocks per file, flatten into a labeled list
+    all_blocks =
+      Enum.flat_map(labeled_content, fn {path, content} ->
+        language = BlockDetector.language_from_path(path)
+        tokens = TokenNormalizer.normalize_structural(content)
+        blocks = BlockDetector.detect_blocks(tokens, language: language)
+        Enum.map(blocks, &%{&1 | label: path})
+      end)
 
-    if total < 2 do
+    block_count = length(all_blocks)
+    sub_block_count = Enum.sum(Enum.map(all_blocks, &Block.sub_block_count/1))
+
+    buckets = find_pairs(all_blocks, workers: workers, max_pairs_per_bucket: max_pairs)
+
+    result =
+      for d <- 0..@max_bucket, into: %{} do
+        {"near_dup_block_d#{d}", Map.get(buckets, d, %{count: 0}).count}
+      end
+
+    result = Map.merge(result, %{"block_count" => block_count, "sub_block_count" => sub_block_count})
+
+    if include_pairs do
+      pairs_result =
+        for d <- 0..@max_bucket, into: %{} do
+          {"near_dup_block_d#{d}_pairs", Map.get(buckets, d, %{pairs: []}).pairs |> format_pairs()}
+        end
+      Map.merge(result, pairs_result)
+    else
+      result
+    end
+  end
+
+  @doc "Find near-duplicate pairs across a list of %Block{} structs."
+  @spec find_pairs([Block.t()], keyword()) :: map()
+  def find_pairs(blocks, opts) do
+    workers = Keyword.get(opts, :workers, System.schedulers_online())
+    max_pairs = Keyword.get(opts, :max_pairs_per_bucket, nil)
+
+    if length(blocks) < 2 do
       %{}
     else
-      exact_index = build_exact_index(labeled_blocks)
-      shingle_index = build_shingle_index(labeled_blocks)
+      exact_index = build_exact_index(blocks)
+      shingle_index = build_shingle_index(blocks)
 
-      labeled_blocks
+      blocks
       |> Enum.with_index()
       |> Task.async_stream(
-        &find_pairs_for_block(&1, labeled_blocks, exact_index, shingle_index, max_distance),
+        &find_pairs_for_block(&1, blocks, exact_index, shingle_index),
         max_concurrency: workers,
         timeout: :infinity
       )
@@ -87,20 +130,31 @@ defmodule CodeQA.Metrics.NearDuplicateBlocks do
     end
   end
 
-  defp build_exact_index(labeled_blocks) do
-    labeled_blocks
+  # Strip leading/trailing <NL> and <WS> tokens for canonical comparison.
+  # This ensures blocks split at blank-line boundaries compare as equal
+  # even if trailing newlines differ between first and last blocks.
+  defp canonical_tokens(tokens) do
+    tokens
+    |> Enum.drop_while(&(&1 in ["<NL>", "<WS>"]))
+    |> Enum.reverse()
+    |> Enum.drop_while(&(&1 in ["<NL>", "<WS>"]))
+    |> Enum.reverse()
+  end
+
+  defp build_exact_index(blocks) do
+    blocks
     |> Enum.with_index()
-    |> Enum.reduce(%{}, fn {{tokens, _label}, idx}, acc ->
-      h = :erlang.phash2(tokens)
+    |> Enum.reduce(%{}, fn {block, idx}, acc ->
+      h = :erlang.phash2(canonical_tokens(block.tokens))
       Map.update(acc, h, [idx], &[idx | &1])
     end)
   end
 
-  defp build_shingle_index(labeled_blocks) do
-    labeled_blocks
+  defp build_shingle_index(blocks) do
+    blocks
     |> Enum.with_index()
-    |> Enum.reduce(%{}, fn {{tokens, _label}, idx}, acc ->
-      tokens
+    |> Enum.reduce(%{}, fn {block, idx}, acc ->
+      canonical_tokens(block.tokens)
       |> Enum.chunk_every(2, 1, :discard)
       |> Enum.reduce(acc, fn bigram, sh_acc ->
         h = :erlang.phash2(bigram)
@@ -109,14 +163,31 @@ defmodule CodeQA.Metrics.NearDuplicateBlocks do
     end)
   end
 
-  defp find_pairs_for_block({{tokens_a, label_a}, i}, labeled_blocks, exact_index, shingle_index, max_distance) do
-    block_size = length(tokens_a)
+  defp find_pairs_for_block({block_a, i}, blocks, exact_index, shingle_index) do
+    tokens_a = canonical_tokens(block_a.tokens)
     hash_a = :erlang.phash2(tokens_a)
     exact_set = MapSet.new(Map.get(exact_index, hash_a, []))
 
-    min_shared = max(0, block_size - max_distance * 2)
+    # For d0 (exact), find hash-matching blocks and confirm with token equality
+    # to guard against phash2 collisions.
+    exact_pairs =
+      Map.get(exact_index, hash_a, [])
+      |> Enum.filter(&(&1 > i))
+      |> Enum.map(fn j ->
+        block_b = Enum.at(blocks, j)
+        tokens_b = canonical_tokens(block_b.tokens)
+        if tokens_b == tokens_a and structure_compatible?(block_a, block_b) do
+          {0, {block_a.label, block_b.label}}
+        else
+          nil
+        end
+      end)
+      |> Enum.reject(&is_nil/1)
 
-    candidates =
+    # For d1-d8 (near), use shingle index to find candidates.
+    min_shared = max(0, round(length(tokens_a) * 0.5) - 1)
+
+    near_pairs =
       tokens_a
       |> Enum.chunk_every(2, 1, :discard)
       |> Enum.reduce(%{}, fn bigram, acc ->
@@ -128,28 +199,47 @@ defmodule CodeQA.Metrics.NearDuplicateBlocks do
       end)
       |> Enum.filter(fn {_, count} -> count >= min_shared end)
       |> Enum.map(&elem(&1, 0))
+      |> Enum.reject(&MapSet.member?(exact_set, &1))
+      |> Enum.flat_map(fn j ->
+        block_b = Enum.at(blocks, j)
+        tokens_b = canonical_tokens(block_b.tokens)
 
-    for j <- candidates,
-        not MapSet.member?(exact_set, j) do
-      {tokens_b, label_b} = Enum.at(labeled_blocks, j)
-      ed = token_edit_distance(tokens_a, tokens_b)
+        if structure_compatible?(block_a, block_b) do
+          ed = token_edit_distance(tokens_a, tokens_b)
+          min_count = min(length(tokens_a), length(tokens_b))
+          case percent_bucket(ed, min_count) do
+            nil -> []
+            bucket when bucket > 0 -> [{bucket, {block_a.label, block_b.label}}]
+            _ -> []  # ed=0 handled by exact_pairs above
+          end
+        else
+          []
+        end
+      end)
 
-      if ed >= 1 and ed <= max_distance do
-        {{block_size, ed}, {label_a, label_b}}
-      else
-        nil
-      end
-    end
-    |> Enum.reject(&is_nil/1)
+    exact_pairs ++ near_pairs
+  end
+
+  defp canonical_line_count(tokens) do
+    tokens
+    |> canonical_tokens()
+    |> Enum.count(&(&1 == "<NL>"))
+    |> Kernel.+(1)
+  end
+
+  defp structure_compatible?(a, b) do
+    sub_diff = abs(Block.sub_block_count(a) - Block.sub_block_count(b))
+    lines_a = canonical_line_count(a.tokens)
+    lines_b = canonical_line_count(b.tokens)
+    max_lines = max(lines_a, lines_b)
+    line_ratio = if max_lines > 0, do: abs(lines_a - lines_b) / max_lines, else: 0.0
+    sub_diff <= 1 and line_ratio <= 0.30
   end
 
   defp bucket_pairs(raw_pairs, max_pairs) do
-    Enum.reduce(raw_pairs, %{}, fn {key, pair}, acc ->
-      Map.update(acc, key, %{count: 1, pairs: maybe_append([], pair, max_pairs)}, fn existing ->
-        %{
-          count: existing.count + 1,
-          pairs: maybe_append(existing.pairs, pair, max_pairs)
-        }
+    Enum.reduce(raw_pairs, %{}, fn {bucket, pair}, acc ->
+      Map.update(acc, bucket, %{count: 1, pairs: maybe_append([], pair, max_pairs)}, fn existing ->
+        %{count: existing.count + 1, pairs: maybe_append(existing.pairs, pair, max_pairs)}
       end)
     end)
   end
@@ -157,57 +247,9 @@ defmodule CodeQA.Metrics.NearDuplicateBlocks do
   defp maybe_append(list, _pair, max) when is_integer(max) and length(list) >= max, do: list
   defp maybe_append(list, pair, _max), do: [pair | list]
 
-  @doc """
-  Run near-duplicate block analysis across a list of labeled token streams.
-
-  `labeled_files` is `[{label, [token]}]`.
-  Returns a flat map with count keys `near_dup_B_dD` and pair keys `near_dup_B_dD_pairs`.
-  """
-  @spec analyze([{term(), [String.t()]}], [pos_integer()], keyword()) :: map()
-  def analyze(labeled_files, block_sizes, opts) do
-    sizes = if block_sizes == [], do: @block_sizes, else: block_sizes
-    workers = Keyword.get(opts, :workers, System.schedulers_online())
-
-    sizes
-    |> Task.async_stream(&analyze_block_size(&1, labeled_files, opts),
-      max_concurrency: workers,
-      timeout: :infinity)
-    |> Enum.flat_map(fn {:ok, kv_list} -> kv_list end)
-    |> Map.new()
-    |> fill_zeros(sizes)
-  end
-
-  defp analyze_block_size(block_size, labeled_files, opts) do
-    labeled_blocks =
-      Enum.flat_map(labeled_files, fn {label, tokens} ->
-        tokens
-        |> extract_blocks(block_size)
-        |> Enum.map(fn {block, offset} -> {block, {label, offset}} end)
-      end)
-
-    buckets = find_pairs(labeled_blocks, opts)
-
-    for d <- 1..@max_distance do
-      bucket = Map.get(buckets, {block_size, d}, %{count: 0, pairs: []})
-      pairs_key = "near_dup_#{block_size}_d#{d}_pairs"
-      count_key = "near_dup_#{block_size}_d#{d}"
-      [{count_key, bucket.count}, {pairs_key, format_pairs(bucket.pairs)}]
-    end
-    |> List.flatten()
-  end
-
   defp format_pairs(pairs) do
-    Enum.map(pairs, fn {{label_a, offset_a}, {label_b, offset_b}} ->
-      %{"source_a" => label_a, "offset_a" => offset_a,
-        "source_b" => label_b, "offset_b" => offset_b}
-    end)
-  end
-
-  defp fill_zeros(result, block_sizes) do
-    Enum.reduce(block_sizes, result, fn b, acc ->
-      Enum.reduce(1..@max_distance, acc, fn d, inner ->
-        Map.put_new(inner, "near_dup_#{b}_d#{d}", 0)
-      end)
+    Enum.map(pairs, fn {label_a, label_b} ->
+      %{"source_a" => label_a, "source_b" => label_b}
     end)
   end
 end
