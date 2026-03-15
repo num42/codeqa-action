@@ -18,6 +18,9 @@ defmodule CodeQA.Metrics.MagicNumberDensity do
   def name, do: "magic_number_density"
 
   @number_re ~r/\b\d+\.?\d*(?:[eE][+-]?\d+)?\b/
+  # In Elixir, module attributes (e.g. `@name value`) are compile-time named constants.
+  # Their values are intentionally named, so they should not count as magic numbers.
+  @module_attr_re ~r/^\s*@\w+\s+.+$/m
   @idiomatic_constants ~w[0 1 2 0.0 1.0 0.5]
 
   @spec analyze(map()) :: map()
@@ -31,7 +34,7 @@ defmodule CodeQA.Metrics.MagicNumberDensity do
     else
       numbers =
         @number_re
-        |> Regex.scan(content)
+        |> Regex.scan(String.replace(content, @module_attr_re, ""))
         |> List.flatten()
         |> Enum.reject(&(&1 in @idiomatic_constants))
 

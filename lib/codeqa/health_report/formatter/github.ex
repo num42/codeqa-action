@@ -8,12 +8,15 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   @spec render(map(), atom(), keyword()) :: String.t()
   def render(report, detail, opts \\ []) do
     chart? = Keyword.get(opts, :chart, true)
+    watch_files = Keyword.get(opts, :watch_files, MapSet.new())
+    alerts = collect_alerts(report.categories, watch_files)
 
     [
       header(report),
+      alerts_section(alerts),
       if(chart?, do: mermaid_chart(report.categories), else: []),
       progress_bars(report.categories),
-      category_sections(report.categories, detail),
+      category_sections(report.categories, detail, watch_files),
       footer()
     ]
     |> List.flatten()
@@ -74,15 +77,43 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     String.duplicate(@filled, filled) <> String.duplicate(@empty, empty)
   end
 
-  defp category_sections(_categories, :summary), do: []
+  defp alerts_section([]), do: []
 
-  defp category_sections(categories, detail) do
+  defp alerts_section(alerts) do
+    rows = Enum.map(alerts, fn a ->
+      "| `#{a.path}` | #{a.category} | #{a.grade} |"
+    end)
+
+    [
+      "> ⚠️ **File Alerts** — #{length(alerts)} watched file(s) found in worst offenders",
+      "",
+      "## ⚠️ File Alerts",
+      "",
+      "| File | Category | Grade |",
+      "|------|----------|-------|"
+      | rows
+    ] ++ [""]
+  end
+
+  defp collect_alerts(_categories, watch_files) when watch_files == %MapSet{}, do: []
+
+  defp collect_alerts(categories, watch_files) do
+    Enum.flat_map(categories, fn cat ->
+      cat.worst_offenders
+      |> Enum.filter(fn f -> MapSet.member?(watch_files, f.path) end)
+      |> Enum.map(fn f -> %{path: f.path, category: cat.name, grade: f.grade} end)
+    end)
+  end
+
+  defp category_sections(_categories, :summary, _watch_files), do: []
+
+  defp category_sections(categories, detail, watch_files) do
     Enum.flat_map(categories, fn cat ->
       emoji = grade_emoji(cat.grade)
       summary_line = "#{emoji} #{cat.name} — #{cat.grade} (#{cat.score}/100)"
 
       inner =
-        section_content(cat, detail)
+        section_content(cat, detail, watch_files)
         |> List.flatten()
         |> Enum.join("\n")
 
@@ -98,7 +129,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     end)
   end
 
-  defp section_content(cat, _detail) do
+  defp section_content(cat, _detail, watch_files) do
     metric_summary =
       cat.metric_scores
       |> Enum.map(fn m -> "#{m.name}=#{format_num(m.value)}" end)
@@ -124,10 +155,10 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       "Codebase averages: #{metric_summary}",
       ""
       | metrics_table
-    ] ++ [""] ++ worst_offenders(cat)
+    ] ++ [""] ++ worst_offenders(cat, watch_files)
   end
 
-  defp worst_offenders(cat) do
+  defp worst_offenders(cat, watch_files) do
     offenders = Map.get(cat, :worst_offenders, [])
 
     if offenders == [] do
@@ -137,6 +168,8 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
       rows =
         Enum.map(offenders, fn f ->
+          alert = if MapSet.member?(watch_files, f.path), do: "⚠️ ", else: ""
+
           issues =
             f.metric_scores
             |> Enum.map(fn m ->
@@ -146,7 +179,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
             end)
             |> Enum.join("<br>")
 
-          "| #{format_path(f.path)}<br>#{format_lines(f[:lines])} lines · #{format_size(f[:bytes])} | #{f.grade} (#{f.score}) | #{issues} |"
+          "| #{alert}#{format_path(f.path)}<br>#{format_lines(f[:lines])} lines · #{format_size(f[:bytes])} | #{f.grade} (#{f.score}) | #{issues} |"
         end)
 
       [
