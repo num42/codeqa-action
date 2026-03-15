@@ -4,8 +4,8 @@ defmodule CodeQA.DiagnosticsTest do
   import ExUnit.CaptureIO
 
   @lib_path Path.expand("../../lib", __DIR__)
-  # Use a small subdirectory for per-file mode to keep tests fast
-  @small_path Path.expand("../../lib/codeqa/health_report", __DIR__)
+  # Use a small 2-file subdirectory for per-file mode to keep tests fast
+  @small_path Path.expand("../../lib/codeqa/health_report/formatter", __DIR__)
 
   describe "run/1 aggregate mode" do
     @tag timeout: 120_000
