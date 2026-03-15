@@ -58,7 +58,7 @@ defmodule CodeQA.CLI.CompareTest do
       # Capture stderr to verify the message
       output =
         ExUnit.CaptureIO.capture_io(:stderr, fn ->
-          CodeQA.CLI.main(["compare", repo, "--base-ref", base_ref, "--format", "json"])
+          CodeQA.CLI.main(["compare", repo, "--base-ref", base_ref, "--changes-only", "--format", "json"])
         end)
 
       assert output =~ "No source files changed"
@@ -74,7 +74,7 @@ defmodule CodeQA.CLI.CompareTest do
       stdout =
         ExUnit.CaptureIO.capture_io(fn ->
           ExUnit.CaptureIO.capture_io(:stderr, fn ->
-            CodeQA.CLI.main(["compare", repo, "--base-ref", "HEAD~1", "--format", "json"])
+            CodeQA.CLI.main(["compare", repo, "--base-ref", "HEAD~1", "--changes-only", "--format", "json"])
           end)
         end)
 

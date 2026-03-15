@@ -17,8 +17,8 @@ defmodule CodeQA.CLI.Compare do
     Options:
       --base-ref REF        Base git ref to compare from (required)
       --head-ref REF        Head git ref to compare to (default: HEAD)
-      --changes-only        Only analyze changed files (default)
-      --all-files           Analyze all source files
+      --changes-only        Only analyze changed files
+      --all-files           Analyze all source files (default)
       --format FORMAT       Output format: json, markdown, or github (default: json)
       --output MODE         Output mode: auto, summary, or changes (default: auto)
       --progress            Show per-file progress on stderr
@@ -58,7 +58,7 @@ defmodule CodeQA.CLI.Compare do
 
     base_ref = opts[:base_ref] || raise "Missing --base-ref"
     head_ref = opts[:head_ref] || "HEAD"
-    changes_only = if opts[:all_files], do: false, else: true
+    changes_only = if opts[:changes_only], do: true, else: false
     format = opts[:format] || "json"
     output_mode = opts[:output] || "auto"
 
