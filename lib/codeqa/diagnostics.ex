@@ -60,29 +60,18 @@ defmodule CodeQA.Diagnostics do
   defp run_per_file(result, top, format) do
     files = Map.get(result, "files", %{})
 
-    file_rows =
-      files
-      |> Enum.flat_map(fn {file_path, file_data} ->
+    file_diagnoses =
+      Map.new(files, fn {file_path, file_data} ->
         metrics = Map.get(file_data, "metrics", %{})
         file_agg = FileScorer.file_to_aggregate(metrics)
         diagnoses = SampleRunner.diagnose_aggregate(file_agg, top: top)
-
-        Enum.map(diagnoses, fn %{category: cat, behavior: beh, cosine: cosine, score: score} ->
-          {file_path, "#{cat}.#{beh}", cosine, score}
-        end)
+        {file_path, diagnoses}
       end)
 
     case format do
       :json ->
         files_json =
-          files
-          |> Map.keys()
-          |> Enum.map(fn file_path ->
-            file_data = Map.fetch!(files, file_path)
-            metrics = Map.get(file_data, "metrics", %{})
-            file_agg = FileScorer.file_to_aggregate(metrics)
-            diagnoses = SampleRunner.diagnose_aggregate(file_agg, top: top)
-
+          Enum.map(file_diagnoses, fn {file_path, diagnoses} ->
             behaviors =
               Enum.map(diagnoses, fn d ->
                 %{
@@ -98,6 +87,13 @@ defmodule CodeQA.Diagnostics do
         IO.puts(Jason.encode!(%{files: files_json}, pretty: true))
 
       _ ->
+        file_rows =
+          Enum.flat_map(file_diagnoses, fn {file_path, diagnoses} ->
+            Enum.map(diagnoses, fn %{category: cat, behavior: beh, cosine: cosine, score: score} ->
+              {file_path, "#{cat}.#{beh}", cosine, score}
+            end)
+          end)
+
         IO.puts("## Diagnose: per-file\n")
         print_per_file_table(file_rows, top)
     end
