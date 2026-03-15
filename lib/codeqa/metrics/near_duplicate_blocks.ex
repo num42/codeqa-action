@@ -68,6 +68,7 @@ defmodule CodeQA.Metrics.NearDuplicateBlocks do
   Returns count keys `near_dup_block_d0..d8`, `block_count`, `sub_block_count`.
   With `include_pairs: true` in opts, also returns `_pairs` keys.
   """
+  @dialyzer {:nowarn_function, analyze: 2}
   @spec analyze([{String.t(), String.t()}], keyword()) :: map()
   def analyze(labeled_content, opts) do
     workers = Keyword.get(opts, :workers, System.schedulers_online())
@@ -95,14 +96,15 @@ defmodule CodeQA.Metrics.NearDuplicateBlocks do
 
     result = Map.merge(result, %{"block_count" => block_count, "sub_block_count" => sub_block_count})
 
-    if include_pairs do
-      pairs_result =
-        for d <- 0..@max_bucket, into: %{} do
-          {"near_dup_block_d#{d}_pairs", Map.get(buckets, d, %{pairs: []}).pairs |> format_pairs()}
-        end
-      Map.merge(result, pairs_result)
-    else
-      result
+    case include_pairs do
+      true ->
+        pairs_result =
+          for d <- 0..@max_bucket, into: %{} do
+            {"near_dup_block_d#{d}_pairs", Map.get(buckets, d, %{pairs: []}).pairs |> format_pairs()}
+          end
+        Map.merge(result, pairs_result)
+      false ->
+        result
     end
   end
 

@@ -9,7 +9,8 @@ defmodule CodeQA.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       escript: [main_module: CodeQA.CLI],
-      elixirc_paths: elixirc_paths(Mix.env())
+      elixirc_paths: elixirc_paths(Mix.env()),
+      dialyzer: [ignore_warnings: ".dialyzer_ignore.exs"]
     ]
   end
 
