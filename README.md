@@ -17,6 +17,7 @@ Works with Python, Ruby, JavaScript, TypeScript, Elixir, C#, Java, C++, Go, Rust
 - [CLI Reference](#cli-reference)
   - [analyze](#analyze)
   - [health-report](#health-report)
+  - [diagnose](#diagnose)
   - [compare](#compare)
   - [history](#history)
   - [correlate](#correlate)
@@ -24,7 +25,7 @@ Works with Python, Ruby, JavaScript, TypeScript, Elixir, C#, Java, C++, Go, Rust
 - [Metrics Reference](#metrics-reference)
   - [Raw Metrics](#raw-metrics)
   - [Health Report Categories](#health-report-categories)
-  - [Behavior Checks](#behavior-checks)
+  - [Behavior Categories](#behavior-categories)
 - [Output Formats](#output-formats)
 - [Grading](#grading)
 
@@ -171,6 +172,33 @@ grade_scale:
   - [0,  "F"]
 ```
 
+### impact
+
+Impact weights used when computing the overall score. The 9 keys below are the built-in defaults; any category not listed falls back to `1`. These weights apply to both primary and behavior categories.
+
+```yaml
+impact:
+  complexity: 5
+  file_structure: 4
+  function_design: 4
+  code_smells: 3
+  naming_conventions: 2
+  error_handling: 2
+  consistency: 2
+  documentation: 1
+  testing: 1
+  # override any category key:
+  # variable_naming: 2
+```
+
+### combined_top
+
+Controls how many worst-offender files are shown per behavior category in `health-report` (default: `2`).
+
+```yaml
+combined_top: 3
+```
+
 ## CLI Reference
 
 > Build the escript first: `mix deps.get && mix escript.build`
@@ -226,6 +254,31 @@ Produces a graded quality report grouped into behavior categories with worst-off
 
 ```sh
 ./codeqa health-report --detail full --top 10 --format github ./lib
+```
+
+### diagnose
+
+Identifies likely code quality issues by scoring behavior profiles using cosine similarity. Useful for understanding *why* a codebase scores poorly without running a full health report.
+
+```sh
+./codeqa diagnose --path <path> [OPTIONS]
+```
+
+`--path` is **required**. Note: unlike `health-report`, the path is passed as a named flag (`--path`), not a positional argument.
+
+| Option | Description |
+|--------|-------------|
+| `--path PATH` | **(Required)** File or directory to analyze |
+| `--mode MODE` | `aggregate` (default) or `per-file` |
+| `--top N` | Number of top issues to show (default: `15`) |
+| `--format FORMAT` | Output format: `plain` or `json` (default: `plain`) |
+| `--combined-top N` | Worst-offender files per behavior in per-file mode (default: `2`) |
+
+**Example:**
+
+```sh
+./codeqa diagnose --path ./lib --mode aggregate --top 10
+./codeqa diagnose --path ./lib --mode per-file --format json
 ```
 
 ### compare
@@ -332,7 +385,12 @@ All metrics are computed per file and aggregated at the codebase level.
 
 ### Health Report Categories
 
-The `health-report` command grades your codebase against 6 primary categories. Each category aggregates raw metrics using configurable weights and thresholds.
+The `health-report` command evaluates your codebase using two complementary scoring models:
+
+- **6 primary categories** — graded using configurable thresholds against raw metrics (Readability, Complexity, Structure, Duplication, Naming, Magic Numbers)
+- **12 behavior categories** — graded using cosine similarity against behavior profiles (see [Behavior Categories](#behavior-categories))
+
+The overall score is a weighted average of all 18 categories. Primary category weights are set via `weight:` in `.codeqa.yml`; behavior category weights are configured via [`impact:`](#impact).
 
 | Category | What it measures |
 |----------|-----------------|
@@ -343,11 +401,21 @@ The `health-report` command grades your codebase against 6 primary categories. E
 | **Naming** | Casing entropy, identifier length variance, avg sub-words per identifier |
 | **Magic Numbers** | Magic number density |
 
+**Cosine scoring breakpoints** (used for behavior categories):
+
+| Cosine similarity | Score | Approx. grade |
+|-------------------|-------|---------------|
+| ≥ 0.5             | 90–100 | A             |
+| ≥ 0.2             | 70–90  | B–A-          |
+| ≥ 0.0             | 50–70  | C–B-          |
+| ≥ −0.3            | 30–50  | D–C-          |
+| ≥ −1.0            | 0–30   | F–D-          |
+
 > Category definitions and thresholds are configurable via `.codeqa.yml`.
 
-### Behavior Checks
+### Behavior Categories
 
-In addition to the 6 graded categories, `health-report` evaluates additional behavior check categories using a separate multiplicative scoring model. These appear in the report as "Top Issues" diagnostics.
+In addition to the 6 primary categories, `health-report` grades 12 behavior categories using cosine similarity against behavior profiles. These contribute to the overall score alongside the primary categories.
 
 | Category | Checks |
 |----------|--------|
@@ -363,6 +431,8 @@ In addition to the 6 graded categories, `health-report` evaluates additional beh
 | **Testing** | Test file coverage and naming patterns |
 | **Dependencies** | Import and dependency patterns |
 | **Error Handling** | Error handling completeness |
+
+> These categories are graded in the `health-report` output using cosine similarity scoring and contribute to the overall score.
 
 ## Output Formats
 
@@ -396,6 +466,8 @@ In addition to the 6 graded categories, `health-report` evaluates additional beh
 | E     | ≥ 12        |
 | E-    | ≥ 6         |
 | F     | < 6         |
+
+The overall score is a weighted average across all categories. Primary category weights use the `weight:` field inside each category definition in `.codeqa.yml`. Behavior category weights are configured via `impact:` (defaults range from 1–5; categories not listed fall back to `1`). See [Configuration](#configuration) for examples.
 
 The `fail-grade` action input causes a non-zero exit when the overall grade falls below the specified threshold.
 
