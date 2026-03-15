@@ -15,6 +15,10 @@ defmodule CodeQA.Metrics.Readability do
   @impl true
   def name, do: "readability"
 
+  @impl true
+  def keys, do: ["avg_tokens_per_line", "avg_line_length", "avg_sub_words_per_id", "flesch_adapted", "fog_adapted", "total_lines"]
+
+
   @spec analyze(map()) :: map()
   @impl true
   def analyze(ctx) do

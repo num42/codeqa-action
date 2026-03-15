@@ -14,6 +14,10 @@ defmodule CodeQA.Metrics.Zipf do
   @impl true
   def name, do: "zipf"
 
+  @impl true
+  def keys, do: ["exponent", "r_squared", "vocab_size", "total_tokens"]
+
+
   @spec analyze(map()) :: map()
   @impl true
   def analyze(%{tokens: tokens, token_counts: _token_counts}) when tuple_size(tokens) == 0 do

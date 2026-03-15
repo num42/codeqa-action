@@ -18,6 +18,10 @@ defmodule CodeQA.Metrics.Compression do
   @impl true
   def name, do: "compression"
 
+  @impl true
+  def keys, do: ["raw_bytes", "zlib_bytes", "zlib_ratio", "redundancy"]
+
+
   @spec analyze(map()) :: map()
   @impl true
   def analyze(%{content: "", byte_count: 0}) do

@@ -19,6 +19,10 @@ defmodule CodeQA.Metrics.Vocabulary do
   @impl true
   def name, do: "vocabulary"
 
+  @impl true
+  def keys, do: ["raw_ttr", "mattr", "unique_identifiers", "total_identifiers", "vocabulary"]
+
+
   @window_size 100
 
   @spec analyze(map()) :: map()

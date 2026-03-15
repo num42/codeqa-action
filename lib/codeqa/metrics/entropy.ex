@@ -16,6 +16,10 @@ defmodule CodeQA.Metrics.Entropy do
   @impl true
   def name, do: "entropy"
 
+  @impl true
+  def keys, do: ["char_entropy", "char_max_entropy", "char_normalized", "token_entropy", "token_max_entropy", "token_normalized", "vocab_size", "total_tokens"]
+
+
   @spec analyze(map()) :: map()
   @impl true
   def analyze(ctx) do

@@ -14,6 +14,10 @@ defmodule CodeQA.Metrics.Halstead do
   @impl true
   def name, do: "halstead"
 
+  @impl true
+  def keys, do: ["n1_unique_operators", "n2_unique_operands", "N1_total_operators", "N2_total_operands", "vocabulary", "length", "volume", "difficulty", "effort", "estimated_bugs", "time_to_implement_seconds"]
+
+
   # Keyword operators for:
   # Python, Ruby, JavaScript, Elixir, C#,
   # Java, C++, Go, Rust, PHP, Swift, Shell, Kotlin

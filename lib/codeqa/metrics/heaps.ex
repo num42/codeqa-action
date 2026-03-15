@@ -14,6 +14,10 @@ defmodule CodeQA.Metrics.Heaps do
   @impl true
   def name, do: "heaps"
 
+  @impl true
+  def keys, do: ["k", "beta", "r_squared"]
+
+
   @max_samples 50
 
   @spec analyze(map()) :: map()

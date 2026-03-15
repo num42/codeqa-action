@@ -14,6 +14,10 @@ defmodule CodeQA.Metrics.SymbolDensity do
   @impl true
   def name, do: "symbol_density"
 
+  @impl true
+  def keys, do: ["density", "symbol_count", "distinct_symbol_types"]
+
+
   @spec analyze(map()) :: map()
   @impl true
   def analyze(%{content: content}) do

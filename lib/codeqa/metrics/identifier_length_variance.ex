@@ -16,6 +16,10 @@ defmodule CodeQA.Metrics.IdentifierLengthVariance do
   @impl true
   def name, do: "identifier_length_variance"
 
+  @impl true
+  def keys, do: ["mean", "variance", "std_dev", "max"]
+
+
   @spec analyze(map()) :: map()
   @impl true
   def analyze(%{identifiers: identifiers}) when tuple_size(identifiers) == 0 do

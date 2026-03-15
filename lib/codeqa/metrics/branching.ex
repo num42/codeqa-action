@@ -43,6 +43,9 @@ defmodule CodeQA.Metrics.Branching do
   @impl true
   def name, do: "branching"
 
+  @impl true
+  def keys, do: ["branching_density", "branch_count", "non_blank_count"]
+
   @spec analyze(map()) :: map()
   @impl true
   def analyze(%{lines: lines, tokens: tokens}) do

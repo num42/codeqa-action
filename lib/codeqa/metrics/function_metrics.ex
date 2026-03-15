@@ -39,6 +39,10 @@ defmodule CodeQA.Metrics.FunctionMetrics do
   @impl true
   def name, do: "function_metrics"
 
+  @impl true
+  def keys, do: ["function_count", "avg_function_lines", "max_function_lines", "avg_param_count", "max_param_count"]
+
+
   @spec analyze(map()) :: map()
   @impl true
   def analyze(%{lines: lines}) do

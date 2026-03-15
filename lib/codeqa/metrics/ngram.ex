@@ -15,6 +15,10 @@ defmodule CodeQA.Metrics.Ngram do
   @impl true
   def name, do: "ngram"
 
+  @impl true
+  def keys, do: ["bigram_total", "bigram_unique", "bigram_repetition_rate", "bigram_hapax_fraction", "bigram_repeated_unique", "trigram_total", "trigram_unique", "trigram_repetition_rate", "trigram_hapax_fraction", "trigram_repeated_unique"]
+
+
   @spec analyze(map()) :: map()
   @impl true
   def analyze(ctx) do

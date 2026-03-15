@@ -16,6 +16,10 @@ defmodule CodeQA.Metrics.VowelDensity do
   @impl true
   def name, do: "vowel_density"
 
+  @impl true
+  def keys, do: ["density", "vowel_count", "total_chars"]
+
+
   @spec analyze(map()) :: map()
   @impl true
   def analyze(%{identifiers: identifiers}) do

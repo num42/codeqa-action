@@ -27,6 +27,9 @@ defmodule CodeQA.Metrics.FileMetric do
   @callback name() :: String.t()
   @callback analyze(CodeQA.Pipeline.FileContext.t()) :: map()
 
+  @doc "List of metric keys returned by analyze/1."
+  @callback keys() :: [String.t()]
+
   @doc "Human-readable description of what this metric measures."
   @callback description() :: String.t()
 

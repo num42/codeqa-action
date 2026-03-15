@@ -22,6 +22,10 @@ defmodule CodeQA.Metrics.CasingEntropy do
   @impl true
   def name, do: "casing_entropy"
 
+  @impl true
+  def keys, do: ["entropy", "pascal_case_count", "camel_case_count", "snake_case_count", "macro_case_count", "kebab_case_count", "other_count"]
+
+
   @spec analyze(map()) :: map()
   @impl true
   def analyze(%{identifiers: identifiers}) when tuple_size(identifiers) == 0 do

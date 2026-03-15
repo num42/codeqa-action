@@ -17,6 +17,10 @@ defmodule CodeQA.Metrics.MagicNumberDensity do
   @impl true
   def name, do: "magic_number_density"
 
+  @impl true
+  def keys, do: ["density", "magic_number_count"]
+
+
   @number_re ~r/\b\d+\.?\d*(?:[eE][+-]?\d+)?\b/
   @idiomatic_constants ~w[0 1 2 0.0 1.0 0.5]
 

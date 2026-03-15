@@ -15,6 +15,10 @@ defmodule CodeQA.Metrics.Indentation do
   @impl true
   def name, do: "indentation"
 
+  @impl true
+  def keys, do: ["mean_depth", "variance", "max_depth", "uses_tabs"]
+
+
   @spec analyze(map()) :: map()
   @impl true
   def analyze(%{lines: lines}) do
