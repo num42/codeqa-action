@@ -6,6 +6,7 @@ on:
       - "README.md"
       - "AUTOMATION.md"
       - ".github/ISSUE_TEMPLATE/**"
+      - ".github/workflows/validate-issue-links.yml"
 
 jobs:
   validate:
