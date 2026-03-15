@@ -1,31 +1,26 @@
 defmodule CodeQA.Metrics.NearDuplicateBlocksFile do
   @moduledoc """
-  Counts near-duplicate token blocks within a single file.
+  Counts near-duplicate and exact-duplicate natural code blocks within a single file.
 
-  Blocks are extracted from the normalized token stream (via TokenNormalizer)
-  at sizes [8, 16, 32, 64, 128, 256] with 50% stride. Pairs with token-level
-  edit distance 1–8 are counted per (block_size, distance) bucket.
+  Blocks are detected at blank-line boundaries with sub-block detection via bracket rules.
+  Distance is a percentage of the smaller block's token count, bucketed d0–d8.
+  Also reports block_count and sub_block_count as standalone metrics.
   """
 
   @behaviour CodeQA.Metrics.FileMetric
-
-  @block_sizes [8, 16, 32, 64, 128, 256]
-  @max_distance 8
 
   @impl true
   def name, do: "near_duplicate_blocks_file"
 
   @spec keys() :: [String.t()]
   def keys do
-    for b <- @block_sizes, d <- 1..@max_distance, do: "near_dup_#{b}_d#{d}"
+    ["block_count", "sub_block_count"] ++ for(d <- 0..8, do: "near_dup_block_d#{d}")
   end
 
   @impl true
   def analyze(ctx) do
-    tokens = CodeQA.Metrics.TokenNormalizer.normalize(ctx.content)
-    labeled = [{"file", tokens}]
-
-    CodeQA.Metrics.NearDuplicateBlocks.analyze(labeled, @block_sizes, [])
+    path = Map.get(ctx, :path, "unknown")
+    CodeQA.Metrics.NearDuplicateBlocks.analyze([{path, ctx.content}], [])
     |> Map.reject(fn {k, _} -> String.ends_with?(k, "_pairs") end)
   end
 end
