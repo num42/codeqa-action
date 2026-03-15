@@ -5,7 +5,9 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
   def render(report, detail) do
     [
       header(report),
+      cosine_legend(),
       overall_table(report),
+      top_issues_section(Map.get(report, :top_issues, []), detail),
       category_sections(report.categories, detail)
     ]
     |> List.flatten()
@@ -23,16 +25,24 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     ]
   end
 
+  defp cosine_legend do
+    [
+      "> *Combined metric scores use cosine similarity: +1 = metric profile perfectly matches healthy pattern for this behavior, 0 = no signal, −1 = anti-pattern detected. Mapped to 0–100 using breakpoints (approx: ≥0.5→A, ≥0.2→B, ≥0.0→C, ≥−0.3→D, <−0.3→F); actual letter grades use the full 15-step scale.*",
+      ""
+    ]
+  end
+
   defp overall_table(report) do
     rows =
       Enum.map(report.categories, fn cat ->
         summary = Map.get(cat, :summary, "")
-        "| #{cat.name} | #{cat.grade} | #{cat.score} | #{summary} |"
+        impact = Map.get(cat, :impact, "")
+        "| #{cat.name} | #{cat.grade} | #{cat.score} | #{impact} | #{summary} |"
       end)
 
     [
-      "| Category | Grade | Score | Summary |",
-      "|----------|-------|-------|---------|"
+      "| Category | Grade | Score | Impact | Summary |",
+      "|----------|-------|-------|--------|---------|"
       | rows
     ] ++ [""]
   end
@@ -41,7 +51,64 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
 
   defp category_sections(categories, detail) do
     Enum.flat_map(categories, fn cat ->
-      section_header(cat) ++ metric_detail(cat) ++ worst_offenders_section(cat, detail)
+      render_category(cat, detail)
+    end)
+  end
+
+  defp render_category(%{type: :cosine} = cat, detail) do
+    cosine_section_header(cat) ++ cosine_behaviors_table(cat) ++ cosine_worst_offenders(cat, detail)
+  end
+
+  defp render_category(cat, detail) do
+    section_header(cat) ++ metric_detail(cat) ++ worst_offenders_section(cat, detail)
+  end
+
+  defp cosine_section_header(cat) do
+    n = length(cat.behaviors)
+
+    [
+      "## #{cat.name} — #{cat.grade}",
+      "",
+      "> Cosine similarity scores for #{n} behaviors.",
+      ""
+    ]
+  end
+
+  defp cosine_behaviors_table(cat) do
+    rows =
+      Enum.map(cat.behaviors, fn b ->
+        "| #{b.behavior} | #{format_num(b.cosine)} | #{b.score} | #{b.grade} |"
+      end)
+
+    [
+      "| Behavior | Cosine | Score | Grade |",
+      "|----------|--------|-------|-------|"
+      | rows
+    ] ++ [""]
+  end
+
+  defp cosine_worst_offenders(_cat, :summary), do: []
+
+  defp cosine_worst_offenders(cat, _detail) do
+    Enum.flat_map(cat.behaviors, fn b ->
+      offenders = Map.get(b, :worst_offenders, [])
+
+      if offenders == [] do
+        []
+      else
+        rows =
+          Enum.map(offenders, fn f ->
+            "| #{format_path(f.file)} | #{format_num(f.cosine)} |"
+          end)
+
+        [
+          "### Worst Offenders: #{b.behavior}",
+          "",
+          "| File | Cosine |",
+          "|------|--------|"
+          | rows
+        ] ++ [""]
+      end
     end)
   end
 
@@ -138,4 +205,23 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
   end
 
   defp format_date(_), do: "unknown"
+
+  defp top_issues_section([], _detail), do: []
+  defp top_issues_section(_issues, :summary), do: []
+
+  defp top_issues_section(issues, _detail) do
+    rows = Enum.map(issues, fn i ->
+      "| #{i.category}.#{i.behavior} | #{format_num(i.cosine)} | #{format_num(i.score)} |"
+    end)
+
+    [
+      "## Top Likely Issues",
+      "",
+      "> Ranked by cosine similarity — most negative means the file's metric profile best matches this anti-pattern.",
+      "",
+      "| Behavior | Cosine | Score |",
+      "|----------|--------|-------|"
+      | rows
+    ] ++ [""]
+  end
 end

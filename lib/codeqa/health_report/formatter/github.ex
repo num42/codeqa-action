@@ -11,8 +11,10 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
     [
       header(report),
+      cosine_legend(),
       if(chart?, do: mermaid_chart(report.categories), else: []),
       progress_bars(report.categories),
+      top_issues_section(Map.get(report, :top_issues, []), detail),
       category_sections(report.categories, detail),
       footer()
     ]
@@ -27,6 +29,13 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       "## #{emoji} Code Health: #{report.overall_grade} (#{report.overall_score}/100)",
       "",
       "> #{report.metadata.total_files} files · #{extract_project_name(report.metadata.path)} · #{format_date(report.metadata.timestamp)}",
+      ""
+    ]
+  end
+
+  defp cosine_legend do
+    [
+      "> *Combined metric scores use cosine similarity: +1 = metric profile perfectly matches healthy pattern for this behavior, 0 = no signal, −1 = anti-pattern detected. Mapped to 0–100 using breakpoints (approx: ≥0.5→A, ≥0.2→B, ≥0.0→C, ≥−0.3→D, <−0.3→F); actual letter grades use the full 15-step scale.*",
       ""
     ]
   end
@@ -77,24 +86,92 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   defp category_sections(_categories, :summary), do: []
 
   defp category_sections(categories, detail) do
-    Enum.flat_map(categories, fn cat ->
-      emoji = grade_emoji(cat.grade)
-      summary_line = "#{emoji} #{cat.name} — #{cat.grade} (#{cat.score}/100)"
+    Enum.flat_map(categories, &render_category(&1, detail))
+  end
 
-      inner =
-        section_content(cat, detail)
-        |> List.flatten()
-        |> Enum.join("\n")
+  defp render_category(%{type: :cosine} = cat, detail) do
+    emoji = grade_emoji(cat.grade)
+    summary_line = "#{emoji} #{cat.name} — #{cat.grade} (#{cat.score}/100)"
 
-      [
-        "<details>",
-        "<summary><strong>#{summary_line}</strong></summary>",
-        "",
-        inner,
-        "",
-        "</details>",
-        ""
-      ]
+    inner =
+      cosine_section_content(cat, detail)
+      |> List.flatten()
+      |> Enum.join("\n")
+
+    [
+      "<details>",
+      "<summary><strong>#{summary_line}</strong></summary>",
+      "",
+      inner,
+      "",
+      "</details>",
+      ""
+    ]
+  end
+
+  defp render_category(cat, detail) do
+    emoji = grade_emoji(cat.grade)
+    summary_line = "#{emoji} #{cat.name} — #{cat.grade} (#{cat.score}/100)"
+
+    inner =
+      section_content(cat, detail)
+      |> List.flatten()
+      |> Enum.join("\n")
+
+    [
+      "<details>",
+      "<summary><strong>#{summary_line}</strong></summary>",
+      "",
+      inner,
+      "",
+      "</details>",
+      ""
+    ]
+  end
+
+  defp cosine_section_content(cat, detail) do
+    n = length(cat.behaviors)
+
+    behaviors_rows =
+      Enum.map(cat.behaviors, fn b ->
+        "| #{b.behavior} | #{format_num(b.cosine)} | #{b.score} | #{b.grade} |"
+      end)
+
+    behaviors_table = [
+      "> Cosine similarity scores for #{n} behaviors.",
+      "",
+      "| Behavior | Cosine | Score | Grade |",
+      "|----------|--------|-------|-------|"
+      | behaviors_rows
+    ]
+
+    offenders_sections = cosine_worst_offenders(cat, detail)
+
+    behaviors_table ++ [""] ++ offenders_sections
+  end
+
+  defp cosine_worst_offenders(_cat, :summary), do: []
+
+  defp cosine_worst_offenders(cat, _detail) do
+    Enum.flat_map(cat.behaviors, fn b ->
+      offenders = Map.get(b, :worst_offenders, [])
+
+      if offenders == [] do
+        []
+      else
+        rows =
+          Enum.map(offenders, fn f ->
+            "| #{format_path(f.file)} | #{format_num(f.cosine)} |"
+          end)
+
+        [
+          "**Worst Offenders: #{b.behavior}**",
+          "",
+          "| File | Cosine |",
+          "|------|--------|"
+          | rows
+        ] ++ [""]
+      end
     end)
   end
 
@@ -157,6 +234,32 @@ defmodule CodeQA.HealthReport.Formatter.Github do
         | rows
       ]
     end
+  end
+
+  defp top_issues_section([], _detail), do: []
+  defp top_issues_section(_issues, :summary), do: []
+
+  defp top_issues_section(issues, _detail) do
+    rows =
+      issues
+      |> Enum.map(fn i ->
+        "| `#{i.category}.#{i.behavior}` | #{format_num(i.cosine)} | #{format_num(i.score)} |"
+      end)
+      |> Enum.join("\n")
+
+    table = "| Behavior | Cosine | Score |\n|----------|--------|-------|\n#{rows}"
+
+    [
+      "<details>",
+      "<summary><strong>🔍 Top Likely Issues (cosine similarity)</strong></summary>",
+      "",
+      "> Most negative cosine = file's metric profile best matches this anti-pattern.",
+      "",
+      table,
+      "",
+      "</details>",
+      ""
+    ]
   end
 
   defp footer do
