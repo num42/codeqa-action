@@ -1,0 +1,39 @@
+- name: action
+  description: GitHub Action-specific issues
+  color: "0075ca"
+
+- name: metrics
+  description: Metric scoring or accuracy issues
+  color: "e4e669"
+
+- name: languages
+  description: Language support requests
+  color: "d93f0b"
+
+- name: samples
+  description: Combined-metrics sample submissions
+  color: "0e8a16"
+
+- name: bot
+  description: Submitted by an automated tool or AI agent
+  color: "5319e7"
+
+- name: "type:bug-report"
+  description: "Schema discriminator: bug report"
+  color: "ee0701"
+
+- name: "type:metric-accuracy"
+  description: "Schema discriminator: metric accuracy"
+  color: "ee0701"
+
+- name: "type:feature-request"
+  description: "Schema discriminator: feature request"
+  color: "84b6eb"
+
+- name: "schema:v1"
+  description: Issue schema version 1
+  color: "cccccc"
+
+- name: question
+  description: How-to or support question
+  color: "cc317c"

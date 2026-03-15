@@ -1,0 +1,14 @@
+name: Question
+description: Ask a how-to or support question
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For quick questions you can also use [Discussions](https://github.com/num42/codeqa-action/discussions).
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
