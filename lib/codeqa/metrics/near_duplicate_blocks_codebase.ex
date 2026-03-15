@@ -1,21 +1,16 @@
 defmodule CodeQA.Metrics.NearDuplicateBlocksCodebase do
   @moduledoc """
-  Counts near-duplicate token blocks across the whole codebase.
+  Counts near-duplicate and exact-duplicate natural code blocks across the codebase.
 
-  Blocks are extracted per-file at sizes [8, 16, 32, 64, 128, 256] with
-  50% stride, then pooled for pairwise comparison. Pairs with token-level
-  edit distance 1–8 are counted per (block_size, distance) bucket.
-  Sources record file path and token offset.
+  Detects blocks per file, pools them, and finds pairs across all files.
+  Includes pair source lists (capped by max_pairs_per_bucket).
 
-  Configure `max_pairs_per_bucket` in `.codeqa.yml`:
-
+  Configure in .codeqa.yml:
       near_duplicate_blocks:
         max_pairs_per_bucket: 50
   """
 
   @behaviour CodeQA.Metrics.CodebaseMetric
-
-  @block_sizes [8, 16, 32, 64, 128, 256]
 
   @impl true
   def name, do: "near_duplicate_blocks_codebase"
@@ -26,17 +21,12 @@ defmodule CodeQA.Metrics.NearDuplicateBlocksCodebase do
     max_pairs = Keyword.get(ndb_opts, :max_pairs_per_bucket, nil)
     workers = Keyword.get(opts, :workers, System.schedulers_online())
 
-    labeled =
-      Enum.map(files, fn {path, content} ->
-        tokens = CodeQA.Metrics.TokenNormalizer.normalize(content)
-        {path, tokens}
-      end)
-
     CodeQA.Metrics.NearDuplicateBlocks.analyze(
-      labeled,
-      @block_sizes,
+      Map.to_list(files),
+      include_pairs: true,
       max_pairs_per_bucket: max_pairs,
       workers: workers
     )
+    |> Map.reject(fn {k, _} -> k in ["block_count", "sub_block_count"] end)
   end
 end
