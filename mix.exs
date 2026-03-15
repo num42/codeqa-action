@@ -9,7 +9,9 @@ defmodule CodeQA.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       escript: [main_module: CodeQA.CLI],
-      elixirc_paths: elixirc_paths(Mix.env())
+      elixirc_paths: elixirc_paths(Mix.env()),
+      preferred_envs: [precommit: :test],
+      aliases: aliases()
     ]
   end
 
@@ -21,6 +23,16 @@ defmodule CodeQA.MixProject do
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
+
+  defp aliases do
+    [
+      precommit: [
+        "compile --warnings-as-errors",
+        "deps.unlock --unused",
+        "format"
+      ]
+    ]
+  end
 
   defp deps do
     [
