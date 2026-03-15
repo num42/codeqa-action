@@ -7,7 +7,8 @@ defmodule CodeQA.CLI do
     "history" => CodeQA.CLI.History,
     "correlate" => CodeQA.CLI.Correlate,
     "stopwords" => CodeQA.CLI.Stopwords,
-    "health-report" => CodeQA.CLI.HealthReport
+    "health-report" => CodeQA.CLI.HealthReport,
+    "diagnose" => CodeQA.CLI.Diagnose
   }
 
   def main(args) do
