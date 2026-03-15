@@ -26,7 +26,6 @@ defmodule CodeQA.Metrics.Similarity do
   @impl true
   def name, do: "similarity"
 
-  @impl true
   def keys, do: ["ncd_pairs", "cross_file_density"]
 
 
