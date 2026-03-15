@@ -12,16 +12,4 @@
     elixir --version
     mix deps.get
   '';
-
-  scripts.precommit.exec = ''
-    mix precommit
-  '';
-
-  git-hooks.hooks.mix-precommit = {
-    enable = true;
-    name = "Mix precommit";
-    entry = "devenv shell precommit";
-    language = "system";
-    pass_filenames = false;
-  };
 }
