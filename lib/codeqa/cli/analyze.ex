@@ -99,9 +99,6 @@ defmodule CodeQA.CLI.Analyze do
     end
   end
 
-  defp filter_files_for_output(results, _opts, format) when format in ["github", "markdown"],
-    do: results
-
   defp filter_files_for_output(results, opts, _format) do
     cond do
       opts[:show_files] ->
