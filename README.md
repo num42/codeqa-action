@@ -244,8 +244,8 @@ Compares code quality metrics between two git refs. Designed for PR workflows.
 | `--head-ref REF` | Git ref for the head (default: `HEAD`) |
 | `--format FORMAT` | Output format: `json`, `markdown`, or `github` (default: `json`) |
 | `--output MODE` | Output mode: `auto`, `summary`, or `changes` (default: `auto`) |
-| `--changes-only` | Show only files with metric changes (default) |
-| `--all-files` | Include all files regardless of changes |
+| `--changes-only` | Only analyze files changed between refs |
+| `--all-files` | Analyze all source files at both refs (default) |
 | `--ignore-paths GLOBS` | Comma-separated glob patterns to exclude |
 
 **Example:**
