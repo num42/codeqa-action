@@ -3,9 +3,32 @@ defmodule CodeQA.HealthReport.Config do
 
   alias CodeQA.HealthReport.Categories
 
-  @spec load(String.t() | nil) :: %{categories: [map()], grade_scale: [{number(), String.t()}]}
-  def load(nil),
-    do: %{categories: Categories.defaults(), grade_scale: Categories.default_grade_scale()}
+  @default_impact %{
+    "complexity" => 5,
+    "file_structure" => 4,
+    "function_design" => 4,
+    "code_smells" => 3,
+    "naming_conventions" => 2,
+    "error_handling" => 2,
+    "consistency" => 2,
+    "documentation" => 1,
+    "testing" => 1
+  }
+
+  @spec load(String.t() | nil) :: %{
+          categories: [map()],
+          grade_scale: [{number(), String.t()}],
+          impact_map: %{String.t() => pos_integer()},
+          combined_top: pos_integer()
+        }
+  def load(nil) do
+    %{
+      categories: Categories.defaults(),
+      grade_scale: Categories.default_grade_scale(),
+      impact_map: @default_impact,
+      combined_top: 2
+    }
+  end
 
   def load(path) do
     yaml = YamlElixir.read_from_file!(path)
@@ -30,8 +53,17 @@ defmodule CodeQA.HealthReport.Config do
       end)
 
     grade_scale = parse_grade_scale(Map.get(yaml, "grade_scale"))
+    impact_map = parse_impact(Map.get(yaml, "impact"))
+    combined_top = Map.get(yaml, "combined_top", 2)
 
-    %{categories: categories, grade_scale: grade_scale}
+    %{categories: categories, grade_scale: grade_scale, impact_map: impact_map, combined_top: combined_top}
+  end
+
+  defp parse_impact(nil), do: @default_impact
+
+  defp parse_impact(overrides) when is_map(overrides) do
+    string_overrides = Map.new(overrides, fn {k, v} -> {to_string(k), v} end)
+    Map.merge(@default_impact, string_overrides)
   end
 
   defp parse_grade_scale(nil), do: Categories.default_grade_scale()
