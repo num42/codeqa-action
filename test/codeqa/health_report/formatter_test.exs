@@ -9,10 +9,12 @@ defmodule CodeQA.HealthReport.FormatterTest do
     overall_grade: "B+",
     categories: [
       %{
+        type: :threshold,
         name: "Readability",
         key: :readability,
         score: 100,
         grade: "A",
+        impact: 3,
         summary: "Excellent",
         metric_scores: [
           %{name: "flesch_adapted", source: "readability", weight: 0.4, good: :high, value: 102.5, score: 100}
@@ -23,10 +25,12 @@ defmodule CodeQA.HealthReport.FormatterTest do
         ]
       },
       %{
+        type: :threshold,
         name: "Complexity",
         key: :complexity,
         score: 35,
         grade: "D",
+        impact: 5,
         summary: "Critical — requires attention",
         metric_scores: [
           %{name: "difficulty", source: "halstead", weight: 0.35, value: 24.01, score: 65}
@@ -34,6 +38,38 @@ defmodule CodeQA.HealthReport.FormatterTest do
         worst_offenders: []
       }
     ]
+  }
+
+  @cosine_category %{
+    type: :cosine,
+    key: "function_design",
+    name: "Function Design",
+    score: 64,
+    grade: "C",
+    impact: 1,
+    behaviors: [
+      %{
+        behavior: "no_boolean_parameter",
+        cosine: 0.12,
+        score: 56,
+        grade: "C",
+        worst_offenders: [
+          %{file: "lib/foo/bar.ex", cosine: -0.71}
+        ]
+      },
+      %{
+        behavior: "single_responsibility",
+        cosine: 0.45,
+        score: 78,
+        grade: "B+",
+        worst_offenders: []
+      }
+    ]
+  }
+
+  @report_with_cosine %{
+    @sample_report
+    | categories: @sample_report.categories ++ [@cosine_category]
   }
 
   describe "format_markdown/3 with :plain format" do
@@ -53,10 +89,17 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert result =~ "## Overall: B+"
     end
 
-    test "includes category table" do
+    test "includes cosine legend" do
       result = Formatter.format_markdown(@sample_report, :default, :plain)
-      assert result =~ "| Readability | A | 100 | Excellent |"
-      assert result =~ "| Complexity | D | 35 |"
+      assert result =~ "cosine similarity"
+      assert result =~ "anti-pattern detected"
+    end
+
+    test "includes category table with Impact column" do
+      result = Formatter.format_markdown(@sample_report, :default, :plain)
+      assert result =~ "| Category | Grade | Score | Impact | Summary |"
+      assert result =~ "| Readability | A | 100 | 3 | Excellent |"
+      assert result =~ "| Complexity | D | 35 | 5 |"
     end
 
     test "includes worst offenders section" do
@@ -76,6 +119,42 @@ defmodule CodeQA.HealthReport.FormatterTest do
     end
   end
 
+  describe "format_markdown/3 plain with cosine category" do
+    test "renders cosine category header" do
+      result = Formatter.format_markdown(@report_with_cosine, :default, :plain)
+      assert result =~ "## Function Design — C"
+    end
+
+    test "renders cosine behavior table" do
+      result = Formatter.format_markdown(@report_with_cosine, :default, :plain)
+      assert result =~ "| Behavior | Cosine | Score | Grade |"
+      assert result =~ "| no_boolean_parameter | 0.12 | 56 | C |"
+      assert result =~ "| single_responsibility | 0.45 | 78 | B+ |"
+    end
+
+    test "renders cosine worst offenders per behavior" do
+      result = Formatter.format_markdown(@report_with_cosine, :default, :plain)
+      assert result =~ "### Worst Offenders: no_boolean_parameter"
+      assert result =~ "| File | Cosine |"
+      assert result =~ "| `lib/foo/bar.ex` | -0.71 |"
+    end
+
+    test "omits behaviors with no worst offenders" do
+      result = Formatter.format_markdown(@report_with_cosine, :default, :plain)
+      refute result =~ "### Worst Offenders: single_responsibility"
+    end
+
+    test "cosine category impact shown in overall table" do
+      result = Formatter.format_markdown(@report_with_cosine, :default, :plain)
+      assert result =~ "| Function Design | C | 64 | 1 |"
+    end
+
+    test "summary detail omits cosine worst offenders" do
+      result = Formatter.format_markdown(@report_with_cosine, :summary, :plain)
+      refute result =~ "### Worst Offenders: no_boolean_parameter"
+    end
+  end
+
   describe "format_markdown/3 defaults to :plain" do
     test "two-arity call matches plain output" do
       plain = Formatter.format_markdown(@sample_report, :default, :plain)
@@ -89,6 +168,12 @@ defmodule CodeQA.HealthReport.FormatterTest do
       result = Formatter.format_markdown(@sample_report, :default, :github)
       assert result =~ "## 🟡 Code Health: B+"
       assert result =~ "(79/100)"
+    end
+
+    test "includes cosine legend" do
+      result = Formatter.format_markdown(@sample_report, :default, :github)
+      assert result =~ "cosine similarity"
+      assert result =~ "anti-pattern detected"
     end
 
     test "includes mermaid chart" do
@@ -127,6 +212,36 @@ defmodule CodeQA.HealthReport.FormatterTest do
     test "does not include ## Overall: line (plain format header)" do
       result = Formatter.format_markdown(@sample_report, :default, :github)
       refute result =~ "## Overall: B+"
+    end
+  end
+
+  describe "format_markdown/3 github with cosine category" do
+    test "wraps cosine category in details/summary block" do
+      result = Formatter.format_markdown(@report_with_cosine, :default, :github)
+      assert result =~ "<summary><strong>🟠 Function Design — C (64/100)</strong></summary>"
+    end
+
+    test "renders cosine behaviors table inside details" do
+      result = Formatter.format_markdown(@report_with_cosine, :default, :github)
+      assert result =~ "| Behavior | Cosine | Score | Grade |"
+      assert result =~ "| no_boolean_parameter | 0.12 | 56 | C |"
+    end
+
+    test "renders cosine worst offenders per behavior" do
+      result = Formatter.format_markdown(@report_with_cosine, :default, :github)
+      assert result =~ "**Worst Offenders: no_boolean_parameter**"
+      assert result =~ "| File | Cosine |"
+      assert result =~ "| `lib/foo/bar.ex` | -0.71 |"
+    end
+
+    test "omits behaviors with no worst offenders" do
+      result = Formatter.format_markdown(@report_with_cosine, :default, :github)
+      refute result =~ "**Worst Offenders: single_responsibility**"
+    end
+
+    test "summary detail omits cosine worst offenders" do
+      result = Formatter.format_markdown(@report_with_cosine, :summary, :github)
+      refute result =~ "**Worst Offenders: no_boolean_parameter**"
     end
   end
 
