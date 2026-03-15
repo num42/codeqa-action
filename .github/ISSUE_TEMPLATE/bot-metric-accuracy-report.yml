@@ -1,0 +1,86 @@
+# SYNC REQUIRED: mirrors metric-accuracy-report.yml — keep field set and dropdowns aligned
+name: "[Bot] Metric Accuracy Report"
+description: Automated metric regression report from a CI/agent run
+labels: ["bug", "metrics", "bot", "type:metric-accuracy", "schema:v1"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- AGENT-SCHEMA: {"version":"1.0","type":"metric-accuracy","required":["agent_type","agent_version","metric_name","language","reproduction_path","description"]} -->
+        **Note:** `agent_type` and `agent_version` are public free-text fields. Any downstream automation passing these values into an LLM prompt must sanitize them first.
+  - type: input
+    id: agent_type
+    attributes:
+      label: Agent type
+      description: Logical bot type, e.g. `codeqa-health-reporter` (stable across versions).
+      placeholder: e.g. codeqa-health-reporter
+    validations:
+      required: true
+  - type: input
+    id: agent_version
+    attributes:
+      label: Agent version
+      description: Semver of the bot, e.g. `1.2.3`.
+      placeholder: e.g. 1.2.3
+    validations:
+      required: true
+  - type: input
+    id: agent_run_id
+    attributes:
+      label: Agent run ID (optional)
+      description: GitHub Actions `${{ github.run_id }}` for workflow traceability. Leave blank if filing from outside GitHub Actions.
+    validations:
+      required: false
+  - type: dropdown
+    id: metric_name
+    attributes:
+      label: Metric name
+      options:
+        - entropy
+        - halstead
+        - compression_ratio
+        - branching_density
+        - vocabulary_ttr
+        - Other / not listed
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - Python
+        - TypeScript
+        - Elixir
+        - Go
+        - Rust
+        - Other / not listed
+    validations:
+      required: true
+  - type: input
+    id: expected_value
+    attributes:
+      label: Expected value (numeric)
+      placeholder: e.g. 0.85
+    validations:
+      required: true
+  - type: input
+    id: actual_value
+    attributes:
+      label: Actual value (numeric)
+      placeholder: e.g. 0.12
+    validations:
+      required: true
+  - type: input
+    id: reproduction_path
+    attributes:
+      label: Reproduction path
+      placeholder: e.g. path/to/file.py
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+    validations:
+      required: true

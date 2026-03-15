@@ -1,0 +1,43 @@
+name: Combined-Metrics Sample Submission
+description: Submit a curated file pattern used in combined-metrics health scoring
+labels: ["enhancement", "samples"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Submit a real-world code sample to improve combined-metrics scoring calibration.
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - Python
+        - TypeScript
+        - Elixir
+        - Go
+        - Rust
+        - Other / not listed
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Code sample
+      description: Paste the code sample (max ~100 lines). Ensure it is anonymized if needed.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Why is this a good sample?
+      description: Describe what quality or anti-pattern this sample demonstrates.
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source (optional)
+      description: Public repo or documentation link, if applicable.
+    validations:
+      required: false

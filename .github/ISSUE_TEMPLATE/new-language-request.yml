@@ -1,0 +1,27 @@
+name: New Language Request
+description: Request support for a new programming language
+labels: ["enhancement", "languages"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Request analysis support for a language not currently covered.
+  - type: input
+    id: language
+    attributes:
+      label: Language name
+      placeholder: e.g. Kotlin
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Why would this be useful?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+    validations:
+      required: false

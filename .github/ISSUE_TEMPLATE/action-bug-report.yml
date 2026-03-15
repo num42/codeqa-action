@@ -1,0 +1,58 @@
+name: GitHub Action Bug Report
+description: Report a bug specific to the GitHub Action (runner, inputs, permissions)
+labels: ["bug", "action"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for bugs that occur specifically when running codeqa-action in a GitHub Actions workflow.
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+    validations:
+      required: true
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow configuration
+      description: Paste the relevant part of your workflow YAML.
+      render: yaml
+    validations:
+      required: true
+  - type: input
+    id: action_version
+    attributes:
+      label: Action version
+      placeholder: e.g. num42/codeqa-action@v1
+    validations:
+      required: true
+  - type: input
+    id: runner_os
+    attributes:
+      label: Runner OS
+      placeholder: e.g. ubuntu-latest, macos-14
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Action inputs
+      description: List the inputs you passed to the action.
+      render: yaml
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Paste relevant lines from the Actions run log.
+      render: text
+    validations:
+      required: false
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true

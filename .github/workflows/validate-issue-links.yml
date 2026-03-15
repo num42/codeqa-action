@@ -1,0 +1,46 @@
+name: Validate Issue Links
+
+on:
+  pull_request:
+    paths:
+      - "README.md"
+      - "AGENT.md"
+      - ".github/ISSUE_TEMPLATE/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate issue template links
+        run: |
+          set -euo pipefail
+
+          TEMPLATE_DIR=".github/ISSUE_TEMPLATE"
+          FILES_TO_CHECK="README.md AGENT.md"
+          broken=0
+
+          for file in $FILES_TO_CHECK; do
+            if [ ! -f "$file" ]; then
+              continue
+            fi
+
+            # Extract all ?template=X.yml references
+            templates=$(grep -oP '(?<=\?template=)[^\s")\x27>]+' "$file" || true)
+
+            for tmpl in $templates; do
+              if [ ! -f "$TEMPLATE_DIR/$tmpl" ]; then
+                echo "ERROR: $file references missing template: $TEMPLATE_DIR/$tmpl"
+                broken=1
+              fi
+            done
+          done
+
+          if [ "$broken" -eq 1 ]; then
+            echo ""
+            echo "Fix the broken template links listed above before merging."
+            exit 1
+          else
+            echo "All issue template links are valid."
+          fi

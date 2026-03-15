@@ -398,3 +398,23 @@ In addition to the 6 graded categories, `health-report` evaluates additional beh
 | F     | < 6         |
 
 The `fail-grade` action input causes a non-zero exit when the overall grade falls below the specified threshold.
+
+## Contributing & Issues
+
+Found a bug? [Open a bug report](https://github.com/num42/codeqa-action/issues/new?template=bug-report.yml)
+GitHub Action not behaving? [File an Action bug report](https://github.com/num42/codeqa-action/issues/new?template=action-bug-report.yml)
+Have an idea? [Request a feature](https://github.com/num42/codeqa-action/issues/new?template=feature-request.yml)
+Metric scoring wrong? [File a metric accuracy report](https://github.com/num42/codeqa-action/issues/new?template=metric-accuracy-report.yml)
+New language? [Request language support](https://github.com/num42/codeqa-action/issues/new?template=new-language-request.yml)
+New combined-metrics sample? [Submit a sample](https://github.com/num42/codeqa-action/issues/new?template=combined-metrics-sample-submission.yml)
+Docs unclear? [Report a documentation issue](https://github.com/num42/codeqa-action/issues/new?template=docs-issue.yml)
+Have a question? [Ask in Discussions](https://github.com/num42/codeqa-action/discussions)
+
+Want to contribute code? Fork the repo, make your changes, and open a pull request. See [Quick Start](#quick-start) for build instructions.
+
+<details>
+<summary>🤖 Automated tool integration</summary>
+
+See [AUTOMATION.md](./AUTOMATION.md) for machine-readable issue template links and label schema.
+
+</details>

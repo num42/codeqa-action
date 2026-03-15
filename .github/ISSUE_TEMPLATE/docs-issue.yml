@@ -1,0 +1,28 @@
+name: Documentation Issue
+description: Report unclear, missing, or incorrect documentation
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us improve the docs by describing what is unclear or incorrect.
+  - type: input
+    id: location
+    attributes:
+      label: Documentation location
+      description: Link to or describe which part of the docs is affected.
+      placeholder: e.g. README.md, Inputs section
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is wrong or unclear?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+    validations:
+      required: false
