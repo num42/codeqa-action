@@ -158,7 +158,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     ] ++ [""] ++ worst_offenders(cat, watch_files)
   end
 
-  defp worst_offenders(cat, watch_files \\ %MapSet{}) do
+  defp worst_offenders(cat, watch_files) do
     offenders = Map.get(cat, :worst_offenders, [])
 
     if offenders == [] do
