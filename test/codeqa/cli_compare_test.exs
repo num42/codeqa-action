@@ -29,12 +29,7 @@ defmodule CodeQA.CLI.CompareTest do
       System.cmd("git", ["add", "."], cd: repo)
       System.cmd("git", ["commit", "-m", "update app"], cd: repo)
 
-      stdout =
-        ExUnit.CaptureIO.capture_io(fn ->
-          ExUnit.CaptureIO.capture_io(:stderr, fn ->
-            CodeQA.CLI.main(["compare", repo, "--base-ref", "HEAD~1", "--format", "github"])
-          end)
-        end)
+      stdout = CodeQA.CLI.main(["compare", repo, "--base-ref", "HEAD~1", "--format", "github"])
 
       assert stdout =~ "File changes — 1 modified"
       refute stdout =~ "File changes — no changes"
@@ -44,7 +39,7 @@ defmodule CodeQA.CLI.CompareTest do
   describe "compare with no source file changes" do
     test "exits 0 when only non-source files changed", %{repo: repo} do
       # Create a branch, change only a .md file (not a source file)
-      File.write!(Path.join(repo, "README.md"), "# Hello")
+      File.write!(Path.join(repo, "README.txt"), "hello")
       System.cmd("git", ["add", "."], cd: repo)
       System.cmd("git", ["commit", "-m", "add readme"], cd: repo)
 
@@ -55,28 +50,39 @@ defmodule CodeQA.CLI.CompareTest do
       assert changes == [], "expected no source file changes, got: #{inspect(changes)}"
 
       # Verify the CLI handles this gracefully by calling main
-      # Capture stderr to verify the message
-      output =
-        ExUnit.CaptureIO.capture_io(:stderr, fn ->
-          CodeQA.CLI.main(["compare", repo, "--base-ref", base_ref, "--changes-only", "--format", "json"])
-        end)
+      stdout =
+        CodeQA.CLI.main([
+          "compare",
+          repo,
+          "--base-ref",
+          base_ref,
+          "--changes-only",
+          "--format",
+          "json"
+        ])
 
-      assert output =~ "No source files changed"
+      result = Jason.decode!(stdout)
+
+      assert result["metadata"]["total_files_compared"] == 0
     end
 
     test "outputs valid JSON with empty comparison", %{repo: repo} do
       # Change only a non-source file
-      File.write!(Path.join(repo, "README.md"), "# Hello")
+      File.write!(Path.join(repo, "README.txt"), "hello")
       System.cmd("git", ["add", "."], cd: repo)
       System.cmd("git", ["commit", "-m", "add readme"], cd: repo)
 
-      # Capture stdout (the JSON output) to verify it's valid
+      # Assert on JSON return value directly
       stdout =
-        ExUnit.CaptureIO.capture_io(fn ->
-          ExUnit.CaptureIO.capture_io(:stderr, fn ->
-            CodeQA.CLI.main(["compare", repo, "--base-ref", "HEAD~1", "--changes-only", "--format", "json"])
-          end)
-        end)
+        CodeQA.CLI.main([
+          "compare",
+          repo,
+          "--base-ref",
+          "HEAD~1",
+          "--changes-only",
+          "--format",
+          "json"
+        ])
 
       assert {:ok, result} = Jason.decode(stdout)
       assert result["metadata"]["total_files_compared"] == 0

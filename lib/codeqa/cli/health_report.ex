@@ -29,28 +29,28 @@ defmodule CodeQA.CLI.HealthReport do
 
   @impl CodeQA.CLI.Command
   def run(args) when args in [["--help"], ["-h"]] do
-    IO.puts(usage())
+    usage()
   end
 
+  @command_options [
+    output: :string,
+    config: :string,
+    detail: :string,
+    top: :integer,
+    format: :string,
+    ignore_paths: :string
+  ]
+
   def run(args) do
-    {opts, [path], _} =
-      Options.parse(args,
-        [
-          output: :string,
-          config: :string,
-          detail: :string,
-          top: :integer,
-          format: :string
-        ],
-        [o: :output]
-      )
-
-    if opts[:telemetry], do: CodeQA.Telemetry.setup()
-
+    {opts, [path], _} = Options.parse(args, @command_options, o: :output)
     Options.validate_dir!(path)
+    extra_ignore_patterns = Options.parse_ignore_paths(opts[:ignore_paths])
 
-    ignore_patterns = Options.parse_ignore_paths(opts[:ignore_paths]) ++ Options.load_config_ignore_paths(path)
-    files = CodeQA.Collector.collect_files(path, ignore_patterns: ignore_patterns)
+    files =
+      CodeQA.Engine.Collector.collect_files(path, extra_ignore_patterns)
+
+    # IO.inspect(files |> Map.keys(), label: "files", limit: :infinity)
+    # Process.exit(Process.get(:codeqa_config), :kill)
 
     if map_size(files) == 0 do
       IO.puts(:stderr, "Warning: no source files found in '#{path}'")
@@ -59,13 +59,17 @@ defmodule CodeQA.CLI.HealthReport do
 
     IO.puts(:stderr, "Analyzing #{map_size(files)} files for health report...")
 
-    analyze_opts = Options.build_analyze_opts(opts)
+    analyze_opts =
+      Options.build_analyze_opts(opts) ++ CodeQA.Config.near_duplicate_blocks_opts()
 
     start_time = System.monotonic_time(:millisecond)
-    results = CodeQA.Analyzer.analyze_codebase(files, analyze_opts)
+    results = CodeQA.Engine.Analyzer.analyze_codebase(files, analyze_opts)
     end_time = System.monotonic_time(:millisecond)
 
     IO.puts(:stderr, "Analysis completed in #{end_time - start_time}ms")
+
+    nodes_top = opts[:nodes_top] || 3
+    results = CodeQA.BlockImpactAnalyzer.analyze(results, files, nodes_top: nodes_top)
 
     total_bytes = results["files"] |> Map.values() |> Enum.map(& &1["bytes"]) |> Enum.sum()
 
@@ -92,14 +96,13 @@ defmodule CodeQA.CLI.HealthReport do
 
     case opts[:output] do
       nil ->
-        IO.puts(markdown)
+        markdown
 
       file ->
         File.write!(file, markdown)
         IO.puts(:stderr, "Health report written to #{file}")
+        ""
     end
-
-    if opts[:telemetry], do: CodeQA.Telemetry.print_report()
   end
 
   defp parse_detail(nil), do: :default

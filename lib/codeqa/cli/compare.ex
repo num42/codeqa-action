@@ -37,12 +37,13 @@ defmodule CodeQA.CLI.Compare do
 
   @impl CodeQA.CLI.Command
   def run(args) when args in [["--help"], ["-h"]] do
-    IO.puts(usage())
+    usage()
   end
 
   def run(args) do
     {opts, [path], _} =
-      Options.parse(args,
+      Options.parse(
+        args,
         [
           base_ref: :string,
           head_ref: :string,
@@ -54,8 +55,6 @@ defmodule CodeQA.CLI.Compare do
         []
       )
 
-    if opts[:telemetry], do: CodeQA.Telemetry.setup()
-
     base_ref = opts[:base_ref] || raise "Missing --base-ref"
     head_ref = opts[:head_ref] || "HEAD"
     changes_only = if opts[:changes_only], do: true, else: false
@@ -63,8 +62,9 @@ defmodule CodeQA.CLI.Compare do
     output_mode = opts[:output] || "auto"
 
     Options.validate_dir!(path)
+    CodeQA.Config.load(path)
 
-    ignore_patterns = Options.parse_ignore_paths(opts[:ignore_paths]) ++ Options.load_config_ignore_paths(path)
+    ignore_patterns = Options.parse_ignore_paths(opts[:ignore_paths])
     opts = Keyword.put(opts, :ignore_patterns, ignore_patterns)
 
     {base_result, head_result, changes} =
@@ -76,14 +76,12 @@ defmodule CodeQA.CLI.Compare do
       |> filter_files_for_output(opts, format)
 
     output_comparison(comparison, format, output_mode)
-
-    if opts[:telemetry], do: CodeQA.Telemetry.print_report()
   end
 
   defp run_comparison(path, base_ref, head_ref, changes_only, opts) do
     ignore_patterns = opts[:ignore_patterns] || []
     changes = CodeQA.Git.changed_files(path, base_ref, head_ref)
-    changes = CodeQA.Collector.reject_ignored(changes, ignore_patterns, & &1.path)
+    changes = CodeQA.Engine.Collector.reject_ignored(changes, & &1.path, ignore_patterns)
 
     file_paths =
       if changes_only do
@@ -102,8 +100,8 @@ defmodule CodeQA.CLI.Compare do
     else
       base_files = CodeQA.Git.collect_files_at_ref(path, base_ref, file_paths)
       head_files = CodeQA.Git.collect_files_at_ref(path, head_ref, file_paths)
-      base_files = CodeQA.Collector.reject_ignored_map(base_files, ignore_patterns)
-      head_files = CodeQA.Collector.reject_ignored_map(head_files, ignore_patterns)
+      base_files = CodeQA.Engine.Collector.reject_ignored_map(base_files, ignore_patterns)
+      head_files = CodeQA.Engine.Collector.reject_ignored_map(head_files, ignore_patterns)
 
       if map_size(base_files) == 0 and map_size(head_files) == 0 do
         IO.puts(:stderr, "Warning: no source files found at either ref")
@@ -112,16 +110,17 @@ defmodule CodeQA.CLI.Compare do
 
       print_progress(opts, base_files, head_files)
 
-      analyze_opts = Options.build_analyze_opts(opts)
+      analyze_opts =
+        Options.build_analyze_opts(opts) ++ CodeQA.Config.near_duplicate_blocks_opts()
 
       base_result =
         if map_size(base_files) > 0,
-          do: CodeQA.Analyzer.analyze_codebase(base_files, analyze_opts),
+          do: CodeQA.Engine.Analyzer.analyze_codebase(base_files, analyze_opts),
           else: empty
 
       head_result =
         if map_size(head_files) > 0,
-          do: CodeQA.Analyzer.analyze_codebase(head_files, analyze_opts),
+          do: CodeQA.Engine.Analyzer.analyze_codebase(head_files, analyze_opts),
           else: empty
 
       changes = if changes_only, do: changes, else: synthesize_changes(base_files, head_files)
@@ -156,11 +155,11 @@ defmodule CodeQA.CLI.Compare do
   end
 
   defp output_comparison(comparison, "markdown", output_mode) do
-    IO.puts(CodeQA.Formatter.format_markdown(comparison, output_mode))
+    CodeQA.Formatter.format_markdown(comparison, output_mode)
   end
 
   defp output_comparison(comparison, "github", output_mode) do
-    IO.puts(CodeQA.Formatter.format_github(comparison, output_mode))
+    CodeQA.Formatter.format_github(comparison, output_mode)
   end
 
   defp output_comparison(comparison, _format, output_mode) do
@@ -171,10 +170,8 @@ defmodule CodeQA.CLI.Compare do
         {path, CodeQA.Summarizer.summarize_file(path, data)}
       end)
 
-    IO.puts(
-      Jason.encode!(build_json_output(comparison, codebase_summary, file_summaries, output_mode),
-        pretty: true
-      )
+    Jason.encode!(build_json_output(comparison, codebase_summary, file_summaries, output_mode),
+      pretty: true
     )
   end
 
