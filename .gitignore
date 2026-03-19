@@ -19,6 +19,9 @@ devenv.lock
 # Git worktrees
 .worktrees/
 docs/plans/
+docs/superpowers/
+plans/
+scripts/*.exs
 
 # Claude Code
 .claude/
