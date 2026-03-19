@@ -54,8 +54,8 @@ defmodule CodeQA.Formatter do
   end
 
   defp mermaid_chart(head_grades) do
-    names = Enum.map(head_grades, fn g -> ~s("#{g.name}") end) |> Enum.join(", ")
-    scores = Enum.map(head_grades, fn g -> to_string(g.score) end) |> Enum.join(", ")
+    names = Enum.map_join(head_grades, ", ", fn g -> ~s("#{g.name}") end)
+    scores = Enum.map_join(head_grades, ", ", fn g -> to_string(g.score) end)
 
     [
       "```mermaid",
@@ -91,7 +91,8 @@ defmodule CodeQA.Formatter do
   end
 
   defp file_details(files, codebase, _output_mode) do
-    codebase_summary = CodeQA.Summarizer.summarize_codebase(%{"files" => files, "codebase" => codebase})
+    codebase_summary =
+      CodeQA.Summarizer.summarize_codebase(%{"files" => files, "codebase" => codebase})
 
     file_summaries =
       Map.new(files, fn {path, data} ->
@@ -291,6 +292,7 @@ defmodule CodeQA.Formatter do
         |> Enum.map(fn key ->
           direction = Map.get(direction_map, "#{metric_name}.#{key}")
           delta_cell = format_delta_with_direction(delta_m[key], direction)
+
           "| #{metric_name}.#{key} | #{format_value(base_m[key])} | #{format_value(head_m[key])} | #{delta_cell} |"
         end)
       end)

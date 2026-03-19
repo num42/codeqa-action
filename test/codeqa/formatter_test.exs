@@ -126,6 +126,7 @@ defmodule CodeQA.FormatterTest do
 
     test "file changes section reflects metric directions from codebase data" do
       result = Formatter.format_github(@sample_comparison)
+
       # halstead.mean_volume drops 100/500 = 20% → "decreased"; readability rises 10/65 ≈ 15% → "increased slightly"
       refute result =~ "File changes — 1 modified — all metrics stable"
     end

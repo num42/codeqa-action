@@ -10,6 +10,22 @@ defmodule CodeQA.Git do
 
   @status_map %{"A" => "added", "M" => "modified", "D" => "deleted"}
 
+  @spec gitignored_files(String.t(), [String.t()]) :: MapSet.t()
+  def gitignored_files(_repo_path, []), do: MapSet.new()
+
+  def gitignored_files(repo_path, paths) do
+    {output, _exit_code} =
+      System.cmd("git", ["check-ignore", "--no-index" | paths],
+        cd: repo_path,
+        stderr_to_stdout: false
+      )
+
+    output
+    |> String.trim()
+    |> String.split("\n", trim: true)
+    |> MapSet.new()
+  end
+
   def changed_files(repo_path, base_ref, head_ref) do
     {output, 0} =
       System.cmd(
@@ -66,6 +82,6 @@ defmodule CodeQA.Git do
 
   defp source_file?(path) do
     ext = path |> Path.extname() |> String.downcase()
-    MapSet.member?(CodeQA.Collector.source_extensions(), ext)
+    MapSet.member?(CodeQA.Engine.Collector.source_extensions(), ext)
   end
 end
