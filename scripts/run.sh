@@ -38,8 +38,9 @@ case "$INPUT_COMMAND" in
     fi
     ;;
   analyze) OUTPUT_FILE="${OUTPUT_FILE}.json" ;;
+  blocks) OUTPUT_FILE="${OUTPUT_FILE}.json" ;;
   *)
-    echo "::error::Unknown command: $INPUT_COMMAND. Must be health-report, compare, or analyze."
+    echo "::error::Unknown command: $INPUT_COMMAND. Must be health-report, compare, analyze, or blocks."
     exit 1
     ;;
 esac
@@ -80,6 +81,9 @@ case "$INPUT_COMMAND" in
     CAPTURE_STDOUT=true
     ;;
   analyze)
+    ARGS+=("--output" "$OUTPUT_FILE")
+    ;;
+  blocks)
     ARGS+=("--output" "$OUTPUT_FILE")
     ;;
 esac

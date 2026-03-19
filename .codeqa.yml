@@ -4,4 +4,29 @@
 # Patterns here are merged with any --ignore-paths passed on the command line.
 
 ignore_paths:
-  - priv/combined_metrics/samples/**
+  - priv/**
+  - tools/**
+  - scripts/**
+  - docs/**
+  - plans/**
+  - devenv*
+  - direnv*
+
+# Impact weights for overall score calculation.
+# Combined metric categories default to 1 (can be overridden here).
+impact:
+  complexity: 5
+  file_structure: 4
+  function_design: 4
+  code_smells: 3
+  naming_conventions: 2
+  error_handling: 2
+  consistency: 2
+  documentation: 1
+  testing: 1
+  # combined categories override example:
+  # variable_naming: 2
+
+combined_top: 5 # worst offender files per combined-metric behavior
+
+cosine_significance_threshold: 0.25 # threshold for cosine similarity calculation in behavior categories
