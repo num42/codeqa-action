@@ -2,6 +2,7 @@ defmodule CodeQA.HealthReport do
   @moduledoc "Orchestrates health report generation from analysis results."
 
   alias CodeQA.HealthReport.{Config, Grader, Formatter}
+  alias CodeQA.CombinedMetrics.{FileScorer, SampleRunner}
 
   @spec generate(map(), keyword()) :: map()
   def generate(analysis_results, opts \\ []) do
@@ -9,17 +10,23 @@ defmodule CodeQA.HealthReport do
     detail = Keyword.get(opts, :detail, :default)
     top_n = Keyword.get(opts, :top, 5)
 
-    %{categories: categories, grade_scale: grade_scale} = Config.load(config_path)
+    %{
+      categories: categories,
+      grade_scale: grade_scale,
+      impact_map: impact_map,
+      combined_top: combined_top
+    } =
+      Config.load(config_path)
+
     aggregate = get_in(analysis_results, ["codebase", "aggregate"]) || %{}
     files = Map.get(analysis_results, "files", %{})
 
-    category_grades = Grader.grade_aggregate(categories, aggregate, grade_scale)
-
-    category_grades =
-      Enum.zip(categories, category_grades)
-      |> Enum.map(fn {cat_def, graded} ->
+    threshold_grades =
+      categories
+      |> Grader.grade_aggregate(aggregate, grade_scale)
+      |> Enum.zip(categories)
+      |> Enum.map(fn {graded, cat_def} ->
         summary = build_category_summary(graded)
-
         cat_top = Map.get(cat_def, :top, top_n)
 
         worst =
@@ -29,18 +36,34 @@ defmodule CodeQA.HealthReport do
             _default -> Grader.worst_offenders(cat_def, files, cat_top, grade_scale)
           end
 
-        Map.merge(graded, %{summary: summary, worst_offenders: worst})
+        graded
+        |> Map.put(:type, :threshold)
+        |> Map.merge(%{summary: summary, worst_offenders: worst})
       end)
 
-    {overall_score, overall_grade} = Grader.overall_score(category_grades, grade_scale)
+    worst_files_map = FileScorer.worst_files_per_behavior(files, combined_top: combined_top)
+
+    cosine_grades = Grader.grade_cosine_categories(aggregate, worst_files_map, grade_scale)
+
+    # TODO(option-c): a unified flat issues list would replace the current per-category worst offenders loop; all category results would be flattened, deduplicated by file+line, and re-ranked by a cross-category severity score before rendering.
+    all_categories =
+      (threshold_grades ++ cosine_grades)
+      |> Enum.map(fn cat ->
+        Map.put(cat, :impact, Map.get(impact_map, to_string(cat.key), 1))
+      end)
+
+    {overall_score, overall_grade} = Grader.overall_score(all_categories, grade_scale, impact_map)
 
     metadata = build_metadata(analysis_results)
+
+    top_issues = SampleRunner.diagnose_aggregate(aggregate, top: 10)
 
     %{
       metadata: metadata,
       overall_score: overall_score,
       overall_grade: overall_grade,
-      categories: category_grades
+      categories: all_categories,
+      top_issues: top_issues
     }
   end
 
@@ -58,6 +81,8 @@ defmodule CodeQA.HealthReport do
       total_files: meta["total_files"] || map_size(Map.get(analysis_results, "files", %{}))
     }
   end
+
+  defp build_category_summary(%{type: :cosine}), do: ""
 
   defp build_category_summary(graded) do
     low_scorers =

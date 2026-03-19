@@ -1,6 +1,8 @@
 defmodule CodeQA.HealthReport.Grader do
   @moduledoc "Scores metrics and assigns letter grades."
 
+  alias CodeQA.CombinedMetrics.SampleRunner
+
   @doc """
   Score a single metric value (0-100) based on thresholds and direction.
 
@@ -15,6 +17,32 @@ defmodule CodeQA.HealthReport.Grader do
   def score_metric(%{good: _, thresholds: t}, value) do
     value |> score_low_is_good(t) |> clamp(0, 100)
   end
+
+  @doc """
+  Maps cosine similarity [-1, +1] to a score [0, 100] with linear interpolation
+  within each band. Result is clamped to [0, 100] and rounded to an integer.
+
+  | Cosine range  | Score range |
+  |---------------|-------------|
+  | [0.5, 1.0]    | [90, 100]   |
+  | [0.2, 0.5)    | [70, 90)    |
+  | [0.0, 0.2)    | [50, 70)    |
+  | [-0.3, 0.0)   | [30, 50)    |
+  | [-1.0, -0.3)  | [0, 30)     |
+  """
+  @spec score_cosine(float()) :: integer()
+  def score_cosine(cosine) do
+    cosine
+    |> cosine_to_score()
+    |> clamp(0, 100)
+    |> round()
+  end
+
+  defp cosine_to_score(c) when c >= 0.5, do: interpolate_between(c, 0.5, 90, 1.0, 100)
+  defp cosine_to_score(c) when c >= 0.2, do: interpolate_between(c, 0.2, 70, 0.5, 90)
+  defp cosine_to_score(c) when c >= 0.0, do: interpolate_between(c, 0.0, 50, 0.2, 70)
+  defp cosine_to_score(c) when c >= -0.3, do: interpolate_between(c, -0.3, 30, 0.0, 50)
+  defp cosine_to_score(c), do: interpolate_between(c, -1.0, 0, -0.3, 30)
 
   # Lower values are better: below A = 100, A = 90, A-B = 70-90, etc.
   defp score_low_is_good(val, t) do
@@ -161,21 +189,101 @@ defmodule CodeQA.HealthReport.Grader do
     Enum.map(categories, &grade_category(&1, file_like, scale))
   end
 
-  @doc "Compute overall score as average of category scores."
-  @spec overall_score(list(), [{number(), String.t()}]) :: {integer(), String.t()}
+  @doc """
+  Compute overall score as a weighted average of category scores.
+
+  Each category's weight is looked up from `impact_map` by converting
+  `category.key` (atom) to string. Defaults to `1` if the key is absent.
+
+  Backward compatible: calling with two arguments (empty `impact_map`) produces
+  the same arithmetic mean as the old `/2` signature.
+  """
+  @spec overall_score(
+          categories :: [map()],
+          grade_scale :: [{number(), String.t()}],
+          impact_map :: %{String.t() => pos_integer()}
+        ) :: {integer(), String.t()}
   def overall_score(
         category_grades,
-        scale \\ CodeQA.HealthReport.Categories.default_grade_scale()
+        scale \\ CodeQA.HealthReport.Categories.default_grade_scale(),
+        impact_map \\ %{}
       ) do
     if category_grades == [] do
       {0, "F"}
     else
-      avg =
-        Enum.reduce(category_grades, 0, fn g, acc -> acc + g.score end)
-        |> div(length(category_grades))
+      {weighted_sum, total_impact} =
+        Enum.reduce(category_grades, {0, 0}, fn g, {ws, ti} ->
+          impact = Map.get(impact_map, to_string(g.key), 1)
+          {ws + g.score * impact, ti + impact}
+        end)
 
+      avg = round(weighted_sum / total_impact)
       {avg, grade_letter(avg, scale)}
     end
+  end
+
+  @doc """
+  Grade codebase aggregate metrics using cosine similarity.
+
+  Calls `SampleRunner.diagnose_aggregate/2` to get all behaviors with cosine
+  values, groups them by category, and returns a graded category list suitable
+  for use with `overall_score/3`.
+
+  Categories with zero behaviors are skipped.
+  """
+  @spec grade_cosine_categories(
+          aggregate :: map(),
+          worst_files :: %{String.t() => [map()]},
+          grade_scale :: [{number(), String.t()}]
+        ) :: [map()]
+  def grade_cosine_categories(
+        aggregate,
+        worst_files,
+        scale \\ CodeQA.HealthReport.Categories.default_grade_scale()
+      ) do
+    threshold = CodeQA.Config.cosine_significance_threshold()
+
+    aggregate
+    |> SampleRunner.diagnose_aggregate(top: 99_999)
+    |> Enum.group_by(& &1.category)
+    |> Enum.map(fn {category, behaviors} ->
+      behavior_entries =
+        behaviors
+        |> Enum.reject(fn b -> abs(b.cosine) < threshold end)
+        |> Enum.map(fn b ->
+          cosine_score = score_cosine(b.cosine)
+
+          %{
+            behavior: b.behavior,
+            cosine: b.cosine,
+            score: cosine_score,
+            grade: grade_letter(cosine_score, scale),
+            worst_offenders: Map.get(worst_files, "#{category}.#{b.behavior}", [])
+          }
+        end)
+
+      category_score =
+        if behavior_entries == [] do
+          50
+        else
+          round(Enum.sum(Enum.map(behavior_entries, & &1.score)) / length(behavior_entries))
+        end
+
+      %{
+        type: :cosine,
+        key: category,
+        name: humanize_category(category),
+        score: category_score,
+        grade: grade_letter(category_score, scale),
+        behaviors: behavior_entries
+      }
+    end)
+  end
+
+  defp humanize_category(slug) do
+    slug
+    |> String.split("_")
+    |> Enum.map_join(" ", &String.capitalize/1)
   end
 
   @doc """
@@ -189,21 +297,47 @@ defmodule CodeQA.HealthReport.Grader do
         top_n,
         scale \\ CodeQA.HealthReport.Categories.default_grade_scale()
       ) do
+    # TODO(option-c): threshold metric scores are file-level aggregates; line-level attribution would require each AST node to carry its own per-metric values so that the node with the highest contribution to the bad metric score could be identified and reported directly.
     all_file_metrics
     |> Enum.map(fn {path, file_data} ->
       metrics = Map.get(file_data, "metrics", %{})
       graded = grade_category(category, metrics, scale)
+
       %{
         path: path,
         score: graded.score,
         grade: graded.grade,
         metric_scores: graded.metric_scores,
         lines: file_data["lines"],
-        bytes: file_data["bytes"]
+        bytes: file_data["bytes"],
+        top_nodes: top_3_nodes(Map.get(file_data, "nodes"))
       }
     end)
     |> Enum.filter(fn f -> f.metric_scores != [] end)
     |> Enum.sort_by(& &1.score, :asc)
     |> Enum.take(top_n)
   end
+
+  @doc """
+  Returns the top 3 nodes by refactoring potential impact, ranked by cosine_delta sum.
+
+  Only considers top-level nodes; children are not traversed. Returns an empty list
+  if input is nil, empty, or nodes lack refactoring_potentials data.
+  """
+  @spec top_3_nodes(list() | nil) :: list()
+  def top_3_nodes(nil), do: []
+  def top_3_nodes([]), do: []
+
+  def top_3_nodes(nodes) when is_list(nodes) do
+    nodes
+    |> Enum.sort_by(&node_impact_score/1, :desc)
+    |> Enum.take(3)
+  end
+
+  defp node_impact_score(%{"refactoring_potentials" => potentials})
+       when is_list(potentials) and potentials != [] do
+    Enum.sum(Enum.map(potentials, & &1["cosine_delta"]))
+  end
+
+  defp node_impact_score(_), do: 0.0
 end
