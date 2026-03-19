@@ -18,3 +18,10 @@ devenv.lock
 
 # Git worktrees
 .worktrees/
+docs/plans/
+
+# Claude Code
+.claude/
+
+# Node
+node_modules/

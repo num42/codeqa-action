@@ -11,7 +11,9 @@ defmodule CodeQA.MixProject do
       escript: [main_module: CodeQA.CLI],
       elixirc_paths: elixirc_paths(Mix.env()),
       preferred_envs: [precommit: :test],
-      aliases: aliases()
+      aliases: aliases(),
+      dialyzer: [ignore_warnings: ".dialyzer_ignore.exs"],
+      consolidate_protocols: Mix.env() != :test
     ]
   end
 
@@ -30,6 +32,12 @@ defmodule CodeQA.MixProject do
         "compile --warnings-as-errors",
         "deps.unlock --unused",
         "format"
+      ],
+      health: [
+        "run -e 'CodeQA.CLI.main([\"health-report\", \".\", \"--ignore-paths\", \"test/**\"])'"
+      ],
+      "health.progress": [
+        "run -e 'CodeQA.CLI.main([\"health-report\", \".\", \"--ignore-paths\", \"test/**\", \"--progress\"])'"
       ]
     ]
   end
