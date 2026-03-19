@@ -1,0 +1,1 @@
+doc: "Hungarian notation prefixes (`strName`, `bFlag`) add noise without type safety."

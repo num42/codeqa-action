@@ -1,0 +1,1 @@
+doc: "Variables should be scoped as narrowly as possible — not declared at a wider scope than needed."

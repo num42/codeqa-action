@@ -1,0 +1,1 @@
+doc: "Numeric literals should be extracted to named constants rather than used inline."

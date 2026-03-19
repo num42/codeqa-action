@@ -1,0 +1,1 @@
+doc: "URLs, file paths, and host names should be configuration values, not inline string literals."

@@ -1,0 +1,1 @@
+doc: "A variable used only once is a candidate for inlining — it rarely adds clarity over a direct expression."

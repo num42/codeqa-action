@@ -1,0 +1,1 @@
+doc: "A variable reassigned many times is a sign the name is too generic or the function does too much."
