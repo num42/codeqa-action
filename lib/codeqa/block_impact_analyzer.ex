@@ -41,9 +41,10 @@ defmodule CodeQA.BlockImpactAnalyzer do
     workers = Keyword.get(opts, :workers, System.schedulers_online())
 
     baseline_codebase_agg = Analyzer.analyze_codebase_aggregate(files_map)
+    project_langs = project_languages(files_map)
 
     baseline_codebase_cosines =
-      SampleRunner.diagnose_aggregate(baseline_codebase_agg, top: 99_999)
+      SampleRunner.diagnose_aggregate(baseline_codebase_agg, top: 99_999, languages: project_langs)
 
     file_results = pipeline_result["files"]
 
@@ -90,7 +91,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
       top_level_nodes = Parser.detect_blocks(root_tokens, Unknown)
 
       baseline_file_agg = FileScorer.file_to_aggregate(baseline_file_metrics)
-      baseline_file_cosines = SampleRunner.diagnose_aggregate(baseline_file_agg, top: 99_999)
+      language = CodeQA.Language.detect(path).name()
+      baseline_file_cosines = SampleRunner.diagnose_aggregate(baseline_file_agg, top: 99_999, language: language)
 
       top_level_nodes
       |> Enum.map(fn node ->
@@ -181,12 +183,25 @@ defmodule CodeQA.BlockImpactAnalyzer do
       |> Map.put(path, %{"metrics" => without_file_metrics})
       |> Analyzer.aggregate_file_metrics()
 
+    language = CodeQA.Language.detect(path).name()
+    project_langs = project_languages(file_results)
+
     RefactoringPotentials.compute(
       baseline_file_cosines,
       without_file_metrics,
       baseline_codebase_cosines,
       without_codebase_agg,
-      top: nodes_top
+      top: nodes_top,
+      language: language,
+      languages: project_langs
     )
+  end
+
+  defp project_languages(files_map) do
+    files_map
+    |> Map.keys()
+    |> Enum.map(&CodeQA.Language.detect(&1).name())
+    |> Enum.reject(&(&1 == "unknown"))
+    |> Enum.uniq()
   end
 end

@@ -20,6 +20,7 @@ defmodule CodeQA.HealthReport do
 
     aggregate = get_in(analysis_results, ["codebase", "aggregate"]) || %{}
     files = Map.get(analysis_results, "files", %{})
+    project_langs = project_languages(files)
 
     threshold_grades =
       categories
@@ -43,7 +44,7 @@ defmodule CodeQA.HealthReport do
 
     worst_files_map = FileScorer.worst_files_per_behavior(files, combined_top: combined_top)
 
-    cosine_grades = Grader.grade_cosine_categories(aggregate, worst_files_map, grade_scale)
+    cosine_grades = Grader.grade_cosine_categories(aggregate, worst_files_map, grade_scale, project_langs)
 
     # TODO(option-c): a unified flat issues list would replace the current per-category worst offenders loop; all category results would be flattened, deduplicated by file+line, and re-ranked by a cross-category severity score before rendering.
     all_categories =
@@ -56,7 +57,7 @@ defmodule CodeQA.HealthReport do
 
     metadata = build_metadata(analysis_results)
 
-    top_issues = SampleRunner.diagnose_aggregate(aggregate, top: 10)
+    top_issues = SampleRunner.diagnose_aggregate(aggregate, top: 10, languages: project_langs)
 
     %{
       metadata: metadata,
@@ -80,6 +81,14 @@ defmodule CodeQA.HealthReport do
       timestamp: meta["timestamp"] || DateTime.utc_now() |> DateTime.to_iso8601(),
       total_files: meta["total_files"] || map_size(Map.get(analysis_results, "files", %{}))
     }
+  end
+
+  defp project_languages(files_map) do
+    files_map
+    |> Map.keys()
+    |> Enum.map(&CodeQA.Language.detect(&1).name())
+    |> Enum.reject(&(&1 == "unknown"))
+    |> Enum.uniq()
   end
 
   defp build_category_summary(%{type: :cosine}), do: ""

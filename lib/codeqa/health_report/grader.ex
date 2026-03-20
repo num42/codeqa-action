@@ -234,17 +234,19 @@ defmodule CodeQA.HealthReport.Grader do
   @spec grade_cosine_categories(
           aggregate :: map(),
           worst_files :: %{String.t() => [map()]},
-          grade_scale :: [{number(), String.t()}]
+          grade_scale :: [{number(), String.t()}],
+          languages :: [String.t()]
         ) :: [map()]
   def grade_cosine_categories(
         aggregate,
         worst_files,
-        scale \\ CodeQA.HealthReport.Categories.default_grade_scale()
+        scale \\ CodeQA.HealthReport.Categories.default_grade_scale(),
+        languages \\ []
       ) do
     threshold = CodeQA.Config.cosine_significance_threshold()
 
     aggregate
-    |> SampleRunner.diagnose_aggregate(top: 99_999)
+    |> SampleRunner.diagnose_aggregate(top: 99_999, languages: languages)
     |> Enum.group_by(& &1.category)
     |> Enum.map(fn {category, behaviors} ->
       behavior_entries =

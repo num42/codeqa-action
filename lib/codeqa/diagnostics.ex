@@ -36,8 +36,11 @@ defmodule CodeQA.Diagnostics do
 
   defp run_aggregate(result, top, format) do
     aggregate = get_in(result, ["codebase", "aggregate"])
-    issues_task = Task.async(fn -> SampleRunner.diagnose_aggregate(aggregate, top: top) end)
-    categories_task = Task.async(fn -> SampleRunner.score_aggregate(aggregate) end)
+    files = Map.get(result, "files", %{})
+    project_langs = project_languages(files)
+
+    issues_task = Task.async(fn -> SampleRunner.diagnose_aggregate(aggregate, top: top, languages: project_langs) end)
+    categories_task = Task.async(fn -> SampleRunner.score_aggregate(aggregate, languages: project_langs) end)
     issues = Task.await(issues_task)
     categories = Task.await(categories_task)
 
@@ -60,7 +63,8 @@ defmodule CodeQA.Diagnostics do
       Map.new(files, fn {file_path, file_data} ->
         metrics = Map.get(file_data, "metrics", %{})
         file_agg = FileScorer.file_to_aggregate(metrics)
-        diagnoses = SampleRunner.diagnose_aggregate(file_agg, top: top)
+        language = CodeQA.Language.detect(file_path).name()
+        diagnoses = SampleRunner.diagnose_aggregate(file_agg, top: top, language: language)
         {file_path, diagnoses}
       end)
 
@@ -92,6 +96,14 @@ defmodule CodeQA.Diagnostics do
 
         "## Diagnose: per-file\n\n" <> per_file_table(file_rows, top)
     end
+  end
+
+  defp project_languages(files_map) do
+    files_map
+    |> Map.keys()
+    |> Enum.map(&CodeQA.Language.detect(&1).name())
+    |> Enum.reject(&(&1 == "unknown"))
+    |> Enum.uniq()
   end
 
   defp issues_table(issues) do

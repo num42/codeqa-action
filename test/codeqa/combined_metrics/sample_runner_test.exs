@@ -112,6 +112,13 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
     end
   end
 
+  describe "grade_cosine_categories/4 languages wiring" do
+    test "accepts languages argument" do
+      result = CodeQA.HealthReport.Grader.grade_cosine_categories(%{}, %{}, [], ["elixir"])
+      assert is_list(result)
+    end
+  end
+
   describe "run/1" do
     test "returns a list of results with required keys", %{results: results} do
       assert is_list(results)
