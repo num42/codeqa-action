@@ -1,6 +1,7 @@
 docstring_is_nonempty:
   _doc: "Docstrings must contain meaningful content, not just a placeholder or empty string."
   _fix_hint: "Replace placeholder docstrings with a real description of what the function does"
+  _languages: [elixir]
   _log_baseline: 29.4288
   branching:
     mean_branch_count: 0.3089
@@ -112,6 +113,7 @@ docstring_is_nonempty:
 file_has_license_header:
   _doc: "Source files should begin with a license or copyright header."
   _fix_hint: "Add a license header comment at the top of the file"
+  _languages: [elixir]
   _log_baseline: 5.7261
   branching:
     mean_branching_density: -0.0081
@@ -200,6 +202,7 @@ file_has_license_header:
 file_has_module_docstring:
   _doc: "Files should have a module-level docstring explaining purpose and usage."
   _fix_hint: "Add a @moduledoc string describing the module's purpose"
+  _languages: [elixir]
   _log_baseline: 24.2268
   branching:
     mean_branch_count: 0.3854
@@ -304,6 +307,7 @@ file_has_module_docstring:
 file_has_no_commented_out_code:
   _doc: "Files should not contain commented-out code blocks left from development."
   _fix_hint: "Remove commented-out code — use version control to track deleted code"
+  _languages: [elixir]
   _log_baseline: -8.1616
   branching:
     mean_branching_density: 0.0368
@@ -411,6 +415,7 @@ file_has_no_commented_out_code:
 function_has_docstring:
   _doc: "Public functions should have a docstring describing behaviour, params, and return value."
   _fix_hint: "Add @doc strings to public functions describing parameters, return value, and purpose"
+  _languages: [elixir]
   _log_baseline: 43.0440
   branching:
     mean_branch_count: 0.5279
@@ -529,6 +534,7 @@ function_has_docstring:
 function_todo_comment_in_body:
   _doc: "Functions should not contain TODO/FIXME comments indicating unfinished work."
   _fix_hint: "Resolve or extract TODO comments — create a tracked issue instead of leaving them inline"
+  _languages: [elixir]
   _log_baseline: 7.0511
   branching:
     mean_branch_count: -0.0287

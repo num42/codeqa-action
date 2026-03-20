@@ -1,6 +1,7 @@
 consistent_string_quote_style:
   _doc: "Files should use a single, consistent string quoting style throughout."
   _fix_hint: "Use a single quote style (e.g., double quotes) consistently throughout the file"
+  _languages: [elixir]
   _log_baseline: -18.9505
   branching:
     mean_branching_density: 0.0243
@@ -98,6 +99,7 @@ consistent_string_quote_style:
 no_dead_code_after_return:
   _doc: "There should be no unreachable statements after a return or early exit."
   _fix_hint: "Remove unreachable statements after return/raise/exit — they can never execute"
+  _languages: [elixir]
   _log_baseline: -57.2281
   branching:
     mean_branch_count: -2.0000
@@ -204,6 +206,7 @@ no_dead_code_after_return:
 no_debug_print_statements:
   _doc: "Debug output (`console.log`, `IO.inspect`, `fmt.Println`) must not be left in committed code."
   _fix_hint: "Remove IO.inspect/IO.puts/console.log debug output — use Logger or remove entirely"
+  _languages: [elixir]
   _log_baseline: -86.5160
   branching:
     mean_branch_count: -0.3540
@@ -314,6 +317,7 @@ no_debug_print_statements:
 no_fixme_comments:
   _doc: "FIXME, XXX, and HACK comments indicate known problems that should be resolved before merging."
   _fix_hint: "Resolve FIXME/XXX/HACK comments before merging — they indicate known unresolved issues"
+  _languages: [elixir]
   _log_baseline: -2.1522
   branching:
     mean_branch_count: 0.1755
@@ -428,6 +432,7 @@ no_fixme_comments:
 no_nested_ternary:
   _doc: "Nested conditional expressions (ternary-within-ternary) are harder to read than a plain if-else."
   _fix_hint: "Replace nested ternary/conditional expressions with if-else blocks or pattern matching"
+  _languages: [elixir]
   _log_baseline: 7.2208
   branching:
     mean_branch_count: -0.5662

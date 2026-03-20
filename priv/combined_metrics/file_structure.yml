@@ -1,6 +1,7 @@
 has_consistent_indentation:
   _doc: "Files should use a single, consistent indentation style with no mixed tabs and spaces."
   _fix_hint: "Use a consistent indentation width throughout the file (2 or 4 spaces, not mixed)"
+  _languages: [elixir]
   _log_baseline: -12.7016
   branching:
     mean_branching_density: 0.1994
@@ -37,6 +38,7 @@ has_consistent_indentation:
 line_count_under_300:
   _doc: "Files should be under 300 lines; longer files typically violate single responsibility."
   _fix_hint: "Split large files — extract cohesive groups of functions into separate modules"
+  _languages: [elixir]
   _log_baseline: -49.2655
   branching:
     mean_branch_count: -0.4508
@@ -154,6 +156,7 @@ line_count_under_300:
 line_length_under_120:
   _doc: "Lines should be under 120 characters to avoid horizontal scrolling."
   _fix_hint: "Wrap lines at 80–120 characters — break long expressions into multiple lines"
+  _languages: [elixir]
   _log_baseline: -6.2404
   branching:
     mean_branching_density: -0.1942
@@ -257,6 +260,7 @@ line_length_under_120:
 no_magic_numbers:
   _doc: "Numeric literals should be extracted to named constants rather than used inline."
   _fix_hint: "Replace literal numbers with named constants or module attributes"
+  _languages: [elixir]
   _log_baseline: 107.5222
   branching:
     mean_branch_count: -0.4352
@@ -361,6 +365,7 @@ no_magic_numbers:
 single_responsibility:
   _doc: "Each file should have one primary concern — low complexity spread across few, focused functions."
   _fix_hint: "Split the module — each file should have one primary purpose"
+  _languages: [elixir]
   _log_baseline: -35.4996
   branching:
     mean_branch_count: -0.0678
@@ -475,6 +480,7 @@ single_responsibility:
 uses_standard_indentation_width:
   _doc: "Indentation should use consistent multiples of 2 or 4 spaces throughout the file."
   _fix_hint: "Use the project-standard 2-space indentation throughout"
+  _languages: [elixir]
   _log_baseline: -17.9172
   compression:
     mean_raw_bytes: -0.2512

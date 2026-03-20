@@ -1,6 +1,7 @@
 boolean_has_is_has_prefix:
   _doc: "Boolean variables should be prefixed with `is_`, `has_`, or `can_`."
   _fix_hint: "Prefix boolean variables with is_, has_, or can_ (e.g., is_valid, has_errors)"
+  _languages: [elixir, javascript, ruby]
   _log_baseline: 15.9674
   brevity:
     mean_sample_size: 0.0752
@@ -64,6 +65,7 @@ boolean_has_is_has_prefix:
 collection_name_is_plural:
   _doc: "Variables holding a collection should use a plural name."
   _fix_hint: "Use plural names for collections (users, orders, ids not user, order, id)"
+  _languages: [elixir, javascript, ruby]
   _log_baseline: 32.4645
   brevity:
     mean_sample_size: -0.6992
@@ -126,6 +128,7 @@ collection_name_is_plural:
 loop_var_is_single_letter:
   _doc: "Loop index variables (`i`, `j`, `k`) are acceptable inside loop bodies."
   _fix_hint: "Use descriptive loop variable names instead of single letters (user not u)"
+  _languages: [elixir, javascript, ruby]
   _log_baseline: -28.4780
   brevity:
     mean_sample_size: -0.1049
@@ -206,6 +209,7 @@ loop_var_is_single_letter:
 name_contains_and:
   _doc: "Variable names containing `and` signal a variable that holds two concerns."
   _fix_hint: "Split variables with 'and' into two focused variables (user_and_role → user + role)"
+  _languages: [elixir, javascript, ruby]
   _log_baseline: -11.0411
   branching:
     mean_branch_count: -0.7789
@@ -316,6 +320,7 @@ name_contains_and:
 name_contains_type_suffix:
   _doc: "Type suffixes in names (`userString`, `nameList`) are redundant noise."
   _fix_hint: "Remove type suffixes from names (userList → users, dataMap → data)"
+  _languages: [elixir, javascript, ruby]
   _log_baseline: -26.2345
   branching:
     mean_branch_count: -0.4150
@@ -402,6 +407,7 @@ name_contains_type_suffix:
 name_is_abbreviation:
   _doc: "Abbreviated names (`usr`, `cfg`, `mgr`) reduce readability."
   _fix_hint: "Expand abbreviations to full words (usr → user, cnt → count, idx → index)"
+  _languages: [elixir, javascript, ruby]
   _log_baseline: 23.1000
   brevity:
     mean_sample_size: -0.2397
@@ -488,6 +494,7 @@ name_is_abbreviation:
 name_is_generic:
   _doc: "Generic names (`data`, `result`, `tmp`, `val`, `obj`) convey no domain meaning."
   _fix_hint: "Replace generic names (data, result, tmp, info) with domain-specific names"
+  _languages: [elixir, javascript, ruby]
   _log_baseline: 37.2228
   branching:
     mean_branch_count: 0.5193
@@ -600,6 +607,7 @@ name_is_generic:
 name_is_number_like:
   _doc: "Number-suffixed names (`var1`, `thing2`) signal a missing abstraction."
   _fix_hint: "Replace number-like names (x1, y2) with descriptive names indicating purpose"
+  _languages: [elixir, javascript, ruby]
   _log_baseline: 1.7668
   brevity:
     mean_sample_size: -0.0262
@@ -680,6 +688,7 @@ name_is_number_like:
 name_is_single_letter:
   _doc: "Single-letter names outside loop indices are too opaque."
   _fix_hint: "Replace single-letter names with descriptive names (n → count, s → status)"
+  _languages: [elixir, javascript, ruby]
   _log_baseline: 25.4977
   branching:
     mean_branching_density: -0.0458
@@ -779,6 +788,7 @@ name_is_single_letter:
 name_is_too_long:
   _doc: "Names longer than ~30 characters harm readability."
   _fix_hint: "Shorten overly long names — aim for 2–3 descriptive words, drop redundant context"
+  _languages: [elixir, javascript, ruby]
   _log_baseline: -7.5164
   branching:
     mean_branch_count: 0.0340
@@ -894,6 +904,7 @@ name_is_too_long:
 name_is_too_short:
   _doc: "Names shorter than 3 characters (outside loops) are too opaque."
   _fix_hint: "Use at least 3 characters — replace very short names with full words"
+  _languages: [elixir, javascript, ruby]
   _log_baseline: -0.4484
   branching:
     mean_branch_count: -0.2327
@@ -980,6 +991,7 @@ name_is_too_short:
 negated_boolean_name:
   _doc: "Negated boolean names (`isNotValid`, `notActive`) are harder to reason about."
   _fix_hint: "Rename negated booleans positively (is_not_active → is_inactive, not_found → missing)"
+  _languages: [elixir, javascript, ruby]
   _log_baseline: -15.6244
   brevity:
     mean_sample_size: -0.3765
@@ -1049,6 +1061,7 @@ negated_boolean_name:
 no_hungarian_notation:
   _doc: "Hungarian notation prefixes (`strName`, `bFlag`) add noise without type safety."
   _fix_hint: "Remove type prefixes from names (strName → name, intCount → count)"
+  _languages: [elixir, javascript, ruby]
   _log_baseline: -15.0940
   brevity:
     mean_sample_size: -0.0814
@@ -1121,6 +1134,7 @@ no_hungarian_notation:
 screaming_snake_for_constants:
   _doc: "Module-level constants should use SCREAMING_SNAKE_CASE."
   _fix_hint: "Use SCREAMING_SNAKE_CASE for module-level constants (@MAX_SIZE not @max_size)"
+  _languages: [elixir, javascript, ruby]
   _log_baseline: -6.3000
   branching:
     mean_branching_density: 0.0176

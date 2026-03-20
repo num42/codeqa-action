@@ -1,6 +1,7 @@
 declared_close_to_use:
   _doc: "Variables should be declared near their first use, not hoisted to the top of the function."
   _fix_hint: "Move variable declarations closer to their first use to reduce cognitive scope"
+  _languages: [elixir]
   _log_baseline: -59.6022
   branching:
     mean_branch_count: -0.4906
@@ -107,6 +108,7 @@ declared_close_to_use:
 mutated_after_initial_assignment:
   _doc: "Variables should not be reassigned after their initial value — prefer introducing a new name."
   _fix_hint: "Avoid reassigning variables — introduce a new name for each transformed value"
+  _languages: [elixir]
   _log_baseline: 6.6347
   branching:
     mean_branch_count: 0.1519
@@ -217,6 +219,7 @@ mutated_after_initial_assignment:
 reassigned_multiple_times:
   _doc: "A variable reassigned many times is a sign the name is too generic or the function does too much."
   _fix_hint: "Refactor repeated reassignment into a pipeline or named intermediate values"
+  _languages: [elixir]
   _log_baseline: -107.5659
   branching:
     mean_non_blank_count: -0.2287
@@ -316,6 +319,7 @@ reassigned_multiple_times:
 scope_is_minimal:
   _doc: "Variables should be scoped as narrowly as possible — not declared at a wider scope than needed."
   _fix_hint: "Narrow the scope of variables — declare them in the innermost block where they are used"
+  _languages: [elixir]
   _log_baseline: -6.7522
   branching:
     mean_branch_count: -0.1072
@@ -424,6 +428,7 @@ scope_is_minimal:
 shadowed_by_inner_scope:
   _doc: "Inner-scope names that shadow outer-scope names cause confusion about which value is in play."
   _fix_hint: "Rename the inner variable to avoid shadowing the outer one"
+  _languages: [elixir]
   _log_baseline: -33.9501
   branching:
     mean_branching_density: 2.0000
@@ -529,6 +534,7 @@ shadowed_by_inner_scope:
 used_only_once:
   _doc: "A variable used only once is a candidate for inlining — it rarely adds clarity over a direct expression."
   _fix_hint: "Inline single-use variables directly into their only use site"
+  _languages: [elixir]
   _log_baseline: -116.4649
   branching:
     mean_non_blank_count: -0.5385

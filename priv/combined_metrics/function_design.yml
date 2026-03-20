@@ -1,6 +1,7 @@
 boolean_function_has_question_mark:
   _doc: "Functions returning a boolean should end with `?` (Elixir/Ruby) or start with `is_`/`has_` (JS/Python)."
   _fix_hint: "Add a ? suffix to boolean-returning functions (e.g., valid? instead of is_valid)"
+  _languages: [elixir]
   _log_baseline: 7.0991
   brevity:
     mean_sample_size: 0.0085
@@ -47,6 +48,7 @@ boolean_function_has_question_mark:
 cyclomatic_complexity_under_10:
   _doc: "Functions should have a cyclomatic complexity under 10."
   _fix_hint: "Reduce branching — extract complex conditionals into helper functions"
+  _languages: [elixir]
   _log_baseline: -1.6476
   branching:
     mean_branch_count: -0.2373
@@ -151,6 +153,7 @@ cyclomatic_complexity_under_10:
 has_verb_in_name:
   _doc: "Function names should contain a verb describing the action performed."
   _fix_hint: "Start function names with a verb (get_, fetch_, build_, compute_, validate_)"
+  _languages: [elixir]
   _log_baseline: 15.9117
   compression:
     mean_raw_bytes: 0.0990
@@ -177,6 +180,7 @@ has_verb_in_name:
 is_less_than_20_lines:
   _doc: "Functions should be 20 lines or fewer."
   _fix_hint: "Split long functions — each function should fit on one screen (under 20 lines)"
+  _languages: [elixir]
   _log_baseline: 23.1945
   branching:
     mean_branch_count: -0.0820
@@ -289,6 +293,7 @@ is_less_than_20_lines:
 nesting_depth_under_4:
   _doc: "Code should not nest deeper than 4 levels."
   _fix_hint: "Reduce nesting — use early returns, guards, or extract inner blocks"
+  _languages: [elixir]
   _log_baseline: 1.1322
   branching:
     mean_branch_count: -0.3267
@@ -400,6 +405,7 @@ nesting_depth_under_4:
 no_boolean_parameter:
   _doc: "Functions should not take boolean parameters — a flag usually means the function does two things."
   _fix_hint: "Replace boolean parameters with two separate functions or use an options map"
+  _languages: [elixir]
   _log_baseline: 3.0928
   branching:
     mean_branch_count: -2.0000
@@ -507,6 +513,7 @@ no_boolean_parameter:
 no_magic_numbers:
   _doc: "Numeric literals should be named constants, not inline magic numbers."
   _fix_hint: "Replace magic numbers inside functions with named module attributes or constants"
+  _languages: [elixir]
   _log_baseline: 48.6069
   branching:
     mean_branch_count: -0.2708
@@ -611,6 +618,7 @@ no_magic_numbers:
 parameter_count_under_4:
   _doc: "Functions should take fewer than 4 parameters."
   _fix_hint: "Reduce parameter count — group related params into a struct or options map"
+  _languages: [elixir]
   _log_baseline: 1.6218
   branching:
     mean_non_blank_count: 0.0967
@@ -717,6 +725,7 @@ parameter_count_under_4:
 uses_ternary_expression:
   _doc: "Simple conditional assignments should use inline expressions rather than full if-blocks."
   _fix_hint: "Replace verbose if-else blocks with concise ternary/conditional expressions where readable"
+  _languages: [elixir]
   _log_baseline: -0.3649
   branching:
     mean_branch_count: -0.4693

@@ -1,6 +1,7 @@
 class_name_is_noun:
   _doc: "Class and module names should be nouns describing what they represent, not verbs or gerunds."
   _fix_hint: "Name modules/classes with nouns (User, OrderProcessor) not verbs"
+  _languages: [elixir]
   _log_baseline: 4.2909
   brevity:
     mean_sample_size: 0.7106
@@ -58,6 +59,7 @@ class_name_is_noun:
 file_name_matches_primary_export:
   _doc: "The file name should match the primary class or module it exports (e.g. `user.js` exports `User`)."
   _fix_hint: "Rename the file to match the primary module it defines"
+  _languages: [elixir]
   _log_baseline: 0.0000
   casing_entropy:
     mean_pascal_case_count: 0.0000
@@ -67,6 +69,7 @@ file_name_matches_primary_export:
 function_name_is_not_single_word:
   _doc: "Single-word function names like `run`, `process`, or `handle` are too vague to convey intent."
   _fix_hint: "Use at least two words in function names to convey intent (e.g., fetch_user not fetch)"
+  _languages: [elixir]
   _log_baseline: 17.4874
   compression:
     mean_raw_bytes: 0.2480
@@ -94,6 +97,7 @@ function_name_is_not_single_word:
 function_name_matches_return_type:
   _doc: "Functions prefixed with `get_`, `fetch_`, or `find_` should return the thing they name."
   _fix_hint: "Align the function name with what it returns (get_ for values, is_/has_ for booleans)"
+  _languages: [elixir]
   _log_baseline: 7.9532
   branching:
     mean_max_nesting_depth: 0.1335
@@ -188,6 +192,7 @@ function_name_matches_return_type:
 test_name_starts_with_verb:
   _doc: "Test descriptions should start with a verb: `creates`, `raises`, `returns`, not a noun phrase."
   _fix_hint: "Start test descriptions with a verb (returns, raises, creates, validates)"
+  _languages: [elixir]
   _log_baseline: 7.8702
   branching:
     mean_branch_count: 1.9977
