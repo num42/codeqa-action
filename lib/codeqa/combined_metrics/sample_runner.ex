@@ -260,7 +260,11 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
 
   ## Options
 
-    * `:top` - number of results to return (default 15)
+    * `:top`       - number of results to return (default 15)
+    * `:language`  - single language string for per-file filtering; when set, only
+                     behaviors whose `_languages` list includes this language are scored
+    * `:languages` - list of language strings for project-level filtering; when set, only
+                     behaviors whose `_languages` list overlaps with this list are scored
 
   ## Result shape
 
@@ -457,7 +461,12 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   # language: single language string from :language opt (nil = no filter)
   # languages: project language list from :languages opt (nil = no filter)
   defp behavior_language_applies?(_behavior_langs, nil, nil), do: true
+
+  # Empty behavior_langs means "applies to all languages" — always include.
+  # This clause takes priority over all non-nil filter cases.
   defp behavior_language_applies?([], _language, _languages), do: true
+
+  defp behavior_language_applies?(_behavior_langs, nil, []), do: true
 
   defp behavior_language_applies?(behavior_langs, language, nil) when is_binary(language),
     do: language in behavior_langs
@@ -465,8 +474,9 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   defp behavior_language_applies?(behavior_langs, nil, languages) when is_list(languages),
     do: Enum.any?(behavior_langs, &(&1 in languages))
 
-  defp behavior_language_applies?(behavior_langs, language, languages),
-    do: language in behavior_langs or Enum.any?(behavior_langs, &(&1 in languages))
+  defp behavior_language_applies?(behavior_langs, language, languages)
+       when is_binary(language) and is_list(languages),
+       do: language in behavior_langs or Enum.any?(behavior_langs, &(&1 in languages))
 
   defp format_yaml(data) do
     lines =
