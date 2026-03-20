@@ -65,11 +65,12 @@ defmodule CodeQA.CombinedMetrics.FileScorer do
     end)
     |> Enum.reduce(%{}, fn {path, file_data}, acc ->
       top_nodes = CodeQA.HealthReport.Grader.top_3_nodes(Map.get(file_data, "nodes"))
+      language = CodeQA.Language.detect(path).name()
 
       file_data
       |> Map.get("metrics", %{})
       |> file_to_aggregate()
-      |> SampleRunner.diagnose_aggregate(top: 99_999)
+      |> SampleRunner.diagnose_aggregate(top: 99_999, language: language)
       |> Enum.reduce(acc, fn %{
                                category: category,
                                behavior: behavior,

@@ -188,6 +188,33 @@ defmodule CodeQA.CombinedMetrics.FileScorerTest do
     end
   end
 
+  describe "worst_files_per_behavior/2 language filtering" do
+    test "does not include rust-only behaviors when scoring an elixir file" do
+      fake_metrics = %{"halstead" => %{"tokens" => 100.0, "difficulty" => 5.0}}
+      files_map = %{"lib/foo.ex" => %{"metrics" => fake_metrics}}
+
+      results = FileScorer.worst_files_per_behavior(files_map)
+
+      # Any behavior that only applies to rust should not have this .ex file in results
+      rust_only_keys =
+        Enum.filter(results, fn {key, entries} ->
+          [cat, beh] = String.split(key, ".", parts: 2)
+          yaml_path = "priv/combined_metrics/#{cat}.yml"
+
+          case YamlElixir.read_from_file(yaml_path) do
+            {:ok, data} ->
+              langs = get_in(data, [beh, "_languages"]) || []
+              langs != [] and "elixir" not in langs and entries != []
+
+            _ ->
+              false
+          end
+        end)
+
+      assert rust_only_keys == []
+    end
+  end
+
   # Build a realistic files_map using a real project file so diagnose_aggregate
   # has real metric values to work with. We use a small fixed map rather than
   # running the full analyzer to keep tests fast.
