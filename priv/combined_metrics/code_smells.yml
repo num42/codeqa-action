@@ -1,17 +1,15 @@
 consistent_string_quote_style:
   _doc: "Files should use a single, consistent string quoting style throughout."
-  _fix_hint: "Use a single quote style (e.g., double quotes) consistently throughout the file"
-  _languages: [elixir]
-  _log_baseline: -18.9505
+  _log_baseline: -18.2553
   branching:
     mean_branching_density: 0.0243
     mean_non_blank_count: -0.0248
   brevity:
     mean_sample_size: -0.0656
   casing_entropy:
-    mean_entropy: -0.0493
+    mean_entropy: -0.0405
     mean_pascal_case_count: -0.1743
-    mean_snake_case_count: -0.0451
+    mean_snake_case_count: -0.0505
   compression:
     mean_raw_bytes: -0.0672
     mean_redundancy: 0.0207
@@ -43,9 +41,9 @@ consistent_string_quote_style:
     mean_k: -0.0368
     mean_r_squared: -0.0080
   identifier_length_variance:
-    mean_mean: 0.0058
-    mean_std_dev: 0.0158
-    mean_variance: 0.0316
+    mean_mean: 0.0059
+    mean_std_dev: 0.0235
+    mean_variance: 0.0470
   indentation:
     mean_blank_line_ratio: 0.0205
     mean_variance: 0.0246
@@ -56,6 +54,11 @@ consistent_string_quote_style:
   magic_number_density:
     mean_string_literal_ratio: 0.3018
   near_duplicate_blocks_file:
+    mean_near_dup_block_d2: 0.9542
+    mean_near_dup_block_d3: -0.6021
+    mean_near_dup_block_d4: -0.9542
+    mean_near_dup_block_d5: 0.9542
+    mean_near_dup_block_d6: -0.6021
     mean_sub_block_count: -0.1804
   ngram:
     mean_bigram_hapax_fraction: -0.0101
@@ -86,21 +89,19 @@ consistent_string_quote_style:
     mean_distinct_symbol_types: -0.0966
     mean_symbol_count: -0.0999
   vocabulary:
-    mean_mattr: -0.0304
-    mean_raw_ttr: -0.0079
-    mean_total_identifiers: -0.0589
-    mean_unique_identifiers: -0.0668
+    mean_mattr: -0.0187
+    mean_raw_ttr: -0.0050
+    mean_total_identifiers: -0.0666
+    mean_unique_identifiers: -0.0714
   vowel_density:
-    mean_total_chars: -0.0531
+    mean_total_chars: -0.0607
   zipf:
     mean_total_tokens: -0.0783
     mean_vocab_size: -0.0656
 
 no_dead_code_after_return:
   _doc: "There should be no unreachable statements after a return or early exit."
-  _fix_hint: "Remove unreachable statements after return/raise/exit — they can never execute"
-  _languages: [elixir]
-  _log_baseline: -57.2281
+  _log_baseline: -55.8435
   branching:
     mean_branch_count: -2.0000
     mean_branching_density: -1.4201
@@ -108,10 +109,10 @@ no_dead_code_after_return:
   brevity:
     mean_sample_size: -0.2610
   casing_entropy:
-    mean_entropy: -0.2355
+    mean_entropy: -0.2430
     mean_other_count: -0.8708
     mean_pascal_case_count: -0.5752
-    mean_snake_case_count: -0.3869
+    mean_snake_case_count: -0.3559
   compression:
     mean_raw_bytes: -0.4531
     mean_redundancy: -0.0467
@@ -147,9 +148,9 @@ no_dead_code_after_return:
     mean_k: -0.1169
   identifier_length_variance:
     mean_max: -0.4367
-    mean_mean: 0.0078
-    mean_std_dev: -0.2478
-    mean_variance: -0.4957
+    mean_mean: -0.0159
+    mean_std_dev: -0.2804
+    mean_variance: -0.5607
   indentation:
     mean_blank_line_ratio: 0.2883
     mean_mean_depth: -0.4448
@@ -162,6 +163,11 @@ no_dead_code_after_return:
     mean_density: 0.2821
     mean_string_literal_ratio: -0.8289
   near_duplicate_blocks_file:
+    mean_block_count: -0.1083
+    mean_near_dup_block_d0: 1.1292
+    mean_near_dup_block_d5: 1.1292
+    mean_near_dup_block_d7: -0.7124
+    mean_near_dup_block_d8: 1.1292
     mean_sub_block_count: -0.3612
   ngram:
     mean_bigram_hapax_fraction: 0.0142
@@ -192,12 +198,12 @@ no_dead_code_after_return:
     mean_density: 0.2141
     mean_symbol_count: -0.2386
   vocabulary:
-    mean_mattr: -0.0870
-    mean_raw_ttr: 0.0851
-    mean_total_identifiers: -0.4256
-    mean_unique_identifiers: -0.3406
+    mean_mattr: -0.0424
+    mean_raw_ttr: 0.0435
+    mean_total_identifiers: -0.4061
+    mean_unique_identifiers: -0.3626
   vowel_density:
-    mean_total_chars: -0.4179
+    mean_total_chars: -0.4220
   zipf:
     mean_exponent: -0.0067
     mean_total_tokens: -0.3093
@@ -205,9 +211,7 @@ no_dead_code_after_return:
 
 no_debug_print_statements:
   _doc: "Debug output (`console.log`, `IO.inspect`, `fmt.Println`) must not be left in committed code."
-  _fix_hint: "Remove IO.inspect/IO.puts/console.log debug output — use Logger or remove entirely"
-  _languages: [elixir]
-  _log_baseline: -86.5160
+  _log_baseline: -88.0844
   branching:
     mean_branch_count: -0.3540
     mean_branching_density: 0.0181
@@ -216,10 +220,10 @@ no_debug_print_statements:
   brevity:
     mean_sample_size: -0.2128
   casing_entropy:
-    mean_entropy: 0.0285
+    mean_entropy: 0.0841
     mean_other_count: 0.1169
     mean_pascal_case_count: -1.0141
-    mean_snake_case_count: -0.5844
+    mean_snake_case_count: -0.6773
   compression:
     mean_raw_bytes: -0.4490
     mean_redundancy: -0.0518
@@ -254,9 +258,9 @@ no_debug_print_statements:
     mean_k: 0.0324
     mean_r_squared: -0.0077
   identifier_length_variance:
-    mean_mean: 0.1266
-    mean_std_dev: 0.0871
-    mean_variance: 0.1743
+    mean_mean: 0.1804
+    mean_std_dev: 0.0496
+    mean_variance: 0.0993
   indentation:
     mean_blank_line_ratio: -0.0499
     mean_max_depth: -0.2215
@@ -271,6 +275,7 @@ no_debug_print_statements:
     mean_density: 0.5227
     mean_string_literal_ratio: -1.0798
   near_duplicate_blocks_file:
+    mean_block_count: -0.2856
     mean_sub_block_count: -0.4114
   ngram:
     mean_bigram_hapax_fraction: -0.0183
@@ -302,12 +307,12 @@ no_debug_print_statements:
     mean_distinct_symbol_types: -0.1242
     mean_symbol_count: -0.5369
   vocabulary:
-    mean_mattr: 0.2274
-    mean_raw_ttr: 0.3523
-    mean_total_identifiers: -0.5867
-    mean_unique_identifiers: -0.2346
+    mean_mattr: 0.3160
+    mean_raw_ttr: 0.4438
+    mean_total_identifiers: -0.6654
+    mean_unique_identifiers: -0.2215
   vowel_density:
-    mean_total_chars: -0.4601
+    mean_total_chars: -0.4850
   zipf:
     mean_exponent: -0.1196
     mean_r_squared: 0.0127
@@ -316,9 +321,7 @@ no_debug_print_statements:
 
 no_fixme_comments:
   _doc: "FIXME, XXX, and HACK comments indicate known problems that should be resolved before merging."
-  _fix_hint: "Resolve FIXME/XXX/HACK comments before merging — they indicate known unresolved issues"
-  _languages: [elixir]
-  _log_baseline: -2.1522
+  _log_baseline: -2.0233
   branching:
     mean_branch_count: 0.1755
     mean_branching_density: 0.1504
@@ -326,9 +329,9 @@ no_fixme_comments:
   brevity:
     mean_sample_size: -0.0887
   casing_entropy:
-    mean_entropy: -0.0225
-    mean_pascal_case_count: -0.0769
-    mean_snake_case_count: -0.0130
+    mean_entropy: 0.0286
+    mean_pascal_case_count: 0.0129
+    mean_snake_case_count: -0.0450
   comment_structure:
     mean_comment_line_count: -0.6667
     mean_comment_line_ratio: 0.5464
@@ -369,9 +372,9 @@ no_fixme_comments:
     mean_beta: -0.0665
     mean_k: 0.1089
   identifier_length_variance:
-    mean_mean: 0.0027
-    mean_std_dev: 0.0259
-    mean_variance: 0.0517
+    mean_mean: 0.0159
+    mean_std_dev: 0.0203
+    mean_variance: 0.0407
   indentation:
     mean_blank_line_ratio: 0.0697
     mean_max_depth: 0.0646
@@ -385,6 +388,7 @@ no_fixme_comments:
     mean_density: -0.0646
     mean_string_literal_ratio: 0.0564
   near_duplicate_blocks_file:
+    mean_block_count: 0.0305
     mean_sub_block_count: 0.1090
   ngram:
     mean_bigram_hapax_fraction: -0.0378
@@ -417,12 +421,12 @@ no_fixme_comments:
     mean_density: 0.1041
     mean_symbol_count: 0.1218
   vocabulary:
-    mean_mattr: -0.1086
-    mean_raw_ttr: -0.1007
-    mean_total_identifiers: -0.0217
-    mean_unique_identifiers: -0.1224
+    mean_mattr: -0.0826
+    mean_raw_ttr: -0.0781
+    mean_total_identifiers: -0.0352
+    mean_unique_identifiers: -0.1133
   vowel_density:
-    mean_total_chars: -0.0190
+    mean_total_chars: -0.0193
   zipf:
     mean_exponent: 0.0584
     mean_r_squared: 0.0015
@@ -431,9 +435,7 @@ no_fixme_comments:
 
 no_nested_ternary:
   _doc: "Nested conditional expressions (ternary-within-ternary) are harder to read than a plain if-else."
-  _fix_hint: "Replace nested ternary/conditional expressions with if-else blocks or pattern matching"
-  _languages: [elixir]
-  _log_baseline: 7.2208
+  _log_baseline: 7.6475
   branching:
     mean_branch_count: -0.5662
     mean_branching_density: -0.3441
@@ -442,10 +444,10 @@ no_nested_ternary:
   brevity:
     mean_sample_size: 0.0486
   casing_entropy:
-    mean_entropy: 0.2495
+    mean_entropy: 0.2311
     mean_other_count: 0.7455
     mean_pascal_case_count: 0.1237
-    mean_snake_case_count: 0.0885
+    mean_snake_case_count: 0.1138
   compression:
     mean_raw_bytes: -0.0141
     mean_redundancy: -0.0117
@@ -483,8 +485,9 @@ no_nested_ternary:
     mean_k: 0.0563
   identifier_length_variance:
     mean_max: 0.0170
-    mean_std_dev: -0.0032
-    mean_variance: -0.0065
+    mean_mean: -0.0112
+    mean_std_dev: -0.0060
+    mean_variance: -0.0120
   indentation:
     mean_blank_line_ratio: 0.3825
     mean_max_depth: -0.2891
@@ -500,6 +503,8 @@ no_nested_ternary:
     mean_magic_number_count: -0.0310
     mean_string_literal_ratio: 0.0146
   near_duplicate_blocks_file:
+    mean_block_count: 0.0885
+    mean_near_dup_block_d7: -0.1824
     mean_sub_block_count: 0.5472
   ngram:
     mean_bigram_hapax_fraction: -0.0464
@@ -531,12 +536,12 @@ no_nested_ternary:
     mean_distinct_symbol_types: 0.0377
     mean_symbol_count: 0.2475
   vocabulary:
-    mean_mattr: -0.0453
-    mean_raw_ttr: -0.0380
-    mean_total_identifiers: 0.1302
-    mean_unique_identifiers: 0.0921
+    mean_mattr: -0.0587
+    mean_raw_ttr: -0.0515
+    mean_total_identifiers: 0.1551
+    mean_unique_identifiers: 0.1036
   vowel_density:
-    mean_total_chars: 0.1293
+    mean_total_chars: 0.1439
   zipf:
     mean_exponent: 0.0240
     mean_r_squared: 0.0111

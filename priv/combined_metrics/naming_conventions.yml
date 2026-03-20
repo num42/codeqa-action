@@ -1,8 +1,6 @@
 class_name_is_noun:
   _doc: "Class and module names should be nouns describing what they represent, not verbs or gerunds."
-  _fix_hint: "Name modules/classes with nouns (User, OrderProcessor) not verbs"
-  _languages: [elixir]
-  _log_baseline: 4.2909
+  _log_baseline: 2.9861
   brevity:
     mean_sample_size: 0.7106
   compression:
@@ -28,9 +26,9 @@ class_name_is_noun:
     mean_k: -0.6266
   identifier_length_variance:
     mean_max: -0.4031
-    mean_mean: 0.3059
-    mean_std_dev: -0.5093
-    mean_variance: -1.0187
+    mean_mean: 0.3287
+    mean_std_dev: -0.8347
+    mean_variance: -1.6695
   ngram:
     mean_bigram_hapax_fraction: 0.2542
     mean_bigram_repeated_unique: -0.5967
@@ -47,11 +45,11 @@ class_name_is_noun:
   symbol_density:
     mean_density: -0.1381
   vocabulary:
-    mean_mattr: 1.2109
-    mean_raw_ttr: 1.2109
-    mean_unique_identifiers: 1.2116
+    mean_mattr: 1.4020
+    mean_raw_ttr: 1.4020
+    mean_unique_identifiers: 1.4020
   vowel_density:
-    mean_total_chars: 0.3059
+    mean_total_chars: 0.3287
   zipf:
     mean_exponent: -0.2180
     mean_vocab_size: 0.7106
@@ -68,45 +66,41 @@ file_name_matches_primary_export:
 
 function_name_is_not_single_word:
   _doc: "Single-word function names like `run`, `process`, or `handle` are too vague to convey intent."
-  _fix_hint: "Use at least two words in function names to convey intent (e.g., fetch_user not fetch)"
-  _languages: [elixir]
-  _log_baseline: 17.4874
+  _log_baseline: 17.8470
   compression:
-    mean_raw_bytes: 0.2480
-    mean_redundancy: 0.0791
-    mean_zlib_bytes: 0.1049
-    mean_zlib_ratio: 0.1431
+    mean_raw_bytes: 0.2434
+    mean_redundancy: 0.0776
+    mean_zlib_bytes: 0.1029
+    mean_zlib_ratio: 0.1405
   entropy:
-    mean_char_entropy: 0.0245
-    mean_char_normalized: 0.0246
+    mean_char_entropy: 0.0241
+    mean_char_normalized: 0.0241
   identifier_length_variance:
-    mean_max: 0.7830
-    mean_mean: 0.5357
+    mean_max: 0.7685
+    mean_mean: 0.5825
     mean_std_dev: 1.0000
     mean_variance: 2.0000
   readability:
-    mean_avg_line_length: 0.2607
-    mean_avg_sub_words_per_id: 0.3141
-    mean_flesch_adapted: -0.3241
-    mean_fog_adapted: 1.3508
+    mean_avg_line_length: 0.2559
+    mean_avg_sub_words_per_id: 0.3083
+    mean_flesch_adapted: -0.3181
+    mean_fog_adapted: 1.3258
   symbol_density:
-    mean_density: -0.2477
+    mean_density: -0.2431
   vowel_density:
-    mean_total_chars: 0.5357
+    mean_total_chars: 0.5825
 
 function_name_matches_return_type:
   _doc: "Functions prefixed with `get_`, `fetch_`, or `find_` should return the thing they name."
-  _fix_hint: "Align the function name with what it returns (get_ for values, is_/has_ for booleans)"
-  _languages: [elixir]
-  _log_baseline: 7.9532
+  _log_baseline: 7.5638
   branching:
     mean_max_nesting_depth: 0.1335
   brevity:
     mean_sample_size: 0.0257
   casing_entropy:
-    mean_entropy: 0.0452
+    mean_entropy: 0.0310
     mean_other_count: 0.0347
-    mean_snake_case_count: -0.0493
+    mean_snake_case_count: -0.0296
   compression:
     mean_raw_bytes: -0.0190
     mean_redundancy: -0.0180
@@ -137,9 +131,8 @@ function_name_matches_return_type:
     mean_r_squared: 0.0038
   identifier_length_variance:
     mean_max: 0.1082
-    mean_mean: 0.0200
-    mean_std_dev: 0.0081
-    mean_variance: 0.0162
+    mean_std_dev: 0.0326
+    mean_variance: 0.0653
   line_patterns:
     mean_max_nesting_depth: 0.1335
     mean_string_literal_ratio: -0.0027
@@ -148,6 +141,9 @@ function_name_matches_return_type:
     mean_density: -0.0108
     mean_string_literal_ratio: -0.0027
   near_duplicate_blocks_file:
+    mean_near_dup_block_d0: -0.5899
+    mean_near_dup_block_d5: -0.2282
+    mean_near_dup_block_d7: 0.2282
     mean_sub_block_count: 0.0314
   ngram:
     mean_bigram_hapax_fraction: 0.0106
@@ -177,12 +173,12 @@ function_name_matches_return_type:
     mean_distinct_symbol_types: 0.0639
     mean_symbol_count: 0.0442
   vocabulary:
-    mean_mattr: 0.0228
-    mean_raw_ttr: 0.0478
-    mean_total_identifiers: -0.0410
-    mean_unique_identifiers: 0.0068
+    mean_mattr: 0.0350
+    mean_raw_ttr: 0.0299
+    mean_total_identifiers: -0.0225
+    mean_unique_identifiers: 0.0074
   vowel_density:
-    mean_total_chars: -0.0210
+    mean_total_chars: -0.0235
   zipf:
     mean_exponent: -0.0047
     mean_r_squared: 0.0105
@@ -191,17 +187,15 @@ function_name_matches_return_type:
 
 test_name_starts_with_verb:
   _doc: "Test descriptions should start with a verb: `creates`, `raises`, `returns`, not a noun phrase."
-  _fix_hint: "Start test descriptions with a verb (returns, raises, creates, validates)"
-  _languages: [elixir]
-  _log_baseline: 7.8702
+  _log_baseline: 7.8915
   branching:
     mean_branch_count: 1.9977
     mean_branching_density: 2.0000
   brevity:
     mean_sample_size: 0.0694
   casing_entropy:
-    mean_entropy: -0.0749
-    mean_snake_case_count: 0.1317
+    mean_entropy: -0.0711
+    mean_snake_case_count: 0.1381
   compression:
     mean_raw_bytes: 0.0914
     mean_redundancy: 0.0182
@@ -230,8 +224,8 @@ test_name_starts_with_verb:
     mean_k: 0.0795
     mean_r_squared: -0.0081
   identifier_length_variance:
-    mean_std_dev: -0.0221
-    mean_variance: -0.0441
+    mean_std_dev: -0.0192
+    mean_variance: -0.0384
   line_patterns:
     mean_string_literal_ratio: -0.0611
   magic_number_density:
@@ -258,12 +252,11 @@ test_name_starts_with_verb:
   symbol_density:
     mean_density: -0.0912
   vocabulary:
-    mean_mattr: 0.0427
-    mean_raw_ttr: -0.0298
-    mean_total_identifiers: 0.1126
-    mean_unique_identifiers: 0.0828
+    mean_mattr: 0.0463
+    mean_total_identifiers: 0.1129
+    mean_unique_identifiers: 0.1161
   vowel_density:
-    mean_total_chars: 0.1150
+    mean_total_chars: 0.1122
   zipf:
     mean_exponent: -0.0239
     mean_total_tokens: 0.0600

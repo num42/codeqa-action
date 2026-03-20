@@ -1,8 +1,6 @@
 declared_close_to_use:
   _doc: "Variables should be declared near their first use, not hoisted to the top of the function."
-  _fix_hint: "Move variable declarations closer to their first use to reduce cognitive scope"
-  _languages: [elixir]
-  _log_baseline: -59.6022
+  _log_baseline: -59.7486
   branching:
     mean_branch_count: -0.4906
     mean_branching_density: -0.2814
@@ -10,9 +8,9 @@ declared_close_to_use:
   brevity:
     mean_sample_size: -0.2189
   casing_entropy:
-    mean_entropy: 0.1835
+    mean_entropy: 0.1911
     mean_pascal_case_count: -0.1139
-    mean_snake_case_count: -0.3839
+    mean_snake_case_count: -0.4005
   comment_structure:
     mean_comment_line_count: -2.0000
     mean_comment_line_ratio: 1.9655
@@ -50,9 +48,9 @@ declared_close_to_use:
     mean_k: 0.0180
     mean_r_squared: 0.0061
   identifier_length_variance:
-    mean_mean: 0.0259
-    mean_std_dev: 0.0252
-    mean_variance: 0.0505
+    mean_mean: 0.0337
+    mean_std_dev: 0.0216
+    mean_variance: 0.0433
   indentation:
     mean_blank_line_ratio: 0.0720
     mean_mean_depth: 0.0139
@@ -94,12 +92,12 @@ declared_close_to_use:
     mean_distinct_symbol_types: -0.0387
     mean_symbol_count: -0.1541
   vocabulary:
-    mean_mattr: -0.0662
-    mean_raw_ttr: 0.0986
-    mean_total_identifiers: -0.3537
-    mean_unique_identifiers: -0.2551
+    mean_mattr: -0.0812
+    mean_raw_ttr: 0.1048
+    mean_total_identifiers: -0.3668
+    mean_unique_identifiers: -0.2619
   vowel_density:
-    mean_total_chars: -0.3278
+    mean_total_chars: -0.3330
   zipf:
     mean_exponent: -0.0151
     mean_total_tokens: -0.2436
@@ -107,9 +105,7 @@ declared_close_to_use:
 
 mutated_after_initial_assignment:
   _doc: "Variables should not be reassigned after their initial value — prefer introducing a new name."
-  _fix_hint: "Avoid reassigning variables — introduce a new name for each transformed value"
-  _languages: [elixir]
-  _log_baseline: 6.6347
+  _log_baseline: 6.6896
   branching:
     mean_branch_count: 0.1519
     mean_branching_density: 0.2073
@@ -118,9 +114,9 @@ mutated_after_initial_assignment:
   brevity:
     mean_sample_size: 0.0068
   casing_entropy:
-    mean_entropy: -0.0957
+    mean_entropy: -0.0947
     mean_pascal_case_count: -0.2061
-    mean_snake_case_count: -0.0467
+    mean_snake_case_count: -0.0436
   compression:
     mean_raw_bytes: -0.0496
     mean_redundancy: -0.0291
@@ -156,9 +152,9 @@ mutated_after_initial_assignment:
     mean_k: -0.0775
     mean_r_squared: 0.0063
   identifier_length_variance:
-    mean_mean: -0.0225
-    mean_std_dev: 0.0262
-    mean_variance: 0.0525
+    mean_mean: -0.0249
+    mean_std_dev: 0.0286
+    mean_variance: 0.0571
   indentation:
     mean_blank_line_ratio: -0.1139
     mean_max_depth: 0.2725
@@ -204,12 +200,12 @@ mutated_after_initial_assignment:
     mean_distinct_symbol_types: 0.0436
     mean_symbol_count: -0.0402
   vocabulary:
-    mean_mattr: 0.0742
-    mean_raw_ttr: 0.0464
-    mean_total_identifiers: -0.0634
-    mean_unique_identifiers: -0.0170
+    mean_mattr: 0.0885
+    mean_raw_ttr: 0.0564
+    mean_total_identifiers: -0.0623
+    mean_unique_identifiers: -0.0059
   vowel_density:
-    mean_total_chars: -0.0859
+    mean_total_chars: -0.0872
   zipf:
     mean_exponent: -0.0305
     mean_r_squared: 0.0040
@@ -218,109 +214,106 @@ mutated_after_initial_assignment:
 
 reassigned_multiple_times:
   _doc: "A variable reassigned many times is a sign the name is too generic or the function does too much."
-  _fix_hint: "Refactor repeated reassignment into a pipeline or named intermediate values"
-  _languages: [elixir]
-  _log_baseline: -107.5659
+  _log_baseline: -63.1779
   branching:
-    mean_non_blank_count: -0.2287
+    mean_non_blank_count: -0.1343
   brevity:
-    mean_sample_size: 0.0287
+    mean_sample_size: 0.0169
   casing_entropy:
-    mean_entropy: 0.2150
-    mean_pascal_case_count: -0.3434
-    mean_snake_case_count: -0.9136
+    mean_entropy: 0.0898
+    mean_pascal_case_count: -0.2016
+    mean_snake_case_count: -0.4475
   compression:
-    mean_raw_bytes: -0.4804
-    mean_redundancy: -0.2638
-    mean_unique_line_ratio: -0.0172
-    mean_zlib_bytes: 0.0205
-    mean_zlib_ratio: -0.5009
+    mean_raw_bytes: -0.2821
+    mean_redundancy: -0.1549
+    mean_unique_line_ratio: -0.0101
+    mean_zlib_bytes: 0.0121
+    mean_zlib_ratio: -0.2942
   entropy:
-    mean_char_entropy: 0.0869
-    mean_char_max_entropy: 0.0234
-    mean_char_normalized: 0.0636
-    mean_token_entropy: 0.0534
-    mean_token_normalized: 0.0470
-    mean_total_tokens: -0.4852
-    mean_vocab_size: 0.0287
+    mean_char_entropy: 0.0510
+    mean_char_max_entropy: 0.0137
+    mean_char_normalized: 0.0373
+    mean_token_entropy: 0.0313
+    mean_token_normalized: 0.0276
+    mean_total_tokens: -0.2849
+    mean_vocab_size: 0.0169
   function_metrics:
-    mean_avg_function_lines: -0.1143
+    mean_avg_function_lines: -0.0671
   halstead:
-    mean_N1_total_operators: -0.2160
-    mean_N2_total_operands: -0.9103
-    mean_difficulty: -1.1372
-    mean_effort: -1.6318
-    mean_estimated_bugs: -0.4946
-    mean_length: -0.5017
-    mean_n1_unique_operators: -0.1489
-    mean_n2_unique_operands: 0.0780
-    mean_time_to_implement_seconds: -1.6318
-    mean_vocabulary: 0.0309
-    mean_volume: -0.4946
+    mean_N1_total_operators: -0.1269
+    mean_N2_total_operands: -0.5345
+    mean_difficulty: -0.6678
+    mean_effort: -0.9583
+    mean_estimated_bugs: -0.2905
+    mean_length: -0.2946
+    mean_n1_unique_operators: -0.0875
+    mean_n2_unique_operands: 0.0458
+    mean_time_to_implement_seconds: -0.9583
+    mean_vocabulary: 0.0181
+    mean_volume: -0.2905
   heaps:
-    mean_beta: 0.2282
-    mean_k: -0.3898
-    mean_r_squared: 0.0349
+    mean_beta: 0.1340
+    mean_k: -0.2289
+    mean_r_squared: 0.0205
   identifier_length_variance:
-    mean_max: 0.3280
-    mean_mean: 0.3212
-    mean_std_dev: 0.8224
-    mean_variance: 1.6450
+    mean_max: 0.1926
+    mean_mean: 0.1821
+    mean_std_dev: 0.4688
+    mean_variance: 0.9376
   indentation:
-    mean_blank_line_ratio: 1.1002
-    mean_mean_depth: -0.0484
-    mean_variance: 0.1417
+    mean_blank_line_ratio: 0.6461
+    mean_mean_depth: -0.0284
+    mean_variance: 0.0832
   line_patterns:
-    mean_blank_line_ratio: 1.1002
-    mean_string_literal_ratio: 0.4958
-    mean_unique_line_ratio: -0.0236
+    mean_blank_line_ratio: 0.6461
+    mean_string_literal_ratio: 0.2911
+    mean_unique_line_ratio: -0.0138
   magic_number_density:
-    mean_density: 0.4930
-    mean_string_literal_ratio: 0.4958
+    mean_density: 0.2895
+    mean_string_literal_ratio: 0.2911
   near_duplicate_blocks_file:
-    mean_sub_block_count: 0.3280
+    mean_near_dup_block_d8: -2.0000
+    mean_sub_block_count: 0.1926
   ngram:
-    mean_bigram_hapax_fraction: 0.4509
-    mean_bigram_repeated_unique: -1.1755
-    mean_bigram_repetition_rate: -0.4690
-    mean_bigram_total: -0.4861
-    mean_bigram_unique: 0.0798
-    mean_trigram_hapax_fraction: 0.4536
-    mean_trigram_repeated_unique: -2.0000
-    mean_trigram_repetition_rate: -0.7942
-    mean_trigram_total: -0.4871
-    mean_trigram_unique: -0.0423
+    mean_bigram_hapax_fraction: 0.2648
+    mean_bigram_repeated_unique: -0.6903
+    mean_bigram_repetition_rate: -0.2754
+    mean_bigram_total: -0.2855
+    mean_bigram_unique: 0.0469
+    mean_trigram_hapax_fraction: 0.2664
+    mean_trigram_repeated_unique: -1.1745
+    mean_trigram_repetition_rate: -0.4664
+    mean_trigram_total: -0.2861
+    mean_trigram_unique: -0.0248
   punctuation_density:
-    mean_colon_suffix_density: 0.4930
-    mean_dot_count: -0.4849
-    mean_id_nonalpha_suffix_density: -0.3517
+    mean_colon_suffix_density: 0.2895
+    mean_dot_count: -0.2847
+    mean_id_nonalpha_suffix_density: -0.2066
   readability:
-    mean_avg_line_length: -0.2630
-    mean_avg_sub_words_per_id: 0.1974
-    mean_avg_tokens_per_line: -0.2565
-    mean_flesch_adapted: -0.1476
-    mean_fog_adapted: -0.2565
-    mean_total_lines: -0.2287
+    mean_avg_line_length: -0.1544
+    mean_avg_sub_words_per_id: 0.1159
+    mean_avg_tokens_per_line: -0.1506
+    mean_flesch_adapted: -0.0867
+    mean_fog_adapted: -0.1506
+    mean_total_lines: -0.1343
   symbol_density:
-    mean_density: 0.2755
-    mean_symbol_count: -0.2056
+    mean_density: 0.1618
+    mean_symbol_count: -0.1207
   vocabulary:
-    mean_mattr: 0.9538
-    mean_raw_ttr: 0.9009
-    mean_total_identifiers: -0.7749
-    mean_unique_identifiers: 0.1260
+    mean_mattr: 0.4975
+    mean_raw_ttr: 0.4909
+    mean_total_identifiers: -0.3859
+    mean_unique_identifiers: 0.1050
   vowel_density:
-    mean_total_chars: -0.4538
+    mean_total_chars: -0.2038
   zipf:
-    mean_exponent: -0.2377
-    mean_total_tokens: -0.4852
-    mean_vocab_size: 0.0287
+    mean_exponent: -0.1396
+    mean_total_tokens: -0.2849
+    mean_vocab_size: 0.0169
 
 scope_is_minimal:
   _doc: "Variables should be scoped as narrowly as possible — not declared at a wider scope than needed."
-  _fix_hint: "Narrow the scope of variables — declare them in the innermost block where they are used"
-  _languages: [elixir]
-  _log_baseline: -6.7522
+  _log_baseline: -7.8286
   branching:
     mean_branch_count: -0.1072
     mean_branching_density: -0.0452
@@ -328,9 +321,9 @@ scope_is_minimal:
   brevity:
     mean_sample_size: -0.0368
   casing_entropy:
-    mean_entropy: -0.0721
+    mean_entropy: -0.0341
     mean_other_count: -0.1823
-    mean_snake_case_count: 0.0081
+    mean_snake_case_count: -0.0471
   comment_structure:
     mean_comment_line_count: -0.4075
     mean_comment_line_ratio: 2.0000
@@ -369,9 +362,9 @@ scope_is_minimal:
     mean_k: -0.0341
     mean_r_squared: 0.0103
   identifier_length_variance:
-    mean_mean: -0.0389
-    mean_std_dev: 0.0545
-    mean_variance: 0.1090
+    mean_mean: -0.0320
+    mean_std_dev: 0.0864
+    mean_variance: 0.1729
   indentation:
     mean_blank_line_ratio: -0.1076
     mean_max_depth: -0.4694
@@ -384,6 +377,7 @@ scope_is_minimal:
   magic_number_density:
     mean_string_literal_ratio: -0.0144
   near_duplicate_blocks_file:
+    mean_block_count: -0.1691
     mean_sub_block_count: 0.0447
   ngram:
     mean_bigram_hapax_fraction: -0.0078
@@ -414,12 +408,11 @@ scope_is_minimal:
     mean_distinct_symbol_types: 0.0336
     mean_symbol_count: 0.0316
   vocabulary:
-    mean_mattr: -0.0277
-    mean_raw_ttr: -0.0643
-    mean_total_identifiers: -0.0071
-    mean_unique_identifiers: -0.0713
+    mean_raw_ttr: -0.0313
+    mean_total_identifiers: -0.0577
+    mean_unique_identifiers: -0.0891
   vowel_density:
-    mean_total_chars: -0.0460
+    mean_total_chars: -0.0897
   zipf:
     mean_exponent: 0.0070
     mean_total_tokens: 0.0143
@@ -427,9 +420,7 @@ scope_is_minimal:
 
 shadowed_by_inner_scope:
   _doc: "Inner-scope names that shadow outer-scope names cause confusion about which value is in play."
-  _fix_hint: "Rename the inner variable to avoid shadowing the outer one"
-  _languages: [elixir]
-  _log_baseline: -33.9501
+  _log_baseline: -33.8958
   branching:
     mean_branching_density: 2.0000
     mean_max_nesting_depth: -0.1450
@@ -437,9 +428,9 @@ shadowed_by_inner_scope:
   brevity:
     mean_sample_size: -0.0786
   casing_entropy:
-    mean_entropy: 0.1125
+    mean_entropy: 0.1132
     mean_pascal_case_count: -0.0306
-    mean_snake_case_count: -0.2319
+    mean_snake_case_count: -0.2452
   comment_structure:
     mean_comment_line_count: -1.1073
     mean_comment_line_ratio: 0.8936
@@ -476,9 +467,9 @@ shadowed_by_inner_scope:
     mean_k: -0.0817
     mean_r_squared: -0.0030
   identifier_length_variance:
-    mean_mean: 0.1455
-    mean_std_dev: 0.2453
-    mean_variance: 0.4905
+    mean_mean: 0.1622
+    mean_std_dev: 0.2441
+    mean_variance: 0.4883
   indentation:
     mean_blank_line_ratio: 0.0798
     mean_mean_depth: -0.0595
@@ -519,12 +510,12 @@ shadowed_by_inner_scope:
     mean_distinct_symbol_types: -0.0561
     mean_symbol_count: -0.1275
   vocabulary:
-    mean_mattr: 0.0829
-    mean_raw_ttr: 0.1254
-    mean_total_identifiers: -0.2059
-    mean_unique_identifiers: -0.0804
+    mean_mattr: 0.1103
+    mean_raw_ttr: 0.1343
+    mean_total_identifiers: -0.2135
+    mean_unique_identifiers: -0.0792
   vowel_density:
-    mean_total_chars: -0.0604
+    mean_total_chars: -0.0513
   zipf:
     mean_exponent: -0.0364
     mean_r_squared: 0.0058
@@ -533,16 +524,14 @@ shadowed_by_inner_scope:
 
 used_only_once:
   _doc: "A variable used only once is a candidate for inlining — it rarely adds clarity over a direct expression."
-  _fix_hint: "Inline single-use variables directly into their only use site"
-  _languages: [elixir]
-  _log_baseline: -116.4649
+  _log_baseline: -115.3539
   branching:
     mean_non_blank_count: -0.5385
   brevity:
     mean_sample_size: -0.4955
   casing_entropy:
-    mean_entropy: 0.6972
-    mean_snake_case_count: -1.1633
+    mean_entropy: 0.6530
+    mean_snake_case_count: -1.1336
   compression:
     mean_raw_bytes: -0.8394
     mean_redundancy: -0.1990
@@ -573,9 +562,9 @@ used_only_once:
   heaps:
     mean_k: -0.1674
   identifier_length_variance:
-    mean_mean: -0.2014
-    mean_std_dev: 0.1846
-    mean_variance: 0.3694
+    mean_mean: -0.1940
+    mean_std_dev: 0.1753
+    mean_variance: 0.3505
   indentation:
     mean_blank_line_ratio: 0.4750
     mean_max_depth: 1.2798
@@ -617,12 +606,12 @@ used_only_once:
     mean_density: 0.6227
     mean_symbol_count: -0.2178
   vocabulary:
-    mean_mattr: 0.2063
-    mean_raw_ttr: 0.2647
-    mean_total_identifiers: -0.9999
-    mean_unique_identifiers: -0.7352
+    mean_mattr: 0.0846
+    mean_raw_ttr: 0.1945
+    mean_total_identifiers: -0.9555
+    mean_unique_identifiers: -0.7612
   vowel_density:
-    mean_total_chars: -1.2013
+    mean_total_chars: -1.1494
   zipf:
     mean_exponent: 0.1820
     mean_r_squared: -0.0230

@@ -1,8 +1,6 @@
 docstring_is_nonempty:
   _doc: "Docstrings must contain meaningful content, not just a placeholder or empty string."
-  _fix_hint: "Replace placeholder docstrings with a real description of what the function does"
-  _languages: [elixir]
-  _log_baseline: 29.4288
+  _log_baseline: 28.4942
   branching:
     mean_branch_count: 0.3089
     mean_branching_density: 0.2652
@@ -10,10 +8,10 @@ docstring_is_nonempty:
   brevity:
     mean_sample_size: 0.1931
   casing_entropy:
-    mean_entropy: 0.0560
+    mean_entropy: 0.0676
     mean_other_count: 0.0709
     mean_pascal_case_count: 0.3089
-    mean_snake_case_count: 0.1585
+    mean_snake_case_count: 0.1382
   compression:
     mean_raw_bytes: 0.1245
     mean_redundancy: -0.0198
@@ -49,9 +47,9 @@ docstring_is_nonempty:
     mean_beta: 0.0242
     mean_k: 0.0556
   identifier_length_variance:
-    mean_mean: -0.0039
-    mean_std_dev: -0.0154
-    mean_variance: -0.0307
+    mean_mean: 0.0042
+    mean_std_dev: -0.0168
+    mean_variance: -0.0336
   indentation:
     mean_blank_line_ratio: 0.0413
     mean_mean_depth: -0.0330
@@ -65,8 +63,9 @@ docstring_is_nonempty:
     mean_magic_number_count: 0.1709
     mean_string_literal_ratio: 0.1078
   near_duplicate_blocks_file:
-    mean_block_count: 0.5417
-    mean_near_dup_block_d8: 0.2709
+    mean_block_count: 0.0907
+    mean_near_dup_block_d5: -0.2709
+    mean_near_dup_block_d8: 0.1000
     mean_sub_block_count: -0.0061
   ngram:
     mean_bigram_hapax_fraction: 0.0378
@@ -98,12 +97,12 @@ docstring_is_nonempty:
     mean_distinct_symbol_types: 0.0505
     mean_symbol_count: 0.0664
   vocabulary:
-    mean_mattr: 0.1408
-    mean_raw_ttr: 0.0942
-    mean_total_identifiers: 0.1709
-    mean_unique_identifiers: 0.2651
+    mean_mattr: 0.1382
+    mean_raw_ttr: 0.0976
+    mean_total_identifiers: 0.1534
+    mean_unique_identifiers: 0.2510
   vowel_density:
-    mean_total_chars: 0.1670
+    mean_total_chars: 0.1576
   zipf:
     mean_exponent: -0.0353
     mean_r_squared: 0.0037
@@ -112,18 +111,16 @@ docstring_is_nonempty:
 
 file_has_license_header:
   _doc: "Source files should begin with a license or copyright header."
-  _fix_hint: "Add a license header comment at the top of the file"
-  _languages: [elixir]
-  _log_baseline: 5.7261
+  _log_baseline: 5.8777
   branching:
     mean_branching_density: -0.0081
     mean_non_blank_count: 0.0080
   brevity:
     mean_sample_size: 0.0263
   casing_entropy:
-    mean_entropy: 0.0312
+    mean_entropy: 0.0296
     mean_pascal_case_count: 0.0957
-    mean_snake_case_count: 0.0036
+    mean_snake_case_count: 0.0039
   comment_structure:
     mean_comment_line_ratio: -2.0000
   compression:
@@ -153,8 +150,7 @@ file_has_license_header:
     mean_beta: -0.0113
     mean_k: 0.0614
   identifier_length_variance:
-    mean_mean: -0.0037
-    mean_variance: -0.0031
+    mean_mean: -0.0048
   indentation:
     mean_blank_line_ratio: 0.0206
     mean_mean_depth: -0.0080
@@ -167,6 +163,7 @@ file_has_license_header:
     mean_magic_number_count: 0.1973
     mean_string_literal_ratio: -0.0104
   near_duplicate_blocks_file:
+    mean_block_count: 0.0650
     mean_sub_block_count: 0.0089
   ngram:
     mean_bigram_hapax_fraction: 0.0086
@@ -188,12 +185,12 @@ file_has_license_header:
     mean_density: -0.0042
     mean_symbol_count: 0.0065
   vocabulary:
-    mean_mattr: 0.0121
-    mean_raw_ttr: 0.0200
-    mean_total_identifiers: 0.0175
-    mean_unique_identifiers: 0.0374
+    mean_mattr: 0.0108
+    mean_raw_ttr: 0.0207
+    mean_total_identifiers: 0.0187
+    mean_unique_identifiers: 0.0395
   vowel_density:
-    mean_total_chars: 0.0138
+    mean_total_chars: 0.0139
   zipf:
     mean_exponent: -0.0055
     mean_total_tokens: 0.0091
@@ -201,9 +198,7 @@ file_has_license_header:
 
 file_has_module_docstring:
   _doc: "Files should have a module-level docstring explaining purpose and usage."
-  _fix_hint: "Add a @moduledoc string describing the module's purpose"
-  _languages: [elixir]
-  _log_baseline: 24.2268
+  _log_baseline: 24.1681
   branching:
     mean_branch_count: 0.3854
     mean_branching_density: -2.0000
@@ -211,9 +206,9 @@ file_has_module_docstring:
   brevity:
     mean_sample_size: 0.2219
   casing_entropy:
-    mean_entropy: -0.0217
+    mean_entropy: -0.0210
     mean_pascal_case_count: 0.0929
-    mean_snake_case_count: 0.1492
+    mean_snake_case_count: 0.1544
   compression:
     mean_raw_bytes: 0.1161
     mean_redundancy: -0.0256
@@ -247,9 +242,9 @@ file_has_module_docstring:
     mean_k: 0.5760
     mean_r_squared: -0.0049
   identifier_length_variance:
-    mean_mean: -0.0059
-    mean_std_dev: -0.0462
-    mean_variance: -0.0924
+    mean_mean: -0.0101
+    mean_std_dev: -0.0477
+    mean_variance: -0.0954
   indentation:
     mean_blank_line_ratio: 0.0686
     mean_mean_depth: -0.0240
@@ -263,7 +258,7 @@ file_has_module_docstring:
     mean_magic_number_count: 0.1599
     mean_string_literal_ratio: 0.1425
   near_duplicate_blocks_file:
-    mean_block_count: 0.3854
+    mean_block_count: 0.0586
     mean_sub_block_count: 0.0098
   ngram:
     mean_bigram_hapax_fraction: 0.0500
@@ -293,12 +288,12 @@ file_has_module_docstring:
     mean_distinct_symbol_types: 0.0618
     mean_symbol_count: 0.0433
   vocabulary:
-    mean_mattr: 0.0527
-    mean_raw_ttr: 0.1365
-    mean_total_identifiers: 0.1309
-    mean_unique_identifiers: 0.2674
+    mean_mattr: 0.0532
+    mean_raw_ttr: 0.1353
+    mean_total_identifiers: 0.1326
+    mean_unique_identifiers: 0.2679
   vowel_density:
-    mean_total_chars: 0.1250
+    mean_total_chars: 0.1226
   zipf:
     mean_exponent: -0.0467
     mean_total_tokens: 0.0837
@@ -306,18 +301,16 @@ file_has_module_docstring:
 
 file_has_no_commented_out_code:
   _doc: "Files should not contain commented-out code blocks left from development."
-  _fix_hint: "Remove commented-out code — use version control to track deleted code"
-  _languages: [elixir]
-  _log_baseline: -8.1616
+  _log_baseline: -8.5677
   branching:
     mean_branching_density: 0.0368
     mean_non_blank_count: -0.0367
   brevity:
     mean_sample_size: -0.0046
   casing_entropy:
-    mean_entropy: -0.0252
-    mean_pascal_case_count: -0.0657
-    mean_snake_case_count: 0.0160
+    mean_entropy: -0.0091
+    mean_pascal_case_count: -0.0597
+    mean_snake_case_count: -0.0126
   comment_structure:
     mean_comment_line_count: -0.9901
     mean_comment_line_ratio: 0.3578
@@ -353,9 +346,9 @@ file_has_no_commented_out_code:
     mean_k: 0.1958
     mean_r_squared: -0.0200
   identifier_length_variance:
-    mean_mean: 0.0074
-    mean_std_dev: 0.0252
-    mean_variance: 0.0503
+    mean_mean: 0.0169
+    mean_std_dev: 0.0264
+    mean_variance: 0.0527
   indentation:
     mean_blank_line_ratio: 0.0551
     mean_max_depth: 0.0324
@@ -369,6 +362,7 @@ file_has_no_commented_out_code:
     mean_density: 2.0000
     mean_string_literal_ratio: -0.0818
   near_duplicate_blocks_file:
+    mean_block_count: -0.0474
     mean_sub_block_count: -0.0454
   ngram:
     mean_bigram_hapax_fraction: 0.0101
@@ -401,12 +395,12 @@ file_has_no_commented_out_code:
     mean_density: -0.0172
     mean_symbol_count: -0.0237
   vocabulary:
-    mean_mattr: -0.0404
-    mean_raw_ttr: -0.0140
-    mean_total_identifiers: -0.0030
-    mean_unique_identifiers: -0.0170
+    mean_mattr: -0.0327
+    mean_raw_ttr: 0.0060
+    mean_total_identifiers: -0.0246
+    mean_unique_identifiers: -0.0186
   vowel_density:
-    mean_total_chars: 0.0044
+    mean_total_chars: -0.0077
   zipf:
     mean_exponent: -0.0043
     mean_total_tokens: -0.0158
@@ -414,9 +408,7 @@ file_has_no_commented_out_code:
 
 function_has_docstring:
   _doc: "Public functions should have a docstring describing behaviour, params, and return value."
-  _fix_hint: "Add @doc strings to public functions describing parameters, return value, and purpose"
-  _languages: [elixir]
-  _log_baseline: 43.0440
+  _log_baseline: 41.6283
   branching:
     mean_branch_count: 0.5279
     mean_branching_density: 0.3832
@@ -424,10 +416,10 @@ function_has_docstring:
   brevity:
     mean_sample_size: 0.2608
   casing_entropy:
-    mean_entropy: -0.0193
+    mean_entropy: -0.0026
     mean_other_count: 0.3105
     mean_pascal_case_count: 0.1852
-    mean_snake_case_count: 0.3052
+    mean_snake_case_count: 0.2708
   comment_structure:
     mean_comment_line_ratio: -2.0000
   compression:
@@ -467,9 +459,9 @@ function_has_docstring:
     mean_k: -0.0612
     mean_r_squared: -0.0041
   identifier_length_variance:
-    mean_mean: -0.0412
-    mean_std_dev: -0.0363
-    mean_variance: -0.0727
+    mean_mean: -0.0191
+    mean_std_dev: -0.0493
+    mean_variance: -0.0985
   indentation:
     mean_blank_line_ratio: 0.1003
     mean_max_depth: -0.1288
@@ -484,9 +476,10 @@ function_has_docstring:
     mean_magic_number_count: 0.4104
     mean_string_literal_ratio: 0.5931
   near_duplicate_blocks_file:
-    mean_block_count: 0.6209
-    mean_near_dup_block_d6: 0.3105
-    mean_near_dup_block_d8: 0.3105
+    mean_block_count: 0.2288
+    mean_near_dup_block_d6: -0.3105
+    mean_near_dup_block_d7: 0.3105
+    mean_near_dup_block_d8: -0.1816
     mean_sub_block_count: 0.0349
   ngram:
     mean_bigram_hapax_fraction: 0.0560
@@ -520,12 +513,12 @@ function_has_docstring:
     mean_distinct_symbol_types: 0.0427
     mean_symbol_count: 0.1896
   vocabulary:
-    mean_mattr: 0.1771
-    mean_raw_ttr: 0.0544
-    mean_total_identifiers: 0.2819
-    mean_unique_identifiers: 0.3363
+    mean_mattr: 0.1769
+    mean_raw_ttr: 0.0666
+    mean_total_identifiers: 0.2541
+    mean_unique_identifiers: 0.3207
   vowel_density:
-    mean_total_chars: 0.2407
+    mean_total_chars: 0.2350
   zipf:
     mean_exponent: 0.0025
     mean_total_tokens: 0.2284
@@ -533,9 +526,7 @@ function_has_docstring:
 
 function_todo_comment_in_body:
   _doc: "Functions should not contain TODO/FIXME comments indicating unfinished work."
-  _fix_hint: "Resolve or extract TODO comments — create a tracked issue instead of leaving them inline"
-  _languages: [elixir]
-  _log_baseline: 7.0511
+  _log_baseline: 7.2394
   branching:
     mean_branch_count: -0.0287
     mean_branching_density: -0.0435
@@ -543,9 +534,9 @@ function_todo_comment_in_body:
   brevity:
     mean_sample_size: -0.0084
   casing_entropy:
-    mean_entropy: 0.0039
-    mean_pascal_case_count: 0.0055
-    mean_snake_case_count: -0.0047
+    mean_entropy: 0.0157
+    mean_pascal_case_count: 0.0410
+    mean_snake_case_count: -0.0125
   comment_structure:
     mean_comment_line_count: -0.5392
     mean_comment_line_ratio: 0.7796
@@ -582,9 +573,9 @@ function_todo_comment_in_body:
     mean_k: 0.1608
     mean_r_squared: -0.0095
   identifier_length_variance:
-    mean_mean: 0.0058
-    mean_std_dev: 0.0154
-    mean_variance: 0.0309
+    mean_mean: 0.0061
+    mean_std_dev: 0.0128
+    mean_variance: 0.0257
   indentation:
     mean_blank_line_ratio: 0.0593
     mean_mean_depth: -0.0184
@@ -597,6 +588,7 @@ function_todo_comment_in_body:
     mean_density: -2.0000
     mean_string_literal_ratio: -0.0151
   near_duplicate_blocks_file:
+    mean_block_count: 0.0317
     mean_sub_block_count: 0.0281
   ngram:
     mean_bigram_hapax_fraction: -0.0187
@@ -628,12 +620,11 @@ function_todo_comment_in_body:
     mean_distinct_symbol_types: -0.0140
     mean_symbol_count: 0.0200
   vocabulary:
-    mean_mattr: -0.0437
-    mean_raw_ttr: -0.0159
-    mean_total_identifiers: -0.0024
-    mean_unique_identifiers: -0.0182
+    mean_mattr: -0.0525
+    mean_raw_ttr: -0.0250
+    mean_unique_identifiers: -0.0236
   vowel_density:
-    mean_total_chars: 0.0035
+    mean_total_chars: 0.0076
   zipf:
     mean_total_tokens: 0.0157
     mean_vocab_size: -0.0084

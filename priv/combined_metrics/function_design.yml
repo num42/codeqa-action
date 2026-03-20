@@ -1,7 +1,5 @@
 boolean_function_has_question_mark:
   _doc: "Functions returning a boolean should end with `?` (Elixir/Ruby) or start with `is_`/`has_` (JS/Python)."
-  _fix_hint: "Add a ? suffix to boolean-returning functions (e.g., valid? instead of is_valid)"
-  _languages: [elixir]
   _log_baseline: 7.0991
   brevity:
     mean_sample_size: 0.0085
@@ -47,17 +45,15 @@ boolean_function_has_question_mark:
 
 cyclomatic_complexity_under_10:
   _doc: "Functions should have a cyclomatic complexity under 10."
-  _fix_hint: "Reduce branching — extract complex conditionals into helper functions"
-  _languages: [elixir]
-  _log_baseline: -1.6476
+  _log_baseline: -1.4896
   branching:
     mean_branch_count: -0.2373
     mean_branching_density: -0.1952
     mean_non_blank_count: -0.0421
   casing_entropy:
-    mean_entropy: 0.1030
+    mean_entropy: 0.0964
     mean_other_count: 0.3306
-    mean_snake_case_count: 0.0284
+    mean_snake_case_count: 0.0321
   compression:
     mean_raw_bytes: -0.0162
     mean_redundancy: -0.0172
@@ -91,9 +87,9 @@ cyclomatic_complexity_under_10:
     mean_k: 0.0672
     mean_r_squared: 0.0049
   identifier_length_variance:
-    mean_mean: 0.0092
-    mean_std_dev: 0.0209
-    mean_variance: 0.0418
+    mean_mean: 0.0130
+    mean_std_dev: 0.0120
+    mean_variance: 0.0240
   indentation:
     mean_blank_line_ratio: 0.1655
     mean_max_depth: -0.2086
@@ -107,6 +103,8 @@ cyclomatic_complexity_under_10:
     mean_density: -0.0329
     mean_string_literal_ratio: -0.0439
   near_duplicate_blocks_file:
+    mean_block_count: 0.1013
+    mean_near_dup_block_d8: -0.2086
     mean_sub_block_count: 0.0994
   ngram:
     mean_bigram_hapax_fraction: -0.0068
@@ -139,12 +137,12 @@ cyclomatic_complexity_under_10:
     mean_distinct_symbol_types: -0.0172
     mean_symbol_count: 0.0391
   vocabulary:
-    mean_mattr: -0.0325
-    mean_raw_ttr: -0.0309
-    mean_total_identifiers: 0.0382
-    mean_unique_identifiers: 0.0074
+    mean_mattr: -0.0361
+    mean_raw_ttr: -0.0361
+    mean_total_identifiers: 0.0441
+    mean_unique_identifiers: 0.0080
   vowel_density:
-    mean_total_chars: 0.0474
+    mean_total_chars: 0.0572
   zipf:
     mean_exponent: 0.0120
     mean_r_squared: 0.0057
@@ -152,36 +150,32 @@ cyclomatic_complexity_under_10:
 
 has_verb_in_name:
   _doc: "Function names should contain a verb describing the action performed."
-  _fix_hint: "Start function names with a verb (get_, fetch_, build_, compute_, validate_)"
-  _languages: [elixir]
-  _log_baseline: 15.9117
+  _log_baseline: 14.8350
   compression:
-    mean_raw_bytes: 0.0990
-    mean_redundancy: -0.0473
-    mean_zlib_bytes: 0.2439
-    mean_zlib_ratio: -0.1449
+    mean_raw_bytes: 0.0816
+    mean_redundancy: -0.0390
+    mean_zlib_bytes: 0.2011
+    mean_zlib_ratio: -0.1195
   identifier_length_variance:
-    mean_max: 0.9396
-    mean_mean: 0.1989
-    mean_std_dev: 1.0001
+    mean_max: 0.7747
+    mean_mean: 0.2058
+    mean_std_dev: 1.0000
     mean_variance: 2.0000
   punctuation_density:
-    mean_exclamation_density: -0.1305
+    mean_exclamation_density: -0.1076
   readability:
-    mean_avg_line_length: 0.1026
-    mean_avg_sub_words_per_id: 0.1614
-    mean_flesch_adapted: -0.1605
-    mean_fog_adapted: 1.6084
+    mean_avg_line_length: 0.0846
+    mean_avg_sub_words_per_id: 0.1330
+    mean_flesch_adapted: -0.1324
+    mean_fog_adapted: 1.3261
   symbol_density:
-    mean_density: -0.1005
+    mean_density: -0.0828
   vowel_density:
-    mean_total_chars: 0.1989
+    mean_total_chars: 0.2058
 
 is_less_than_20_lines:
   _doc: "Functions should be 20 lines or fewer."
-  _fix_hint: "Split long functions — each function should fit on one screen (under 20 lines)"
-  _languages: [elixir]
-  _log_baseline: 23.1945
+  _log_baseline: 23.9658
   branching:
     mean_branch_count: -0.0820
     mean_branching_density: -0.1010
@@ -190,10 +184,10 @@ is_less_than_20_lines:
   brevity:
     mean_sample_size: 0.0165
   casing_entropy:
-    mean_entropy: 0.0640
+    mean_entropy: 0.0577
     mean_other_count: 0.6266
     mean_pascal_case_count: 0.0440
-    mean_snake_case_count: 0.0800
+    mean_snake_case_count: 0.0910
   compression:
     mean_raw_bytes: 0.0746
     mean_redundancy: 0.0227
@@ -228,9 +222,9 @@ is_less_than_20_lines:
   heaps:
     mean_k: -0.0254
   identifier_length_variance:
-    mean_mean: 0.0149
-    mean_std_dev: 0.0313
-    mean_variance: 0.0625
+    mean_mean: 0.0122
+    mean_std_dev: 0.0297
+    mean_variance: 0.0593
   indentation:
     mean_blank_line_ratio: -0.0440
     mean_mean_depth: -0.0962
@@ -245,6 +239,8 @@ is_less_than_20_lines:
     mean_magic_number_count: 0.1156
     mean_string_literal_ratio: -0.0774
   near_duplicate_blocks_file:
+    mean_block_count: 0.2797
+    mean_near_dup_block_d8: 0.3133
     mean_sub_block_count: 0.1886
   ngram:
     mean_bigram_hapax_fraction: -0.0508
@@ -278,12 +274,12 @@ is_less_than_20_lines:
     mean_distinct_symbol_types: 0.0127
     mean_symbol_count: 0.0662
   vocabulary:
-    mean_mattr: -0.0368
-    mean_raw_ttr: -0.0647
-    mean_total_identifiers: 0.0864
-    mean_unique_identifiers: 0.0218
+    mean_mattr: -0.0390
+    mean_raw_ttr: -0.0717
+    mean_total_identifiers: 0.0965
+    mean_unique_identifiers: 0.0248
   vowel_density:
-    mean_total_chars: 0.1013
+    mean_total_chars: 0.1087
   zipf:
     mean_exponent: 0.0225
     mean_r_squared: 0.0030
@@ -292,9 +288,7 @@ is_less_than_20_lines:
 
 nesting_depth_under_4:
   _doc: "Code should not nest deeper than 4 levels."
-  _fix_hint: "Reduce nesting — use early returns, guards, or extract inner blocks"
-  _languages: [elixir]
-  _log_baseline: 1.1322
+  _log_baseline: 1.0611
   branching:
     mean_branch_count: -0.3267
     mean_branching_density: -0.2061
@@ -303,10 +297,10 @@ nesting_depth_under_4:
   brevity:
     mean_sample_size: 0.0178
   casing_entropy:
-    mean_entropy: -0.0358
+    mean_entropy: -0.0207
     mean_other_count: 0.2917
     mean_pascal_case_count: -0.2725
-    mean_snake_case_count: 0.1015
+    mean_snake_case_count: 0.0787
   compression:
     mean_raw_bytes: -0.0069
     mean_redundancy: -0.0076
@@ -342,9 +336,9 @@ nesting_depth_under_4:
     mean_beta: -0.0464
     mean_k: 0.0845
   identifier_length_variance:
-    mean_mean: 0.0488
-    mean_std_dev: 0.1849
-    mean_variance: 0.3698
+    mean_mean: 0.0770
+    mean_std_dev: 0.1858
+    mean_variance: 0.3716
   indentation:
     mean_blank_line_ratio: 0.5622
     mean_max_depth: -0.3155
@@ -358,6 +352,7 @@ nesting_depth_under_4:
   magic_number_density:
     mean_string_literal_ratio: -0.1046
   near_duplicate_blocks_file:
+    mean_block_count: 0.0856
     mean_sub_block_count: 0.1999
   ngram:
     mean_bigram_hapax_fraction: -0.0645
@@ -390,12 +385,12 @@ nesting_depth_under_4:
     mean_density: 0.1426
     mean_symbol_count: 0.1355
   vocabulary:
-    mean_mattr: -0.0321
-    mean_raw_ttr: -0.0555
-    mean_total_identifiers: 0.0987
-    mean_unique_identifiers: 0.0432
+    mean_mattr: -0.0269
+    mean_raw_ttr: -0.0269
+    mean_total_identifiers: 0.0774
+    mean_unique_identifiers: 0.0505
   vowel_density:
-    mean_total_chars: 0.1475
+    mean_total_chars: 0.1544
   zipf:
     mean_exponent: 0.0250
     mean_r_squared: 0.0156
@@ -404,9 +399,7 @@ nesting_depth_under_4:
 
 no_boolean_parameter:
   _doc: "Functions should not take boolean parameters — a flag usually means the function does two things."
-  _fix_hint: "Replace boolean parameters with two separate functions or use an options map"
-  _languages: [elixir]
-  _log_baseline: 3.0928
+  _log_baseline: 13.6290
   branching:
     mean_branch_count: -2.0000
     mean_branching_density: 1.0271
@@ -415,9 +408,9 @@ no_boolean_parameter:
   brevity:
     mean_sample_size: -0.0253
   casing_entropy:
-    mean_entropy: 0.0155
+    mean_entropy: 0.0049
     mean_pascal_case_count: 0.1180
-    mean_snake_case_count: 0.0762
+    mean_snake_case_count: 0.0931
   compression:
     mean_raw_bytes: 0.0435
     mean_redundancy: 0.0777
@@ -453,9 +446,9 @@ no_boolean_parameter:
     mean_beta: -0.0314
     mean_k: 0.0620
   identifier_length_variance:
-    mean_mean: 0.0178
-    mean_std_dev: 0.1693
-    mean_variance: 0.3386
+    mean_mean: 0.0125
+    mean_std_dev: 0.1858
+    mean_variance: 0.3715
   indentation:
     mean_blank_line_ratio: 0.4402
     mean_max_depth: -0.5579
@@ -469,6 +462,14 @@ no_boolean_parameter:
   magic_number_density:
     mean_string_literal_ratio: 0.0206
   near_duplicate_blocks_file:
+    mean_block_count: 0.4338
+    mean_near_dup_block_d0: 1.7685
+    mean_near_dup_block_d2: 1.1158
+    mean_near_dup_block_d4: 1.6737
+    mean_near_dup_block_d5: 1.6737
+    mean_near_dup_block_d6: 1.7685
+    mean_near_dup_block_d7: -0.8842
+    mean_near_dup_block_d8: 0.5579
     mean_sub_block_count: 0.2775
   ngram:
     mean_bigram_hapax_fraction: -0.1940
@@ -499,12 +500,12 @@ no_boolean_parameter:
     mean_density: 0.0479
     mean_symbol_count: 0.0916
   vocabulary:
-    mean_mattr: -0.0611
-    mean_raw_ttr: -0.0924
-    mean_total_identifiers: 0.0811
-    mean_unique_identifiers: -0.0114
+    mean_mattr: -0.0916
+    mean_raw_ttr: -0.1091
+    mean_total_identifiers: 0.0962
+    mean_unique_identifiers: -0.0129
   vowel_density:
-    mean_total_chars: 0.0989
+    mean_total_chars: 0.1087
   zipf:
     mean_exponent: 0.0374
     mean_total_tokens: 0.0692
@@ -512,9 +513,7 @@ no_boolean_parameter:
 
 no_magic_numbers:
   _doc: "Numeric literals should be named constants, not inline magic numbers."
-  _fix_hint: "Replace magic numbers inside functions with named module attributes or constants"
-  _languages: [elixir]
-  _log_baseline: 48.6069
+  _log_baseline: 45.8808
   branching:
     mean_branch_count: -0.2708
     mean_branching_density: -0.1682
@@ -522,8 +521,8 @@ no_magic_numbers:
   brevity:
     mean_sample_size: 0.1527
   casing_entropy:
-    mean_entropy: -0.2876
-    mean_snake_case_count: 0.4222
+    mean_entropy: -0.2908
+    mean_snake_case_count: 0.4279
   compression:
     mean_raw_bytes: 0.3823
     mean_redundancy: 0.0584
@@ -559,9 +558,9 @@ no_magic_numbers:
     mean_r_squared: -0.0256
   identifier_length_variance:
     mean_max: 0.0987
-    mean_mean: 0.3701
-    mean_std_dev: 0.3918
-    mean_variance: 0.7835
+    mean_mean: 0.3721
+    mean_std_dev: 0.3878
+    mean_variance: 0.7757
   indentation:
     mean_blank_line_ratio: 0.2374
     mean_mean_depth: -0.3518
@@ -574,6 +573,9 @@ no_magic_numbers:
     mean_density: -0.2831
     mean_string_literal_ratio: -0.2880
   near_duplicate_blocks_file:
+    mean_block_count: -0.7894
+    mean_near_dup_block_d0: -1.1158
+    mean_near_dup_block_d7: -1.1158
     mean_sub_block_count: 0.2708
   ngram:
     mean_bigram_hapax_fraction: -0.1437
@@ -603,12 +605,12 @@ no_magic_numbers:
     mean_distinct_symbol_types: 0.0644
     mean_symbol_count: 0.3512
   vocabulary:
-    mean_mattr: 0.0054
-    mean_raw_ttr: -0.0161
-    mean_total_identifiers: 0.3860
-    mean_unique_identifiers: 0.3699
+    mean_mattr: 0.0058
+    mean_raw_ttr: -0.0081
+    mean_total_identifiers: 0.3908
+    mean_unique_identifiers: 0.3826
   vowel_density:
-    mean_total_chars: 0.7561
+    mean_total_chars: 0.7629
   zipf:
     mean_exponent: 0.0164
     mean_r_squared: 0.0321
@@ -617,18 +619,16 @@ no_magic_numbers:
 
 parameter_count_under_4:
   _doc: "Functions should take fewer than 4 parameters."
-  _fix_hint: "Reduce parameter count — group related params into a struct or options map"
-  _languages: [elixir]
-  _log_baseline: 1.6218
+  _log_baseline: 1.9637
   branching:
     mean_non_blank_count: 0.0967
   brevity:
     mean_sample_size: 0.0261
   casing_entropy:
-    mean_entropy: 0.5987
+    mean_entropy: 0.5731
     mean_other_count: 0.5408
     mean_pascal_case_count: 0.2329
-    mean_snake_case_count: -0.0580
+    mean_snake_case_count: -0.0351
   compression:
     mean_raw_bytes: -0.0343
     mean_redundancy: -0.0308
@@ -667,9 +667,9 @@ parameter_count_under_4:
     mean_k: -0.0082
     mean_r_squared: -0.0062
   identifier_length_variance:
-    mean_mean: -0.0044
-    mean_std_dev: -0.0221
-    mean_variance: -0.0442
+    mean_mean: -0.0239
+    mean_std_dev: -0.0185
+    mean_variance: -0.0371
   indentation:
     mean_blank_line_ratio: 0.0518
     mean_max_depth: 0.1362
@@ -682,6 +682,9 @@ parameter_count_under_4:
   magic_number_density:
     mean_density: -2.0000
     mean_string_literal_ratio: 0.1674
+  near_duplicate_blocks_file:
+    mean_block_count: 0.0967
+    mean_near_dup_block_d7: -0.4658
   ngram:
     mean_bigram_hapax_fraction: 0.0479
     mean_bigram_repeated_unique: -0.0222
@@ -711,11 +714,11 @@ parameter_count_under_4:
     mean_distinct_symbol_types: 0.1042
     mean_symbol_count: -0.0218
   vocabulary:
-    mean_mattr: 0.0175
-    mean_raw_ttr: 0.0416
-    mean_total_identifiers: -0.0416
+    mean_mattr: 0.0150
+    mean_raw_ttr: 0.0153
+    mean_total_identifiers: -0.0153
   vowel_density:
-    mean_total_chars: -0.0460
+    mean_total_chars: -0.0393
   zipf:
     mean_exponent: 0.0101
     mean_r_squared: -0.0074
@@ -724,106 +727,106 @@ parameter_count_under_4:
 
 uses_ternary_expression:
   _doc: "Simple conditional assignments should use inline expressions rather than full if-blocks."
-  _fix_hint: "Replace verbose if-else blocks with concise ternary/conditional expressions where readable"
-  _languages: [elixir]
-  _log_baseline: -0.3649
+  _log_baseline: -4.5289
   branching:
-    mean_branch_count: -0.4693
-    mean_branching_density: 0.1280
-    mean_non_blank_count: -0.5975
+    mean_branch_count: -0.4160
+    mean_branching_density: 0.1134
+    mean_non_blank_count: -0.5296
   brevity:
-    mean_sample_size: 0.0107
+    mean_sample_size: 0.0095
   casing_entropy:
-    mean_entropy: -0.0141
-    mean_snake_case_count: 0.0271
+    mean_entropy: 0.0068
+    mean_snake_case_count: -0.0141
   compression:
-    mean_raw_bytes: -0.0924
-    mean_redundancy: -0.0709
-    mean_unique_line_ratio: 0.1809
-    mean_zlib_bytes: 0.0167
-    mean_zlib_ratio: -0.1090
+    mean_raw_bytes: -0.0819
+    mean_redundancy: -0.0629
+    mean_unique_line_ratio: 0.1604
+    mean_zlib_bytes: 0.0148
+    mean_zlib_ratio: -0.0967
   entropy:
-    mean_char_entropy: 0.0749
-    mean_char_normalized: 0.0717
-    mean_token_entropy: -0.0088
-    mean_token_normalized: -0.0114
-    mean_total_tokens: 0.0969
-    mean_vocab_size: 0.0107
+    mean_char_entropy: 0.0664
+    mean_char_normalized: 0.0636
+    mean_token_entropy: -0.0078
+    mean_token_normalized: -0.0101
+    mean_total_tokens: 0.0859
+    mean_vocab_size: 0.0095
   function_metrics:
-    mean_avg_function_lines: -0.7654
-    mean_function_count: 0.2745
-    mean_max_function_lines: -0.4693
+    mean_avg_function_lines: -0.6785
+    mean_function_count: 0.2434
+    mean_max_function_lines: -0.4160
   halstead:
-    mean_N1_total_operators: 0.1767
-    mean_N2_total_operands: 0.0622
-    mean_difficulty: 0.0952
-    mean_effort: 0.2409
-    mean_estimated_bugs: 0.1456
-    mean_length: 0.1429
-    mean_n1_unique_operators: 0.0330
-    mean_time_to_implement_seconds: 0.2409
-    mean_vocabulary: 0.0114
-    mean_volume: 0.1457
+    mean_N1_total_operators: 0.1567
+    mean_N2_total_operands: 0.0551
+    mean_difficulty: 0.0844
+    mean_effort: 0.2135
+    mean_estimated_bugs: 0.1291
+    mean_length: 0.1267
+    mean_n1_unique_operators: 0.0293
+    mean_time_to_implement_seconds: 0.2135
+    mean_vocabulary: 0.0101
+    mean_volume: 0.1291
   heaps:
-    mean_beta: -0.0340
-    mean_k: 0.0670
+    mean_beta: -0.0301
+    mean_k: 0.0594
   identifier_length_variance:
-    mean_mean: 0.0616
-    mean_std_dev: 0.0617
-    mean_variance: 0.1234
+    mean_mean: 0.0749
+    mean_std_dev: 0.0535
+    mean_variance: 0.1070
   indentation:
-    mean_blank_line_ratio: 0.5702
-    mean_max_depth: -0.2745
-    mean_mean_depth: -0.3658
-    mean_variance: -0.6153
+    mean_blank_line_ratio: 0.5054
+    mean_max_depth: -0.2434
+    mean_mean_depth: -0.3243
+    mean_variance: -0.5454
   line_patterns:
-    mean_blank_line_ratio: 0.5702
-    mean_string_literal_ratio: -0.0964
-    mean_unique_line_ratio: 0.1839
+    mean_blank_line_ratio: 0.5054
+    mean_string_literal_ratio: -0.0855
+    mean_unique_line_ratio: 0.1630
   magic_number_density:
-    mean_density: -0.0969
-    mean_string_literal_ratio: -0.0964
+    mean_density: -0.0859
+    mean_string_literal_ratio: -0.0855
   near_duplicate_blocks_file:
-    mean_sub_block_count: 0.2745
+    mean_block_count: -0.2821
+    mean_near_dup_block_d0: -2.0000
+    mean_sub_block_count: 0.2434
   ngram:
-    mean_bigram_hapax_fraction: -0.0616
-    mean_bigram_repeated_unique: 0.2415
-    mean_bigram_repetition_rate: 0.0886
-    mean_bigram_total: 0.0973
-    mean_bigram_unique: 0.0487
-    mean_trigram_hapax_fraction: -0.0186
-    mean_trigram_repeated_unique: 0.1511
-    mean_trigram_repetition_rate: 0.1328
-    mean_trigram_total: 0.0977
-    mean_trigram_unique: 0.0452
+    mean_bigram_hapax_fraction: -0.0546
+    mean_bigram_repeated_unique: 0.2141
+    mean_bigram_repetition_rate: 0.0785
+    mean_bigram_total: 0.0863
+    mean_bigram_unique: 0.0432
+    mean_trigram_hapax_fraction: -0.0165
+    mean_trigram_repeated_unique: 0.1339
+    mean_trigram_repetition_rate: 0.1178
+    mean_trigram_total: 0.0866
+    mean_trigram_unique: 0.0400
   punctuation_density:
-    mean_bracket_nonalpha_prefix_count: 0.3060
-    mean_bracket_nonalpha_suffix_count: 0.5928
-    mean_bracket_number_pair_count: 0.4693
-    mean_colon_suffix_density: 2.0000
-    mean_dot_count: -1.3176
-    mean_id_nonalpha_suffix_density: 0.2152
+    mean_bracket_nonalpha_prefix_count: 0.2713
+    mean_bracket_nonalpha_suffix_count: 0.5255
+    mean_bracket_number_pair_count: 0.4160
+    mean_colon_suffix_density: 1.7729
+    mean_dot_count: -1.1679
+    mean_id_nonalpha_suffix_density: 0.1908
   readability:
-    mean_avg_line_length: 0.5254
-    mean_avg_sub_words_per_id: 0.0352
-    mean_avg_tokens_per_line: 0.6944
-    mean_flesch_adapted: -0.0769
-    mean_fog_adapted: 0.6047
-    mean_total_lines: -0.5975
+    mean_avg_line_length: 0.4657
+    mean_avg_sub_words_per_id: 0.0312
+    mean_avg_tokens_per_line: 0.6155
+    mean_flesch_adapted: -0.0682
+    mean_fog_adapted: 0.5360
+    mean_total_lines: -0.5296
   symbol_density:
-    mean_density: 0.3573
-    mean_distinct_symbol_types: 0.0410
-    mean_symbol_count: 0.2651
+    mean_density: 0.3167
+    mean_distinct_symbol_types: 0.0364
+    mean_symbol_count: 0.2350
   vocabulary:
-    mean_mattr: -0.0421
-    mean_raw_ttr: -0.0421
-    mean_total_identifiers: 0.0230
-    mean_unique_identifiers: -0.0191
+    mean_mattr: -0.0068
+    mean_raw_ttr: -0.0068
+    mean_total_identifiers: -0.0117
+    mean_unique_identifiers: -0.0185
   vowel_density:
-    mean_total_chars: 0.0845
+    mean_total_chars: 0.0632
   zipf:
-    mean_exponent: 0.0361
-    mean_r_squared: 0.0150
-    mean_total_tokens: 0.0969
-    mean_vocab_size: 0.0107
+    mean_exponent: 0.0320
+    mean_r_squared: 0.0133
+    mean_total_tokens: 0.0859
+    mean_vocab_size: 0.0095
 

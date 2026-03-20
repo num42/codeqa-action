@@ -1,7 +1,5 @@
 has_consistent_indentation:
   _doc: "Files should use a single, consistent indentation style with no mixed tabs and spaces."
-  _fix_hint: "Use a consistent indentation width throughout the file (2 or 4 spaces, not mixed)"
-  _languages: [elixir]
   _log_baseline: -12.7016
   branching:
     mean_branching_density: 0.1994
@@ -37,9 +35,7 @@ has_consistent_indentation:
 
 line_count_under_300:
   _doc: "Files should be under 300 lines; longer files typically violate single responsibility."
-  _fix_hint: "Split large files — extract cohesive groups of functions into separate modules"
-  _languages: [elixir]
-  _log_baseline: -49.2655
+  _log_baseline: -45.8565
   branching:
     mean_branch_count: -0.4508
     mean_branching_density: -0.2446
@@ -47,10 +43,10 @@ line_count_under_300:
   brevity:
     mean_sample_size: -0.2062
   casing_entropy:
-    mean_entropy: 0.0366
+    mean_entropy: 0.0413
     mean_other_count: -0.6011
     mean_pascal_case_count: 0.1036
-    mean_snake_case_count: -0.1860
+    mean_snake_case_count: -0.2080
   compression:
     mean_raw_bytes: -0.2263
     mean_redundancy: -0.0026
@@ -90,9 +86,9 @@ line_count_under_300:
     mean_r_squared: -0.0094
   identifier_length_variance:
     mean_max: -0.0671
-    mean_mean: -0.0670
-    mean_std_dev: 0.0028
-    mean_variance: 0.0055
+    mean_mean: -0.0614
+    mean_std_dev: 0.0205
+    mean_variance: 0.0411
   indentation:
     mean_blank_line_ratio: -0.4899
     mean_max_depth: 0.0301
@@ -107,8 +103,10 @@ line_count_under_300:
     mean_magic_number_count: -0.4114
     mean_string_literal_ratio: 0.0039
   near_duplicate_blocks_file:
-    mean_block_count: 0.1772
-    mean_sub_block_count: -0.1378
+    mean_block_count: 0.5617
+    mean_near_dup_block_d7: 0.1772
+    mean_near_dup_block_d8: 0.1772
+    mean_sub_block_count: 1.0591
   ngram:
     mean_bigram_hapax_fraction: -0.0655
     mean_bigram_repeated_unique: -0.1356
@@ -141,12 +139,12 @@ line_count_under_300:
     mean_distinct_symbol_types: -0.0604
     mean_symbol_count: -0.1504
   vocabulary:
-    mean_mattr: -0.1338
-    mean_raw_ttr: -0.0761
-    mean_total_identifiers: -0.1689
-    mean_unique_identifiers: -0.2450
+    mean_mattr: -0.1396
+    mean_raw_ttr: -0.0669
+    mean_total_identifiers: -0.1838
+    mean_unique_identifiers: -0.2507
   vowel_density:
-    mean_total_chars: -0.2359
+    mean_total_chars: -0.2452
   zipf:
     mean_exponent: 0.0102
     mean_r_squared: -0.0067
@@ -155,17 +153,15 @@ line_count_under_300:
 
 line_length_under_120:
   _doc: "Lines should be under 120 characters to avoid horizontal scrolling."
-  _fix_hint: "Wrap lines at 80–120 characters — break long expressions into multiple lines"
-  _languages: [elixir]
-  _log_baseline: -6.2404
+  _log_baseline: -6.2041
   branching:
     mean_branching_density: -0.1942
     mean_non_blank_count: 0.1944
   brevity:
     mean_sample_size: -0.0200
   casing_entropy:
-    mean_entropy: -0.0025
-    mean_snake_case_count: 0.0039
+    mean_entropy: -0.0047
+    mean_snake_case_count: 0.0074
   compression:
     mean_raw_bytes: 0.0170
     mean_redundancy: 0.0140
@@ -200,9 +196,9 @@ line_length_under_120:
     mean_beta: -0.0068
     mean_k: 0.0086
   identifier_length_variance:
-    mean_mean: -0.0176
-    mean_std_dev: -0.0468
-    mean_variance: -0.0936
+    mean_mean: -0.0207
+    mean_std_dev: -0.0480
+    mean_variance: -0.0960
   indentation:
     mean_blank_line_ratio: -0.0420
     mean_max_depth: 0.1137
@@ -246,10 +242,10 @@ line_length_under_120:
     mean_distinct_symbol_types: -0.0130
     mean_symbol_count: -0.0078
   vocabulary:
-    mean_mattr: -0.0207
-    mean_raw_ttr: -0.0312
-    mean_total_identifiers: 0.0036
-    mean_unique_identifiers: -0.0276
+    mean_mattr: -0.0231
+    mean_raw_ttr: -0.0300
+    mean_total_identifiers: 0.0067
+    mean_unique_identifiers: -0.0232
   vowel_density:
     mean_total_chars: -0.0140
   zipf:
@@ -259,9 +255,7 @@ line_length_under_120:
 
 no_magic_numbers:
   _doc: "Numeric literals should be extracted to named constants rather than used inline."
-  _fix_hint: "Replace literal numbers with named constants or module attributes"
-  _languages: [elixir]
-  _log_baseline: 107.5222
+  _log_baseline: 105.2910
   branching:
     mean_branch_count: -0.4352
     mean_branching_density: -0.9103
@@ -269,8 +263,8 @@ no_magic_numbers:
   brevity:
     mean_sample_size: 0.3955
   casing_entropy:
-    mean_entropy: -0.4640
-    mean_snake_case_count: 0.7640
+    mean_entropy: -0.5234
+    mean_snake_case_count: 0.9072
   compression:
     mean_raw_bytes: 0.7713
     mean_redundancy: 0.1328
@@ -307,9 +301,9 @@ no_magic_numbers:
     mean_r_squared: -0.0645
   identifier_length_variance:
     mean_max: 0.2172
-    mean_mean: 0.5105
-    mean_std_dev: 0.5395
-    mean_variance: 1.0791
+    mean_mean: 0.4886
+    mean_std_dev: 0.4918
+    mean_variance: 0.9835
   indentation:
     mean_blank_line_ratio: 0.3137
     mean_mean_depth: -0.4612
@@ -323,6 +317,9 @@ no_magic_numbers:
     mean_magic_number_count: -0.8032
     mean_string_literal_ratio: -0.5060
   near_duplicate_blocks_file:
+    mean_block_count: -0.1911
+    mean_near_dup_block_d0: -1.6546
+    mean_near_dup_block_d7: -1.0789
     mean_sub_block_count: 0.3466
   ngram:
     mean_bigram_hapax_fraction: -0.1520
@@ -351,11 +348,12 @@ no_magic_numbers:
     mean_density: -0.3071
     mean_symbol_count: 0.4654
   vocabulary:
-    mean_mattr: 0.3317
-    mean_total_identifiers: 0.6600
-    mean_unique_identifiers: 0.6581
+    mean_mattr: 0.3553
+    mean_raw_ttr: -0.0669
+    mean_total_identifiers: 0.7640
+    mean_unique_identifiers: 0.6968
   vowel_density:
-    mean_total_chars: 1.1705
+    mean_total_chars: 1.2526
   zipf:
     mean_exponent: -0.1353
     mean_r_squared: -0.0320
@@ -364,9 +362,7 @@ no_magic_numbers:
 
 single_responsibility:
   _doc: "Each file should have one primary concern — low complexity spread across few, focused functions."
-  _fix_hint: "Split the module — each file should have one primary purpose"
-  _languages: [elixir]
-  _log_baseline: -35.4996
+  _log_baseline: -36.0617
   branching:
     mean_branch_count: -0.0678
     mean_branching_density: 0.1364
@@ -375,9 +371,10 @@ single_responsibility:
   brevity:
     mean_sample_size: -0.0864
   casing_entropy:
+    mean_entropy: -0.0206
     mean_other_count: -0.7475
     mean_pascal_case_count: 0.0470
-    mean_snake_case_count: -0.1816
+    mean_snake_case_count: -0.1543
   compression:
     mean_raw_bytes: -0.1908
     mean_redundancy: -0.0351
@@ -416,9 +413,9 @@ single_responsibility:
     mean_r_squared: -0.0163
   identifier_length_variance:
     mean_max: -0.0836
-    mean_mean: -0.0346
-    mean_std_dev: -0.0825
-    mean_variance: -0.1650
+    mean_mean: -0.0508
+    mean_std_dev: -0.0865
+    mean_variance: -0.1729
   indentation:
     mean_blank_line_ratio: 0.0458
     mean_mean_depth: -0.0476
@@ -432,6 +429,9 @@ single_responsibility:
     mean_density: 0.1469
     mean_string_literal_ratio: -0.1759
   near_duplicate_blocks_file:
+    mean_block_count: -0.2284
+    mean_near_dup_block_d0: -0.2962
+    mean_near_dup_block_d7: -0.3737
     mean_sub_block_count: -0.1348
   ngram:
     mean_bigram_hapax_fraction: 0.0075
@@ -465,12 +465,12 @@ single_responsibility:
     mean_distinct_symbol_types: 0.0284
     mean_symbol_count: -0.1225
   vocabulary:
-    mean_mattr: -0.0474
-    mean_raw_ttr: 0.0249
-    mean_total_identifiers: -0.1662
-    mean_unique_identifiers: -0.1414
+    mean_mattr: -0.0285
+    mean_raw_ttr: 0.0110
+    mean_total_identifiers: -0.1419
+    mean_unique_identifiers: -0.1309
   vowel_density:
-    mean_total_chars: -0.2009
+    mean_total_chars: -0.1927
   zipf:
     mean_exponent: -0.0209
     mean_r_squared: -0.0043
@@ -479,8 +479,6 @@ single_responsibility:
 
 uses_standard_indentation_width:
   _doc: "Indentation should use consistent multiples of 2 or 4 spaces throughout the file."
-  _fix_hint: "Use the project-standard 2-space indentation throughout"
-  _languages: [elixir]
   _log_baseline: -17.9172
   compression:
     mean_raw_bytes: -0.2512
@@ -499,6 +497,9 @@ uses_standard_indentation_width:
     mean_variance: -2.0000
   line_patterns:
     mean_blank_line_ratio: 0.2077
+  near_duplicate_blocks_file:
+    mean_near_dup_block_d3: -1.0000
+    mean_near_dup_block_d4: 1.0000
   punctuation_density:
     mean_exclamation_density: 0.2630
     mean_question_mark_density: 0.2630
