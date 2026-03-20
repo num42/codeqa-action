@@ -216,8 +216,10 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
         ...
       ]
   """
-  @spec score_aggregate(map()) :: [map()]
-  def score_aggregate(aggregate) do
+  @spec score_aggregate(map(), keyword()) :: [map()]
+  def score_aggregate(aggregate, opts \\ []) do
+    languages = Keyword.get(opts, :languages)
+
     Scorer.all_yamls()
     |> Enum.sort_by(fn {path, _} -> path end)
     |> Enum.map(fn {yaml_path, data} ->
@@ -226,6 +228,10 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
       behaviors =
         data
         |> Enum.filter(fn {_k, v} -> is_map(v) end)
+        |> Enum.reject(fn {_behavior, behavior_data} ->
+          behavior_langs = Map.get(behavior_data, "_languages", [])
+          not behavior_language_applies?(behavior_langs, nil, languages)
+        end)
         |> Enum.map(fn {behavior, behavior_data} ->
           log_baseline = Map.get(behavior_data, "_log_baseline", 0.0) / 1.0
           raw_score = Scorer.compute_score(yaml_path, behavior, aggregate)

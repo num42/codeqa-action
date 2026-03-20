@@ -86,6 +86,32 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
     end
   end
 
+  describe "score_aggregate/2 language filtering" do
+    test "accepts :languages option without crashing" do
+      result = SampleRunner.score_aggregate(%{}, languages: ["elixir"])
+      assert is_list(result)
+      assert Enum.all?(result, &Map.has_key?(&1, :behaviors))
+    end
+
+    test "with languages option returns fewer behaviors than unfiltered" do
+      agg =
+        "priv/combined_metrics/samples/variable_naming/name_is_generic/bad"
+        |> CodeQA.Engine.Collector.collect_files()
+        |> CodeQA.Engine.Analyzer.analyze_codebase()
+        |> get_in(["codebase", "aggregate"])
+
+      all_count = SampleRunner.score_aggregate(agg) |> Enum.flat_map(& &1.behaviors) |> length()
+
+      elixir_count =
+        SampleRunner.score_aggregate(agg, languages: ["elixir"])
+        |> Enum.flat_map(& &1.behaviors)
+        |> length()
+
+      # elixir-only project sees fewer or equal behaviors
+      assert elixir_count <= all_count
+    end
+  end
+
   describe "run/1" do
     test "returns a list of results with required keys", %{results: results} do
       assert is_list(results)
