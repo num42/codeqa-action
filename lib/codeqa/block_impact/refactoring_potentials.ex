@@ -44,7 +44,9 @@ defmodule CodeQA.BlockImpact.RefactoringPotentials do
     languages = Keyword.get(opts, :languages)
 
     file_delta = compute_file_delta(baseline_file_cosines, without_file_metrics, language)
-    codebase_delta = compute_codebase_delta(baseline_codebase_cosines, without_codebase_agg, languages)
+
+    codebase_delta =
+      compute_codebase_delta(baseline_codebase_cosines, without_codebase_agg, languages)
 
     all_keys = Enum.uniq(Map.keys(file_delta) ++ Map.keys(codebase_delta))
 
@@ -68,12 +70,17 @@ defmodule CodeQA.BlockImpact.RefactoringPotentials do
 
   defp compute_file_delta(baseline_cosines, without_metrics, language) do
     without_agg = FileScorer.file_to_aggregate(without_metrics)
-    without_cosines = SampleRunner.diagnose_aggregate(without_agg, top: 99_999, language: language)
+
+    without_cosines =
+      SampleRunner.diagnose_aggregate(without_agg, top: 99_999, language: language)
+
     cosines_to_delta(baseline_cosines, without_cosines)
   end
 
   defp compute_codebase_delta(baseline_cosines, without_agg, languages) do
-    without_cosines = SampleRunner.diagnose_aggregate(without_agg, top: 99_999, languages: languages)
+    without_cosines =
+      SampleRunner.diagnose_aggregate(without_agg, top: 99_999, languages: languages)
+
     cosines_to_delta(baseline_cosines, without_cosines)
   end
 

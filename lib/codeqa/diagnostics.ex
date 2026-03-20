@@ -39,8 +39,14 @@ defmodule CodeQA.Diagnostics do
     files = Map.get(result, "files", %{})
     project_langs = project_languages(files)
 
-    issues_task = Task.async(fn -> SampleRunner.diagnose_aggregate(aggregate, top: top, languages: project_langs) end)
-    categories_task = Task.async(fn -> SampleRunner.score_aggregate(aggregate, languages: project_langs) end)
+    issues_task =
+      Task.async(fn ->
+        SampleRunner.diagnose_aggregate(aggregate, top: top, languages: project_langs)
+      end)
+
+    categories_task =
+      Task.async(fn -> SampleRunner.score_aggregate(aggregate, languages: project_langs) end)
+
     issues = Task.await(issues_task)
     categories = Task.await(categories_task)
 

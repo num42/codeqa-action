@@ -44,7 +44,10 @@ defmodule CodeQA.BlockImpactAnalyzer do
     project_langs = project_languages(files_map)
 
     baseline_codebase_cosines =
-      SampleRunner.diagnose_aggregate(baseline_codebase_agg, top: 99_999, languages: project_langs)
+      SampleRunner.diagnose_aggregate(baseline_codebase_agg,
+        top: 99_999,
+        languages: project_langs
+      )
 
     file_results = pipeline_result["files"]
 
@@ -92,7 +95,9 @@ defmodule CodeQA.BlockImpactAnalyzer do
 
       baseline_file_agg = FileScorer.file_to_aggregate(baseline_file_metrics)
       language = CodeQA.Language.detect(path).name()
-      baseline_file_cosines = SampleRunner.diagnose_aggregate(baseline_file_agg, top: 99_999, language: language)
+
+      baseline_file_cosines =
+        SampleRunner.diagnose_aggregate(baseline_file_agg, top: 99_999, language: language)
 
       top_level_nodes
       |> Enum.map(fn node ->
@@ -104,7 +109,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
           baseline_file_cosines,
           file_results,
           baseline_codebase_cosines,
-          nodes_top
+          nodes_top,
+          language
         )
       end)
       |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
@@ -119,7 +125,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
          baseline_file_cosines,
          file_results,
          baseline_codebase_cosines,
-         nodes_top
+         nodes_top,
+         language
        ) do
     potentials =
       if length(node.tokens) < @min_tokens do
@@ -132,7 +139,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
           baseline_file_cosines,
           file_results,
           baseline_codebase_cosines,
-          nodes_top
+          nodes_top,
+          language
         )
       end
 
@@ -147,7 +155,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
           baseline_file_cosines,
           file_results,
           baseline_codebase_cosines,
-          nodes_top
+          nodes_top,
+          language
         )
       end)
       |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
@@ -173,7 +182,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
          baseline_file_cosines,
          file_results,
          baseline_codebase_cosines,
-         nodes_top
+         nodes_top,
+         language
        ) do
     reconstructed = FileImpact.reconstruct_without(root_tokens, node)
     without_file_metrics = Analyzer.analyze_file(path, reconstructed)
@@ -183,7 +193,6 @@ defmodule CodeQA.BlockImpactAnalyzer do
       |> Map.put(path, %{"metrics" => without_file_metrics})
       |> Analyzer.aggregate_file_metrics()
 
-    language = CodeQA.Language.detect(path).name()
     project_langs = project_languages(file_results)
 
     RefactoringPotentials.compute(
@@ -197,8 +206,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
     )
   end
 
-  defp project_languages(files_map) do
-    files_map
+  defp project_languages(path_keyed_map) do
+    path_keyed_map
     |> Map.keys()
     |> Enum.map(&CodeQA.Language.detect(&1).name())
     |> Enum.reject(&(&1 == "unknown"))

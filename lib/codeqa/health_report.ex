@@ -44,7 +44,8 @@ defmodule CodeQA.HealthReport do
 
     worst_files_map = FileScorer.worst_files_per_behavior(files, combined_top: combined_top)
 
-    cosine_grades = Grader.grade_cosine_categories(aggregate, worst_files_map, grade_scale, project_langs)
+    cosine_grades =
+      Grader.grade_cosine_categories(aggregate, worst_files_map, grade_scale, project_langs)
 
     # TODO(option-c): a unified flat issues list would replace the current per-category worst offenders loop; all category results would be flattened, deduplicated by file+line, and re-ranked by a cross-category severity score before rendering.
     all_categories =
