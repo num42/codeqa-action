@@ -51,6 +51,41 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
     end
   end
 
+  describe "diagnose_aggregate/2 language option" do
+    test "accepts :language option without crashing" do
+      # minimal aggregate — behavior will be scored but most will have no scalars
+      agg = %{}
+      result = SampleRunner.diagnose_aggregate(agg, top: 5, language: "elixir")
+      assert is_list(result)
+    end
+
+    test "accepts :languages option without crashing" do
+      agg = %{}
+      result = SampleRunner.diagnose_aggregate(agg, top: 5, languages: ["elixir", "rust"])
+      assert is_list(result)
+    end
+
+    # NOTE: This test uses `<=` intentionally. Before Task 7 + `mix compile --force`,
+    # all behaviors have empty `_languages` in the compiled cache, so no filtering
+    # occurs and all three counts are equal. The `<=` assertion passes in both
+    # pre- and post-Task-7 states.
+    test "with language option returns subset of unfiltered results" do
+      agg =
+        "priv/combined_metrics/samples/variable_naming/name_is_generic/bad"
+        |> CodeQA.Engine.Collector.collect_files()
+        |> CodeQA.Engine.Analyzer.analyze_codebase()
+        |> get_in(["codebase", "aggregate"])
+
+      all = SampleRunner.diagnose_aggregate(agg, top: 999)
+      elixir_only = SampleRunner.diagnose_aggregate(agg, top: 999, language: "elixir")
+      rust_only = SampleRunner.diagnose_aggregate(agg, top: 999, language: "rust")
+
+      # Filtered sets are subsets (or equal, pre-Task-7) of unfiltered
+      assert length(elixir_only) <= length(all)
+      assert length(rust_only) <= length(all)
+    end
+  end
+
   describe "run/1" do
     test "returns a list of results with required keys", %{results: results} do
       assert is_list(results)

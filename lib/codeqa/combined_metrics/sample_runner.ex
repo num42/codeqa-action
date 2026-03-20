@@ -275,6 +275,8 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   @spec diagnose_aggregate(map(), keyword()) :: [map()]
   def diagnose_aggregate(aggregate, opts \\ []) do
     top_n = Keyword.get(opts, :top, 15)
+    language = Keyword.get(opts, :language)
+    languages = Keyword.get(opts, :languages)
 
     Scorer.all_yamls()
     |> Enum.sort_by(fn {path, _} -> path end)
@@ -284,48 +286,54 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
       data
       |> Enum.filter(fn {_k, v} -> is_map(v) end)
       |> Enum.flat_map(fn {behavior, behavior_data} ->
-        scalars = Scorer.scalars_for(yaml_path, behavior)
+        behavior_langs = Map.get(behavior_data, "_languages", [])
 
-        if map_size(scalars) == 0 do
+        if not behavior_language_applies?(behavior_langs, language, languages) do
           []
         else
-          log_baseline = Map.get(behavior_data, "_log_baseline", 0.0) / 1.0
+          scalars = Scorer.scalars_for(yaml_path, behavior)
 
-          {dot, norm_s_sq, norm_v_sq, contributions} =
-            Enum.reduce(scalars, {0.0, 0.0, 0.0, []}, fn {{group, key}, scalar},
-                                                         {d, ns, nv, contribs} ->
-              log_m = :math.log(Scorer.get(aggregate, group, key))
-              contrib = scalar * log_m
+          if map_size(scalars) == 0 do
+            []
+          else
+            log_baseline = Map.get(behavior_data, "_log_baseline", 0.0) / 1.0
 
-              {d + contrib, ns + scalar * scalar, nv + log_m * log_m,
-               [{:"#{group}.#{key}", contrib} | contribs]}
-            end)
+            {dot, norm_s_sq, norm_v_sq, contributions} =
+              Enum.reduce(scalars, {0.0, 0.0, 0.0, []}, fn {{group, key}, scalar},
+                                                           {d, ns, nv, contribs} ->
+                log_m = :math.log(Scorer.get(aggregate, group, key))
+                contrib = scalar * log_m
 
-          cos_sim =
-            if norm_s_sq > 0 and norm_v_sq > 0,
-              do: dot / (:math.sqrt(norm_s_sq) * :math.sqrt(norm_v_sq)),
-              else: 0.0
+                {d + contrib, ns + scalar * scalar, nv + log_m * log_m,
+                 [{:"#{group}.#{key}", contrib} | contribs]}
+              end)
 
-          raw_score = Scorer.compute_score(yaml_path, behavior, aggregate)
-          calibrated = :math.log(max(raw_score, 1.0e-300)) - log_baseline
+            cos_sim =
+              if norm_s_sq > 0 and norm_v_sq > 0,
+                do: dot / (:math.sqrt(norm_s_sq) * :math.sqrt(norm_v_sq)),
+                else: 0.0
 
-          top_metrics =
-            contributions
-            |> Enum.sort_by(fn {_, c} -> c end)
-            |> Enum.take(5)
-            |> Enum.map(fn {metric, contribution} ->
-              %{metric: to_string(metric), contribution: Float.round(contribution, 4)}
-            end)
+            raw_score = Scorer.compute_score(yaml_path, behavior, aggregate)
+            calibrated = :math.log(max(raw_score, 1.0e-300)) - log_baseline
 
-          [
-            %{
-              category: category,
-              behavior: behavior,
-              cosine: Float.round(cos_sim, 4),
-              score: Float.round(calibrated, 4),
-              top_metrics: top_metrics
-            }
-          ]
+            top_metrics =
+              contributions
+              |> Enum.sort_by(fn {_, c} -> c end)
+              |> Enum.take(5)
+              |> Enum.map(fn {metric, contribution} ->
+                %{metric: to_string(metric), contribution: Float.round(contribution, 4)}
+              end)
+
+            [
+              %{
+                category: category,
+                behavior: behavior,
+                cosine: Float.round(cos_sim, 4),
+                score: Float.round(calibrated, 4),
+                top_metrics: top_metrics
+              }
+            ]
+          end
         end
       end)
     end)
@@ -443,6 +451,22 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   end
 
   defp deadzone?(ratio), do: ratio >= @deadzone_low and ratio <= @deadzone_high
+
+  # Returns true if the behavior should be included for the given language context.
+  # behavior_langs: the "_languages" list from the YAML ([] = applies to all)
+  # language: single language string from :language opt (nil = no filter)
+  # languages: project language list from :languages opt (nil = no filter)
+  defp behavior_language_applies?(_behavior_langs, nil, nil), do: true
+  defp behavior_language_applies?([], _language, _languages), do: true
+
+  defp behavior_language_applies?(behavior_langs, language, nil) when is_binary(language),
+    do: language in behavior_langs
+
+  defp behavior_language_applies?(behavior_langs, nil, languages) when is_list(languages),
+    do: Enum.any?(behavior_langs, &(&1 in languages))
+
+  defp behavior_language_applies?(behavior_langs, language, languages),
+    do: language in behavior_langs or Enum.any?(behavior_langs, &(&1 in languages))
 
   defp format_yaml(data) do
     lines =
