@@ -11,6 +11,8 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
       mix codeqa.sample_report --verbose
       mix codeqa.sample_report --output results.json
       mix codeqa.sample_report --apply-scalars
+      mix codeqa.sample_report --apply-languages
+      mix codeqa.sample_report --apply-languages --category variable_naming
       mix codeqa.sample_report --file path/to/file.ex
 
   A ratio ≥ 2x means the formula meaningfully separates good from bad code.
@@ -31,6 +33,7 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
     output: :string,
     report: :string,
     apply_scalars: :boolean,
+    apply_languages: :boolean,
     file: :string,
     top: :integer
   ]
@@ -60,6 +63,15 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
       stats = CodeQA.CombinedMetrics.SampleRunner.apply_scalars(opts)
       IO.puts("\nApplied scalars to YAML configs:")
       Enum.each(stats, &print_scalar_stats/1)
+    end
+
+    if opts[:apply_languages] do
+      stats = CodeQA.CombinedMetrics.SampleRunner.apply_languages(opts)
+      IO.puts("\nApplied language coverage to YAML configs:")
+
+      Enum.each(stats, fn %{category: cat, behaviors_with_languages: n} ->
+        IO.puts("  #{cat}: #{n} behaviors with language coverage")
+      end)
     end
 
     if path = opts[:file] do
