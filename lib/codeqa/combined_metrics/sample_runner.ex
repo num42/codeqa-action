@@ -467,10 +467,17 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
             hint -> ["  _fix_hint: #{inspect(hint)}"]
           end
 
+        languages_line =
+          case Map.get(groups, "_languages") do
+            nil -> []
+            [] -> []
+            langs -> ["  _languages: [#{Enum.join(langs, ", ")}]"]
+          end
+
         group_lines =
           groups
           |> Enum.filter(fn {k, v} ->
-            k not in ["_doc", "_log_baseline", "_fix_hint"] and is_map(v)
+            k not in ["_doc", "_log_baseline", "_fix_hint", "_languages"] and is_map(v)
           end)
           |> Enum.sort_by(fn {group, _} -> group end)
           |> Enum.flat_map(fn {group, keys} ->
@@ -482,7 +489,8 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
             ["  #{group}:" | key_lines]
           end)
 
-        ["#{behavior}:" | doc_line] ++ fix_hint_line ++ baseline_line ++ group_lines ++ [""]
+        ["#{behavior}:" | doc_line] ++
+          fix_hint_line ++ languages_line ++ baseline_line ++ group_lines ++ [""]
       end)
 
     Enum.join(lines, "\n") <> "\n"
@@ -495,5 +503,76 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
 
   defp sample_path(category, behavior, kind) do
     Path.join([@samples_root, category, behavior, kind])
+  end
+
+  defp dir_languages(dir) do
+    case File.ls(dir) do
+      {:ok, files} ->
+        files
+        |> Enum.map(&CodeQA.Language.detect/1)
+        |> Enum.map(& &1.name())
+        |> MapSet.new()
+
+      _ ->
+        MapSet.new()
+    end
+  end
+
+  defp languages_for_behavior(category, behavior) do
+    bad_langs = dir_languages(sample_path(category, behavior, "bad"))
+    good_langs = dir_languages(sample_path(category, behavior, "good"))
+
+    bad_langs
+    |> MapSet.intersection(good_langs)
+    |> MapSet.to_list()
+    |> Enum.reject(&(&1 == "unknown"))
+    |> Enum.sort()
+  end
+
+  defp maybe_put_languages(groups, []), do: groups
+  defp maybe_put_languages(groups, langs), do: Map.put(groups, "_languages", langs)
+
+  @doc """
+  Updates only the `_languages` field in YAML config files based on sample data.
+
+  Scans `bad/` and `good/` sample directories for each behavior, detects languages
+  from file extensions via `CodeQA.Language.detect/1`, and writes the intersection
+  as `_languages` to the YAML. Behaviors without sample data are left without a
+  `_languages` key (treated as applying to all languages at scoring time).
+  All existing scalars and baselines are preserved.
+
+  Returns a list of `%{category: String.t(), behaviors_with_languages: non_neg_integer()}`.
+  """
+  @spec apply_languages(keyword()) :: [map()]
+  def apply_languages(opts \\ []) do
+    filter_category = opts[:category]
+
+    @yaml_dir
+    |> File.ls!()
+    |> Enum.filter(&String.ends_with?(&1, ".yml"))
+    |> Enum.filter(fn yml_file ->
+      filter_category == nil or String.trim_trailing(yml_file, ".yml") == filter_category
+    end)
+    |> Enum.sort()
+    |> Enum.map(fn yml_file ->
+      category = String.trim_trailing(yml_file, ".yml")
+      yaml_path = Path.join(@yaml_dir, yml_file)
+      {:ok, existing} = YamlElixir.read_from_file(yaml_path)
+
+      updated =
+        existing
+        |> Enum.filter(fn {_k, v} -> is_map(v) end)
+        |> Map.new(fn {behavior, groups} ->
+          langs = languages_for_behavior(category, behavior)
+          {behavior, maybe_put_languages(groups, langs)}
+        end)
+
+      File.write!(yaml_path, format_yaml(updated))
+
+      behaviors_with_languages =
+        Enum.count(updated, fn {_b, groups} -> Map.has_key?(groups, "_languages") end)
+
+      %{category: category, behaviors_with_languages: behaviors_with_languages}
+    end)
   end
 end
