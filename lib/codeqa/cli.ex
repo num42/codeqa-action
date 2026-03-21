@@ -3,7 +3,6 @@ defmodule CodeQA.CLI do
 
   @commands %{
     "analyze" => CodeQA.CLI.Analyze,
-    "compare" => CodeQA.CLI.Compare,
     "history" => CodeQA.CLI.History,
     "correlate" => CodeQA.CLI.Correlate,
     "health-report" => CodeQA.CLI.HealthReport,
