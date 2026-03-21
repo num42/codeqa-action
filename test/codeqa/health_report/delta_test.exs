@@ -50,4 +50,12 @@ defmodule CodeQA.HealthReport.DeltaTest do
     refute Map.has_key?(result.delta.aggregate["entropy"], "label")
     assert result.delta.aggregate["entropy"]["mean_value"] == 1.0
   end
+
+  test "metric key present only in head produces no delta entry" do
+    base = make_results(%{"entropy" => %{"mean_value" => 5.0}})
+    head = make_results(%{"entropy" => %{"mean_value" => 6.0, "new_metric" => 3.0}})
+
+    result = Delta.compute(base, head)
+    refute Map.has_key?(result.delta.aggregate["entropy"], "new_metric")
+  end
 end

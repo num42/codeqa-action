@@ -32,7 +32,7 @@ defmodule CodeQA.HealthReport.Delta do
     |> Enum.reduce(%{}, fn key, acc ->
       case {Map.get(base, key), Map.get(head, key)} do
         {b, h} when is_number(b) and is_number(h) ->
-          Map.put(acc, key, Float.round(h - b, 4))
+          Map.put(acc, key, Float.round((h - b) * 1.0, 4))
 
         _ ->
           acc
