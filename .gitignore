@@ -13,6 +13,8 @@ devenv.lock
 /docs/
 /tmp/
 
+priv/research/
+
 # Built escript
 /codeqa
 
