@@ -7,7 +7,6 @@ defmodule CodeQA.HealthReport do
   @spec generate(map(), keyword()) :: map()
   def generate(analysis_results, opts \\ []) do
     config_path = Keyword.get(opts, :config)
-    _detail = Keyword.get(opts, :detail, :default)
     base_results = Keyword.get(opts, :base_results)
     changed_files = Keyword.get(opts, :changed_files, [])
 

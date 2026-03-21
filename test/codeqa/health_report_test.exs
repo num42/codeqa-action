@@ -38,6 +38,7 @@ defmodule CodeQA.HealthReportTest do
       end)
     end
 
+    @tag :slow
     test "worst_offenders is always empty in categories" do
       files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
       results = CodeQA.Engine.Analyzer.analyze_codebase(files)
