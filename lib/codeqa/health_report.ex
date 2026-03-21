@@ -1,14 +1,15 @@
 defmodule CodeQA.HealthReport do
   @moduledoc "Orchestrates health report generation from analysis results."
 
-  alias CodeQA.HealthReport.{Config, Grader, Formatter}
+  alias CodeQA.HealthReport.{Config, Grader, Formatter, Delta, TopBlocks}
   alias CodeQA.CombinedMetrics.{FileScorer, SampleRunner}
 
   @spec generate(map(), keyword()) :: map()
   def generate(analysis_results, opts \\ []) do
     config_path = Keyword.get(opts, :config)
-    detail = Keyword.get(opts, :detail, :default)
-    top_n = Keyword.get(opts, :top, 5)
+    _detail = Keyword.get(opts, :detail, :default)
+    base_results = Keyword.get(opts, :base_results)
+    changed_files = Keyword.get(opts, :changed_files, [])
 
     %{
       categories: categories,
@@ -26,20 +27,12 @@ defmodule CodeQA.HealthReport do
       categories
       |> Grader.grade_aggregate(aggregate, grade_scale)
       |> Enum.zip(categories)
-      |> Enum.map(fn {graded, cat_def} ->
+      |> Enum.map(fn {graded, _cat_def} ->
         summary = build_category_summary(graded)
-        cat_top = Map.get(cat_def, :top, top_n)
-
-        worst =
-          case detail do
-            :summary -> []
-            :full -> Grader.worst_offenders(cat_def, files, map_size(files), grade_scale)
-            _default -> Grader.worst_offenders(cat_def, files, cat_top, grade_scale)
-          end
 
         graded
         |> Map.put(:type, :threshold)
-        |> Map.merge(%{summary: summary, worst_offenders: worst})
+        |> Map.merge(%{summary: summary, worst_offenders: []})
       end)
 
     worst_files_map = FileScorer.worst_files_per_behavior(files, combined_top: combined_top)
@@ -47,7 +40,6 @@ defmodule CodeQA.HealthReport do
     cosine_grades =
       Grader.grade_cosine_categories(aggregate, worst_files_map, grade_scale, project_langs)
 
-    # TODO(option-c): a unified flat issues list would replace the current per-category worst offenders loop; all category results would be flattened, deduplicated by file+line, and re-ranked by a cross-category severity score before rendering.
     all_categories =
       (threshold_grades ++ cosine_grades)
       |> Enum.map(fn cat ->
@@ -58,20 +50,117 @@ defmodule CodeQA.HealthReport do
 
     metadata = build_metadata(analysis_results)
 
-    top_issues = SampleRunner.diagnose_aggregate(aggregate, top: 10, languages: project_langs)
+    all_cosines =
+      SampleRunner.diagnose_aggregate(aggregate, top: 99_999, languages: project_langs)
+
+    top_issues = Enum.take(all_cosines, 10)
+
+    codebase_cosine_lookup =
+      Map.new(all_cosines, fn i -> {{i.category, i.behavior}, i.cosine} end)
+
+    top_blocks = TopBlocks.build(analysis_results, changed_files, codebase_cosine_lookup)
+
+    {codebase_delta, pr_summary} =
+      if base_results do
+        build_delta_and_summary(
+          base_results,
+          analysis_results,
+          overall_score,
+          overall_grade,
+          all_categories,
+          categories,
+          grade_scale,
+          impact_map,
+          combined_top,
+          changed_files,
+          top_blocks
+        )
+      else
+        {nil, nil}
+      end
 
     %{
       metadata: metadata,
+      pr_summary: pr_summary,
       overall_score: overall_score,
       overall_grade: overall_grade,
+      codebase_delta: codebase_delta,
       categories: all_categories,
-      top_issues: top_issues
+      top_issues: top_issues,
+      top_blocks: top_blocks
     }
   end
 
   @spec to_markdown(map(), atom(), atom()) :: String.t()
   def to_markdown(report, detail \\ :default, format \\ :plain) do
     Formatter.format_markdown(report, detail, format)
+  end
+
+  defp build_delta_and_summary(
+         base_results,
+         head_results,
+         head_score,
+         head_grade,
+         _head_categories,
+         category_defs,
+         grade_scale,
+         impact_map,
+         combined_top,
+         changed_files,
+         top_blocks
+       ) do
+    delta = Delta.compute(base_results, head_results)
+
+    base_aggregate = get_in(base_results, ["codebase", "aggregate"]) || %{}
+    base_files = Map.get(base_results, "files", %{})
+    base_project_langs = project_languages(base_files)
+
+    base_threshold_grades =
+      category_defs
+      |> Grader.grade_aggregate(base_aggregate, grade_scale)
+      |> Enum.zip(category_defs)
+      |> Enum.map(fn {graded, _cat_def} ->
+        graded
+        |> Map.put(:type, :threshold)
+        |> Map.merge(%{summary: "", worst_offenders: []})
+      end)
+
+    base_worst_files_map =
+      FileScorer.worst_files_per_behavior(base_files, combined_top: combined_top)
+
+    base_cosine_grades =
+      Grader.grade_cosine_categories(
+        base_aggregate,
+        base_worst_files_map,
+        grade_scale,
+        base_project_langs
+      )
+
+    base_all_categories =
+      (base_threshold_grades ++ base_cosine_grades)
+      |> Enum.map(fn cat ->
+        Map.put(cat, :impact, Map.get(impact_map, to_string(cat.key), 1))
+      end)
+
+    {base_score, base_grade} = Grader.overall_score(base_all_categories, grade_scale, impact_map)
+
+    blocks_flagged = Enum.sum(Enum.map(top_blocks, fn g -> length(g.blocks) end))
+    files_added = Enum.count(changed_files, &(&1.status == "added"))
+    files_modified = Enum.count(changed_files, &(&1.status == "modified"))
+
+    summary = %{
+      base_score: base_score,
+      head_score: head_score,
+      score_delta: head_score - base_score,
+      base_grade: base_grade,
+      head_grade: head_grade,
+      blocks_flagged: blocks_flagged,
+      files_changed: length(changed_files),
+      files_added: files_added,
+      files_modified: files_modified
+    }
+
+    {delta, summary}
   end
 
   defp build_metadata(analysis_results) do
