@@ -247,4 +247,5 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
   defp severity_icon(:critical), do: "🔴"
   defp severity_icon(:high), do: "🟠"
   defp severity_icon(:medium), do: "🟡"
+  defp severity_icon(_), do: "⚪"
 end
