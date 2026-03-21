@@ -101,11 +101,15 @@ defmodule CodeQA.HealthReport.TopBlocks do
     |> Enum.flat_map(fn {yaml_path, data} ->
       category = yaml_path |> Path.basename() |> String.trim_trailing(".yml")
 
-      Enum.flat_map(data, fn {behavior, behavior_data} ->
-        case get_in(behavior_data, ["_fix_hint"]) do
-          nil -> []
-          hint -> [{{category, behavior}, hint}]
-        end
+      Enum.flat_map(data, fn
+        {behavior, behavior_data} when is_map(behavior_data) ->
+          case Map.get(behavior_data, "_fix_hint") do
+            nil -> []
+            hint -> [{{category, behavior}, hint}]
+          end
+
+        _ ->
+          []
       end)
     end)
     |> Map.new()
