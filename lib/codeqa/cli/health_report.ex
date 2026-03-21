@@ -24,6 +24,8 @@ defmodule CodeQA.CLI.HealthReport do
       --cache-dir DIR       Directory to store cache (default: .codeqa_cache)
       -t, --timeout MS      Timeout for similarity analysis (default: 5000)
       --ignore-paths PATHS  Comma-separated list of path patterns to ignore (supports wildcards, e.g. "test/*,docs/*")
+      --base-ref REF        Base git ref for PR comparison (enables delta and block scoping)
+      --head-ref REF        Head git ref (default: HEAD)
     """
   end
 
@@ -38,7 +40,9 @@ defmodule CodeQA.CLI.HealthReport do
     detail: :string,
     top: :integer,
     format: :string,
-    ignore_paths: :string
+    ignore_paths: :string,
+    base_ref: :string,
+    head_ref: :string
   ]
 
   def run(args) do
@@ -46,11 +50,11 @@ defmodule CodeQA.CLI.HealthReport do
     Options.validate_dir!(path)
     extra_ignore_patterns = Options.parse_ignore_paths(opts[:ignore_paths])
 
+    base_ref = opts[:base_ref]
+    head_ref = opts[:head_ref] || "HEAD"
+
     files =
       CodeQA.Engine.Collector.collect_files(path, extra_ignore_patterns)
-
-    # IO.inspect(files |> Map.keys(), label: "files", limit: :infinity)
-    # Process.exit(Process.get(:codeqa_config), :kill)
 
     if map_size(files) == 0 do
       IO.puts(:stderr, "Warning: no source files found in '#{path}'")
@@ -81,6 +85,20 @@ defmodule CodeQA.CLI.HealthReport do
         "total_bytes" => total_bytes
       })
 
+    {base_results, changed_files} =
+      if base_ref do
+        IO.puts(:stderr, "Collecting base snapshot at #{base_ref}...")
+        base_files = CodeQA.Git.collect_files_at_ref(path, base_ref)
+        changed = CodeQA.Git.changed_files(path, base_ref, head_ref)
+
+        IO.puts(:stderr, "Analyzing base snapshot (#{map_size(base_files)} files)...")
+        base_res = CodeQA.Engine.Analyzer.analyze_codebase(base_files, analyze_opts)
+
+        {base_res, changed}
+      else
+        {nil, []}
+      end
+
     detail = parse_detail(opts[:detail])
     format = parse_format(opts[:format])
     top_n = opts[:top] || 5
@@ -89,7 +107,9 @@ defmodule CodeQA.CLI.HealthReport do
       CodeQA.HealthReport.generate(results,
         config: opts[:config],
         detail: detail,
-        top: top_n
+        top: top_n,
+        base_results: base_results,
+        changed_files: changed_files
       )
 
     markdown = CodeQA.HealthReport.to_markdown(report, detail, format)
