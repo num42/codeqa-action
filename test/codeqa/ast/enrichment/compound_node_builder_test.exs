@@ -1,13 +1,12 @@
 defmodule CodeQA.AST.Enrichment.CompoundNodeBuilderTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Parsing.Parser
   alias CodeQA.AST.Classification.NodeTypeDetector
   alias CodeQA.AST.Enrichment.CompoundNode
   alias CodeQA.AST.Enrichment.CompoundNodeBuilder
   alias CodeQA.AST.Lexing.TokenNormalizer
-
-  alias CodeQA.AST.Nodes.{DocNode, AttributeNode, CodeNode}
+  alias CodeQA.AST.Nodes.{AttributeNode, CodeNode, DocNode}
+  alias CodeQA.AST.Parsing.Parser
 
   defp build(code) do
     lang_mod = CodeQA.Languages.Code.Vm.Elixir
@@ -112,7 +111,7 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilderTest do
       doc = %DocNode{tokens: [:d], line_count: 1, children: [], start_line: 1, end_line: 1}
       code = %CodeNode{tokens: [:c], line_count: 2, children: [], start_line: 2, end_line: 3}
 
-      [compound] = CodeQA.AST.Enrichment.CompoundNodeBuilder.build([doc, code])
+      [compound] = CompoundNodeBuilder.build([doc, code])
       assert length(compound.docs) == 1
       assert is_struct(hd(compound.docs), DocNode)
     end
@@ -129,7 +128,7 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilderTest do
 
       code = %CodeNode{tokens: [:c], line_count: 2, children: [], start_line: 2, end_line: 3}
 
-      [compound] = CodeQA.AST.Enrichment.CompoundNodeBuilder.build([attr, code])
+      [compound] = CompoundNodeBuilder.build([attr, code])
       assert length(compound.typespecs) == 1
       assert is_struct(hd(compound.typespecs), AttributeNode)
     end

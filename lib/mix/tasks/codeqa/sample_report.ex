@@ -38,11 +38,15 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
     top: :integer
   ]
 
+  alias CodeQA.CombinedMetrics.SampleRunner
+  alias CodeQA.Engine.Analyzer
+  alias CodeQA.Engine.Collector
+
   def run(args) do
     Mix.Task.run("app.start")
     {opts, _, _} = OptionParser.parse(args, switches: @switches)
 
-    results = CodeQA.CombinedMetrics.SampleRunner.run(opts)
+    results = SampleRunner.run(opts)
 
     results
     |> Enum.group_by(& &1.category)
@@ -54,19 +58,19 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
     end
 
     if path = opts[:report] do
-      report = CodeQA.CombinedMetrics.SampleRunner.build_metric_report(opts)
+      report = SampleRunner.build_metric_report(opts)
       File.write!(path, Jason.encode!(report, pretty: true))
       IO.puts("\nMetric report written to #{path}")
     end
 
     if opts[:apply_scalars] do
-      stats = CodeQA.CombinedMetrics.SampleRunner.apply_scalars(opts)
+      stats = SampleRunner.apply_scalars(opts)
       IO.puts("\nApplied scalars to YAML configs:")
       Enum.each(stats, &print_scalar_stats/1)
     end
 
     if opts[:apply_languages] do
-      stats = CodeQA.CombinedMetrics.SampleRunner.apply_languages(opts)
+      stats = SampleRunner.apply_languages(opts)
       IO.puts("\nApplied language coverage to YAML configs:")
 
       Enum.each(stats, fn %{category: cat, behaviors_with_languages: n} ->
@@ -116,19 +120,21 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
     )
 
     if opts[:verbose] do
-      Enum.each(r.metric_detail, fn m ->
-        scalar_str = if m.scalar >= 0, do: "+#{m.scalar}", else: "#{m.scalar}"
-
-        IO.puts(
-          "      " <>
-            pad("#{m.group}.#{m.key}", 45) <>
-            pad(scalar_str, 7) <>
-            pad(fmt(m.bad), 8) <>
-            pad(fmt(m.good), 8) <>
-            "#{m.ratio}x"
-        )
-      end)
+      Enum.each(r.metric_detail, &print_metric_detail/1)
     end
+  end
+
+  defp print_metric_detail(m) do
+    scalar_str = if m.scalar >= 0, do: "+#{m.scalar}", else: "#{m.scalar}"
+
+    IO.puts(
+      "      " <>
+        pad("#{m.group}.#{m.key}", 45) <>
+        pad(scalar_str, 7) <>
+        pad(fmt(m.bad), 8) <>
+        pad(fmt(m.good), 8) <>
+        "#{m.ratio}x"
+    )
   end
 
   defp print_file_scores(path, opts) do
@@ -137,7 +143,7 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
     files =
       cond do
         File.dir?(expanded) ->
-          CodeQA.Engine.Collector.collect_files(expanded)
+          Collector.collect_files(expanded)
 
         File.regular?(expanded) ->
           %{Path.basename(expanded) => File.read!(expanded)}
@@ -152,18 +158,18 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
 
       aggregate =
         files
-        |> CodeQA.Engine.Analyzer.analyze_codebase()
+        |> Analyzer.analyze_codebase()
         |> get_in(["codebase", "aggregate"])
 
       top_n = opts[:top] || 15
-      issues = CodeQA.CombinedMetrics.SampleRunner.diagnose_aggregate(aggregate, top: top_n)
+      issues = SampleRunner.diagnose_aggregate(aggregate, top: top_n)
       IO.puts("\nTop #{top_n} likely issues (by cosine similarity):")
       IO.puts(String.duplicate("-", 75))
       IO.puts("  " <> pad("behavior", 38) <> pad("cosine", 9) <> "score")
       Enum.each(issues, &print_issue_row/1)
 
       IO.puts("\nFull breakdown by category:")
-      combined = CodeQA.CombinedMetrics.SampleRunner.score_aggregate(aggregate)
+      combined = SampleRunner.score_aggregate(aggregate)
       IO.puts("")
       Enum.each(combined, &print_combined_category/1)
     else

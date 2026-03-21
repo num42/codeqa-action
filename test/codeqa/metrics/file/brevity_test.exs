@@ -1,8 +1,8 @@
 defmodule CodeQA.Metrics.File.BrevityTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.Metrics.File.Brevity
   alias CodeQA.Engine.Pipeline
+  alias CodeQA.Metrics.File.Brevity
 
   defp ctx(code), do: Pipeline.build_file_context(code)
   defp result(code), do: Brevity.analyze(ctx(code))

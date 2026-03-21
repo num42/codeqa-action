@@ -178,19 +178,7 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
       {"Structure", "branching", "mean_branch_count"}
     ]
 
-    rows =
-      Enum.flat_map(metrics, fn {label, group, key} ->
-        base_val = get_in(base_agg, [group, key])
-        head_val = get_in(head_agg, [group, key])
-
-        if is_number(base_val) and is_number(head_val) do
-          diff = Float.round(head_val - base_val, 2)
-          diff_str = if diff >= 0, do: "+#{format_num(diff)}", else: "#{format_num(diff)}"
-          ["| #{label} | #{format_num(base_val)} | #{format_num(head_val)} | #{diff_str} |"]
-        else
-          []
-        end
-      end)
+    rows = Enum.flat_map(metrics, &format_metric_row(&1, base_agg, head_agg))
 
     if rows == [] do
       []
@@ -205,6 +193,19 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     end
   end
 
+  defp format_metric_row({label, group, key}, base_agg, head_agg) do
+    base_val = get_in(base_agg, [group, key])
+    head_val = get_in(head_agg, [group, key])
+
+    if is_number(base_val) and is_number(head_val) do
+      diff = Float.round(head_val - base_val, 2)
+      diff_str = if diff >= 0, do: "+#{format_num(diff)}", else: "#{format_num(diff)}"
+      ["| #{label} | #{format_num(base_val)} | #{format_num(head_val)} | #{diff_str} |"]
+    else
+      []
+    end
+  end
+
   defp blocks_section([]), do: []
 
   defp blocks_section(top_blocks) do
@@ -213,27 +214,7 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     file_parts =
       Enum.flat_map(top_blocks, fn group ->
         status_str = if group.status, do: "  [#{group.status}]", else: ""
-
-        block_lines =
-          Enum.flat_map(group.blocks, fn block ->
-            end_line = block.end_line || block.start_line
-
-            header =
-              "**lines #{block.start_line}–#{end_line}** · #{block.type} · #{block.token_count} tokens"
-
-            potential_lines =
-              Enum.flat_map(block.potentials, fn p ->
-                icon = severity_icon(p.severity)
-                delta_str = format_num(p.cosine_delta)
-                label = "#{String.upcase(to_string(p.severity))}"
-                line = "  #{icon} #{label}  #{p.category} / #{p.behavior}  (Δ #{delta_str})"
-                fix = if p.fix_hint, do: ["    → #{p.fix_hint}"], else: []
-                [line | fix]
-              end)
-
-            [header | potential_lines] ++ [""]
-          end)
-
+        block_lines = Enum.flat_map(group.blocks, &format_block/1)
         ["### #{group.path}#{status_str}", "" | block_lines]
       end)
 
@@ -242,6 +223,25 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
       ""
       | file_parts
     ]
+  end
+
+  defp format_block(block) do
+    end_line = block.end_line || block.start_line
+
+    header =
+      "**lines #{block.start_line}–#{end_line}** · #{block.type} · #{block.token_count} tokens"
+
+    potential_lines = Enum.flat_map(block.potentials, &format_potential/1)
+    [header | potential_lines] ++ [""]
+  end
+
+  defp format_potential(p) do
+    icon = severity_icon(p.severity)
+    delta_str = format_num(p.cosine_delta)
+    label = String.upcase(to_string(p.severity))
+    line = "  #{icon} #{label}  #{p.category} / #{p.behavior}  (Δ #{delta_str})"
+    fix = if p.fix_hint, do: ["    → #{p.fix_hint}"], else: []
+    [line | fix]
   end
 
   defp severity_icon(:critical), do: "🔴"

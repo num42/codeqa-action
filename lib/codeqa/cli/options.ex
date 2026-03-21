@@ -1,6 +1,8 @@
 defmodule CodeQA.CLI.Options do
   @moduledoc false
 
+  alias CodeQA.CLI.Progress
+
   @common_strict [
     workers: :integer,
     cache: :boolean,
@@ -68,8 +70,7 @@ defmodule CodeQA.CLI.Options do
       [{:timeout, opts[:timeout] || 5000}]
       |> maybe_add(
         opts[:progress],
-        {:on_progress,
-         fn c, t, p, _tt -> CodeQA.CLI.Progress.callback(c, t, p, start_time_progress) end}
+        {:on_progress, fn c, t, p, _tt -> Progress.callback(c, t, p, start_time_progress) end}
       )
       |> maybe_add(opts[:cache], {:cache_dir, opts[:cache_dir] || ".codeqa_cache"})
       |> maybe_add(

@@ -34,15 +34,19 @@ defmodule CodeQA.AST.Signals.Classification.TypeSignal do
           {MapSet.new(), %{state | saw_at: true, at_line_start: false}}
 
         _ when state.saw_at and state.indent == 0 ->
-          if MapSet.member?(@type_attrs, token.content) do
-            weight = if state.is_first, do: 3, else: 1
-            {MapSet.new([{:type_vote, weight}]), :halt}
-          else
-            {MapSet.new(), %{state | saw_at: false, is_first: false, at_line_start: false}}
-          end
+          emit_after_at(token, state)
 
         _ ->
           {MapSet.new(), %{state | saw_at: false, is_first: false, at_line_start: false}}
+      end
+    end
+
+    defp emit_after_at(token, state) do
+      if MapSet.member?(@type_attrs, token.content) do
+        weight = if state.is_first, do: 3, else: 1
+        {MapSet.new([{:type_vote, weight}]), :halt}
+      else
+        {MapSet.new(), %{state | saw_at: false, is_first: false, at_line_start: false}}
       end
     end
   end

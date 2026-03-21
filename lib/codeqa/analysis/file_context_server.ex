@@ -17,6 +17,8 @@ defmodule CodeQA.Analysis.FileContextServer do
   use GenServer
 
   alias CodeQA.Engine.{FileContext, Pipeline}
+  alias CodeQA.Language
+  alias CodeQA.Languages.Unknown
 
   # --- Public API ---
 
@@ -72,14 +74,14 @@ defmodule CodeQA.Analysis.FileContextServer do
   defp resolve_language_name(opts) do
     cond do
       lang = Keyword.get(opts, :language) ->
-        mod = CodeQA.Language.find(lang) || CodeQA.Languages.Unknown
+        mod = Language.find(lang) || Unknown
         mod.name()
 
       path = Keyword.get(opts, :path) ->
-        CodeQA.Language.detect(path).name()
+        Language.detect(path).name()
 
       true ->
-        CodeQA.Languages.Unknown.name()
+        Unknown.name()
     end
   end
 end

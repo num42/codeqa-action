@@ -3,6 +3,7 @@ defmodule CodeQA.BlockImpactAnalyzerTest do
   use ExUnit.Case, async: false
 
   alias CodeQA.BlockImpactAnalyzer
+  alias CodeQA.Engine.Analyzer
 
   @fixture_content """
   defmodule MyModule do
@@ -21,7 +22,7 @@ defmodule CodeQA.BlockImpactAnalyzerTest do
   describe "analyze/3" do
     test "adds 'nodes' key to each file entry in the pipeline result" do
       files = %{"lib/my_module.ex" => @fixture_content}
-      pipeline_result = CodeQA.Engine.Analyzer.analyze_codebase(files)
+      pipeline_result = Analyzer.analyze_codebase(files)
 
       result = BlockImpactAnalyzer.analyze(pipeline_result, files)
 
@@ -34,7 +35,7 @@ defmodule CodeQA.BlockImpactAnalyzerTest do
 
     test "each node has required fields" do
       files = %{"lib/my_module.ex" => @fixture_content}
-      pipeline_result = CodeQA.Engine.Analyzer.analyze_codebase(files)
+      pipeline_result = Analyzer.analyze_codebase(files)
       result = BlockImpactAnalyzer.analyze(pipeline_result, files)
 
       nodes = result["files"]["lib/my_module.ex"]["nodes"]
@@ -55,7 +56,7 @@ defmodule CodeQA.BlockImpactAnalyzerTest do
 
     test "nodes are sorted by start_line ascending" do
       files = %{"lib/my_module.ex" => @fixture_content}
-      pipeline_result = CodeQA.Engine.Analyzer.analyze_codebase(files)
+      pipeline_result = Analyzer.analyze_codebase(files)
       result = BlockImpactAnalyzer.analyze(pipeline_result, files)
 
       nodes = result["files"]["lib/my_module.ex"]["nodes"]
@@ -65,7 +66,7 @@ defmodule CodeQA.BlockImpactAnalyzerTest do
 
     test "preserves existing 'codebase' key in pipeline result" do
       files = %{"lib/my_module.ex" => @fixture_content}
-      pipeline_result = CodeQA.Engine.Analyzer.analyze_codebase(files)
+      pipeline_result = Analyzer.analyze_codebase(files)
       result = BlockImpactAnalyzer.analyze(pipeline_result, files)
 
       assert Map.has_key?(result, "codebase")
@@ -74,7 +75,7 @@ defmodule CodeQA.BlockImpactAnalyzerTest do
 
     test "nodes_top option limits refactoring_potentials per node" do
       files = %{"lib/my_module.ex" => @fixture_content}
-      pipeline_result = CodeQA.Engine.Analyzer.analyze_codebase(files)
+      pipeline_result = Analyzer.analyze_codebase(files)
       result = BlockImpactAnalyzer.analyze(pipeline_result, files, nodes_top: 1)
 
       nodes = result["files"]["lib/my_module.ex"]["nodes"]

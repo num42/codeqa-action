@@ -1,4 +1,6 @@
 defmodule CodeQA.CombinedMetrics.Scorer do
+  alias CodeQA.Engine.Analyzer
+
   @moduledoc """
   Pure computation engine for combined metric formulas.
 
@@ -45,7 +47,7 @@ defmodule CodeQA.CombinedMetrics.Scorer do
   @doc "Returns the full default scalar map: all registered file metric keys mapped to 0.0."
   @spec default_scalars() :: %{{String.t(), String.t()} => float()}
   def default_scalars do
-    CodeQA.Engine.Analyzer.build_registry().file_metrics
+    Analyzer.build_registry().file_metrics
     |> Enum.flat_map(fn mod ->
       Enum.map(mod.keys(), fn key -> {{mod.name(), "mean_" <> key}, 0.0} end)
     end)

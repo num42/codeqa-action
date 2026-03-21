@@ -49,14 +49,18 @@ defmodule CodeQA.AST.Signals.Classification.TestSignal do
           {MapSet.new(), state}
 
         _ ->
-          if ind == 0 and MapSet.member?(state.keywords, token.content) do
-            weight = if first, do: 3, else: 1
+          emit_content_token(token, state, ind, first)
+      end
+    end
 
-            {MapSet.new([{:test_vote, weight}]),
-             %{state | is_first: false, at_line_start: false, voted: true}}
-          else
-            {MapSet.new(), %{state | is_first: false, at_line_start: false}}
-          end
+    defp emit_content_token(token, state, ind, first) do
+      base_state = %{state | is_first: false, at_line_start: false}
+
+      if ind == 0 and MapSet.member?(state.keywords, token.content) do
+        weight = if first, do: 3, else: 1
+        {MapSet.new([{:test_vote, weight}]), %{base_state | voted: true}}
+      else
+        {MapSet.new(), base_state}
       end
     end
   end

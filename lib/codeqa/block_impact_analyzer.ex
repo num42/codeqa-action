@@ -104,7 +104,6 @@ defmodule CodeQA.BlockImpactAnalyzer do
         serialize_node(
           node,
           path,
-          content,
           root_tokens,
           baseline_file_cosines,
           file_results,
@@ -120,7 +119,6 @@ defmodule CodeQA.BlockImpactAnalyzer do
   defp serialize_node(
          node,
          path,
-         content,
          root_tokens,
          baseline_file_cosines,
          file_results,
@@ -150,7 +148,6 @@ defmodule CodeQA.BlockImpactAnalyzer do
         serialize_node(
           child,
           path,
-          content,
           root_tokens,
           baseline_file_cosines,
           file_results,

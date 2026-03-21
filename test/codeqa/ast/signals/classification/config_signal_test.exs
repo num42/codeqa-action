@@ -1,7 +1,7 @@
 defmodule CodeQA.AST.Signals.Classification.ConfigSignalTest do
   use ExUnit.Case, async: true
-  alias CodeQA.AST.Signals.Classification.ConfigSignal
   alias CodeQA.AST.Parsing.SignalStream
+  alias CodeQA.AST.Signals.Classification.ConfigSignal
 
   defp run(tokens), do: SignalStream.run(tokens, [%ConfigSignal{}], []) |> List.flatten()
   defp t(content, kind \\ "<ID>"), do: %{kind: kind, content: content, line: 1, col: 0}

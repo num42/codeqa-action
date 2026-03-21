@@ -13,11 +13,11 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilder do
   promoted to the compound's `docs`/`typespecs` lists.
   """
 
-  alias CodeQA.AST.Enrichment.Node
-  alias CodeQA.AST.Enrichment.CompoundNode
   alias CodeQA.AST.Classification.NodeProtocol
-  alias CodeQA.AST.Nodes.{DocNode, AttributeNode}
+  alias CodeQA.AST.Enrichment.CompoundNode
+  alias CodeQA.AST.Enrichment.Node
   alias CodeQA.AST.Lexing.{NewlineToken, WhitespaceToken}
+  alias CodeQA.AST.Nodes.{AttributeNode, DocNode}
 
   @doc """
   Groups a list of typed nodes into CompoundNode structs.

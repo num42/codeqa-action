@@ -1,14 +1,14 @@
 defmodule CodeQA.AST.Enrichment.CompoundNodeAssertionsLanguagesTest do
   use ExUnit.Case, async: true
 
+  alias CodeQA.AST.Classification.NodeProtocol
+  alias CodeQA.AST.Classification.NodeTypeDetector
+  alias CodeQA.AST.Enrichment.CompoundNode
+  alias CodeQA.AST.Enrichment.CompoundNodeBuilder
+  alias CodeQA.AST.Enrichment.Node
   alias CodeQA.AST.Lexing.TokenNormalizer
   alias CodeQA.AST.Parsing.Parser
   alias CodeQA.Languages.Unknown
-  alias CodeQA.AST.Classification.NodeTypeDetector
-  alias CodeQA.AST.Classification.NodeProtocol
-  alias CodeQA.AST.Enrichment.CompoundNodeBuilder
-  alias CodeQA.AST.Enrichment.CompoundNode
-  alias CodeQA.AST.Enrichment.Node
 
   Module.register_attribute(__MODULE__, :fixture, accumulate: true, persist: false)
 

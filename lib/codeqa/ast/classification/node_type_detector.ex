@@ -7,8 +7,8 @@ defmodule CodeQA.AST.Classification.NodeTypeDetector do
   for the full list of signals and their weights.
   """
 
-  alias CodeQA.AST.Enrichment.Node
   alias CodeQA.AST.Classification.NodeClassifier
+  alias CodeQA.AST.Enrichment.Node
 
   @doc """
   Classify each node in the list into the most specific typed struct.

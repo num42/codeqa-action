@@ -1,8 +1,8 @@
 defmodule CodeQA.Metrics.File.BranchingTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.Metrics.File.Branching
   alias CodeQA.Engine.Pipeline
+  alias CodeQA.Metrics.File.Branching
 
   defp ctx(code), do: Pipeline.build_file_context(code)
   defp density(code), do: Branching.analyze(ctx(code))["branching_density"]

@@ -52,23 +52,19 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     end
   end
 
-  defp grade_letter_from_score(score) do
-    cond do
-      score >= 97 -> "A+"
-      score >= 93 -> "A"
-      score >= 90 -> "A-"
-      score >= 87 -> "B+"
-      score >= 83 -> "B"
-      score >= 80 -> "B-"
-      score >= 77 -> "C+"
-      score >= 73 -> "C"
-      score >= 70 -> "C-"
-      score >= 67 -> "D+"
-      score >= 63 -> "D"
-      score >= 60 -> "D-"
-      true -> "F"
-    end
-  end
+  defp grade_letter_from_score(score) when score >= 97, do: "A+"
+  defp grade_letter_from_score(score) when score >= 93, do: "A"
+  defp grade_letter_from_score(score) when score >= 90, do: "A-"
+  defp grade_letter_from_score(score) when score >= 87, do: "B+"
+  defp grade_letter_from_score(score) when score >= 83, do: "B"
+  defp grade_letter_from_score(score) when score >= 80, do: "B-"
+  defp grade_letter_from_score(score) when score >= 77, do: "C+"
+  defp grade_letter_from_score(score) when score >= 73, do: "C"
+  defp grade_letter_from_score(score) when score >= 70, do: "C-"
+  defp grade_letter_from_score(score) when score >= 67, do: "D+"
+  defp grade_letter_from_score(score) when score >= 63, do: "D"
+  defp grade_letter_from_score(score) when score >= 60, do: "D-"
+  defp grade_letter_from_score(_score), do: "F"
 
   defp header(report) do
     emoji = grade_emoji(report.overall_grade)
@@ -284,11 +280,9 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
   defp top_issues_section(issues, _detail) do
     rows =
-      issues
-      |> Enum.map(fn i ->
+      Enum.map_join(issues, "\n", fn i ->
         "| `#{i.category}.#{i.behavior}` | #{format_num(i.cosine)} | #{format_num(i.score)} |"
       end)
-      |> Enum.join("\n")
 
     table = "| Behavior | Cosine | Score |\n|----------|--------|-------|\n#{rows}"
 
@@ -361,19 +355,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       {"Structure", "branching", "mean_branch_count"}
     ]
 
-    rows =
-      Enum.flat_map(metrics, fn {label, group, key} ->
-        base_val = get_in(base_agg, [group, key])
-        head_val = get_in(head_agg, [group, key])
-
-        if is_number(base_val) and is_number(head_val) do
-          diff = Float.round(head_val - base_val, 2)
-          diff_str = if diff >= 0, do: "+#{format_num(diff)}", else: "#{format_num(diff)}"
-          ["| #{label} | #{format_num(base_val)} | #{format_num(head_val)} | #{diff_str} |"]
-        else
-          []
-        end
-      end)
+    rows = Enum.flat_map(metrics, &format_metric_row(&1, base_agg, head_agg))
 
     if rows == [] do
       []
@@ -388,6 +370,19 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     end
   end
 
+  defp format_metric_row({label, group, key}, base_agg, head_agg) do
+    base_val = get_in(base_agg, [group, key])
+    head_val = get_in(head_agg, [group, key])
+
+    if is_number(base_val) and is_number(head_val) do
+      diff = Float.round(head_val - base_val, 2)
+      diff_str = if diff >= 0, do: "+#{format_num(diff)}", else: "#{format_num(diff)}"
+      ["| #{label} | #{format_num(base_val)} | #{format_num(head_val)} | #{diff_str} |"]
+    else
+      []
+    end
+  end
+
   defp blocks_section([]), do: []
 
   defp blocks_section(top_blocks) do
@@ -398,27 +393,8 @@ defmodule CodeQA.HealthReport.Formatter.Github do
         status_str = if group.status, do: " [#{group.status}]", else: ""
         summary_line = "🔍 #{group.path}#{status_str} — #{length(group.blocks)} block(s)"
 
-        block_lines =
-          Enum.flat_map(group.blocks, fn block ->
-            end_line = block.end_line || block.start_line
-
-            potential_lines =
-              Enum.flat_map(block.potentials, fn p ->
-                icon = severity_icon(p.severity)
-                delta_str = format_num(p.cosine_delta)
-                label = String.upcase(to_string(p.severity))
-                line = "**#{icon} #{label}** `#{p.category}/#{p.behavior}` (Δ #{delta_str})"
-                fix = if p.fix_hint, do: ["> #{p.fix_hint}"], else: []
-                [line | fix]
-              end)
-
-            [
-              "**lines #{block.start_line}–#{end_line}** · #{block.type} · #{block.token_count} tokens"
-            ] ++
-              potential_lines ++ [""]
-          end)
-
-        inner = List.flatten(block_lines) |> Enum.join("\n")
+        inner =
+          group.blocks |> Enum.flat_map(&format_block/1) |> List.flatten() |> Enum.join("\n")
 
         [
           "<details>",
@@ -435,6 +411,25 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       ""
       | file_cards
     ]
+  end
+
+  defp format_block(block) do
+    end_line = block.end_line || block.start_line
+
+    header =
+      "**lines #{block.start_line}–#{end_line}** · #{block.type} · #{block.token_count} tokens"
+
+    potential_lines = Enum.flat_map(block.potentials, &format_potential/1)
+    [header] ++ potential_lines ++ [""]
+  end
+
+  defp format_potential(p) do
+    icon = severity_icon(p.severity)
+    delta_str = format_num(p.cosine_delta)
+    label = String.upcase(to_string(p.severity))
+    line = "**#{icon} #{label}** `#{p.category}/#{p.behavior}` (Δ #{delta_str})"
+    fix = if p.fix_hint, do: ["> #{p.fix_hint}"], else: []
+    [line | fix]
   end
 
   defp severity_icon(:critical), do: "🔴"

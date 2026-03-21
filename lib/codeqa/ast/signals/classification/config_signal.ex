@@ -42,12 +42,16 @@ defmodule CodeQA.AST.Signals.Classification.ConfigSignal do
            %{state | bracket_depth: max(0, bd - 1), at_line_start: false, is_first: false}}
 
         _ ->
-          if ind == 0 and bd == 0 and MapSet.member?(@config_keywords, token.content) do
-            weight = if first, do: 3, else: 1
-            {MapSet.new([{:config_vote, weight}]), :halt}
-          else
-            {MapSet.new(), %{state | at_line_start: false, is_first: false}}
-          end
+          emit_content_token(token, state, ind, bd, first)
+      end
+    end
+
+    defp emit_content_token(token, state, ind, bd, first) do
+      if ind == 0 and bd == 0 and MapSet.member?(@config_keywords, token.content) do
+        weight = if first, do: 3, else: 1
+        {MapSet.new([{:config_vote, weight}]), :halt}
+      else
+        {MapSet.new(), %{state | at_line_start: false, is_first: false}}
       end
     end
   end

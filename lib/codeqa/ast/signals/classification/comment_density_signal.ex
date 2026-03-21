@@ -47,15 +47,18 @@ defmodule CodeQA.AST.Signals.Classification.CommentDensitySignal do
             %{state | at_line_start: false}
         end
 
-      if next == nil and map_size(prefixes) > 0 and state.total_lines > 0 do
-        if state.comment_lines / state.total_lines > 0.6 do
-          {MapSet.new([{:comment_vote, 2}]), :halt}
-        else
-          {MapSet.new(), state}
-        end
+      maybe_emit_vote(next, prefixes, state)
+    end
+
+    defp maybe_emit_vote(nil, prefixes, state)
+         when map_size(prefixes) > 0 and state.total_lines > 0 do
+      if state.comment_lines / state.total_lines > 0.6 do
+        {MapSet.new([{:comment_vote, 2}]), :halt}
       else
         {MapSet.new(), state}
       end
     end
+
+    defp maybe_emit_vote(_next, _prefixes, state), do: {MapSet.new(), state}
   end
 end

@@ -1,8 +1,8 @@
 defmodule CodeQA.HealthReport do
   @moduledoc "Orchestrates health report generation from analysis results."
 
-  alias CodeQA.HealthReport.{Config, Grader, Formatter, Delta, TopBlocks}
   alias CodeQA.CombinedMetrics.{FileScorer, SampleRunner}
+  alias CodeQA.HealthReport.{Config, Delta, Formatter, Grader, TopBlocks}
 
   @spec generate(map(), keyword()) :: map()
   def generate(analysis_results, opts \\ []) do
@@ -59,6 +59,13 @@ defmodule CodeQA.HealthReport do
 
     top_blocks = TopBlocks.build(analysis_results, changed_files, codebase_cosine_lookup)
 
+    grading_cfg = %{
+      category_defs: categories,
+      grade_scale: grade_scale,
+      impact_map: impact_map,
+      combined_top: combined_top
+    }
+
     {codebase_delta, pr_summary} =
       if base_results do
         build_delta_and_summary(
@@ -66,11 +73,7 @@ defmodule CodeQA.HealthReport do
           analysis_results,
           overall_score,
           overall_grade,
-          all_categories,
-          categories,
-          grade_scale,
-          impact_map,
-          combined_top,
+          grading_cfg,
           changed_files,
           top_blocks
         )
@@ -100,11 +103,12 @@ defmodule CodeQA.HealthReport do
          head_results,
          head_score,
          head_grade,
-         _head_categories,
-         category_defs,
-         grade_scale,
-         impact_map,
-         combined_top,
+         %{
+           category_defs: category_defs,
+           grade_scale: grade_scale,
+           impact_map: impact_map,
+           combined_top: combined_top
+         },
          changed_files,
          top_blocks
        ) do

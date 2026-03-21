@@ -1,7 +1,7 @@
 defmodule CodeQA.Metrics.File.NearDuplicateBlocksFileTest do
   use ExUnit.Case, async: true
-  alias CodeQA.Metrics.File.NearDuplicateBlocksFile
   alias CodeQA.Engine.Pipeline
+  alias CodeQA.Metrics.File.NearDuplicateBlocksFile
 
   defp ctx(code, path \\ "test.ex") do
     base = Pipeline.build_file_context(code)

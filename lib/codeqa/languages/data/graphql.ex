@@ -1,4 +1,5 @@
 defmodule CodeQA.Languages.Data.GraphQL do
+  @moduledoc false
   use CodeQA.Language
 
   @impl true

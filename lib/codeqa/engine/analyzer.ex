@@ -2,9 +2,11 @@ defmodule CodeQA.Engine.Analyzer do
   @moduledoc "Orchestrates metric computation across files."
 
   alias CodeQA.Analysis.RunSupervisor
+  alias CodeQA.Engine.Parallel
+  alias CodeQA.Engine.Pipeline
   alias CodeQA.Engine.Registry
-  alias CodeQA.Metrics.File, as: Metrics
   alias CodeQA.Metrics.Codebase, as: CodebaseMetrics
+  alias CodeQA.Metrics.File, as: Metrics
 
   @registry Registry.new()
             |> Registry.register_file_metric(Metrics.Entropy)
@@ -35,14 +37,14 @@ defmodule CodeQA.Engine.Analyzer do
 
   @spec analyze_file(String.t(), String.t()) :: map()
   def analyze_file(_path, content) do
-    ctx = CodeQA.Engine.Pipeline.build_file_context(content)
-    CodeQA.Engine.Registry.run_file_metrics(@registry, ctx, [])
+    ctx = Pipeline.build_file_context(content)
+    Registry.run_file_metrics(@registry, ctx, [])
   end
 
   @spec analyze_codebase_aggregate(map(), keyword()) :: map()
   def analyze_codebase_aggregate(files_map, opts \\ []) do
     with_run_context(opts, fn opts ->
-      file_results = CodeQA.Engine.Parallel.analyze_files(files_map, opts)
+      file_results = Parallel.analyze_files(files_map, opts)
       aggregate_file_metrics(file_results)
     end)
   end
@@ -66,7 +68,7 @@ defmodule CodeQA.Engine.Analyzer do
   defp do_analyze_codebase(files, opts) do
     registry = @registry
 
-    file_results = CodeQA.Engine.Parallel.analyze_files(files, opts)
+    file_results = Parallel.analyze_files(files, opts)
     codebase_metrics = Registry.run_codebase_metrics(registry, files, opts)
     aggregate = aggregate_file_metrics(file_results)
 

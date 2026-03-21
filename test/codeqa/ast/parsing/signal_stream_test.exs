@@ -1,8 +1,8 @@
 defmodule CodeQA.AST.SignalStreamTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Parsing.SignalStream
   alias CodeQA.AST.Lexing.Token
+  alias CodeQA.AST.Parsing.SignalStream
   alias CodeQA.Support.CounterSignal
 
   defp tok(kind, content), do: %Token{kind: kind, content: content, line: 1, col: 0}

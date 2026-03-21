@@ -1,10 +1,10 @@
 defmodule CodeQA.AST.Signals.Structural.CommentDividerSignalTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Signals.Structural.CommentDividerSignal
+  alias CodeQA.AST.Lexing.TokenNormalizer
   alias CodeQA.AST.Parsing.Signal
   alias CodeQA.AST.Parsing.SignalStream
-  alias CodeQA.AST.Lexing.TokenNormalizer
+  alias CodeQA.AST.Signals.Structural.CommentDividerSignal
   alias CodeQA.Languages.Code.Vm.Elixir, as: ElixirLang
   alias CodeQA.Languages.Code.Vm.Java
   alias CodeQA.Languages.Data.Sql

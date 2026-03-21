@@ -1,9 +1,9 @@
 defmodule CodeQA.BlockImpact.FileImpactTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.BlockImpact.FileImpact
   alias CodeQA.AST.Lexing.TokenNormalizer
   alias CodeQA.AST.Parsing.Parser
+  alias CodeQA.BlockImpact.FileImpact
   alias CodeQA.Languages.Unknown
 
   @fixture_content """

@@ -1,7 +1,7 @@
 defmodule CodeQA.AST.Signals.Classification.CommentDensitySignalTest do
   use ExUnit.Case, async: true
-  alias CodeQA.AST.Signals.Classification.CommentDensitySignal
   alias CodeQA.AST.Parsing.SignalStream
+  alias CodeQA.AST.Signals.Classification.CommentDensitySignal
   alias CodeQA.Languages.Code.Scripting.Python
   alias CodeQA.Languages.Unknown
 

@@ -13,6 +13,10 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
 
   @behaviour CodeQA.Metrics.Codebase.CodebaseMetric
 
+  alias CodeQA.AST.Lexing.TokenNormalizer
+  alias CodeQA.CLI.UI
+  alias CodeQA.Metrics.File.Winnowing
+
   @impl true
   def name, do: "similarity"
 
@@ -99,7 +103,7 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
 
   defp maybe_print_fingerprint_progress(true, i, total) do
     if rem(i + 1, max(1, div(total, 20))) == 0 do
-      IO.write(:stderr, "\r" <> CodeQA.CLI.UI.progress_bar(i + 1, total, label: "Fingerprinting"))
+      IO.write(:stderr, "\r" <> UI.progress_bar(i + 1, total, label: "Fingerprinting"))
     end
   end
 
@@ -130,7 +134,7 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
 
   defp maybe_print_index_progress(true, idx, total) do
     if rem(idx + 1, max(1, div(total, 20))) == 0 do
-      IO.write(:stderr, "\r" <> CodeQA.CLI.UI.progress_bar(idx + 1, total, label: "Indexing"))
+      IO.write(:stderr, "\r" <> UI.progress_bar(idx + 1, total, label: "Indexing"))
     end
   end
 
@@ -231,7 +235,7 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
 
   defp maybe_print_lsh_progress(true, idx, total) do
     if rem(idx + 1, max(1, div(total, 20))) == 0 do
-      IO.write(:stderr, "\r" <> CodeQA.CLI.UI.progress_bar(idx + 1, total, label: "LSH Filter"))
+      IO.write(:stderr, "\r" <> UI.progress_bar(idx + 1, total, label: "LSH Filter"))
     end
   end
 
@@ -284,8 +288,8 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
       eta_ms = round((total_pairs - c) * avg_time)
 
       output =
-        CodeQA.CLI.UI.progress_bar(c, total_pairs,
-          eta: CodeQA.CLI.UI.format_eta(eta_ms),
+        UI.progress_bar(c, total_pairs,
+          eta: UI.format_eta(eta_ms),
           label: "NCD Compression"
         )
 
@@ -327,9 +331,9 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
 
   defp compute_fingerprints(content, _opts) do
     content
-    |> CodeQA.AST.Lexing.TokenNormalizer.normalize_structural()
+    |> TokenNormalizer.normalize_structural()
     |> Enum.map(& &1.kind)
-    |> CodeQA.Metrics.File.Winnowing.kgrams(5)
+    |> Winnowing.kgrams(5)
     |> MapSet.new()
   end
 

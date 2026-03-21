@@ -1,4 +1,5 @@
 defmodule CodeQA.Languages.Code.Scripting.PHP do
+  @moduledoc false
   use CodeQA.Language
 
   @impl true

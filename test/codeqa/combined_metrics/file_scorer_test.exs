@@ -262,7 +262,7 @@ defmodule CodeQA.CombinedMetrics.FileScorerTest do
             "vocabulary" => 60.0,
             "volume" => 1200.0,
             "difficulty" => 30.0,
-            "effort" => 36000.0,
+            "effort" => 36_000.0,
             "bugs" => 0.4
           },
           "branching" => %{

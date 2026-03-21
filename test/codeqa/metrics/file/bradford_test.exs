@@ -1,8 +1,8 @@
 defmodule CodeQA.Metrics.File.BradfordTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.Metrics.File.Bradford
   alias CodeQA.Engine.Pipeline
+  alias CodeQA.Metrics.File.Bradford
 
   # Bradford zones are built by ranking lines densest-first, then walking down
   # until each third of total tokens is accumulated:

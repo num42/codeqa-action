@@ -2,6 +2,8 @@ defmodule CodeQA.AST.NodeProtocolTest.FakeNode do
   defstruct [:tokens, :line_count, :children, :start_line, :end_line, :label]
 
   defimpl CodeQA.AST.Classification.NodeProtocol do
+    alias CodeQA.AST.Classification.NodeProtocol
+
     def tokens(n), do: n.tokens
     def line_count(n), do: n.line_count
     def children(n), do: n.children
@@ -12,7 +14,7 @@ defmodule CodeQA.AST.NodeProtocolTest.FakeNode do
     def flat_tokens(n) do
       if Enum.empty?(n.children),
         do: n.tokens,
-        else: Enum.flat_map(n.children, &CodeQA.AST.Classification.NodeProtocol.flat_tokens/1)
+        else: Enum.flat_map(n.children, &NodeProtocol.flat_tokens/1)
     end
   end
 end
@@ -21,6 +23,7 @@ defmodule CodeQA.AST.NodeProtocolTest do
   use ExUnit.Case, async: true
 
   alias CodeQA.AST.Classification.NodeProtocol
+  alias CodeQA.AST.Enrichment.Node
   alias CodeQA.AST.NodeProtocolTest.FakeNode
 
   @node %FakeNode{
@@ -57,8 +60,6 @@ defmodule CodeQA.AST.NodeProtocolTest do
   end
 
   describe "flat_tokens/1" do
-    alias CodeQA.AST.Enrichment.Node
-
     test "leaf node returns own tokens" do
       leaf = %Node{tokens: [:a, :b], line_count: 1, children: []}
       assert NodeProtocol.flat_tokens(leaf) == [:a, :b]
@@ -80,8 +81,6 @@ defmodule CodeQA.AST.NodeProtocolTest do
   end
 
   describe "Node implements NodeProtocol" do
-    alias CodeQA.AST.Enrichment.Node
-
     setup do
       node = %Node{
         tokens: [:x, :y],

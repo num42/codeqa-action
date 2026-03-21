@@ -1,4 +1,5 @@
 defmodule CodeQA.Languages.Markup.Markdown do
+  @moduledoc false
   use CodeQA.Language
 
   @impl true

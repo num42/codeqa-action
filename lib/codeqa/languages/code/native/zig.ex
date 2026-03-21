@@ -1,4 +1,5 @@
 defmodule CodeQA.Languages.Code.Native.Zig do
+  @moduledoc false
   use CodeQA.Language
 
   @impl true

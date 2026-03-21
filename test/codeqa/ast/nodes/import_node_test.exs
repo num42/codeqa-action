@@ -1,8 +1,8 @@
 defmodule CodeQA.AST.Nodes.ImportNodeTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Nodes.{ImportNode, AttributeNode, TestNode}
   alias CodeQA.AST.Classification.NodeProtocol
+  alias CodeQA.AST.Nodes.{AttributeNode, ImportNode, TestNode}
 
   describe "ImportNode" do
     test "implements NodeProtocol" do

@@ -1,4 +1,5 @@
 defmodule CodeQA.Languages.Code.Native.Go do
+  @moduledoc false
   use CodeQA.Language
 
   @impl true

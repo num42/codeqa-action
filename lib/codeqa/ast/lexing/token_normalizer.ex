@@ -5,9 +5,9 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
   See [lexical analysis](https://en.wikipedia.org/wiki/Lexical_analysis).
   """
 
-  alias CodeQA.AST.Lexing.Token
-  alias CodeQA.AST.Lexing.StringToken
   alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.StringToken
+  alias CodeQA.AST.Lexing.Token
   alias CodeQA.AST.Lexing.WhitespaceToken
 
   @doc """
@@ -28,22 +28,26 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
     lines
     |> Enum.with_index()
     |> Enum.flat_map(fn {line, idx} ->
-      line_num = idx + 1
-      {tokens, last_token} = tokenize_line(line, line_num)
-
-      if idx < last_idx do
-        # last_token is tracked during scanning — O(1) vs List.last/1 which is O(N).
-        nl_col =
-          case last_token do
-            nil -> 0
-            t -> t.col + String.length(t.content)
-          end
-
-        tokens ++ [%NewlineToken{content: "\n", line: line_num, col: nl_col}]
-      else
-        tokens
-      end
+      tokens_with_newline(line, idx, last_idx)
     end)
+  end
+
+  defp tokens_with_newline(line, idx, last_idx) do
+    line_num = idx + 1
+    {tokens, last_token} = tokenize_line(line, line_num)
+
+    if idx < last_idx do
+      # last_token is tracked during scanning — O(1) vs List.last/1 which is O(N).
+      nl_col =
+        case last_token do
+          nil -> 0
+          t -> t.col + String.length(t.content)
+        end
+
+      tokens ++ [%NewlineToken{content: "\n", line: line_num, col: nl_col}]
+    else
+      tokens
+    end
   end
 
   # Returns {tokens, last_token} where last_token is the final token on the line

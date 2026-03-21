@@ -7,6 +7,9 @@ defmodule CodeQA.CombinedMetrics.FileScorer do
   """
 
   alias CodeQA.CombinedMetrics.SampleRunner
+  alias CodeQA.Config
+  alias CodeQA.HealthReport.Grader
+  alias CodeQA.Language
 
   @doc """
   Converts a single file's raw metric map to aggregate format.
@@ -56,7 +59,10 @@ defmodule CodeQA.CombinedMetrics.FileScorer do
             ]
           }
   def worst_files_per_behavior(files_map, opts \\ []) do
-    # TODO(option-c): cosine similarity is computed at file level; a line-level mapping would require computing a separate cosine score for each AST node by projecting that node's metric vector against the behavior's feature-weight vector. This is not currently possible because serialized nodes do not carry their own metric values.
+    # NOTE: cosine similarity is computed at file level; a line-level mapping would require computing a separate
+    # cosine score for each AST node by projecting that node's metric vector against the behavior's
+    # feature-weight vector. This is not currently possible because serialized nodes do not carry their own
+    # metric values.
     top_n = Keyword.get(opts, :combined_top, 2)
 
     files_map
@@ -64,8 +70,8 @@ defmodule CodeQA.CombinedMetrics.FileScorer do
       file_data |> Map.get("metrics", %{}) |> map_size() == 0
     end)
     |> Enum.reduce(%{}, fn {path, file_data}, acc ->
-      top_nodes = CodeQA.HealthReport.Grader.top_3_nodes(Map.get(file_data, "nodes"))
-      language = CodeQA.Language.detect(path).name()
+      top_nodes = Grader.top_3_nodes(Map.get(file_data, "nodes"))
+      language = Language.detect(path).name()
 
       file_data
       |> Map.get("metrics", %{})
@@ -84,7 +90,7 @@ defmodule CodeQA.CombinedMetrics.FileScorer do
       end)
     end)
     |> Map.new(fn {key, entries} ->
-      threshold = CodeQA.Config.cosine_significance_threshold()
+      threshold = Config.cosine_significance_threshold()
 
       sorted =
         entries

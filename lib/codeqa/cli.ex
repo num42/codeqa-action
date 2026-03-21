@@ -27,8 +27,7 @@ defmodule CodeQA.CLI do
     command_usages =
       @commands
       |> Enum.sort_by(fn {name, _} -> name end)
-      |> Enum.map(fn {_name, mod} -> mod.usage() end)
-      |> Enum.join("\n")
+      |> Enum.map_join("\n", fn {_name, mod} -> mod.usage() end)
 
     "Usage: codeqa <command> [options]\n\n" <> command_usages
   end

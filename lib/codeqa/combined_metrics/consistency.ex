@@ -18,12 +18,13 @@ defmodule CodeQA.CombinedMetrics.Consistency do
 
   for {key, doc} <- @behaviors do
     defmodule Module.concat(CodeQA.CombinedMetrics.Consistency, Macro.camelize(key)) do
+      alias CodeQA.CombinedMetrics.Consistency
       @moduledoc doc
-      @behaviour CodeQA.CombinedMetrics.Consistency
+      @behaviour Consistency
       @score_key key
       @impl true
       def score(metrics),
-        do: CodeQA.CombinedMetrics.Consistency.compute_score(@score_key, metrics)
+        do: Consistency.compute_score(@score_key, metrics)
     end
   end
 end

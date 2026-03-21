@@ -17,12 +17,13 @@ defmodule CodeQA.CombinedMetrics.FileStructure do
 
   for {key, doc} <- @behaviors do
     defmodule Module.concat(CodeQA.CombinedMetrics.FileStructure, Macro.camelize(key)) do
+      alias CodeQA.CombinedMetrics.FileStructure
       @moduledoc doc
-      @behaviour CodeQA.CombinedMetrics.FileStructure
+      @behaviour FileStructure
       @score_key key
       @impl true
       def score(metrics),
-        do: CodeQA.CombinedMetrics.FileStructure.compute_score(@score_key, metrics)
+        do: FileStructure.compute_score(@score_key, metrics)
     end
   end
 end

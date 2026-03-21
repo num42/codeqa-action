@@ -1,10 +1,10 @@
 defmodule CodeQA.AST.Signals.Structural.TripleQuoteSignalTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Signals.Structural.TripleQuoteSignal
+  alias CodeQA.AST.Lexing.TokenNormalizer
   alias CodeQA.AST.Parsing.Signal
   alias CodeQA.AST.Parsing.SignalStream
-  alias CodeQA.AST.Lexing.TokenNormalizer
+  alias CodeQA.AST.Signals.Structural.TripleQuoteSignal
 
   defp split_values(code) do
     tokens = TokenNormalizer.normalize_structural(code)

@@ -1,7 +1,7 @@
 defmodule CodeQA.AST.Signals.Classification.TypeSignalTest do
   use ExUnit.Case, async: true
-  alias CodeQA.AST.Signals.Classification.TypeSignal
   alias CodeQA.AST.Parsing.SignalStream
+  alias CodeQA.AST.Signals.Classification.TypeSignal
 
   defp run(tokens), do: SignalStream.run(tokens, [%TypeSignal{}], []) |> List.flatten()
 

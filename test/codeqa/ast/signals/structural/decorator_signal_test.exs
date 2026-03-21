@@ -1,10 +1,10 @@
 defmodule CodeQA.AST.Signals.Structural.DecoratorSignalTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Signals.Structural.DecoratorSignal
+  alias CodeQA.AST.Lexing.TokenNormalizer
   alias CodeQA.AST.Parsing.Signal
   alias CodeQA.AST.Parsing.SignalStream
-  alias CodeQA.AST.Lexing.TokenNormalizer
+  alias CodeQA.AST.Signals.Structural.DecoratorSignal
 
   defp split_values(code) do
     tokens = TokenNormalizer.normalize_structural(code)

@@ -49,6 +49,8 @@ defmodule CodeQA.AST.Nodes.AttributeNode do
   end
 
   defimpl CodeQA.AST.Classification.NodeProtocol do
+    alias CodeQA.AST.Classification.NodeProtocol
+
     def tokens(n), do: n.tokens
     def line_count(n), do: n.line_count
     def children(n), do: n.children
@@ -59,7 +61,7 @@ defmodule CodeQA.AST.Nodes.AttributeNode do
     def flat_tokens(n) do
       if Enum.empty?(n.children),
         do: n.tokens,
-        else: Enum.flat_map(n.children, &CodeQA.AST.Classification.NodeProtocol.flat_tokens/1)
+        else: Enum.flat_map(n.children, &NodeProtocol.flat_tokens/1)
     end
   end
 end

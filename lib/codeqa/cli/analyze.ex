@@ -3,7 +3,11 @@ defmodule CodeQA.CLI.Analyze do
 
   @behaviour CodeQA.CLI.Command
 
+  alias CodeQA.BlockImpactAnalyzer
   alias CodeQA.CLI.Options
+  alias CodeQA.Config
+  alias CodeQA.Engine.Analyzer
+  alias CodeQA.Engine.Collector
 
   @version "0.1.0"
 
@@ -40,10 +44,10 @@ defmodule CodeQA.CLI.Analyze do
       Options.parse(args, [output: :string], o: :output)
 
     Options.validate_dir!(path)
-    CodeQA.Config.load(path)
+    Config.load(path)
 
     files =
-      CodeQA.Engine.Collector.collect_files(path, Options.parse_ignore_paths(opts[:ignore_paths]))
+      Collector.collect_files(path, Options.parse_ignore_paths(opts[:ignore_paths]))
 
     if map_size(files) == 0 do
       IO.puts(:stderr, "Warning: no source files found in '#{path}'")
@@ -53,16 +57,16 @@ defmodule CodeQA.CLI.Analyze do
     print_progress(opts, files)
 
     analyze_opts =
-      Options.build_analyze_opts(opts) ++ CodeQA.Config.near_duplicate_blocks_opts()
+      Options.build_analyze_opts(opts) ++ Config.near_duplicate_blocks_opts()
 
     start_time = System.monotonic_time(:millisecond)
-    results = CodeQA.Engine.Analyzer.analyze_codebase(files, analyze_opts)
+    results = Analyzer.analyze_codebase(files, analyze_opts)
     end_time = System.monotonic_time(:millisecond)
 
     IO.puts(:stderr, "Analysis completed in #{end_time - start_time}ms")
 
     nodes_top = opts[:nodes_top] || 3
-    results = CodeQA.BlockImpactAnalyzer.analyze(results, files, nodes_top: nodes_top)
+    results = BlockImpactAnalyzer.analyze(results, files, nodes_top: nodes_top)
 
     total_bytes = results["files"] |> Map.values() |> Enum.map(& &1["bytes"]) |> Enum.sum()
     results = filter_files_for_output(results, opts, "json")

@@ -1,8 +1,8 @@
 defmodule CodeQA.Metrics.File.RFCTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.Metrics.File.RFC
   alias CodeQA.Engine.Pipeline
+  alias CodeQA.Metrics.File.RFC
 
   defp ctx(code), do: Pipeline.build_file_context(code)
   defp result(code), do: RFC.analyze(ctx(code))

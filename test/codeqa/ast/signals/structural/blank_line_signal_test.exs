@@ -1,10 +1,10 @@
 defmodule CodeQA.AST.Signals.Structural.BlankLineSignalTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Signals.Structural.BlankLineSignal
+  alias CodeQA.AST.Lexing.TokenNormalizer
   alias CodeQA.AST.Parsing.Signal
   alias CodeQA.AST.Parsing.SignalStream
-  alias CodeQA.AST.Lexing.TokenNormalizer
+  alias CodeQA.AST.Signals.Structural.BlankLineSignal
   alias CodeQA.Languages.Code.Vm.Elixir, as: ElixirLang
 
   defp split_values(code, lang_mod) do

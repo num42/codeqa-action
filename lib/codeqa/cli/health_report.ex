@@ -3,7 +3,13 @@ defmodule CodeQA.CLI.HealthReport do
 
   @behaviour CodeQA.CLI.Command
 
+  alias CodeQA.BlockImpactAnalyzer
   alias CodeQA.CLI.Options
+  alias CodeQA.Config
+  alias CodeQA.Engine.Analyzer
+  alias CodeQA.Engine.Collector
+  alias CodeQA.Git
+  alias CodeQA.HealthReport
 
   @impl CodeQA.CLI.Command
   def usage do
@@ -54,7 +60,7 @@ defmodule CodeQA.CLI.HealthReport do
     head_ref = opts[:head_ref] || "HEAD"
 
     files =
-      CodeQA.Engine.Collector.collect_files(path, extra_ignore_patterns)
+      Collector.collect_files(path, extra_ignore_patterns)
 
     if map_size(files) == 0 do
       IO.puts(:stderr, "Warning: no source files found in '#{path}'")
@@ -64,16 +70,16 @@ defmodule CodeQA.CLI.HealthReport do
     IO.puts(:stderr, "Analyzing #{map_size(files)} files for health report...")
 
     analyze_opts =
-      Options.build_analyze_opts(opts) ++ CodeQA.Config.near_duplicate_blocks_opts()
+      Options.build_analyze_opts(opts) ++ Config.near_duplicate_blocks_opts()
 
     start_time = System.monotonic_time(:millisecond)
-    results = CodeQA.Engine.Analyzer.analyze_codebase(files, analyze_opts)
+    results = Analyzer.analyze_codebase(files, analyze_opts)
     end_time = System.monotonic_time(:millisecond)
 
     IO.puts(:stderr, "Analysis completed in #{end_time - start_time}ms")
 
     nodes_top = opts[:nodes_top] || 3
-    results = CodeQA.BlockImpactAnalyzer.analyze(results, files, nodes_top: nodes_top)
+    results = BlockImpactAnalyzer.analyze(results, files, nodes_top: nodes_top)
 
     total_bytes = results["files"] |> Map.values() |> Enum.map(& &1["bytes"]) |> Enum.sum()
 
@@ -88,11 +94,11 @@ defmodule CodeQA.CLI.HealthReport do
     {base_results, changed_files} =
       if base_ref do
         IO.puts(:stderr, "Collecting base snapshot at #{base_ref}...")
-        base_files = CodeQA.Git.collect_files_at_ref(path, base_ref)
-        changed = CodeQA.Git.changed_files(path, base_ref, head_ref)
+        base_files = Git.collect_files_at_ref(path, base_ref)
+        changed = Git.changed_files(path, base_ref, head_ref)
 
         IO.puts(:stderr, "Analyzing base snapshot (#{map_size(base_files)} files)...")
-        base_res = CodeQA.Engine.Analyzer.analyze_codebase(base_files, analyze_opts)
+        base_res = Analyzer.analyze_codebase(base_files, analyze_opts)
 
         {base_res, changed}
       else
@@ -104,7 +110,7 @@ defmodule CodeQA.CLI.HealthReport do
     top_n = opts[:top] || 5
 
     report =
-      CodeQA.HealthReport.generate(results,
+      HealthReport.generate(results,
         config: opts[:config],
         detail: detail,
         top: top_n,
@@ -112,7 +118,7 @@ defmodule CodeQA.CLI.HealthReport do
         changed_files: changed_files
       )
 
-    markdown = CodeQA.HealthReport.to_markdown(report, detail, format)
+    markdown = HealthReport.to_markdown(report, detail, format)
 
     case opts[:output] do
       nil ->

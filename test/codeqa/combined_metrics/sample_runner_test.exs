@@ -2,6 +2,9 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
   use ExUnit.Case
 
   alias CodeQA.CombinedMetrics.SampleRunner
+  alias CodeQA.Engine.Analyzer
+  alias CodeQA.Engine.Collector
+  alias CodeQA.HealthReport.Grader
 
   setup_all do
     results = SampleRunner.run(category: "variable_naming", verbose: true)
@@ -22,7 +25,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
       {:ok, data} = YamlElixir.read_from_file("priv/combined_metrics/variable_naming.yml")
       langs = get_in(data, ["name_is_generic", "_languages"])
       assert is_list(langs)
-      assert length(langs) > 0
+      assert langs != []
       assert Enum.all?(langs, &is_binary/1)
     end
 
@@ -34,7 +37,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
         if is_map(groups) do
           case Map.get(groups, "_languages") do
             nil -> :ok
-            langs -> assert is_list(langs) and length(langs) > 0
+            langs -> assert is_list(langs) and langs != []
           end
         end
       end)
@@ -72,8 +75,8 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
     test "with language option returns subset of unfiltered results" do
       agg =
         "priv/combined_metrics/samples/variable_naming/name_is_generic/bad"
-        |> CodeQA.Engine.Collector.collect_files()
-        |> CodeQA.Engine.Analyzer.analyze_codebase()
+        |> Collector.collect_files()
+        |> Analyzer.analyze_codebase()
         |> get_in(["codebase", "aggregate"])
 
       all = SampleRunner.diagnose_aggregate(agg, top: 999)
@@ -96,8 +99,8 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
     test "with languages option returns fewer behaviors than unfiltered" do
       agg =
         "priv/combined_metrics/samples/variable_naming/name_is_generic/bad"
-        |> CodeQA.Engine.Collector.collect_files()
-        |> CodeQA.Engine.Analyzer.analyze_codebase()
+        |> Collector.collect_files()
+        |> Analyzer.analyze_codebase()
         |> get_in(["codebase", "aggregate"])
 
       all_count = SampleRunner.score_aggregate(agg) |> Enum.flat_map(& &1.behaviors) |> length()
@@ -114,7 +117,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
 
   describe "grade_cosine_categories/4 languages wiring" do
     test "accepts languages argument" do
-      result = CodeQA.HealthReport.Grader.grade_cosine_categories(%{}, %{}, [], ["elixir"])
+      result = Grader.grade_cosine_categories(%{}, %{}, [], ["elixir"])
       assert is_list(result)
     end
   end
@@ -122,7 +125,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
   describe "run/1" do
     test "returns a list of results with required keys", %{results: results} do
       assert is_list(results)
-      assert length(results) > 0
+      assert results != []
       result = hd(results)
       assert Map.has_key?(result, :bad_score)
       assert Map.has_key?(result, :good_score)

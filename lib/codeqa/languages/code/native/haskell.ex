@@ -1,4 +1,5 @@
 defmodule CodeQA.Languages.Code.Native.Haskell do
+  @moduledoc false
   use CodeQA.Language
 
   @impl true

@@ -1,14 +1,19 @@
 defmodule CodeQA.HealthReportTest do
   use ExUnit.Case, async: true
 
+  alias CodeQA.BlockImpactAnalyzer
+  alias CodeQA.Engine.Analyzer
+  alias CodeQA.Git.ChangedFile
+  alias CodeQA.HealthReport
+
   describe "generate/2 output keys" do
     @tag :slow
     test "without base_results: pr_summary and codebase_delta are nil" do
       files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
-      results = CodeQA.Engine.Analyzer.analyze_codebase(files)
-      results = CodeQA.BlockImpactAnalyzer.analyze(results, files)
+      results = Analyzer.analyze_codebase(files)
+      results = BlockImpactAnalyzer.analyze(results, files)
 
-      report = CodeQA.HealthReport.generate(results)
+      report = HealthReport.generate(results)
 
       assert report.pr_summary == nil
       assert report.codebase_delta == nil
@@ -22,10 +27,10 @@ defmodule CodeQA.HealthReportTest do
     @tag :slow
     test "without base_results: top_blocks shows all files with significant blocks" do
       files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
-      results = CodeQA.Engine.Analyzer.analyze_codebase(files)
-      results = CodeQA.BlockImpactAnalyzer.analyze(results, files)
+      results = Analyzer.analyze_codebase(files)
+      results = BlockImpactAnalyzer.analyze(results, files)
 
-      report = CodeQA.HealthReport.generate(results)
+      report = HealthReport.generate(results)
 
       # top_blocks is a list of file groups (may be empty if no blocks above threshold)
       assert is_list(report.top_blocks)
@@ -41,10 +46,10 @@ defmodule CodeQA.HealthReportTest do
     @tag :slow
     test "worst_offenders is always empty in categories" do
       files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
-      results = CodeQA.Engine.Analyzer.analyze_codebase(files)
-      results = CodeQA.BlockImpactAnalyzer.analyze(results, files)
+      results = Analyzer.analyze_codebase(files)
+      results = BlockImpactAnalyzer.analyze(results, files)
 
-      report = CodeQA.HealthReport.generate(results)
+      report = HealthReport.generate(results)
 
       Enum.each(report.categories, fn cat ->
         assert Map.get(cat, :worst_offenders, []) == []
@@ -56,14 +61,14 @@ defmodule CodeQA.HealthReportTest do
     @tag :slow
     test "pr_summary is populated" do
       files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
-      head_results = CodeQA.Engine.Analyzer.analyze_codebase(files)
-      head_results = CodeQA.BlockImpactAnalyzer.analyze(head_results, files)
-      base_results = CodeQA.Engine.Analyzer.analyze_codebase(files)
+      head_results = Analyzer.analyze_codebase(files)
+      head_results = BlockImpactAnalyzer.analyze(head_results, files)
+      base_results = Analyzer.analyze_codebase(files)
 
-      changed = [%CodeQA.Git.ChangedFile{path: "lib/foo.ex", status: "modified"}]
+      changed = [%ChangedFile{path: "lib/foo.ex", status: "modified"}]
 
       report =
-        CodeQA.HealthReport.generate(head_results,
+        HealthReport.generate(head_results,
           base_results: base_results,
           changed_files: changed
         )
@@ -89,11 +94,11 @@ defmodule CodeQA.HealthReportTest do
     @tag :slow
     test "codebase_delta is populated" do
       files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
-      head_results = CodeQA.Engine.Analyzer.analyze_codebase(files)
-      head_results = CodeQA.BlockImpactAnalyzer.analyze(head_results, files)
-      base_results = CodeQA.Engine.Analyzer.analyze_codebase(files)
+      head_results = Analyzer.analyze_codebase(files)
+      head_results = BlockImpactAnalyzer.analyze(head_results, files)
+      base_results = Analyzer.analyze_codebase(files)
 
-      report = CodeQA.HealthReport.generate(head_results, base_results: base_results)
+      report = HealthReport.generate(head_results, base_results: base_results)
 
       assert %{base: %{aggregate: _}, head: %{aggregate: _}, delta: %{aggregate: _}} =
                report.codebase_delta
@@ -106,14 +111,14 @@ defmodule CodeQA.HealthReportTest do
         "lib/bar.ex" => "defmodule Bar do\n  def baz, do: :ok\nend\n"
       }
 
-      head_results = CodeQA.Engine.Analyzer.analyze_codebase(files)
-      head_results = CodeQA.BlockImpactAnalyzer.analyze(head_results, files)
-      base_results = CodeQA.Engine.Analyzer.analyze_codebase(files)
+      head_results = Analyzer.analyze_codebase(files)
+      head_results = BlockImpactAnalyzer.analyze(head_results, files)
+      base_results = Analyzer.analyze_codebase(files)
 
-      changed = [%CodeQA.Git.ChangedFile{path: "lib/foo.ex", status: "modified"}]
+      changed = [%ChangedFile{path: "lib/foo.ex", status: "modified"}]
 
       report =
-        CodeQA.HealthReport.generate(head_results,
+        HealthReport.generate(head_results,
           base_results: base_results,
           changed_files: changed
         )

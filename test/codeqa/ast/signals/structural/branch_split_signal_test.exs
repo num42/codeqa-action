@@ -1,13 +1,13 @@
 defmodule CodeQA.AST.Signals.Structural.BranchSplitSignalTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Signals.Structural.BranchSplitSignal
-  alias CodeQA.AST.Parsing.{Signal, SignalStream}
   alias CodeQA.AST.Lexing.TokenNormalizer
-  alias CodeQA.Languages.Code.Vm.Elixir, as: ElixirLang
+  alias CodeQA.AST.Parsing.{Signal, SignalStream}
+  alias CodeQA.AST.Signals.Structural.BranchSplitSignal
+  alias CodeQA.Languages.Code.Scripting.PHP
   alias CodeQA.Languages.Code.Scripting.Python
   alias CodeQA.Languages.Code.Scripting.Ruby
-  alias CodeQA.Languages.Code.Scripting.PHP
+  alias CodeQA.Languages.Code.Vm.Elixir, as: ElixirLang
   alias CodeQA.Languages.Code.Vm.Java
 
   defp split_values(code, lang_mod) do
@@ -83,7 +83,7 @@ defmodule CodeQA.AST.Signals.Structural.BranchSplitSignalTest do
     splits =
       split_values("switch x\n  case 1:\n    :a\n  case 2:\n    :b\nend\n", Java)
 
-    assert length(splits) >= 1
+    assert splits != []
   end
 
   test "emits split at when keyword" do

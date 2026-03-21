@@ -1,8 +1,8 @@
 defmodule CodeQA.AST.TokenNormalizerTest do
   use ExUnit.Case, async: true
-  alias CodeQA.AST.Lexing.TokenNormalizer
-  alias CodeQA.AST.Lexing.Token
   alias CodeQA.AST.Lexing.StringToken
+  alias CodeQA.AST.Lexing.Token
+  alias CodeQA.AST.Lexing.TokenNormalizer
 
   defp kinds(tokens), do: Enum.map(tokens, & &1.kind)
 

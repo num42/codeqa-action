@@ -1,4 +1,5 @@
 defmodule CodeQA.Languages.Code.Scripting.Lua do
+  @moduledoc false
   use CodeQA.Language
 
   @impl true

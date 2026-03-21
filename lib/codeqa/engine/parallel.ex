@@ -1,4 +1,8 @@
 defmodule CodeQA.Engine.Parallel do
+  alias CodeQA.Analysis.FileContextServer
+  alias CodeQA.Engine.Analyzer
+  alias CodeQA.Engine.Registry
+
   @moduledoc "Parallel file analysis using Flow (GenStage-based)."
 
   def analyze_files(files, opts \\ []) when is_map(files) do
@@ -65,12 +69,12 @@ defmodule CodeQA.Engine.Parallel do
   end
 
   defp analyze_single_file(path, content, opts) do
-    registry = CodeQA.Engine.Analyzer.build_registry()
+    registry = Analyzer.build_registry()
     file_opts = Keyword.put(opts, :path, path)
     pid = Keyword.fetch!(opts, :file_context_pid)
 
-    ctx = CodeQA.Analysis.FileContextServer.get(pid, content, file_opts)
-    metrics = CodeQA.Engine.Registry.run_file_metrics(registry, ctx, opts)
+    ctx = FileContextServer.get(pid, content, file_opts)
+    metrics = Registry.run_file_metrics(registry, ctx, opts)
 
     %{
       "bytes" => ctx.byte_count,

@@ -1,10 +1,10 @@
 defmodule CodeQA.AST.Signals.Structural.AssignmentFunctionSignalTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Signals.Structural.AssignmentFunctionSignal
+  alias CodeQA.AST.Lexing.TokenNormalizer
   alias CodeQA.AST.Parsing.Signal
   alias CodeQA.AST.Parsing.SignalStream
-  alias CodeQA.AST.Lexing.TokenNormalizer
+  alias CodeQA.AST.Signals.Structural.AssignmentFunctionSignal
 
   defp split_indices(code) do
     tokens = TokenNormalizer.normalize_structural(code)

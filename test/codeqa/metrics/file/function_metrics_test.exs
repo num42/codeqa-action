@@ -1,8 +1,8 @@
 defmodule CodeQA.Metrics.File.FunctionMetricsTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.Metrics.File.FunctionMetrics
   alias CodeQA.Engine.Pipeline
+  alias CodeQA.Metrics.File.FunctionMetrics
 
   defp ctx(code), do: Pipeline.build_file_context(code)
   defp analyze(code), do: FunctionMetrics.analyze(ctx(code))
@@ -50,7 +50,7 @@ defmodule CodeQA.Metrics.File.FunctionMetricsTest do
     for keyword <- FunctionMetrics.func_keywords() do
       test "detects function starting with #{keyword}" do
         code = "#{unquote(keyword)} my_func(x) {\n  return x\n}"
-        result = FunctionMetrics.analyze(CodeQA.Engine.Pipeline.build_file_context(code))
+        result = FunctionMetrics.analyze(Pipeline.build_file_context(code))
 
         assert result["avg_function_lines"] > 0,
                "expected '#{unquote(keyword)}' to be detected as function start"
@@ -62,7 +62,7 @@ defmodule CodeQA.Metrics.File.FunctionMetricsTest do
     for modifier <- FunctionMetrics.access_modifiers() do
       test "detects method starting with #{modifier}" do
         code = "#{unquote(modifier)} void MyMethod() {\n  return;\n}"
-        result = FunctionMetrics.analyze(CodeQA.Engine.Pipeline.build_file_context(code))
+        result = FunctionMetrics.analyze(Pipeline.build_file_context(code))
 
         assert result["avg_function_lines"] > 0,
                "expected '#{unquote(modifier)}' access modifier to trigger method detection"

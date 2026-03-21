@@ -1,6 +1,8 @@
 defmodule CodeQA.HealthReport.GraderTest do
   use ExUnit.Case, async: true
 
+  alias CodeQA.Engine.Analyzer
+  alias CodeQA.Engine.Collector
   alias CodeQA.HealthReport.Grader
 
   @default_scale CodeQA.HealthReport.Categories.default_grade_scale()
@@ -118,7 +120,7 @@ defmodule CodeQA.HealthReport.GraderTest do
       # weighted = (80*2 + 60*1) / 3 = 220/3 ≈ 73
       impact_map = %{"readability" => 2}
       {score, _grade} = Grader.overall_score(categories, @default_scale, impact_map)
-      assert score == round((80 * 2 + 60 * 1) / 3)
+      assert score == 73
     end
 
     test "backward compat: /2 call with empty impact_map equals arithmetic mean" do
@@ -151,14 +153,14 @@ defmodule CodeQA.HealthReport.GraderTest do
       impact_map = %{"function_design" => 2, "variable_naming" => 1}
       {score, _} = Grader.overall_score(categories, @default_scale, impact_map)
       # (60*2 + 40*1) / 3 = 160/3 ≈ 53
-      assert score == round((60 * 2 + 40 * 1) / 3)
+      assert score == 53
     end
   end
 
   # Shared aggregate for grade_cosine_categories/3 tests — computed once for the module.
   setup_all do
-    files = CodeQA.Engine.Collector.collect_files("lib", [])
-    result = CodeQA.Engine.Analyzer.analyze_codebase(files)
+    files = Collector.collect_files("lib", [])
+    result = Analyzer.analyze_codebase(files)
     aggregate = get_in(result, ["codebase", "aggregate"])
     {:ok, aggregate: aggregate}
   end

@@ -16,7 +16,7 @@ defmodule CodeQA.Analysis.BehaviorConfigServerTest do
     Enum.each(behaviors, fn {category, list} ->
       assert is_binary(category)
       assert is_list(list)
-      assert length(list) > 0
+      assert list != []
 
       Enum.each(list, fn {behavior, data} ->
         assert is_binary(behavior)

@@ -7,8 +7,8 @@ defmodule CodeQA.AST.Enrichment.NodeAnalyzer do
   reference and should not appear in the node's domain fingerprint.
   """
 
-  alias CodeQA.AST.Lexing.Token
   alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.Token
 
   @doc """
   Returns a MapSet of lowercase identifier names that are locally bound

@@ -85,21 +85,23 @@ defmodule CodeQA.Analysis.BehaviorConfigServer do
       {:ok, files} ->
         files
         |> Enum.filter(&String.ends_with?(&1, ".yml"))
-        |> Enum.each(fn yml_file ->
-          category = String.trim_trailing(yml_file, ".yml")
-          yaml_path = Path.join(@yaml_dir, yml_file)
-          {:ok, data} = YamlElixir.read_from_file(yaml_path)
-
-          data
-          |> Enum.filter(fn {_k, v} -> is_map(v) end)
-          |> Enum.each(fn {behavior, behavior_data} ->
-            :ets.insert(tid, {{category, behavior}, behavior_data})
-          end)
-        end)
+        |> Enum.each(&load_yml_file(&1, tid))
 
       {:error, _} ->
         :ok
     end
+  end
+
+  defp load_yml_file(yml_file, tid) do
+    category = String.trim_trailing(yml_file, ".yml")
+    yaml_path = Path.join(@yaml_dir, yml_file)
+    {:ok, data} = YamlElixir.read_from_file(yaml_path)
+
+    data
+    |> Enum.filter(fn {_k, v} -> is_map(v) end)
+    |> Enum.each(fn {behavior, behavior_data} ->
+      :ets.insert(tid, {{category, behavior}, behavior_data})
+    end)
   end
 
   @doc false

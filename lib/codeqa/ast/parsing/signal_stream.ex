@@ -34,21 +34,25 @@ defmodule CodeQA.AST.Parsing.SignalStream do
 
       {_final_state, emissions} =
         Enum.reduce_while(triples, {init_state, []}, fn triple, {state, acc} ->
-          {emitted, new_state} = Signal.emit(signal, triple, state)
-
-          new_acc =
-            emitted
-            |> Enum.map(fn {name, value} -> {source, group, name, value} end)
-            |> Enum.reduce(acc, fn e, a -> [e | a] end)
-
-          if new_state == :halt do
-            {:halt, {new_state, new_acc}}
-          else
-            {:cont, {new_state, new_acc}}
-          end
+          emit_step(signal, triple, state, acc, source, group)
         end)
 
       Enum.reverse(emissions)
     end)
+  end
+
+  defp emit_step(signal, triple, state, acc, source, group) do
+    {emitted, new_state} = Signal.emit(signal, triple, state)
+
+    new_acc =
+      emitted
+      |> Enum.map(fn {name, value} -> {source, group, name, value} end)
+      |> Enum.reduce(acc, fn e, a -> [e | a] end)
+
+    if new_state == :halt do
+      {:halt, {new_state, new_acc}}
+    else
+      {:cont, {new_state, new_acc}}
+    end
   end
 end

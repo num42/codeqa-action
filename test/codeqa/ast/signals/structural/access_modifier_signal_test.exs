@@ -1,10 +1,10 @@
 defmodule CodeQA.AST.Signals.Structural.AccessModifierSignalTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Signals.Structural.AccessModifierSignal
+  alias CodeQA.AST.Lexing.TokenNormalizer
   alias CodeQA.AST.Parsing.Signal
   alias CodeQA.AST.Parsing.SignalStream
-  alias CodeQA.AST.Lexing.TokenNormalizer
+  alias CodeQA.AST.Signals.Structural.AccessModifierSignal
   alias CodeQA.Languages.Code.Vm.Java
 
   defp split_values(code, lang_mod) do

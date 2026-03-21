@@ -1,11 +1,12 @@
 defmodule CodeQA.AST.Signals.Structural.ColonIndentSignalTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Signals.Structural.ColonIndentSignal
+  alias CodeQA.AST.Lexing.TokenNormalizer
   alias CodeQA.AST.Parsing.Signal
   alias CodeQA.AST.Parsing.SignalStream
-  alias CodeQA.AST.Lexing.TokenNormalizer
+  alias CodeQA.AST.Signals.Structural.ColonIndentSignal
   alias CodeQA.Languages.Code.Scripting.Python
+  alias CodeQA.Languages.Unknown
 
   defp enclosure_values(code, lang_mod \\ Python) do
     tokens = TokenNormalizer.normalize_structural(code)
@@ -14,7 +15,7 @@ defmodule CodeQA.AST.Signals.Structural.ColonIndentSignalTest do
   end
 
   test "no enclosures for non-python language" do
-    assert enclosure_values("def foo:\n    return 1\n", CodeQA.Languages.Unknown) ==
+    assert enclosure_values("def foo:\n    return 1\n", Unknown) ==
              []
   end
 

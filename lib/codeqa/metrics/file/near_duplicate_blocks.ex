@@ -11,11 +11,11 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
     d5 ≤ 25%, d6 ≤ 30%, d7 ≤ 40%, d8 ≤ 50%
   """
 
-  alias CodeQA.AST.Enrichment.Node
   alias CodeQA.AST.Classification.NodeProtocol
-  alias CodeQA.AST.Parsing.Parser
-  alias CodeQA.AST.Lexing.TokenNormalizer
+  alias CodeQA.AST.Enrichment.Node
   alias CodeQA.AST.Lexing.{NewlineToken, WhitespaceToken}
+  alias CodeQA.AST.Lexing.TokenNormalizer
+  alias CodeQA.AST.Parsing.Parser
   alias CodeQA.Language
 
   @max_bucket 8
@@ -230,10 +230,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
 
       decorated =
         if MapSet.size(pruned) > 0 do
-          Enum.map(decorated, fn {i, b, v, h, l, c, n, bigrams} ->
-            {i, b, v, h, l, c, n,
-             Enum.reject(bigrams, &MapSet.member?(pruned, :erlang.phash2(&1)))}
-          end)
+          Enum.map(decorated, &prune_bigrams(&1, pruned))
         else
           decorated
         end
@@ -361,38 +358,53 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
       bigrams_a
       |> Enum.reduce(%{}, fn bigram, acc ->
         h = :erlang.phash2(bigram)
-
-        Map.get(shingle_index, h, [])
-        |> Enum.reduce(acc, fn j, cnt ->
-          if j > i, do: Map.update(cnt, j, 1, &(&1 + 1)), else: cnt
-        end)
+        Map.get(shingle_index, h, []) |> Enum.reduce(acc, &count_candidate(&1, &2, i))
       end)
       |> Enum.filter(fn {_, count} -> count >= min_shared end)
       |> Enum.map(&elem(&1, 0))
       |> Enum.reject(fn j -> j in exact_list end)
       |> Enum.flat_map(fn j ->
-        {_j, block_b, values_b, _hash_b, len_b, children_b, newlines_b, _bigrams_b} =
-          elem(decorated_arr, j)
-
-        min_count = min(len_a, len_b)
-        max_allowed = round(min_count * 0.5)
-
-        if structure_compatible?(children_a, newlines_a, children_b, newlines_b) and
-             abs(len_a - len_b) <= max_allowed do
-          ed = token_edit_distance_bounded(values_a, values_b, max_allowed)
-
-          case percent_bucket(ed, min_count) do
-            nil -> []
-            bucket when bucket > 0 -> [{bucket, {block_a.label, block_b.label}}]
-            # ed=0 handled by exact_pairs above
-            _ -> []
-          end
-        else
-          []
-        end
+        near_pair_for_candidate(
+          j,
+          decorated_arr,
+          block_a,
+          values_a,
+          len_a,
+          children_a,
+          newlines_a
+        )
       end)
 
     exact_pairs ++ near_pairs
+  end
+
+  defp count_candidate(j, cnt, i) when j > i, do: Map.update(cnt, j, 1, &(&1 + 1))
+  defp count_candidate(_j, cnt, _i), do: cnt
+
+  defp near_pair_for_candidate(j, decorated_arr, block_a, values_a, len_a, children_a, newlines_a) do
+    {_j, block_b, values_b, _hash_b, len_b, children_b, newlines_b, _bigrams_b} =
+      elem(decorated_arr, j)
+
+    min_count = min(len_a, len_b)
+    max_allowed = round(min_count * 0.5)
+
+    if structure_compatible?(children_a, newlines_a, children_b, newlines_b) and
+         abs(len_a - len_b) <= max_allowed do
+      ed = token_edit_distance_bounded(values_a, values_b, max_allowed)
+
+      case percent_bucket(ed, min_count) do
+        nil -> []
+        bucket when bucket > 0 -> [{bucket, {block_a.label, block_b.label}}]
+        # ed=0 handled by exact_pairs above
+        _ -> []
+      end
+    else
+      []
+    end
+  end
+
+  defp prune_bigrams({i, b, v, h, l, c, n, bigrams}, pruned) do
+    {i, b, v, h, l, c, n, Enum.reject(bigrams, &MapSet.member?(pruned, :erlang.phash2(&1)))}
   end
 
   # Uses pre-computed children counts and newline counts from the decorated tuple

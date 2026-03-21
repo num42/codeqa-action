@@ -1,8 +1,8 @@
 defmodule CodeQA.AST.Nodes.FunctionNodeTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Nodes.{FunctionNode, ModuleNode}
   alias CodeQA.AST.Classification.NodeProtocol
+  alias CodeQA.AST.Nodes.{FunctionNode, ModuleNode}
 
   describe "FunctionNode" do
     setup do

@@ -2,9 +2,10 @@ defmodule CodeQA.Analysis.FileMetricsServerTest do
   use ExUnit.Case, async: true
 
   alias CodeQA.Analysis.FileMetricsServer
+  alias CodeQA.Engine.Analyzer
 
   defp build_registry do
-    CodeQA.Engine.Analyzer.build_registry()
+    Analyzer.build_registry()
   end
 
   setup do

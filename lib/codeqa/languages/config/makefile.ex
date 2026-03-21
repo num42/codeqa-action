@@ -1,4 +1,5 @@
 defmodule CodeQA.Languages.Config.Makefile do
+  @moduledoc false
   use CodeQA.Language
 
   @impl true

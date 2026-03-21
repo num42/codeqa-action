@@ -8,6 +8,8 @@ defmodule CodeQA.Git do
     defstruct @enforce_keys
   end
 
+  alias CodeQA.Engine.Collector
+
   @status_map %{"A" => "added", "M" => "modified", "D" => "deleted"}
 
   @spec gitignored_files(String.t(), [String.t()]) :: MapSet.t()
@@ -82,6 +84,6 @@ defmodule CodeQA.Git do
 
   defp source_file?(path) do
     ext = path |> Path.extname() |> String.downcase()
-    MapSet.member?(CodeQA.Engine.Collector.source_extensions(), ext)
+    MapSet.member?(Collector.source_extensions(), ext)
   end
 end

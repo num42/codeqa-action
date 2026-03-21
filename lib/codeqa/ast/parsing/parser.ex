@@ -34,9 +34,8 @@ defmodule CodeQA.AST.Parsing.Parser do
   """
 
   alias CodeQA.AST.Enrichment.Node
-  alias CodeQA.AST.Parsing.SignalStream
-  alias CodeQA.Language
   alias CodeQA.AST.Lexing.{NewlineToken, WhitespaceToken}
+  alias CodeQA.AST.Parsing.SignalStream
 
   alias CodeQA.AST.Signals.Structural.{
     BlankLineSignal,
@@ -45,6 +44,8 @@ defmodule CodeQA.AST.Parsing.Parser do
     KeywordSignal,
     TripleQuoteSignal
   }
+
+  alias CodeQA.Language
 
   @spec detect_blocks([CodeQA.AST.Lexing.Token.t()], module()) :: [Node.t()]
   def detect_blocks([], _lang_mod), do: []

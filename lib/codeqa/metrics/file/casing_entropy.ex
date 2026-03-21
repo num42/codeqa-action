@@ -20,6 +20,8 @@ defmodule CodeQA.Metrics.File.CasingEntropy do
 
   @behaviour CodeQA.Metrics.File.FileMetric
 
+  alias CodeQA.Metrics.File.Inflector
+
   @impl true
   def name, do: "casing_entropy"
 
@@ -45,7 +47,7 @@ defmodule CodeQA.Metrics.File.CasingEntropy do
   def analyze(%{identifiers: identifiers}) do
     counts =
       identifiers
-      |> Enum.map(&CodeQA.Metrics.File.Inflector.detect_casing/1)
+      |> Enum.map(&Inflector.detect_casing/1)
       |> Enum.frequencies()
 
     total = length(identifiers)

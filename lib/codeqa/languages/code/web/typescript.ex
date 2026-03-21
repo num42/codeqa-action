@@ -1,4 +1,5 @@
 defmodule CodeQA.Languages.Code.Web.TypeScript do
+  @moduledoc false
   use CodeQA.Language
 
   @impl true

@@ -2,6 +2,8 @@ defmodule CodeQA.HealthReport.Grader do
   @moduledoc "Scores metrics and assigns letter grades."
 
   alias CodeQA.CombinedMetrics.SampleRunner
+  alias CodeQA.Config
+  alias CodeQA.HealthReport.Categories
 
   @doc """
   Score a single metric value (0-100) based on thresholds and direction.
@@ -100,7 +102,7 @@ defmodule CodeQA.HealthReport.Grader do
 
   @doc "Convert a numeric score (0-100) to a letter grade using the given scale."
   @spec grade_letter(number(), [{number(), String.t()}]) :: String.t()
-  def grade_letter(score, scale \\ CodeQA.HealthReport.Categories.default_grade_scale()) do
+  def grade_letter(score, scale \\ Categories.default_grade_scale()) do
     Enum.find_value(scale, "F", fn {min, letter} ->
       if score >= min, do: letter
     end)
@@ -114,7 +116,7 @@ defmodule CodeQA.HealthReport.Grader do
   def grade_category(
         category,
         file_metrics,
-        scale \\ CodeQA.HealthReport.Categories.default_grade_scale()
+        scale \\ Categories.default_grade_scale()
       ) do
     scored =
       category.metrics
@@ -161,7 +163,7 @@ defmodule CodeQA.HealthReport.Grader do
   def grade_file(
         categories,
         file_metrics,
-        scale \\ CodeQA.HealthReport.Categories.default_grade_scale()
+        scale \\ Categories.default_grade_scale()
       ) do
     Enum.map(categories, &grade_category(&1, file_metrics, scale))
   end
@@ -173,7 +175,7 @@ defmodule CodeQA.HealthReport.Grader do
   def grade_aggregate(
         categories,
         aggregate,
-        scale \\ CodeQA.HealthReport.Categories.default_grade_scale()
+        scale \\ Categories.default_grade_scale()
       ) do
     # Convert aggregate format (mean_X keys) to file-metric-like format
     file_like =
@@ -205,7 +207,7 @@ defmodule CodeQA.HealthReport.Grader do
         ) :: {integer(), String.t()}
   def overall_score(
         category_grades,
-        scale \\ CodeQA.HealthReport.Categories.default_grade_scale(),
+        scale \\ Categories.default_grade_scale(),
         impact_map \\ %{}
       ) do
     if category_grades == [] do
@@ -240,10 +242,10 @@ defmodule CodeQA.HealthReport.Grader do
   def grade_cosine_categories(
         aggregate,
         worst_files,
-        scale \\ CodeQA.HealthReport.Categories.default_grade_scale(),
+        scale \\ Categories.default_grade_scale(),
         languages \\ []
       ) do
-    threshold = CodeQA.Config.cosine_significance_threshold()
+    threshold = Config.cosine_significance_threshold()
 
     aggregate
     |> SampleRunner.diagnose_aggregate(top: 99_999, languages: languages)
@@ -297,9 +299,11 @@ defmodule CodeQA.HealthReport.Grader do
         category,
         all_file_metrics,
         top_n,
-        scale \\ CodeQA.HealthReport.Categories.default_grade_scale()
+        scale \\ Categories.default_grade_scale()
       ) do
-    # TODO(option-c): threshold metric scores are file-level aggregates; line-level attribution would require each AST node to carry its own per-metric values so that the node with the highest contribution to the bad metric score could be identified and reported directly.
+    # NOTE: threshold metric scores are file-level aggregates; line-level attribution would require
+    # each AST node to carry its own per-metric values so that the node with the highest
+    # contribution to the bad metric score could be identified and reported directly.
     all_file_metrics
     |> Enum.map(fn {path, file_data} ->
       metrics = Map.get(file_data, "metrics", %{})

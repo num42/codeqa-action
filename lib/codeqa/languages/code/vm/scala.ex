@@ -1,4 +1,5 @@
 defmodule CodeQA.Languages.Code.Vm.Scala do
+  @moduledoc false
   use CodeQA.Language
 
   @impl true

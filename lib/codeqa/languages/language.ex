@@ -1,4 +1,5 @@
 defmodule CodeQA.Language do
+  @moduledoc false
   @callback name() :: String.t()
   @callback extensions() :: [String.t()]
   @callback comment_prefixes() :: [String.t()]
@@ -168,7 +169,7 @@ defmodule CodeQA.Language do
   defp strip_line_comments(content, []), do: content
 
   defp strip_line_comments(content, prefixes) do
-    pattern = prefixes |> Enum.map(&Regex.escape/1) |> Enum.join("|")
+    pattern = Enum.map_join(prefixes, "|", &Regex.escape/1)
     Regex.replace(Regex.compile!("(#{pattern}).*$", [:multiline]), content, "")
   end
 

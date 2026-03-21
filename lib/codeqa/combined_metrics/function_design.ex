@@ -17,12 +17,13 @@ defmodule CodeQA.CombinedMetrics.FunctionDesign do
 
   for {key, doc} <- @behaviors do
     defmodule Module.concat(CodeQA.CombinedMetrics.FunctionDesign, Macro.camelize(key)) do
+      alias CodeQA.CombinedMetrics.FunctionDesign
       @moduledoc doc
-      @behaviour CodeQA.CombinedMetrics.FunctionDesign
+      @behaviour FunctionDesign
       @score_key key
       @impl true
       def score(metrics),
-        do: CodeQA.CombinedMetrics.FunctionDesign.compute_score(@score_key, metrics)
+        do: FunctionDesign.compute_score(@score_key, metrics)
     end
   end
 end

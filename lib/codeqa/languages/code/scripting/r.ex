@@ -1,4 +1,5 @@
 defmodule CodeQA.Languages.Code.Scripting.R do
+  @moduledoc false
   use CodeQA.Language
 
   @impl true

@@ -1,8 +1,8 @@
 defmodule CodeQA.HealthReport.TopBlocksTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.HealthReport.TopBlocks
   alias CodeQA.Git.ChangedFile
+  alias CodeQA.HealthReport.TopBlocks
 
   # A node with cosine_delta 0.60 — will be :critical when codebase_cosine = 0.0 (gap=1.0, ratio=0.60)
   defp make_node(cosine_delta, token_count \\ 20) do
@@ -126,8 +126,24 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
 
   describe "fix hints" do
     test "includes fix_hint string for known behavior" do
-      # function_design/cyclomatic_complexity_under_10 has _fix_hint in YAML
-      [group] = TopBlocks.build(make_results([make_node(0.60)]), [], lookup())
+      # naming_conventions/file_name_matches_primary_export has _fix_hint in YAML
+      node = %{
+        "start_line" => 1,
+        "end_line" => 10,
+        "type" => "code",
+        "token_count" => 20,
+        "refactoring_potentials" => [
+          %{
+            "category" => "naming_conventions",
+            "behavior" => "file_name_matches_primary_export",
+            "cosine_delta" => 0.60
+          }
+        ],
+        "children" => []
+      }
+
+      hint_lookup = %{{"naming_conventions", "file_name_matches_primary_export"} => 0.0}
+      [group] = TopBlocks.build(make_results([node]), [], hint_lookup)
       potential = hd(hd(group.blocks).potentials)
       assert is_binary(potential.fix_hint)
     end

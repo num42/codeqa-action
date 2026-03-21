@@ -1,4 +1,5 @@
 defmodule CodeQA.Languages.Data.Toml do
+  @moduledoc false
   use CodeQA.Language
 
   @impl true

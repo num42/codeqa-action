@@ -1,4 +1,5 @@
 defmodule CodeQA.Languages.Unknown do
+  @moduledoc false
   use CodeQA.Language
 
   @impl true

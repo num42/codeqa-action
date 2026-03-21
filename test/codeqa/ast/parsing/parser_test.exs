@@ -1,9 +1,10 @@
 defmodule CodeQA.AST.Parsing.ParserTest do
   use ExUnit.Case, async: true
-  alias CodeQA.AST.Parsing.Parser
+  alias CodeQA.AST.Enrichment.Node
   alias CodeQA.AST.Lexing.TokenNormalizer
-  alias CodeQA.Languages.Code.Vm.Elixir, as: ElixirLang
+  alias CodeQA.AST.Parsing.Parser
   alias CodeQA.Languages.Code.Scripting.Python
+  alias CodeQA.Languages.Code.Vm.Elixir, as: ElixirLang
   alias CodeQA.Languages.Unknown
 
   defp tokenize(code), do: TokenNormalizer.normalize_structural(code)
@@ -54,7 +55,6 @@ defmodule CodeQA.AST.Parsing.ParserTest do
     end
 
     test "block has children_count accessible via Node.children_count/1" do
-      alias CodeQA.AST.Enrichment.Node
       tokens = tokenize("foo(a)\nbar(b)\n")
       [block] = Parser.detect_blocks(tokens, Unknown)
       assert Node.children_count(block) == length(block.children)

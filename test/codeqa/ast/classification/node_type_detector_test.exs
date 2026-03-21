@@ -1,11 +1,15 @@
 defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
   use ExUnit.Case, async: true
-  alias CodeQA.AST.Parsing.Parser
   alias CodeQA.AST.Classification.NodeTypeDetector
+  alias CodeQA.AST.Enrichment.Node
+  alias CodeQA.AST.Lexing.Token
   alias CodeQA.AST.Lexing.TokenNormalizer
-  alias CodeQA.AST.Nodes.{CodeNode, DocNode, AttributeNode, FunctionNode}
+  alias CodeQA.AST.Nodes.{AttributeNode, CodeNode, DocNode, FunctionNode}
+  alias CodeQA.AST.Parsing.Parser
+  alias CodeQA.Languages.Code.Vm.Elixir, as: ElixirLang
+  alias CodeQA.Languages.Unknown
 
-  defp detect_types(code, lang_mod \\ CodeQA.Languages.Code.Vm.Elixir) do
+  defp detect_types(code, lang_mod \\ ElixirLang) do
     code
     |> TokenNormalizer.normalize_structural()
     |> Parser.detect_blocks(lang_mod)
@@ -70,16 +74,16 @@ defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
     end
 
     test "empty list returns empty list" do
-      assert [] == NodeTypeDetector.detect_types([], CodeQA.Languages.Unknown)
+      assert [] == NodeTypeDetector.detect_types([], Unknown)
     end
   end
 
   describe "detect_types/1 — typed struct output" do
     test "returns DocNode for doc blocks" do
-      doc_token = %CodeQA.AST.Lexing.Token{kind: "<DOC>", content: ~s("""), line: 1, col: 0}
-      nl = %CodeQA.AST.Lexing.Token{kind: "<NL>", content: "\n", line: 2, col: 0}
+      doc_token = %Token{kind: "<DOC>", content: ~s("""), line: 1, col: 0}
+      nl = %Token{kind: "<NL>", content: "\n", line: 2, col: 0}
 
-      node = %CodeQA.AST.Enrichment.Node{
+      node = %Node{
         tokens: [doc_token, nl],
         line_count: 2,
         children: [],
@@ -88,20 +92,20 @@ defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
       }
 
       [result] =
-        CodeQA.AST.Classification.NodeTypeDetector.detect_types(
+        NodeTypeDetector.detect_types(
           [node],
-          CodeQA.Languages.Code.Vm.Elixir
+          ElixirLang
         )
 
       assert is_struct(result, DocNode)
     end
 
     test "returns AttributeNode for typespec blocks" do
-      at = %CodeQA.AST.Lexing.Token{kind: "@", content: "@", line: 1, col: 0}
-      spec = %CodeQA.AST.Lexing.Token{kind: "<ID>", content: "spec", line: 1, col: 1}
-      nl = %CodeQA.AST.Lexing.Token{kind: "<NL>", content: "\n", line: 1, col: 5}
+      at = %Token{kind: "@", content: "@", line: 1, col: 0}
+      spec = %Token{kind: "<ID>", content: "spec", line: 1, col: 1}
+      nl = %Token{kind: "<NL>", content: "\n", line: 1, col: 5}
 
-      node = %CodeQA.AST.Enrichment.Node{
+      node = %Node{
         tokens: [at, spec, nl],
         line_count: 1,
         children: [],
@@ -110,9 +114,9 @@ defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
       }
 
       [result] =
-        CodeQA.AST.Classification.NodeTypeDetector.detect_types(
+        NodeTypeDetector.detect_types(
           [node],
-          CodeQA.Languages.Code.Vm.Elixir
+          ElixirLang
         )
 
       assert is_struct(result, AttributeNode)
@@ -120,10 +124,10 @@ defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
     end
 
     test "returns CodeNode for unclassified blocks" do
-      id = %CodeQA.AST.Lexing.Token{kind: "<ID>", content: "foo", line: 1, col: 0}
-      nl = %CodeQA.AST.Lexing.Token{kind: "<NL>", content: "\n", line: 1, col: 3}
+      id = %Token{kind: "<ID>", content: "foo", line: 1, col: 0}
+      nl = %Token{kind: "<NL>", content: "\n", line: 1, col: 3}
 
-      node = %CodeQA.AST.Enrichment.Node{
+      node = %Node{
         tokens: [id, nl],
         line_count: 1,
         children: [],
@@ -132,9 +136,9 @@ defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
       }
 
       [result] =
-        CodeQA.AST.Classification.NodeTypeDetector.detect_types(
+        NodeTypeDetector.detect_types(
           [node],
-          CodeQA.Languages.Code.Vm.Elixir
+          ElixirLang
         )
 
       assert is_struct(result, CodeNode)

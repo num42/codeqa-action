@@ -4,6 +4,11 @@ defmodule CodeQA.CLI.History do
   @behaviour CodeQA.CLI.Command
 
   alias CodeQA.CLI.Options
+  alias CodeQA.CLI.Progress
+  alias CodeQA.Config
+  alias CodeQA.Engine.Analyzer
+  alias CodeQA.Engine.Collector
+  alias CodeQA.Git
 
   @version "0.1.0"
 
@@ -58,10 +63,10 @@ defmodule CodeQA.CLI.History do
     commits = resolve_commits(opts, path)
     IO.puts(:stderr, "Found #{length(commits)} commits to analyze.")
 
-    CodeQA.Config.load(path)
+    Config.load(path)
 
     analyze_opts =
-      Options.build_analyze_opts(opts) ++ CodeQA.Config.near_duplicate_blocks_opts()
+      Options.build_analyze_opts(opts) ++ Config.near_duplicate_blocks_opts()
 
     ignore_patterns = Options.parse_ignore_paths(opts[:ignore_paths])
 
@@ -97,14 +102,13 @@ defmodule CodeQA.CLI.History do
     current_opts =
       if opts[:progress],
         do: [
-          {:on_progress,
-           fn c, t, p, _tt -> CodeQA.CLI.Progress.callback(c, t, p, start_time_progress) end}
+          {:on_progress, fn c, t, p, _tt -> Progress.callback(c, t, p, start_time_progress) end}
           | analyze_opts
         ],
         else: analyze_opts
 
-    files = CodeQA.Git.collect_files_at_ref(path, commit)
-    files = CodeQA.Engine.Collector.reject_ignored_map(files, ignore_patterns)
+    files = Git.collect_files_at_ref(path, commit)
+    files = Collector.reject_ignored_map(files, ignore_patterns)
 
     if map_size(files) == 0 do
       IO.puts(:stderr, "Warning: no source files found at commit #{commit}")
@@ -115,7 +119,7 @@ defmodule CodeQA.CLI.History do
 
   defp write_commit_result(commit, path, output_dir, files, analyze_opts) do
     start_time = System.monotonic_time(:millisecond)
-    results = CodeQA.Engine.Analyzer.analyze_codebase(files, analyze_opts)
+    results = Analyzer.analyze_codebase(files, analyze_opts)
     end_time = System.monotonic_time(:millisecond)
 
     IO.puts(:stderr, "  Analysis completed in #{end_time - start_time}ms")

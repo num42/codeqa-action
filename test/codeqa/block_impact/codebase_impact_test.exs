@@ -1,9 +1,10 @@
 defmodule CodeQA.BlockImpact.CodebaseImpactTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.BlockImpact.CodebaseImpact
   alias CodeQA.AST.Lexing.TokenNormalizer
   alias CodeQA.AST.Parsing.Parser
+  alias CodeQA.BlockImpact.CodebaseImpact
+  alias CodeQA.Engine.Analyzer
   alias CodeQA.Languages.Unknown
 
   @content_a """
@@ -48,7 +49,7 @@ defmodule CodeQA.BlockImpact.CodebaseImpactTest do
       node = first_block(@content_a)
 
       if length(node.tokens) >= 10 do
-        baseline = CodeQA.Engine.Analyzer.analyze_codebase_aggregate(files_map())
+        baseline = Analyzer.analyze_codebase_aggregate(files_map())
         without = CodebaseImpact.compute("lib/a.ex", @content_a, node, files_map())
         # Not necessarily different in all keys, but result is valid
         assert is_map(without)

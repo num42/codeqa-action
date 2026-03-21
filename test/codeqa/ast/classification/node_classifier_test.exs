@@ -2,33 +2,34 @@ defmodule CodeQA.AST.NodeClassifierTest do
   use ExUnit.Case, async: true
 
   alias CodeQA.AST.Classification.NodeClassifier
-  alias CodeQA.AST.Lexing.TokenNormalizer
-  alias CodeQA.AST.Lexing.Token
-  alias CodeQA.AST.Parsing.Parser
   alias CodeQA.AST.Enrichment.Node
+  alias CodeQA.AST.Lexing.Token
+  alias CodeQA.AST.Lexing.TokenNormalizer
+  alias CodeQA.AST.Parsing.Parser
 
   alias CodeQA.AST.Nodes.{
+    AttributeNode,
     CodeNode,
     DocNode,
     FunctionNode,
-    ModuleNode,
     ImportNode,
-    AttributeNode,
+    ModuleNode,
     TestNode
   }
 
-  alias CodeQA.Languages.Code.Vm.Elixir, as: ElixirLang
-  alias CodeQA.Languages.Code.Scripting.Python
-  alias CodeQA.Languages.Code.Web.JavaScript
   alias CodeQA.Languages.Code.Native.Go
   alias CodeQA.Languages.Code.Native.Rust
+  alias CodeQA.Languages.Code.Scripting.Python
   alias CodeQA.Languages.Code.Scripting.Ruby
-  alias CodeQA.Languages.Code.Web.TypeScript
-  alias CodeQA.Languages.Code.Vm.Java
   alias CodeQA.Languages.Code.Vm.CSharp
+  alias CodeQA.Languages.Code.Vm.Elixir, as: ElixirLang
+  alias CodeQA.Languages.Code.Vm.Java
+  alias CodeQA.Languages.Code.Web.JavaScript
+  alias CodeQA.Languages.Code.Web.TypeScript
+  alias CodeQA.Languages.Unknown
 
   defp classify_first(code, opts \\ []) do
-    lang_mod = opts[:language_module] || CodeQA.Languages.Unknown
+    lang_mod = opts[:language_module] || Unknown
 
     [block | _] =
       code
@@ -155,7 +156,7 @@ defmodule CodeQA.AST.NodeClassifierTest do
       doc_token = %Token{kind: "<DOC>", content: ~s("""), line: 1, col: 0}
       nl = %Token{kind: "<NL>", content: "\n", line: 2, col: 0}
       node = node_with_tokens([doc_token, nl])
-      assert %DocNode{} = NodeClassifier.classify(node, CodeQA.Languages.Unknown)
+      assert %DocNode{} = NodeClassifier.classify(node, Unknown)
     end
   end
 
@@ -207,7 +208,7 @@ defmodule CodeQA.AST.NodeClassifierTest do
       node = node_with_tokens([nl])
 
       assert %CodeNode{} =
-               NodeClassifier.classify(node, CodeQA.Languages.Unknown)
+               NodeClassifier.classify(node, Unknown)
     end
   end
 

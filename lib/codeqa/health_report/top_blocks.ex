@@ -100,18 +100,17 @@ defmodule CodeQA.HealthReport.TopBlocks do
     Scorer.all_yamls()
     |> Enum.flat_map(fn {yaml_path, data} ->
       category = yaml_path |> Path.basename() |> String.trim_trailing(".yml")
-
-      Enum.flat_map(data, fn
-        {behavior, behavior_data} when is_map(behavior_data) ->
-          case Map.get(behavior_data, "_fix_hint") do
-            nil -> []
-            hint -> [{{category, behavior}, hint}]
-          end
-
-        _ ->
-          []
-      end)
+      Enum.flat_map(data, &hints_for_behavior(category, &1))
     end)
     |> Map.new()
   end
+
+  defp hints_for_behavior(category, {behavior, behavior_data}) when is_map(behavior_data) do
+    case Map.get(behavior_data, "_fix_hint") do
+      nil -> []
+      hint -> [{{category, behavior}, hint}]
+    end
+  end
+
+  defp hints_for_behavior(_category, _entry), do: []
 end

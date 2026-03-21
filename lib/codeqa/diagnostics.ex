@@ -4,7 +4,10 @@ defmodule CodeQA.Diagnostics do
   cosine similarity against combined metric behavior profiles.
   """
 
-  alias CodeQA.CombinedMetrics.{SampleRunner, FileScorer}
+  alias CodeQA.CombinedMetrics.FileScorer
+  alias CodeQA.CombinedMetrics.SampleRunner
+  alias CodeQA.Engine.Analyzer
+  alias CodeQA.Engine.Collector
   alias CodeQA.HealthReport.Grader
 
   @doc """
@@ -25,8 +28,8 @@ defmodule CodeQA.Diagnostics do
     top = opts[:top] || 15
     format = opts[:format] || :plain
 
-    files = CodeQA.Engine.Collector.collect_files(path)
-    result = CodeQA.Engine.Analyzer.analyze_codebase(files, [])
+    files = Collector.collect_files(path)
+    result = Analyzer.analyze_codebase(files, [])
 
     case mode do
       :per_file -> run_per_file(result, top, format)
@@ -78,16 +81,7 @@ defmodule CodeQA.Diagnostics do
       :json ->
         files_json =
           Enum.map(file_diagnoses, fn {file_path, diagnoses} ->
-            behaviors =
-              Enum.map(diagnoses, fn d ->
-                %{
-                  behavior: "#{d.category}.#{d.behavior}",
-                  cosine: d.cosine,
-                  score: Grader.score_cosine(d.cosine)
-                }
-              end)
-
-            %{file: file_path, behaviors: behaviors}
+            %{file: file_path, behaviors: Enum.map(diagnoses, &diagnosis_to_map/1)}
           end)
 
         Jason.encode!(%{files: files_json}, pretty: true)
@@ -95,13 +89,25 @@ defmodule CodeQA.Diagnostics do
       _ ->
         file_rows =
           Enum.flat_map(file_diagnoses, fn {file_path, diagnoses} ->
-            Enum.map(diagnoses, fn %{category: cat, behavior: beh, cosine: cosine, score: score} ->
-              {file_path, "#{cat}.#{beh}", cosine, score}
-            end)
+            diagnoses_to_rows(file_path, diagnoses)
           end)
 
         "## Diagnose: per-file\n\n" <> per_file_table(file_rows, top)
     end
+  end
+
+  defp diagnosis_to_map(d) do
+    %{
+      behavior: "#{d.category}.#{d.behavior}",
+      cosine: d.cosine,
+      score: Grader.score_cosine(d.cosine)
+    }
+  end
+
+  defp diagnoses_to_rows(file_path, diagnoses) do
+    Enum.map(diagnoses, fn %{category: cat, behavior: beh, cosine: cosine, score: score} ->
+      {file_path, "#{cat}.#{beh}", cosine, score}
+    end)
   end
 
   defp project_languages(files_map) do

@@ -35,25 +35,26 @@ defmodule CodeQA.AST.Classification.NodeClassifier do
   """
 
   alias CodeQA.AST.Enrichment.Node
-  alias CodeQA.AST.Parsing.SignalStream
-
-  alias CodeQA.AST.Signals.Classification.{
-    DocSignal,
-    AttributeSignal,
-    FunctionSignal,
-    ModuleSignal,
-    ImportSignal,
-    TestSignal
-  }
 
   alias CodeQA.AST.Nodes.{
+    AttributeNode,
     CodeNode,
     DocNode,
     FunctionNode,
-    ModuleNode,
     ImportNode,
-    AttributeNode,
+    ModuleNode,
     TestNode
+  }
+
+  alias CodeQA.AST.Parsing.SignalStream
+
+  alias CodeQA.AST.Signals.Classification.{
+    AttributeSignal,
+    DocSignal,
+    FunctionSignal,
+    ImportSignal,
+    ModuleSignal,
+    TestSignal
   }
 
   @classification_signals [

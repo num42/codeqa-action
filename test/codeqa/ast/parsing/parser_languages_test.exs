@@ -1,8 +1,8 @@
 defmodule CodeQA.AST.Parsing.ParserLanguagesTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Parsing.Parser
   alias CodeQA.AST.Lexing.TokenNormalizer
+  alias CodeQA.AST.Parsing.Parser
   alias CodeQA.Language
   alias CodeQA.Languages.Unknown
 
@@ -118,13 +118,13 @@ defmodule CodeQA.AST.Parsing.ParserLanguagesTest do
                                 code
                               end, block_assertions}
 
-  defp blocks(code, lang_mod \\ CodeQA.Languages.Unknown) do
+  defp blocks(code, lang_mod \\ Unknown) do
     code
     |> TokenNormalizer.normalize_structural()
     |> Parser.detect_blocks(lang_mod)
   end
 
-  defp children(code, lang_mod \\ CodeQA.Languages.Unknown) do
+  defp children(code, lang_mod \\ Unknown) do
     code
     |> TokenNormalizer.normalize_structural()
     |> Parser.detect_blocks(lang_mod)
@@ -141,7 +141,7 @@ defmodule CodeQA.AST.Parsing.ParserLanguagesTest do
         result = blocks(unquote(code), lang_mod)
 
         if unquote(lang_mod) == Unknown do
-          assert length(result) >= 1
+          assert result != []
         else
           assert length(result) >= 3
         end
@@ -152,7 +152,7 @@ defmodule CodeQA.AST.Parsing.ParserLanguagesTest do
         result = children(unquote(code), lang_mod)
 
         if unquote(lang_mod) == Unknown do
-          assert length(result) >= 0
+          assert is_list(result)
         else
           assert length(result) >= 3
         end

@@ -1,4 +1,5 @@
 defmodule CodeQA.Languages.Code.Vm.Fsharp do
+  @moduledoc false
   use CodeQA.Language
 
   @impl true

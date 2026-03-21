@@ -4,6 +4,7 @@ defmodule CodeQA.BlockImpact.RefactoringPotentialsTest do
   alias CodeQA.BlockImpact.RefactoringPotentials
   alias CodeQA.CombinedMetrics.FileScorer
   alias CodeQA.CombinedMetrics.SampleRunner
+  alias CodeQA.Engine.Analyzer
 
   defp file_cosines(fm) do
     fm
@@ -27,13 +28,13 @@ defmodule CodeQA.BlockImpact.RefactoringPotentialsTest do
       end
       """
 
-      baseline_fm = CodeQA.Engine.Analyzer.analyze_file("lib/foo.ex", content)
+      baseline_fm = Analyzer.analyze_file("lib/foo.ex", content)
       simple = "defmodule Foo do\n  def bar, do: :ok\nend\n"
-      without_fm = CodeQA.Engine.Analyzer.analyze_file("lib/foo.ex", simple)
+      without_fm = Analyzer.analyze_file("lib/foo.ex", simple)
 
       files = %{"lib/foo.ex" => content}
-      baseline_agg = CodeQA.Engine.Analyzer.analyze_codebase_aggregate(files)
-      without_agg = CodeQA.Engine.Analyzer.analyze_codebase_aggregate(%{"lib/foo.ex" => simple})
+      baseline_agg = Analyzer.analyze_codebase_aggregate(files)
+      without_agg = Analyzer.analyze_codebase_aggregate(%{"lib/foo.ex" => simple})
 
       baseline_file_cosines = file_cosines(baseline_fm)
       baseline_codebase_cosines = SampleRunner.diagnose_aggregate(baseline_agg, top: 99_999)
@@ -60,8 +61,8 @@ defmodule CodeQA.BlockImpact.RefactoringPotentialsTest do
 
     test "returns at most top N results (default 3)" do
       content = "defmodule A do\n  def foo, do: 1\nend\n"
-      fm = CodeQA.Engine.Analyzer.analyze_file("lib/a.ex", content)
-      agg = CodeQA.Engine.Analyzer.analyze_codebase_aggregate(%{"lib/a.ex" => content})
+      fm = Analyzer.analyze_file("lib/a.ex", content)
+      agg = Analyzer.analyze_codebase_aggregate(%{"lib/a.ex" => content})
 
       baseline_file_cosines = file_cosines(fm)
       baseline_codebase_cosines = SampleRunner.diagnose_aggregate(agg, top: 99_999)
@@ -74,8 +75,8 @@ defmodule CodeQA.BlockImpact.RefactoringPotentialsTest do
 
     test "respects top: N option" do
       content = "defmodule A do\n  def foo, do: 1\nend\n"
-      fm = CodeQA.Engine.Analyzer.analyze_file("lib/a.ex", content)
-      agg = CodeQA.Engine.Analyzer.analyze_codebase_aggregate(%{"lib/a.ex" => content})
+      fm = Analyzer.analyze_file("lib/a.ex", content)
+      agg = Analyzer.analyze_codebase_aggregate(%{"lib/a.ex" => content})
 
       baseline_file_cosines = file_cosines(fm)
       baseline_codebase_cosines = SampleRunner.diagnose_aggregate(agg, top: 99_999)
@@ -90,8 +91,8 @@ defmodule CodeQA.BlockImpact.RefactoringPotentialsTest do
 
     test "results are sorted descending by cosine_delta" do
       content = "defmodule A do\n  def foo, do: 1\nend\n"
-      fm = CodeQA.Engine.Analyzer.analyze_file("lib/a.ex", content)
-      agg = CodeQA.Engine.Analyzer.analyze_codebase_aggregate(%{"lib/a.ex" => content})
+      fm = Analyzer.analyze_file("lib/a.ex", content)
+      agg = Analyzer.analyze_codebase_aggregate(%{"lib/a.ex" => content})
 
       baseline_file_cosines = file_cosines(fm)
       baseline_codebase_cosines = SampleRunner.diagnose_aggregate(agg, top: 99_999)

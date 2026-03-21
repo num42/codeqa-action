@@ -1,8 +1,8 @@
 defmodule CodeQA.AST.Lexing.TokenProtocolTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Lexing.Token
   alias CodeQA.AST.Lexing.StringToken
+  alias CodeQA.AST.Lexing.Token
   alias CodeQA.AST.Lexing.TokenProtocol
 
   describe "Token implementation" do

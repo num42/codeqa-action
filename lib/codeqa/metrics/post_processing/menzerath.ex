@@ -256,22 +256,26 @@ defmodule CodeQA.Metrics.PostProcessing.Menzerath do
       if denom == 0.0 do
         {nil, nil}
       else
-        b = (n * sum_lxly - sum_lx * sum_ly) / denom
-        log_a = (sum_ly - b * sum_lx) / n
-        mean_ly = sum_ly / n
-
-        ss_tot = Enum.reduce(log_ys, 0.0, fn ly, acc -> acc + (ly - mean_ly) ** 2 end)
-
-        ss_res =
-          Enum.zip(log_xs, log_ys)
-          |> Enum.reduce(0.0, fn {lx, ly}, acc ->
-            acc + (ly - (log_a + b * lx)) ** 2
-          end)
-
-        r_squared = if ss_tot == 0.0, do: 0.0, else: 1.0 - ss_res / ss_tot
-        {b, r_squared}
+        fit_power_law_coefficients(log_xs, log_ys, sum_lx, sum_ly, sum_lxly, n, denom)
       end
     end
+  end
+
+  defp fit_power_law_coefficients(log_xs, log_ys, sum_lx, sum_ly, sum_lxly, n, denom) do
+    b = (n * sum_lxly - sum_lx * sum_ly) / denom
+    log_a = (sum_ly - b * sum_lx) / n
+    mean_ly = sum_ly / n
+
+    ss_tot = Enum.reduce(log_ys, 0.0, fn ly, acc -> acc + (ly - mean_ly) ** 2 end)
+
+    ss_res =
+      Enum.zip(log_xs, log_ys)
+      |> Enum.reduce(0.0, fn {lx, ly}, acc ->
+        acc + (ly - (log_a + b * lx)) ** 2
+      end)
+
+    r_squared = if ss_tot == 0.0, do: 0.0, else: 1.0 - ss_res / ss_tot
+    {b, r_squared}
   end
 
   defp round4(v), do: Float.round(v * 1.0, 4)

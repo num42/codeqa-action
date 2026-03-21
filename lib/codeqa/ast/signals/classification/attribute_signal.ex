@@ -42,24 +42,26 @@ defmodule CodeQA.AST.Signals.Classification.AttributeSignal do
           {MapSet.new(), %{state | saw_at: true, at_line_start: false}}
 
         "<ID>" when saw_at ->
-          name = token.content
-
-          cond do
-            MapSet.member?(@skip_attrs, name) ->
-              # @doc/@moduledoc: let DocSignal handle via <DOC> tokens
-              {MapSet.new(), %{state | saw_at: false, at_line_start: false, voted: true}}
-
-            MapSet.member?(@typespec_attrs, name) ->
-              {MapSet.new([{:attribute_vote, 3}]),
-               %{state | saw_at: false, at_line_start: false, voted: true}}
-
-            true ->
-              {MapSet.new([{:attribute_vote, 2}]),
-               %{state | saw_at: false, at_line_start: false, voted: true}}
-          end
+          emit_attribute(token.content, state)
 
         _ ->
           {MapSet.new(), %{state | saw_at: false, at_line_start: false}}
+      end
+    end
+
+    defp emit_attribute(name, state) do
+      base_state = %{state | saw_at: false, at_line_start: false, voted: true}
+
+      cond do
+        MapSet.member?(@skip_attrs, name) ->
+          # @doc/@moduledoc: let DocSignal handle via <DOC> tokens
+          {MapSet.new(), base_state}
+
+        MapSet.member?(@typespec_attrs, name) ->
+          {MapSet.new([{:attribute_vote, 3}]), base_state}
+
+        true ->
+          {MapSet.new([{:attribute_vote, 2}]), base_state}
       end
     end
   end

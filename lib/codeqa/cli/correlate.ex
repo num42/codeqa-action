@@ -4,6 +4,7 @@ defmodule CodeQA.CLI.Correlate do
   @behaviour CodeQA.CLI.Command
 
   alias CodeQA.CLI.Options
+  alias CodeQA.CLI.UI
 
   @impl CodeQA.CLI.Command
   def usage do
@@ -266,7 +267,7 @@ defmodule CodeQA.CLI.Correlate do
       eta_ms = round((total_pairs - current) * avg_time)
 
       output =
-        CodeQA.CLI.UI.progress_bar(current, total_pairs, eta: CodeQA.CLI.UI.format_eta(eta_ms))
+        UI.progress_bar(current, total_pairs, eta: UI.format_eta(eta_ms))
 
       IO.write(:stderr, "\r" <> output)
       if current == total_pairs, do: IO.puts(:stderr, "")

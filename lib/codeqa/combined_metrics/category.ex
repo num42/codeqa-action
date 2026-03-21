@@ -22,6 +22,8 @@ defmodule CodeQA.CombinedMetrics.Category do
 
   defmacro __using__(yaml_path: yaml_path) do
     quote do
+      alias CodeQA.CombinedMetrics.Scorer
+
       @callback score(metrics :: map()) :: float()
 
       @doc """
@@ -31,7 +33,7 @@ defmodule CodeQA.CombinedMetrics.Category do
       """
       @spec compute_score(String.t(), map()) :: float()
       def compute_score(metric_name, metrics) do
-        CodeQA.CombinedMetrics.Scorer.compute_score(unquote(yaml_path), metric_name, metrics)
+        Scorer.compute_score(unquote(yaml_path), metric_name, metrics)
       end
     end
   end

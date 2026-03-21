@@ -1,10 +1,12 @@
 defmodule CodeQA.Engine.AnalyzerTest do
   use ExUnit.Case, async: true
 
+  alias CodeQA.Engine.Analyzer
+
   describe "analyze_file/2" do
     test "returns a metrics map with group keys" do
       content = "defmodule Foo do\n  def bar, do: :ok\nend\n"
-      result = CodeQA.Engine.Analyzer.analyze_file("lib/foo.ex", content)
+      result = Analyzer.analyze_file("lib/foo.ex", content)
       assert is_map(result)
       assert map_size(result) > 0
       # Each value should be a map of metric keys to numbers
@@ -21,7 +23,7 @@ defmodule CodeQA.Engine.AnalyzerTest do
         "lib/b.ex" => "defmodule B do\n  def bar, do: :b\nend\n"
       }
 
-      agg = CodeQA.Engine.Analyzer.analyze_codebase_aggregate(files)
+      agg = Analyzer.analyze_codebase_aggregate(files)
       assert is_map(agg)
       # At least one group should have mean_ keys
       Enum.each(agg, fn {_group, keys} ->
@@ -37,7 +39,7 @@ defmodule CodeQA.Engine.AnalyzerTest do
     test "does not run codebase metrics (returns quickly for large input)" do
       # Just assert it returns without error for a reasonable input
       files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: 1\nend\n"}
-      agg = CodeQA.Engine.Analyzer.analyze_codebase_aggregate(files)
+      agg = Analyzer.analyze_codebase_aggregate(files)
       assert is_map(agg)
     end
   end

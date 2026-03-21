@@ -1,10 +1,10 @@
 defmodule CodeQA.AST.Signals.Structural.SQLBlockSignalTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.AST.Signals.Structural.SQLBlockSignal
+  alias CodeQA.AST.Lexing.TokenNormalizer
   alias CodeQA.AST.Parsing.Signal
   alias CodeQA.AST.Parsing.SignalStream
-  alias CodeQA.AST.Lexing.TokenNormalizer
+  alias CodeQA.AST.Signals.Structural.SQLBlockSignal
   alias CodeQA.Languages.Data.Sql
 
   defp split_values(code) do
