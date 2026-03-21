@@ -411,25 +411,6 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert result =~ "| Behavior | Cosine | Score | Grade |"
       assert result =~ "| no_boolean_parameter | 0.12 | 56 | C |"
     end
-
-    test "renders cosine worst offenders per behavior as details cards" do
-      result = Formatter.format_markdown(@report_with_cosine, :default, :github)
-      assert result =~ "**Worst Offenders: no_boolean_parameter**"
-      assert result =~ "<code>lib/foo/bar.ex</code>"
-      assert result =~ "−0.71"
-      refute result =~ "| File | Cosine |"
-      refute result =~ "| `lib/foo/bar.ex` |"
-    end
-
-    test "omits behaviors with no worst offenders" do
-      result = Formatter.format_markdown(@report_with_cosine, :default, :github)
-      refute result =~ "**Worst Offenders: single_responsibility**"
-    end
-
-    test "summary detail omits cosine worst offenders" do
-      result = Formatter.format_markdown(@report_with_cosine, :summary, :github)
-      refute result =~ "**Worst Offenders: no_boolean_parameter**"
-    end
   end
 
   describe "format_markdown/4 with :github format and chart: false" do
@@ -440,407 +421,81 @@ defmodule CodeQA.HealthReport.FormatterTest do
     end
   end
 
-  describe "github cosine worst offender <details> cards" do
-    defp report_with_enriched_cosine do
+  describe "github formatter: block section" do
+    @block_potential %{
+      category: "function_design",
+      behavior: "cyclomatic_complexity_under_10",
+      cosine_delta: 0.41,
+      severity: :critical,
+      fix_hint: "Reduce branching"
+    }
+
+    @top_blocks_gh [
       %{
-        metadata: %{
-          path: "/home/user/project",
-          timestamp: "2026-03-11T00:00:00Z",
-          total_files: 10
-        },
-        overall_score: 64,
-        overall_grade: "C",
-        categories: [@enriched_cosine_category]
-      }
-    end
-
-    test "renders <details> card for each worst offender" do
-      result = Formatter.format_markdown(report_with_enriched_cosine(), :default, :github)
-      assert result =~ "<details>"
-      assert result =~ "<code>lib/codeqa/formatter.ex</code>"
-    end
-
-    test "renders score with Unicode minus for negative cosine in card summary" do
-      result = Formatter.format_markdown(report_with_enriched_cosine(), :default, :github)
-      assert result =~ "<summary><code>lib/codeqa/formatter.ex</code> — −0.65</summary>"
-    end
-
-    test "renders Why row with ↓ for negative contributions" do
-      result = Formatter.format_markdown(report_with_enriched_cosine(), :default, :github)
-      assert result =~ "**Why:** ↓ branching.mean_depth (−4.10), ↓ halstead.effort (−3.22)"
-    end
-
-    test "renders Why row with ↑ for positive contributions" do
-      category = %{
-        @enriched_cosine_category
-        | behaviors: [
-            %{
-              behavior: "no_boolean_parameter",
-              cosine: 0.5,
-              score: 90,
-              grade: "A",
-              worst_offenders: [
-                %{
-                  file: "lib/foo.ex",
-                  cosine: 0.5,
-                  top_metrics: [%{metric: "halstead.effort", contribution: 2.5}],
-                  top_nodes: []
-                }
-              ]
-            }
-          ]
-      }
-
-      report = %{
-        metadata: %{
-          path: "/home/user/project",
-          timestamp: "2026-03-11T00:00:00Z",
-          total_files: 10
-        },
-        overall_score: 90,
-        overall_grade: "A",
-        categories: [category]
-      }
-
-      result = Formatter.format_markdown(report, :default, :github)
-      assert result =~ "↑ halstead.effort (+2.50)"
-    end
-
-    test "omits Why row when top_metrics is empty" do
-      category = %{
-        @enriched_cosine_category
-        | behaviors: [
-            %{
-              behavior: "no_boolean_parameter",
-              cosine: -0.5,
-              score: 42,
-              grade: "D+",
-              worst_offenders: [
-                %{
-                  file: "lib/foo.ex",
-                  cosine: -0.5,
-                  top_metrics: [],
-                  top_nodes: [%{"start_line" => 10, "type" => "block"}]
-                }
-              ]
-            }
-          ]
-      }
-
-      report = %{
-        metadata: %{
-          path: "/home/user/project",
-          timestamp: "2026-03-11T00:00:00Z",
-          total_files: 10
-        },
-        overall_score: 42,
-        overall_grade: "D+",
-        categories: [category]
-      }
-
-      result = Formatter.format_markdown(report, :default, :github)
-      refute result =~ "**Why:**"
-      assert result =~ "**Where:**"
-    end
-
-    test "renders Where row as 'line N (type)'" do
-      result = Formatter.format_markdown(report_with_enriched_cosine(), :default, :github)
-      assert result =~ "**Where:** line 89 (block), line 134 (block)"
-    end
-
-    test "omits Where row when top_nodes is empty" do
-      category = %{
-        @enriched_cosine_category
-        | behaviors: [
-            %{
-              behavior: "no_boolean_parameter",
-              cosine: -0.5,
-              score: 42,
-              grade: "D+",
-              worst_offenders: [
-                %{
-                  file: "lib/foo.ex",
-                  cosine: -0.5,
-                  top_metrics: [%{metric: "branching.mean_depth", contribution: -4.10}],
-                  top_nodes: []
-                }
-              ]
-            }
-          ]
-      }
-
-      report = %{
-        metadata: %{
-          path: "/home/user/project",
-          timestamp: "2026-03-11T00:00:00Z",
-          total_files: 10
-        },
-        overall_score: 42,
-        overall_grade: "D+",
-        categories: [category]
-      }
-
-      result = Formatter.format_markdown(report, :default, :github)
-      refute result =~ "**Where:**"
-      assert result =~ "**Why:**"
-    end
-
-    test "omits Where row when top_nodes key is absent" do
-      category = %{
-        @enriched_cosine_category
-        | behaviors: [
-            %{
-              behavior: "no_boolean_parameter",
-              cosine: -0.5,
-              score: 42,
-              grade: "D+",
-              worst_offenders: [
-                %{file: "lib/foo.ex", cosine: -0.5}
-              ]
-            }
-          ]
-      }
-
-      report = %{
-        metadata: %{
-          path: "/home/user/project",
-          timestamp: "2026-03-11T00:00:00Z",
-          total_files: 10
-        },
-        overall_score: 42,
-        overall_grade: "D+",
-        categories: [category]
-      }
-
-      result = Formatter.format_markdown(report, :default, :github)
-      refute result =~ "**Where:**"
-    end
-
-    test "does not render old table format" do
-      result = Formatter.format_markdown(report_with_enriched_cosine(), :default, :github)
-      refute result =~ "| File | Cosine |"
-    end
-
-    test "omits Fix row when cosine fix_hint is nil" do
-      category = %{
-        type: :cosine,
-        key: "nonexistent",
-        name: "Nonexistent",
-        score: 50,
-        grade: "C",
-        impact: 1,
-        behaviors: [
+        path: "lib/foo.ex",
+        status: "modified",
+        blocks: [
           %{
-            behavior: "nonexistent_behavior",
-            cosine: -0.5,
-            score: 42,
-            grade: "D+",
-            worst_offenders: [
-              %{
-                file: "lib/foo.ex",
-                cosine: -0.5,
-                top_metrics: [%{metric: "some.metric", contribution: -1.0}],
-                top_nodes: []
-              }
-            ]
+            start_line: 42,
+            end_line: 67,
+            type: "code",
+            token_count: 84,
+            potentials: [@block_potential]
           }
         ]
       }
+    ]
 
-      report = %{
-        metadata: %{
-          path: "/home/user/project",
-          timestamp: "2026-03-11T00:00:00Z",
-          total_files: 10
-        },
-        overall_score: 42,
-        overall_grade: "D+",
-        categories: [category]
-      }
+    @report_with_blocks_gh Map.put(@sample_report, :top_blocks, @top_blocks_gh)
 
-      result = Formatter.format_markdown(report, :default, :github)
-      refute result =~ "**Fix:**"
-    end
-
-    test "renders Fix row for cosine when hint is present" do
-      category = %{
-        type: :cosine,
-        key: "variable_naming",
-        name: "Variable Naming",
-        score: 50,
-        grade: "C",
-        impact: 1,
-        behaviors: [
-          %{
-            behavior: "name_is_generic",
-            cosine: -0.5,
-            score: 42,
-            grade: "D+",
-            worst_offenders: [
-              %{
-                file: "lib/foo.ex",
-                cosine: -0.5,
-                top_metrics: [%{metric: "some.metric", contribution: -1.0}],
-                top_nodes: []
-              }
-            ]
-          }
-        ]
-      }
-
-      report = %{
-        metadata: %{
-          path: "/home/user/project",
-          timestamp: "2026-03-11T00:00:00Z",
-          total_files: 10
-        },
-        overall_score: 42,
-        overall_grade: "D+",
-        categories: [category]
-      }
-
-      result = Formatter.format_markdown(report, :default, :github)
-      assert result =~ "**Fix:**"
-    end
-
-    test "snapshot: full enriched cosine offender card" do
-      result = Formatter.format_markdown(report_with_enriched_cosine(), :default, :github)
+    test "renders block section with details wrapper per file" do
+      result = Formatter.format_markdown(@report_with_blocks_gh, :default, :github)
+      assert result =~ "Blocks"
       assert result =~ "<details>"
-      assert result =~ "<summary>"
-      assert result =~ "**Why:**"
-      assert result =~ "↓"
-      assert result =~ "**Where:**"
-      assert result =~ "line"
-      assert result =~ "("
-      assert result =~ "</details>"
+      assert result =~ "lib/foo.ex"
+      assert result =~ "modified"
+    end
+
+    test "renders severity and fix hint" do
+      result = Formatter.format_markdown(@report_with_blocks_gh, :default, :github)
+      assert result =~ "🔴"
+      assert result =~ "cyclomatic_complexity_under_10"
+      assert result =~ "Reduce branching"
     end
   end
 
-  describe "github threshold worst offender <details> cards" do
-    defp report_with_enriched_threshold do
-      %{
-        metadata: %{
-          path: "/home/user/project",
-          timestamp: "2026-03-11T00:00:00Z",
-          total_files: 10
-        },
-        overall_score: 32,
-        overall_grade: "F",
-        categories: [@enriched_threshold_category]
-      }
-    end
+  describe "github formatter: PR summary and delta" do
+    @pr_summary_gh %{
+      base_score: 85,
+      head_score: 77,
+      score_delta: -8,
+      base_grade: "B+",
+      head_grade: "C+",
+      blocks_flagged: 6,
+      files_changed: 3,
+      files_added: 1,
+      files_modified: 2
+    }
 
-    test "renders <details> card for each threshold worst offender" do
-      result = Formatter.format_markdown(report_with_enriched_threshold(), :default, :github)
-      assert result =~ "<details>"
-      assert result =~ "<code>lib/foo.ex</code>"
-    end
+    @delta_gh %{
+      base: %{aggregate: %{"readability" => %{"mean_flesch_adapted" => 65.0}}},
+      head: %{aggregate: %{"readability" => %{"mean_flesch_adapted" => 61.0}}}
+    }
 
-    test "summary line includes lines, size and grade" do
-      result = Formatter.format_markdown(report_with_enriched_threshold(), :default, :github)
-      assert result =~ "491 lines"
-      assert result =~ "F (32)"
-    end
-
-    test "renders Why row with · separator for threshold metrics" do
-      result = Formatter.format_markdown(report_with_enriched_threshold(), :default, :github)
-      assert result =~ "**Why:** ↓ difficulty=99.00 (avg: 39.00)"
-    end
-
-    test "renders Where row for threshold worst offenders" do
-      result = Formatter.format_markdown(report_with_enriched_threshold(), :default, :github)
-      assert result =~ "**Where:** line 201 (block), line 312 (block)"
-    end
-
-    test "renders Fix row from Categories.defaults when hint available" do
-      result = Formatter.format_markdown(report_with_enriched_threshold(), :default, :github)
-      assert result =~ "**Fix:** High operator/operand ratio"
-    end
-
-    test "omits Where row when top_nodes is empty" do
-      category = %{
-        @enriched_threshold_category
-        | worst_offenders: [
-            %{
-              path: "lib/bar.ex",
-              score: 32,
-              grade: "F",
-              lines: 100,
-              bytes: 3000,
-              metric_scores: [
-                %{name: "difficulty", source: "halstead", good: :low, value: 99.0, score: 0}
-              ],
-              top_nodes: []
-            }
-          ]
-      }
-
-      report = %{
-        metadata: %{
-          path: "/home/user/project",
-          timestamp: "2026-03-11T00:00:00Z",
-          total_files: 10
-        },
-        overall_score: 32,
-        overall_grade: "F",
-        categories: [category]
-      }
-
+    test "renders PR summary" do
+      report = @sample_report |> Map.put(:pr_summary, @pr_summary_gh)
       result = Formatter.format_markdown(report, :default, :github)
-      refute result =~ "**Where:**"
+      assert result =~ "B+"
+      assert result =~ "C+"
+      assert result =~ "-8"
     end
 
-    test "does not render old table format" do
-      result = Formatter.format_markdown(report_with_enriched_threshold(), :default, :github)
-      refute result =~ "| File | Grade | Issues |"
-    end
-
-    test "omits Fix row when threshold fix_hint is nil" do
-      category = %{
-        @enriched_threshold_category
-        | worst_offenders: [
-            %{
-              path: "lib/bar.ex",
-              score: 10,
-              grade: "F",
-              lines: 200,
-              bytes: 6000,
-              metric_scores: [
-                %{
-                  name: "nonexistent_metric",
-                  source: "nonexistent_source",
-                  good: :low,
-                  value: 99.0,
-                  score: 10
-                }
-              ],
-              top_nodes: []
-            }
-          ]
-      }
-
-      report = %{
-        metadata: %{
-          path: "/home/user/project",
-          timestamp: "2026-03-11T00:00:00Z",
-          total_files: 10
-        },
-        overall_score: 10,
-        overall_grade: "F",
-        categories: [category]
-      }
-
+    test "renders delta section" do
+      report = @sample_report |> Map.put(:codebase_delta, @delta_gh)
       result = Formatter.format_markdown(report, :default, :github)
-      refute result =~ "**Fix:**"
-    end
-
-    test "snapshot: full enriched threshold offender card" do
-      result = Formatter.format_markdown(report_with_enriched_threshold(), :default, :github)
-      assert result =~ "<details>"
-      assert result =~ "<summary>"
-      assert result =~ "**Why:**"
-      assert result =~ "**Where:**"
-      assert result =~ "</details>"
+      assert result =~ "Metric Changes"
+      assert result =~ "65.00"
+      assert result =~ "61.00"
     end
   end
 end

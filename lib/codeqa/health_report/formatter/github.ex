@@ -11,11 +11,14 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     display_categories = merge_cosine_categories(report.categories)
 
     [
+      pr_summary_section(Map.get(report, :pr_summary)),
       header(report),
       cosine_legend(),
+      delta_section(Map.get(report, :codebase_delta)),
       if(chart?, do: mermaid_chart(display_categories), else: []),
       progress_bars(display_categories),
       top_issues_section(Map.get(report, :top_issues, []), detail),
+      blocks_section(Map.get(report, :top_blocks, [])),
       category_sections(display_categories, detail),
       footer()
     ]
@@ -230,7 +233,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     summary_table ++ [""] ++ sub_sections
   end
 
-  defp cosine_section_content(cat, detail) do
+  defp cosine_section_content(cat, _detail) do
     n = length(cat.behaviors)
 
     behaviors_rows =
@@ -246,112 +249,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       | behaviors_rows
     ]
 
-    offenders_sections = cosine_worst_offenders(cat, detail)
-
-    behaviors_table ++ [""] ++ offenders_sections
-  end
-
-  defp cosine_worst_offenders(_cat, :summary), do: []
-
-  defp cosine_worst_offenders(cat, _detail) do
-    Enum.flat_map(cat.behaviors, fn b ->
-      offenders = Map.get(b, :worst_offenders, [])
-
-      if offenders == [] do
-        []
-      else
-        fix_hint = cosine_fix_hint(cat.key, b.behavior)
-
-        cards =
-          Enum.flat_map(offenders, fn f ->
-            score_str = format_cosine_score(f.cosine)
-            summary = "<code>#{f.file}</code> — #{score_str}"
-
-            why_line = format_why_line(Map.get(f, :top_metrics, []))
-            where_line = format_where_line(Map.get(f, :top_nodes, []))
-            fix_line = if fix_hint, do: "**Fix:** #{fix_hint}", else: nil
-
-            body_lines =
-              [why_line, where_line, fix_line]
-              |> Enum.reject(&is_nil/1)
-
-            if body_lines == [] do
-              [
-                "<details>",
-                "<summary>#{summary}</summary>",
-                "",
-                "</details>",
-                ""
-              ]
-            else
-              [
-                "<details>",
-                "<summary>#{summary}</summary>",
-                ""
-              ] ++
-                body_lines ++
-                [
-                  "",
-                  "</details>",
-                  ""
-                ]
-            end
-          end)
-
-        ["**Worst Offenders: #{b.behavior}**", "" | cards]
-      end
-    end)
-  end
-
-  defp cosine_fix_hint(category_key, behavior) do
-    yaml_path = "priv/combined_metrics/#{category_key}.yml"
-
-    case YamlElixir.read_from_file(yaml_path) do
-      {:ok, data} ->
-        get_in(data, [behavior, "_fix_hint"])
-
-      {:error, reason} ->
-        require Logger
-        Logger.debug("cosine_fix_hint: could not read #{yaml_path}: #{inspect(reason)}")
-        nil
-    end
-  end
-
-  defp format_cosine_score(cosine) when cosine < 0,
-    do: "−#{format_num(abs(cosine))}"
-
-  defp format_cosine_score(cosine), do: format_num(cosine)
-
-  defp format_why_line([]), do: nil
-
-  defp format_why_line(top_metrics) do
-    parts =
-      Enum.map(top_metrics, fn %{metric: metric, contribution: contribution} ->
-        sign = if contribution < 0, do: "↓", else: "↑"
-        abs_val = abs(contribution)
-
-        value_str =
-          if contribution < 0,
-            do: "−#{format_num(abs_val)}",
-            else: "+#{format_num(abs_val)}"
-
-        "#{sign} #{metric} (#{value_str})"
-      end)
-
-    "**Why:** #{Enum.join(parts, ", ")}"
-  end
-
-  defp format_where_line([]), do: nil
-
-  defp format_where_line(top_nodes) do
-    parts =
-      Enum.map(top_nodes, fn node ->
-        line = node["start_line"] || "?"
-        type = node["type"] || "unknown"
-        "line #{line} (#{type})"
-      end)
-
-    "**Where:** #{Enum.join(parts, ", ")}"
+    behaviors_table ++ [""]
   end
 
   defp section_content(cat, _detail) do
@@ -378,84 +276,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       "Codebase averages: #{metric_summary}",
       ""
       | metrics_table
-    ] ++ [""] ++ worst_offenders(cat)
-  end
-
-  defp worst_offenders(cat) do
-    # TODO(option-c): the flat issues list alternative would replace the per-category worst offenders loop with a single table sorted by severity: each row is one specific issue at one location (file:line — behavior — fix), not one file with multiple behaviors collapsed into it.
-    offenders = Map.get(cat, :worst_offenders, [])
-
-    if offenders == [] do
-      []
-    else
-      averages = Map.new(cat.metric_scores, &{&1.name, &1.value})
-
-      cards =
-        Enum.flat_map(offenders, fn f ->
-          size_str = "#{format_lines(f[:lines])} lines · #{format_size(f[:bytes])}"
-          summary = "<code>#{f.path}</code> — #{size_str} — #{f.grade} (#{f.score})"
-
-          why_str = format_threshold_why(f.metric_scores, averages)
-          why_line = if why_str != "", do: "**Why:** #{why_str}", else: nil
-
-          where_line = format_where_line(Map.get(f, :top_nodes, []))
-
-          fix_hint = threshold_fix_hint(f.metric_scores)
-          fix_line = if fix_hint, do: "**Fix:** #{fix_hint}", else: nil
-
-          body_lines =
-            [why_line, where_line, fix_line]
-            |> Enum.reject(&is_nil/1)
-
-          if body_lines == [] do
-            [
-              "<details>",
-              "<summary>#{summary}</summary>",
-              "",
-              "</details>",
-              ""
-            ]
-          else
-            [
-              "<details>",
-              "<summary>#{summary}</summary>",
-              ""
-            ] ++
-              body_lines ++
-              [
-                "",
-                "</details>",
-                ""
-              ]
-          end
-        end)
-
-      ["**Worst Offenders**", "" | cards]
-    end
-  end
-
-  defp format_threshold_why(metric_scores, averages) do
-    Enum.map_join(metric_scores, " · ", fn m ->
-      avg = Map.get(averages, m.name)
-      avg_str = if avg, do: " (avg: #{format_num(avg)})", else: ""
-      "#{direction(m.good)}#{m.name}=#{format_num(m.value)}#{avg_str}"
-    end)
-  end
-
-  defp threshold_fix_hint(metric_scores) do
-    worst = Enum.min_by(metric_scores, & &1.score, fn -> nil end)
-
-    if worst do
-      categories = CodeQA.HealthReport.Categories.defaults()
-      all_metrics = Enum.flat_map(categories, & &1.metrics)
-
-      found =
-        Enum.find(all_metrics, fn m ->
-          m.name == worst.name and m.source == worst.source
-        end)
-
-      if found, do: Map.get(found, :fix_hint), else: nil
-    end
+    ] ++ [""]
   end
 
   defp top_issues_section([], _detail), do: []
@@ -504,20 +325,119 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
   defp extract_project_name(_), do: "unknown"
 
-  defp direction(:high), do: "↑ "
-  defp direction(_), do: "↓ "
-
-  defp format_lines(nil), do: "—"
-  defp format_lines(n), do: to_string(n)
-
-  defp format_size(nil), do: "—"
-  defp format_size(bytes) when bytes < 1024, do: "#{bytes} B"
-  defp format_size(bytes), do: "#{Float.round(bytes / 1024, 1)} KB"
-
   defp format_num(value) when is_float(value), do: :erlang.float_to_binary(value, decimals: 2)
   defp format_num(value) when is_integer(value), do: to_string(value)
   defp format_num(value), do: to_string(value)
 
   defp format_date(timestamp) when is_binary(timestamp), do: String.slice(timestamp, 0, 10)
   defp format_date(_), do: "unknown"
+
+  defp pr_summary_section(nil), do: []
+
+  defp pr_summary_section(summary) do
+    delta_str =
+      if summary.score_delta >= 0,
+        do: "+#{summary.score_delta}",
+        else: "#{summary.score_delta}"
+
+    status_str = "#{summary.files_modified} modified, #{summary.files_added} added"
+
+    [
+      "> **Score:** #{summary.base_grade} → #{summary.head_grade}  |  **Δ** #{delta_str} pts  |  **#{summary.blocks_flagged}** blocks flagged across #{summary.files_changed} files  |  #{status_str}",
+      ""
+    ]
+  end
+
+  defp delta_section(nil), do: []
+
+  defp delta_section(delta) do
+    base_agg = delta.base.aggregate
+    head_agg = delta.head.aggregate
+
+    metrics = [
+      {"Readability", "readability", "mean_flesch_adapted"},
+      {"Complexity", "halstead", "mean_difficulty"},
+      {"Duplication", "compression", "mean_redundancy"},
+      {"Structure", "branching", "mean_branch_count"}
+    ]
+
+    rows =
+      Enum.flat_map(metrics, fn {label, group, key} ->
+        base_val = get_in(base_agg, [group, key])
+        head_val = get_in(head_agg, [group, key])
+
+        if is_number(base_val) and is_number(head_val) do
+          diff = Float.round(head_val - base_val, 2)
+          diff_str = if diff >= 0, do: "+#{format_num(diff)}", else: "#{format_num(diff)}"
+          ["| #{label} | #{format_num(base_val)} | #{format_num(head_val)} | #{diff_str} |"]
+        else
+          []
+        end
+      end)
+
+    if rows == [] do
+      []
+    else
+      [
+        "## Metric Changes",
+        "",
+        "| Category | Base | Head | Δ |",
+        "|----------|------|------|---|"
+        | rows
+      ] ++ [""]
+    end
+  end
+
+  defp blocks_section([]), do: []
+
+  defp blocks_section(top_blocks) do
+    total = Enum.sum(Enum.map(top_blocks, fn g -> length(g.blocks) end))
+
+    file_cards =
+      Enum.flat_map(top_blocks, fn group ->
+        status_str = if group.status, do: " [#{group.status}]", else: ""
+        summary_line = "🔍 #{group.path}#{status_str} — #{length(group.blocks)} block(s)"
+
+        block_lines =
+          Enum.flat_map(group.blocks, fn block ->
+            end_line = block.end_line || block.start_line
+
+            potential_lines =
+              Enum.flat_map(block.potentials, fn p ->
+                icon = severity_icon(p.severity)
+                delta_str = format_num(p.cosine_delta)
+                label = String.upcase(to_string(p.severity))
+                line = "**#{icon} #{label}** `#{p.category}/#{p.behavior}` (Δ #{delta_str})"
+                fix = if p.fix_hint, do: ["> #{p.fix_hint}"], else: []
+                [line | fix]
+              end)
+
+            [
+              "**lines #{block.start_line}–#{end_line}** · #{block.type} · #{block.token_count} tokens"
+            ] ++
+              potential_lines ++ [""]
+          end)
+
+        inner = List.flatten(block_lines) |> Enum.join("\n")
+
+        [
+          "<details>",
+          "<summary>#{summary_line}</summary>",
+          "",
+          inner,
+          "</details>",
+          ""
+        ]
+      end)
+
+    [
+      "## 🔍 Blocks  (#{total} flagged across #{length(top_blocks)} files)",
+      ""
+      | file_cards
+    ]
+  end
+
+  defp severity_icon(:critical), do: "🔴"
+  defp severity_icon(:high), do: "🟠"
+  defp severity_icon(:medium), do: "🟡"
 end
