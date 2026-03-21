@@ -166,6 +166,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
 
     %{
       "start_line" => node.start_line,
+      "end_line" => node.end_line,
       "column_start" => (first_token && first_token.col) || 0,
       "char_length" => char_length,
       "type" => Atom.to_string(node.type),

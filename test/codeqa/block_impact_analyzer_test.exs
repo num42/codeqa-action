@@ -41,6 +41,7 @@ defmodule CodeQA.BlockImpactAnalyzerTest do
 
       Enum.each(nodes, fn node ->
         assert Map.has_key?(node, "start_line")
+        assert Map.has_key?(node, "end_line")
         assert Map.has_key?(node, "column_start")
         assert Map.has_key?(node, "char_length")
         assert Map.has_key?(node, "type")
