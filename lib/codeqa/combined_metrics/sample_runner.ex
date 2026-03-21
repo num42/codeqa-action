@@ -6,14 +6,14 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   manual scalar tuning of combined metric formulas.
   """
 
-  alias CodeQA.CombinedMetrics.Scorer
-  alias CodeQA.Engine.Analyzer
-  alias CodeQA.Engine.Collector
+  alias CodeQA.CombinedMetrics.{CosineVector, ScalarApplier, Scorer}
+  alias CodeQA.Engine.{Analyzer, Collector}
 
   @samples_root "priv/combined_metrics/samples"
-  @yaml_dir "priv/combined_metrics"
-  @deadzone_low 0.995
-  @deadzone_high 1.005
+
+  # ---------------------------------------------------------------------------
+  # Public API
+  # ---------------------------------------------------------------------------
 
   @doc """
   Runs all behaviors found in sample directories, optionally filtered by category.
@@ -40,12 +40,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     filter_category = opts[:category]
 
     @samples_root
-    |> File.ls!()
-    |> Enum.flat_map(fn category ->
-      Path.join([@samples_root, category])
-      |> File.ls!()
-      |> Enum.map(&{category, &1})
-    end)
+    |> list_behaviors()
     |> Enum.filter(fn {category, behavior} ->
       (filter_category == nil or category == filter_category) and
         has_both_dirs?(category, behavior)
@@ -53,62 +48,6 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     |> Enum.map(fn {category, behavior} ->
       score_behavior(category, behavior, opts)
     end)
-  end
-
-  defp has_both_dirs?(category, behavior) do
-    File.dir?(sample_path(category, behavior, "bad")) and
-      File.dir?(sample_path(category, behavior, "good"))
-  end
-
-  defp score_behavior(category, behavior, opts) do
-    yaml_path = "priv/combined_metrics/#{category}.yml"
-    bad_agg = analyze(sample_path(category, behavior, "bad"))
-    good_agg = analyze(sample_path(category, behavior, "good"))
-
-    bad_score = Scorer.compute_score(yaml_path, behavior, bad_agg)
-    good_score = Scorer.compute_score(yaml_path, behavior, good_agg)
-    ratio = if bad_score > 0, do: good_score / bad_score, else: 0.0
-
-    base = %{
-      category: category,
-      behavior: behavior,
-      bad_score: bad_score,
-      good_score: good_score,
-      ratio: Float.round(ratio, 2),
-      direction_ok: good_score >= bad_score
-    }
-
-    if opts[:verbose] do
-      Map.put(base, :metric_detail, metric_detail(yaml_path, behavior, bad_agg, good_agg))
-    else
-      Map.put(base, :metric_detail, [])
-    end
-  end
-
-  defp analyze(dir) do
-    dir
-    |> Collector.collect_files()
-    |> Analyzer.analyze_codebase()
-    |> get_in(["codebase", "aggregate"])
-  end
-
-  defp metric_detail(yaml_path, behavior, bad_agg, good_agg) do
-    Scorer.scalars_for(yaml_path, behavior)
-    |> Enum.map(fn {{group, key}, scalar} ->
-      bad_val = Scorer.get(bad_agg, group, key)
-      good_val = Scorer.get(good_agg, group, key)
-      ratio = if bad_val > 0, do: Float.round(good_val / bad_val, 2), else: 0.0
-
-      %{
-        group: group,
-        key: key,
-        scalar: scalar,
-        bad: bad_val,
-        good: good_val,
-        ratio: ratio
-      }
-    end)
-    |> Enum.sort_by(&abs(&1.ratio - 1.0), :desc)
   end
 
   @doc """
@@ -144,56 +83,13 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     filter_category = opts[:category]
 
     @samples_root
-    |> File.ls!()
-    |> Enum.flat_map(fn category ->
-      Path.join([@samples_root, category])
-      |> File.ls!()
-      |> Enum.map(&{category, &1})
-    end)
+    |> list_behaviors()
     |> Enum.filter(fn {category, behavior} ->
       (filter_category == nil or category == filter_category) and
         has_both_dirs?(category, behavior)
     end)
     |> Map.new(fn {category, behavior} ->
       {"#{category}.#{behavior}", behavior_metric_table(category, behavior)}
-    end)
-  end
-
-  defp behavior_metric_table(category, behavior) do
-    bad_agg = analyze(sample_path(category, behavior, "bad"))
-    good_agg = analyze(sample_path(category, behavior, "good"))
-
-    entries =
-      Scorer.default_scalars()
-      |> Map.keys()
-      |> Enum.map(fn {group, key} ->
-        bad_val = Scorer.get(bad_agg, group, key)
-        good_val = Scorer.get(good_agg, group, key)
-        log_bad = :math.log(bad_val)
-        log_good = :math.log(good_val)
-        ratio = good_val / bad_val
-        log_diff = log_good - log_bad
-        {"#{group}.#{key}", bad_val, good_val, log_bad, log_good, ratio, log_diff}
-      end)
-
-    max_abs_log_diff =
-      entries
-      |> Enum.map(fn {_, _, _, _, _, _, ld} -> abs(ld) end)
-      |> Enum.max(fn -> 1.0 end)
-      |> max(1.0e-10)
-
-    Map.new(entries, fn {metric_key, bad_val, good_val, log_bad, log_good, ratio, log_diff} ->
-      suggested_scalar = Float.round(2.0 * log_diff / max_abs_log_diff, 4)
-
-      {metric_key,
-       %{
-         bad: r4(bad_val),
-         good: r4(good_val),
-         log_bad: r4(log_bad),
-         log_good: r4(log_good),
-         ratio: r4(ratio),
-         suggested_scalar: suggested_scalar
-       }}
     end)
   end
 
@@ -246,12 +142,6 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     end)
   end
 
-  defp humanize(slug) do
-    slug
-    |> String.split("_")
-    |> Enum.map_join(" ", &String.capitalize/1)
-  end
-
   @doc """
   Identifies the most likely code quality issues in an aggregate by cosine similarity.
 
@@ -298,7 +188,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
       data
       |> Enum.filter(fn {_k, v} -> is_map(v) end)
       |> Enum.flat_map(fn {behavior, behavior_data} ->
-        maybe_score_behavior(
+        maybe_diagnose_behavior(
           yaml_path,
           behavior,
           behavior_data,
@@ -317,9 +207,9 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   Applies suggested scalars from sample analysis back to the YAML config files.
 
   For each behavior that has sample data, rewrites its scalar entries using the
-  log-linear suggestion method. Metrics whose ratio falls in the deadzone
-  (#{@deadzone_low} ≤ ratio ≤ #{@deadzone_high}) are excluded. All non-deadzoned
-  metrics are written, even if they were not previously present in the YAML.
+  log-linear suggestion method. Metrics whose ratio falls in the deadzone are
+  excluded. All non-deadzoned metrics are written, even if they were not
+  previously present in the YAML.
 
   Behaviors without sample data are left unchanged.
 
@@ -328,286 +218,8 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   @spec apply_scalars(keyword()) :: [map()]
   def apply_scalars(opts \\ []) do
     report = build_metric_report(opts)
-    filter_category = opts[:category]
-
-    @yaml_dir
-    |> File.ls!()
-    |> Enum.filter(fn yml_file ->
-      String.ends_with?(yml_file, ".yml") and
-        (filter_category == nil or String.trim_trailing(yml_file, ".yml") == filter_category)
-    end)
-    |> Enum.sort()
-    |> Enum.map(fn yml_file ->
-      category = String.trim_trailing(yml_file, ".yml")
-      yaml_path = Path.join(@yaml_dir, yml_file)
-      {:ok, existing} = YamlElixir.read_from_file(yaml_path)
-
-      {updated_yaml, stats} = apply_to_category(existing, category, report)
-      File.write!(yaml_path, format_yaml(updated_yaml))
-
-      Map.put(stats, :category, category)
-    end)
+    ScalarApplier.apply_scalars(report, opts)
   end
-
-  defp apply_to_category(existing, category, report) do
-    existing
-    |> Enum.filter(fn {_k, v} -> is_map(v) end)
-    |> Enum.reduce({%{}, %{updated: 0, deadzoned: 0, skipped: 0}}, fn
-      {behavior, current_groups}, {acc_yaml, stats} ->
-        report_key = "#{category}.#{behavior}"
-        doc = read_behavior_doc(category, behavior)
-
-        case Map.get(report, report_key) do
-          nil ->
-            groups = maybe_put_doc(current_groups, doc)
-            {Map.put(acc_yaml, behavior, groups), Map.update!(stats, :skipped, &(&1 + 1))}
-
-          metrics ->
-            apply_metrics(acc_yaml, stats, behavior, current_groups, metrics, doc)
-        end
-    end)
-  end
-
-  defp apply_metrics(acc_yaml, stats, behavior, current_groups, metrics, doc) do
-    {new_groups, log_baseline, n_updated, n_deadzoned} = groups_from_report(metrics)
-    # Fall back to current groups if everything was deadzoned
-    base_groups = if map_size(new_groups) > 0, do: new_groups, else: current_groups
-
-    groups =
-      base_groups
-      |> Map.put("_log_baseline", Float.round(log_baseline, 6))
-      |> maybe_put_doc(doc)
-
-    {Map.put(acc_yaml, behavior, groups),
-     %{
-       stats
-       | updated: stats.updated + n_updated,
-         deadzoned: stats.deadzoned + n_deadzoned
-     }}
-  end
-
-  defp read_behavior_doc(category, behavior) do
-    config_path = Path.join([@samples_root, category, behavior, "config.yml"])
-
-    case File.read(config_path) do
-      {:ok, content} ->
-        case YamlElixir.read_from_string(content) do
-          {:ok, %{"doc" => doc}} when is_binary(doc) -> doc
-          _ -> nil
-        end
-
-      _ ->
-        nil
-    end
-  end
-
-  defp maybe_put_doc(groups, nil), do: groups
-  defp maybe_put_doc(groups, doc), do: Map.put(groups, "_doc", doc)
-
-  defp groups_from_report(metrics) do
-    Enum.reduce(metrics, {%{}, 0.0, 0, 0}, fn {metric_key, data},
-                                              {groups, log_baseline, n_updated, n_deadzoned} ->
-      [group, key] = String.split(metric_key, ".", parts: 2)
-
-      if deadzone?(data.ratio) do
-        {groups, log_baseline, n_updated, n_deadzoned + 1}
-      else
-        accumulate_metric(groups, log_baseline, n_updated, n_deadzoned, group, key, data)
-      end
-    end)
-  end
-
-  defp accumulate_metric(groups, log_baseline, n_updated, n_deadzoned, group, key, data) do
-    new_groups =
-      Map.update(
-        groups,
-        group,
-        %{key => data.suggested_scalar},
-        &Map.put(&1, key, data.suggested_scalar)
-      )
-
-    # Baseline: expected log score at the geometric mean of good/bad sample values
-    geo_mean = :math.sqrt(max(data.bad, 1.0e-10) * max(data.good, 1.0e-10))
-    new_baseline = log_baseline + data.suggested_scalar * :math.log(geo_mean)
-    {new_groups, new_baseline, n_updated + 1, n_deadzoned}
-  end
-
-  defp deadzone?(ratio), do: ratio >= @deadzone_low and ratio <= @deadzone_high
-
-  defp maybe_score_behavior(
-         yaml_path,
-         behavior,
-         behavior_data,
-         aggregate,
-         category,
-         language,
-         languages
-       ) do
-    behavior_langs = Map.get(behavior_data, "_languages", [])
-
-    if behavior_language_applies?(behavior_langs, language, languages) do
-      score_behavior_cosine(yaml_path, behavior, behavior_data, aggregate, category)
-    else
-      []
-    end
-  end
-
-  defp score_behavior_cosine(yaml_path, behavior, behavior_data, aggregate, category) do
-    scalars = Scorer.scalars_for(yaml_path, behavior)
-
-    if map_size(scalars) == 0 do
-      []
-    else
-      build_cosine_result(yaml_path, behavior, behavior_data, aggregate, category, scalars)
-    end
-  end
-
-  defp build_cosine_result(yaml_path, behavior, behavior_data, aggregate, category, scalars) do
-    log_baseline = Map.get(behavior_data, "_log_baseline", 0.0) / 1.0
-
-    {dot, norm_s_sq, norm_v_sq, contributions} =
-      Enum.reduce(scalars, {0.0, 0.0, 0.0, []}, fn {{group, key}, scalar},
-                                                   {d, ns, nv, contribs} ->
-        log_m = :math.log(Scorer.get(aggregate, group, key))
-        contrib = scalar * log_m
-
-        {d + contrib, ns + scalar * scalar, nv + log_m * log_m,
-         [{:"#{group}.#{key}", contrib} | contribs]}
-      end)
-
-    cos_sim =
-      if norm_s_sq > 0 and norm_v_sq > 0,
-        do: dot / (:math.sqrt(norm_s_sq) * :math.sqrt(norm_v_sq)),
-        else: 0.0
-
-    raw_score = Scorer.compute_score(yaml_path, behavior, aggregate)
-    calibrated = :math.log(max(raw_score, 1.0e-300)) - log_baseline
-
-    top_metrics =
-      contributions
-      |> Enum.sort_by(fn {_, c} -> c end)
-      |> Enum.take(5)
-      |> Enum.map(fn {metric, contribution} ->
-        %{metric: to_string(metric), contribution: Float.round(contribution, 4)}
-      end)
-
-    [
-      %{
-        category: category,
-        behavior: behavior,
-        cosine: Float.round(cos_sim, 4),
-        score: Float.round(calibrated, 4),
-        top_metrics: top_metrics
-      }
-    ]
-  end
-
-  # Returns true if the behavior should be included for the given language context.
-  # behavior_langs: the "_languages" list from the YAML ([] = applies to all)
-  # language: single language string from :language opt (nil = no filter)
-  # languages: project language list from :languages opt (nil = no filter)
-  defp behavior_language_applies?(_behavior_langs, nil, nil), do: true
-
-  # Empty behavior_langs means "applies to all languages" — always include.
-  # This clause takes priority over all non-nil filter cases.
-  defp behavior_language_applies?([], _language, _languages), do: true
-
-  defp behavior_language_applies?(_behavior_langs, nil, []), do: true
-
-  defp behavior_language_applies?(behavior_langs, language, nil) when is_binary(language),
-    do: language in behavior_langs
-
-  defp behavior_language_applies?(behavior_langs, nil, languages) when is_list(languages),
-    do: Enum.any?(behavior_langs, &(&1 in languages))
-
-  defp behavior_language_applies?(behavior_langs, language, languages)
-       when is_binary(language) and is_list(languages),
-       do: language in behavior_langs or Enum.any?(behavior_langs, &(&1 in languages))
-
-  defp format_yaml(data) do
-    lines =
-      data
-      |> Enum.sort_by(fn {behavior, _} -> behavior end)
-      |> Enum.flat_map(fn {behavior, groups} -> format_behavior_lines(behavior, groups) end)
-
-    Enum.join(lines, "\n") <> "\n"
-  end
-
-  defp format_behavior_lines(behavior, groups) do
-    doc_line = yaml_doc_line(Map.get(groups, "_doc"))
-    baseline_line = yaml_baseline_line(Map.get(groups, "_log_baseline"))
-    fix_hint_line = yaml_fix_hint_line(Map.get(groups, "_fix_hint"))
-    languages_line = yaml_languages_line(Map.get(groups, "_languages"))
-    group_lines = format_group_lines(groups)
-
-    ["#{behavior}:" | doc_line] ++
-      fix_hint_line ++ languages_line ++ baseline_line ++ group_lines ++ [""]
-  end
-
-  defp yaml_doc_line(nil), do: []
-  defp yaml_doc_line(doc), do: ["  _doc: #{inspect(doc)}"]
-
-  defp yaml_baseline_line(nil), do: []
-  defp yaml_baseline_line(val), do: ["  _log_baseline: #{fmt_scalar(val)}"]
-
-  defp yaml_fix_hint_line(nil), do: []
-  defp yaml_fix_hint_line(hint), do: ["  _fix_hint: #{inspect(hint)}"]
-
-  defp yaml_languages_line(nil), do: []
-  defp yaml_languages_line([]), do: []
-  defp yaml_languages_line(langs), do: ["  _languages: [#{Enum.join(langs, ", ")}]"]
-
-  defp format_group_lines(groups) do
-    groups
-    |> Enum.filter(fn {k, v} ->
-      k not in ["_doc", "_log_baseline", "_fix_hint", "_languages"] and is_map(v)
-    end)
-    |> Enum.sort_by(fn {group, _} -> group end)
-    |> Enum.flat_map(fn {group, keys} ->
-      key_lines =
-        keys
-        |> Enum.sort_by(fn {key, _} -> key end)
-        |> Enum.map(fn {key, scalar} -> "    #{key}: #{fmt_scalar(scalar)}" end)
-
-      ["  #{group}:" | key_lines]
-    end)
-  end
-
-  defp fmt_scalar(f) when is_float(f), do: :erlang.float_to_binary(f, decimals: 4)
-  defp fmt_scalar(n) when is_integer(n), do: "#{n}.0"
-
-  defp r4(f), do: Float.round(f / 1.0, 4)
-
-  defp sample_path(category, behavior, kind) do
-    Path.join([@samples_root, category, behavior, kind])
-  end
-
-  defp dir_languages(dir) do
-    case File.ls(dir) do
-      {:ok, files} ->
-        files
-        |> Enum.map(&CodeQA.Language.detect/1)
-        |> Enum.map(& &1.name())
-        |> MapSet.new()
-
-      _ ->
-        MapSet.new()
-    end
-  end
-
-  defp languages_for_behavior(category, behavior) do
-    bad_langs = dir_languages(sample_path(category, behavior, "bad"))
-    good_langs = dir_languages(sample_path(category, behavior, "good"))
-
-    bad_langs
-    |> MapSet.intersection(good_langs)
-    |> MapSet.to_list()
-    |> Enum.reject(&(&1 == "unknown"))
-    |> Enum.sort()
-  end
-
-  defp maybe_put_languages(groups, []), do: groups
-  defp maybe_put_languages(groups, langs), do: Map.put(groups, "_languages", langs)
 
   @doc """
   Updates only the `_languages` field in YAML config files based on sample data.
@@ -622,34 +234,176 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   """
   @spec apply_languages(keyword()) :: [map()]
   def apply_languages(opts \\ []) do
-    filter_category = opts[:category]
+    ScalarApplier.apply_languages(opts)
+  end
 
-    @yaml_dir
+  # ---------------------------------------------------------------------------
+  # Sample discovery
+  # ---------------------------------------------------------------------------
+
+  defp list_behaviors(samples_root) do
+    samples_root
     |> File.ls!()
-    |> Enum.filter(fn yml_file ->
-      String.ends_with?(yml_file, ".yml") and
-        (filter_category == nil or String.trim_trailing(yml_file, ".yml") == filter_category)
+    |> Enum.flat_map(fn category ->
+      Path.join([samples_root, category])
+      |> File.ls!()
+      |> Enum.map(&{category, &1})
     end)
-    |> Enum.sort()
-    |> Enum.map(fn yml_file ->
-      category = String.trim_trailing(yml_file, ".yml")
-      yaml_path = Path.join(@yaml_dir, yml_file)
-      {:ok, existing} = YamlElixir.read_from_file(yaml_path)
+  end
 
-      updated =
-        existing
-        |> Enum.filter(fn {_k, v} -> is_map(v) end)
-        |> Map.new(fn {behavior, groups} ->
-          langs = languages_for_behavior(category, behavior)
-          {behavior, maybe_put_languages(groups, langs)}
-        end)
+  defp has_both_dirs?(category, behavior) do
+    File.dir?(sample_path(category, behavior, "bad")) and
+      File.dir?(sample_path(category, behavior, "good"))
+  end
 
-      File.write!(yaml_path, format_yaml(updated))
+  defp sample_path(category, behavior, kind) do
+    Path.join([@samples_root, category, behavior, kind])
+  end
 
-      behaviors_with_languages =
-        Enum.count(updated, fn {_b, groups} -> Map.has_key?(groups, "_languages") end)
+  defp analyze(dir) do
+    dir
+    |> Collector.collect_files()
+    |> Analyzer.analyze_codebase()
+    |> get_in(["codebase", "aggregate"])
+  end
 
-      %{category: category, behaviors_with_languages: behaviors_with_languages}
+  # ---------------------------------------------------------------------------
+  # Sample scoring
+  # ---------------------------------------------------------------------------
+
+  defp score_behavior(category, behavior, opts) do
+    yaml_path = "priv/combined_metrics/#{category}.yml"
+    bad_agg = analyze(sample_path(category, behavior, "bad"))
+    good_agg = analyze(sample_path(category, behavior, "good"))
+
+    bad_score = Scorer.compute_score(yaml_path, behavior, bad_agg)
+    good_score = Scorer.compute_score(yaml_path, behavior, good_agg)
+    ratio = if bad_score > 0, do: good_score / bad_score, else: 0.0
+
+    base = %{
+      category: category,
+      behavior: behavior,
+      bad_score: bad_score,
+      good_score: good_score,
+      ratio: Float.round(ratio, 2),
+      direction_ok: good_score >= bad_score
+    }
+
+    if opts[:verbose] do
+      Map.put(base, :metric_detail, metric_detail(yaml_path, behavior, bad_agg, good_agg))
+    else
+      Map.put(base, :metric_detail, [])
+    end
+  end
+
+  defp metric_detail(yaml_path, behavior, bad_agg, good_agg) do
+    Scorer.scalars_for(yaml_path, behavior)
+    |> Enum.map(fn {{group, key}, scalar} ->
+      bad_val = Scorer.get(bad_agg, group, key)
+      good_val = Scorer.get(good_agg, group, key)
+      ratio = if bad_val > 0, do: Float.round(good_val / bad_val, 2), else: 0.0
+      %{group: group, key: key, scalar: scalar, bad: bad_val, good: good_val, ratio: ratio}
     end)
+    |> Enum.sort_by(&abs(&1.ratio - 1.0), :desc)
+  end
+
+  # ---------------------------------------------------------------------------
+  # Metric report (vector building)
+  # ---------------------------------------------------------------------------
+
+  defp behavior_metric_table(category, behavior) do
+    bad_agg = analyze(sample_path(category, behavior, "bad"))
+    good_agg = analyze(sample_path(category, behavior, "good"))
+
+    entries =
+      Scorer.default_scalars()
+      |> Map.keys()
+      |> Enum.map(fn {group, key} ->
+        bad_val = Scorer.get(bad_agg, group, key)
+        good_val = Scorer.get(good_agg, group, key)
+        log_bad = :math.log(bad_val)
+        log_good = :math.log(good_val)
+        ratio = good_val / bad_val
+        log_diff = log_good - log_bad
+        {"#{group}.#{key}", bad_val, good_val, log_bad, log_good, ratio, log_diff}
+      end)
+
+    max_abs_log_diff =
+      entries
+      |> Enum.map(fn {_, _, _, _, _, _, ld} -> abs(ld) end)
+      |> Enum.max(fn -> 1.0 end)
+      |> max(1.0e-10)
+
+    Map.new(entries, fn {metric_key, bad_val, good_val, log_bad, log_good, ratio, log_diff} ->
+      suggested_scalar = Float.round(2.0 * log_diff / max_abs_log_diff, 4)
+
+      {metric_key,
+       %{
+         bad: r4(bad_val),
+         good: r4(good_val),
+         log_bad: r4(log_bad),
+         log_good: r4(log_good),
+         ratio: r4(ratio),
+         suggested_scalar: suggested_scalar
+       }}
+    end)
+  end
+
+  defp r4(f), do: Float.round(f / 1.0, 4)
+
+  # ---------------------------------------------------------------------------
+  # Cosine diagnosis (delegates vector math to CosineVector)
+  # ---------------------------------------------------------------------------
+
+  defp maybe_diagnose_behavior(
+         yaml_path,
+         behavior,
+         behavior_data,
+         aggregate,
+         category,
+         language,
+         languages
+       ) do
+    behavior_langs = Map.get(behavior_data, "_languages", [])
+
+    if behavior_language_applies?(behavior_langs, language, languages) do
+      CosineVector.compute(yaml_path, behavior, behavior_data, aggregate, category)
+    else
+      []
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Language filtering
+  # ---------------------------------------------------------------------------
+
+  # behavior_langs: the "_languages" list from the YAML ([] = applies to all)
+  # language: single language string from :language opt (nil = no filter)
+  # languages: project language list from :languages opt (nil = no filter)
+  defp behavior_language_applies?(_behavior_langs, nil, nil), do: true
+
+  # Empty behavior_langs means "applies to all languages" — always include.
+  defp behavior_language_applies?([], _language, _languages), do: true
+
+  defp behavior_language_applies?(_behavior_langs, nil, []), do: true
+
+  defp behavior_language_applies?(behavior_langs, language, nil) when is_binary(language),
+    do: language in behavior_langs
+
+  defp behavior_language_applies?(behavior_langs, nil, languages) when is_list(languages),
+    do: Enum.any?(behavior_langs, &(&1 in languages))
+
+  defp behavior_language_applies?(behavior_langs, language, languages)
+       when is_binary(language) and is_list(languages),
+       do: language in behavior_langs or Enum.any?(behavior_langs, &(&1 in languages))
+
+  # ---------------------------------------------------------------------------
+  # Misc
+  # ---------------------------------------------------------------------------
+
+  defp humanize(slug) do
+    slug
+    |> String.split("_")
+    |> Enum.map_join(" ", &String.capitalize/1)
   end
 end

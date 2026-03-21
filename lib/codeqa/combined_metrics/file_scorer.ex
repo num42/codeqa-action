@@ -70,24 +70,7 @@ defmodule CodeQA.CombinedMetrics.FileScorer do
       file_data |> Map.get("metrics", %{}) |> map_size() == 0
     end)
     |> Enum.reduce(%{}, fn {path, file_data}, acc ->
-      top_nodes = Grader.top_3_nodes(Map.get(file_data, "nodes"))
-      language = Language.detect(path).name()
-
-      file_data
-      |> Map.get("metrics", %{})
-      |> file_to_aggregate()
-      |> SampleRunner.diagnose_aggregate(top: 99_999, language: language)
-      |> Enum.reduce(acc, fn %{
-                               category: category,
-                               behavior: behavior,
-                               cosine: cosine,
-                               top_metrics: top_metrics
-                             },
-                             inner_acc ->
-        key = "#{category}.#{behavior}"
-        entry = %{file: path, cosine: cosine, top_metrics: top_metrics, top_nodes: top_nodes}
-        Map.update(inner_acc, key, [entry], &[entry | &1])
-      end)
+      accumulate_file_behaviors(path, file_data, acc)
     end)
     |> Map.new(fn {key, entries} ->
       threshold = Config.cosine_significance_threshold()
@@ -99,6 +82,28 @@ defmodule CodeQA.CombinedMetrics.FileScorer do
         |> Enum.take(top_n)
 
       {key, sorted}
+    end)
+  end
+
+  # Diagnoses a single file's metrics and merges per-behavior entries into the accumulator.
+  defp accumulate_file_behaviors(path, file_data, acc) do
+    top_nodes = Grader.top_3_nodes(Map.get(file_data, "nodes"))
+    language = Language.detect(path).name()
+
+    file_data
+    |> Map.get("metrics", %{})
+    |> file_to_aggregate()
+    |> SampleRunner.diagnose_aggregate(top: 99_999, language: language)
+    |> Enum.reduce(acc, fn %{
+                             category: category,
+                             behavior: behavior,
+                             cosine: cosine,
+                             top_metrics: top_metrics
+                           },
+                           inner_acc ->
+      key = "#{category}.#{behavior}"
+      entry = %{file: path, cosine: cosine, top_metrics: top_metrics, top_nodes: top_nodes}
+      Map.update(inner_acc, key, [entry], &[entry | &1])
     end)
   end
 end

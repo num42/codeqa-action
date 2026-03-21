@@ -13,11 +13,11 @@ defmodule CodeQA.HealthReport.Grader do
   """
   @spec score_metric(map(), number()) :: integer()
   def score_metric(%{good: :high, thresholds: t}, value) do
-    value |> score_high_is_good(t) |> clamp(0, 100)
+    score_by_direction(:high, value, t) |> clamp(0, 100)
   end
 
   def score_metric(%{good: _, thresholds: t}, value) do
-    value |> score_low_is_good(t) |> clamp(0, 100)
+    score_by_direction(:low, value, t) |> clamp(0, 100)
   end
 
   @doc """
@@ -46,28 +46,27 @@ defmodule CodeQA.HealthReport.Grader do
   defp cosine_to_score(c) when c >= -0.3, do: interpolate_between(c, -0.3, 30, 0.0, 50)
   defp cosine_to_score(c), do: interpolate_between(c, -1.0, 0, -0.3, 30)
 
-  # Lower values are better: below A = 100, A = 90, A-B = 70-90, etc.
-  defp score_low_is_good(val, t) do
+  # :low  — lower values are better (t.a < t.b < t.c < t.d); below t.a = 100
+  # :high — higher values are better (t.a > t.b > t.c > t.d); above t.a = 100
+  defp score_by_direction(:low, val, t) do
     cond do
       val < t.a -> 100
       val == t.a -> 90
       val <= t.b -> interpolate_between(val, t.a, 90, t.b, 70)
       val <= t.c -> interpolate_between(val, t.b, 70, t.c, 50)
       val <= t.d -> interpolate_between(val, t.c, 50, t.d, 30)
-      true -> interpolate_below_d(val, t.d, 30)
+      true -> interpolate_beyond_d(val, t.d, 30)
     end
   end
 
-  # Higher values are better: above A = 100, A = 90, A-B = 70-90, etc.
-  # Thresholds are in descending order (a > b > c > d)
-  defp score_high_is_good(val, t) do
+  defp score_by_direction(:high, val, t) do
     cond do
       val > t.a -> 100
       val == t.a -> 90
       val >= t.b -> interpolate_between(val, t.a, 90, t.b, 70)
       val >= t.c -> interpolate_between(val, t.b, 70, t.c, 50)
       val >= t.d -> interpolate_between(val, t.c, 50, t.d, 30)
-      true -> interpolate_below_d_high(val, t.d, 30)
+      true -> interpolate_beyond_d(val, t.d, 30)
     end
   end
 
@@ -82,23 +81,18 @@ defmodule CodeQA.HealthReport.Grader do
     end
   end
 
-  # Value beyond D threshold (low is good): score degrades below 30
-  defp interpolate_below_d(_val, threshold_d, _score_at_d) when threshold_d == 0, do: 0
+  # Score degrades below 30 when value is beyond the D threshold in either direction.
+  # abs(val - threshold_d) captures overshoot for :low and undershoot for :high uniformly.
+  defp interpolate_beyond_d(_val, 0, _score_at_d), do: 0
 
-  defp interpolate_below_d(val, threshold_d, score_at_d) do
-    overshoot = (val - threshold_d) / threshold_d
-    round(Kernel.max(0, score_at_d - overshoot * score_at_d))
+  defp interpolate_beyond_d(val, threshold_d, score_at_d) do
+    deviation = abs(val - threshold_d) / threshold_d
+    round(Kernel.max(0, score_at_d - deviation * score_at_d))
   end
 
-  # Value below D threshold (high is good): score degrades below 30
-  defp interpolate_below_d_high(_val, threshold_d, _score_at_d) when threshold_d == 0, do: 0
-
-  defp interpolate_below_d_high(val, threshold_d, score_at_d) do
-    undershoot = (threshold_d - val) / threshold_d
-    round(Kernel.max(0, score_at_d - undershoot * score_at_d))
+  defp clamp(val, min_val, max_val) do
+    val |> Kernel.max(min_val) |> Kernel.min(max_val)
   end
-
-  defp clamp(val, min_val, max_val), do: val |> Kernel.max(min_val) |> Kernel.min(max_val)
 
   @doc "Convert a numeric score (0-100) to a letter grade using the given scale."
   @spec grade_letter(number(), [{number(), String.t()}]) :: String.t()
@@ -120,31 +114,10 @@ defmodule CodeQA.HealthReport.Grader do
       ) do
     scored =
       category.metrics
-      |> Enum.map(fn metric_def ->
-        value = get_in(file_metrics, [metric_def.source, metric_def.name])
-
-        if value do
-          %{
-            name: metric_def.name,
-            source: metric_def.source,
-            weight: metric_def.weight,
-            good: metric_def.good,
-            value: value,
-            score: score_metric(metric_def, value)
-          }
-        end
-      end)
+      |> Enum.map(&score_metric_entry(&1, file_metrics))
       |> Enum.reject(&is_nil/1)
 
-    total_weight = Enum.reduce(scored, 0.0, fn s, acc -> acc + s.weight end)
-
-    score =
-      if total_weight > 0 do
-        weighted = Enum.reduce(scored, 0.0, fn s, acc -> acc + s.score * s.weight end)
-        round(weighted / total_weight)
-      else
-        0
-      end
+    score = weighted_category_score(scored)
 
     %{
       key: category.key,
@@ -153,6 +126,34 @@ defmodule CodeQA.HealthReport.Grader do
       grade: grade_letter(score, scale),
       metric_scores: scored
     }
+  end
+
+  defp score_metric_entry(metric_def, file_metrics) do
+    value = get_in(file_metrics, [metric_def.source, metric_def.name])
+
+    if value do
+      %{
+        name: metric_def.name,
+        source: metric_def.source,
+        weight: metric_def.weight,
+        good: metric_def.good,
+        value: value,
+        score: score_metric(metric_def, value)
+      }
+    end
+  end
+
+  defp weighted_category_score([]), do: 0
+
+  defp weighted_category_score(scored) do
+    total_weight = Enum.reduce(scored, 0.0, fn s, acc -> acc + s.weight end)
+
+    if total_weight > 0 do
+      weighted = Enum.reduce(scored, 0.0, fn s, acc -> acc + s.score * s.weight end)
+      round(weighted / total_weight)
+    else
+      0
+    end
   end
 
   @doc """
@@ -252,36 +253,46 @@ defmodule CodeQA.HealthReport.Grader do
     |> Enum.group_by(& &1.category)
     |> Enum.map(fn {category, behaviors} ->
       behavior_entries =
-        behaviors
-        |> Enum.reject(fn b -> abs(b.cosine) < threshold end)
-        |> Enum.map(fn b ->
-          cosine_score = score_cosine(b.cosine)
+        score_behavior_entries(behaviors, threshold, worst_files, scale, category)
 
-          %{
-            behavior: b.behavior,
-            cosine: b.cosine,
-            score: cosine_score,
-            grade: grade_letter(cosine_score, scale),
-            worst_offenders: Map.get(worst_files, "#{category}.#{b.behavior}", [])
-          }
-        end)
-
-      category_score =
-        if behavior_entries == [] do
-          50
-        else
-          round(Enum.sum(Enum.map(behavior_entries, & &1.score)) / length(behavior_entries))
-        end
-
-      %{
-        type: :cosine,
-        key: category,
-        name: humanize_category(category),
-        score: category_score,
-        grade: grade_letter(category_score, scale),
-        behaviors: behavior_entries
-      }
+      category_score = average_behavior_score(behavior_entries)
+      build_cosine_category(category, category_score, behavior_entries, scale)
     end)
+  end
+
+  defp score_behavior_entries(behaviors, threshold, worst_files, scale, category) do
+    behaviors
+    |> Enum.reject(fn b -> abs(b.cosine) < threshold end)
+    |> Enum.map(&score_behavior_entry(&1, worst_files, scale, category))
+  end
+
+  defp score_behavior_entry(b, worst_files, scale, category) do
+    cosine_score = score_cosine(b.cosine)
+
+    %{
+      behavior: b.behavior,
+      cosine: b.cosine,
+      score: cosine_score,
+      grade: grade_letter(cosine_score, scale),
+      worst_offenders: Map.get(worst_files, "#{category}.#{b.behavior}", [])
+    }
+  end
+
+  defp average_behavior_score([]), do: 50
+
+  defp average_behavior_score(entries) do
+    round(Enum.sum(Enum.map(entries, & &1.score)) / length(entries))
+  end
+
+  defp build_cosine_category(category, category_score, behavior_entries, scale) do
+    %{
+      type: :cosine,
+      key: category,
+      name: humanize_category(category),
+      score: category_score,
+      grade: grade_letter(category_score, scale),
+      behaviors: behavior_entries
+    }
   end
 
   defp humanize_category(slug) do
