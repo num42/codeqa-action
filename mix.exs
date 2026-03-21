@@ -12,7 +12,11 @@ defmodule CodeQA.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       preferred_envs: [precommit: :test],
       aliases: aliases(),
-      dialyzer: [ignore_warnings: ".dialyzer_ignore.exs"],
+      dialyzer: [
+        ignore_warnings: ".dialyzer_ignore.exs",
+        plt_local_path: "priv/plts",
+        plt_core_path: "priv/plts"
+      ],
       consolidate_protocols: Mix.env() != :test
     ]
   end

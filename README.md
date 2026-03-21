@@ -76,7 +76,7 @@ jobs:
   health-report:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: num42/codeqa-action@v1
         with:
           command: health-report
@@ -95,7 +95,7 @@ jobs:
   compare:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Get fork point

@@ -8,7 +8,7 @@ branding:
 
 inputs:
   command:
-    description: "Command to run: health-report, compare, analyze, or blocks"
+    description: "Command to run: health-report, compare, or analyze"
     required: true
   path:
     description: "Directory to analyze"
