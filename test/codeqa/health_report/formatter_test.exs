@@ -183,19 +183,8 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert result =~ "| Complexity | D | 35 | 5 |"
     end
 
-    test "includes worst offenders section" do
-      result = Formatter.format_markdown(@sample_report, :default, :plain)
-      assert result =~ "### Worst Offenders"
-      refute result =~ "lib/<br>`foo.ex`"
-      assert result =~ "`lib/foo.ex`"
-      assert result =~ "120 lines · 3.8 KB"
-      assert result =~ "↑ flesch_adapted=65.00 (avg: 102.50)"
-      refute result =~ "↑ flesch_adapted=65.00, "
-    end
-
     test "summary detail omits category sections" do
       result = Formatter.format_markdown(@sample_report, :summary, :plain)
-      refute result =~ "### Worst Offenders"
       refute result =~ "Codebase averages"
     end
   end
@@ -213,13 +202,6 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert result =~ "| single_responsibility | 0.45 | 78 | B+ |"
     end
 
-    test "renders cosine worst offenders per behavior" do
-      result = Formatter.format_markdown(@report_with_cosine, :default, :plain)
-      assert result =~ "### Worst Offenders: no_boolean_parameter"
-      assert result =~ "| File | Cosine | Details |"
-      assert result =~ "| `lib/foo/bar.ex` | -0.71 |"
-    end
-
     test "omits behaviors with no worst offenders" do
       result = Formatter.format_markdown(@report_with_cosine, :default, :plain)
       refute result =~ "### Worst Offenders: single_responsibility"
@@ -233,6 +215,138 @@ defmodule CodeQA.HealthReport.FormatterTest do
     test "summary detail omits cosine worst offenders" do
       result = Formatter.format_markdown(@report_with_cosine, :summary, :plain)
       refute result =~ "### Worst Offenders: no_boolean_parameter"
+    end
+  end
+
+  describe "plain formatter: PR summary section" do
+    @sample_report_with_pr Map.put(@sample_report, :pr_summary, %{
+                             base_score: 85,
+                             head_score: 77,
+                             score_delta: -8,
+                             base_grade: "B+",
+                             head_grade: "C+",
+                             blocks_flagged: 6,
+                             files_changed: 3,
+                             files_added: 1,
+                             files_modified: 2
+                           })
+
+    test "renders PR summary line when pr_summary present" do
+      result = Formatter.format_markdown(@sample_report_with_pr, :default, :plain)
+      assert result =~ "B+"
+      assert result =~ "C+"
+      assert result =~ "-8"
+      assert result =~ "6"
+      assert result =~ "1 added"
+      assert result =~ "2 modified"
+    end
+
+    test "omits PR summary when pr_summary is nil" do
+      result = Formatter.format_markdown(@sample_report, :default, :plain)
+      refute result =~ "Score:"
+    end
+  end
+
+  describe "plain formatter: delta section" do
+    @delta %{
+      base: %{
+        aggregate: %{
+          "readability" => %{"mean_flesch_adapted" => 65.0},
+          "halstead" => %{"mean_difficulty" => 12.0}
+        }
+      },
+      head: %{
+        aggregate: %{
+          "readability" => %{"mean_flesch_adapted" => 61.0},
+          "halstead" => %{"mean_difficulty" => 15.0}
+        }
+      }
+    }
+
+    @sample_report_with_delta Map.put(@sample_report, :codebase_delta, @delta)
+
+    test "renders metric changes table when codebase_delta present" do
+      result = Formatter.format_markdown(@sample_report_with_delta, :default, :plain)
+      assert result =~ "Metric Changes"
+      assert result =~ "Readability"
+      assert result =~ "65.00"
+      assert result =~ "61.00"
+    end
+
+    test "omits delta section when codebase_delta is nil" do
+      result = Formatter.format_markdown(@sample_report, :default, :plain)
+      refute result =~ "Metric Changes"
+    end
+  end
+
+  describe "plain formatter: block section" do
+    @block_potential %{
+      category: "function_design",
+      behavior: "cyclomatic_complexity_under_10",
+      cosine_delta: 0.41,
+      severity: :critical,
+      fix_hint: "Reduce branching"
+    }
+
+    @top_blocks [
+      %{
+        path: "lib/foo.ex",
+        status: "modified",
+        blocks: [
+          %{
+            start_line: 42,
+            end_line: 67,
+            type: "code",
+            token_count: 84,
+            potentials: [@block_potential]
+          }
+        ]
+      }
+    ]
+
+    @sample_report_with_blocks Map.put(@sample_report, :top_blocks, @top_blocks)
+
+    test "renders block section header" do
+      result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
+      assert result =~ "Blocks"
+      assert result =~ "1 flagged"
+    end
+
+    test "renders file group with status" do
+      result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
+      assert result =~ "lib/foo.ex"
+      assert result =~ "modified"
+    end
+
+    test "renders block location and type" do
+      result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
+      assert result =~ "lines 42"
+      assert result =~ "67"
+      assert result =~ "84 tokens"
+    end
+
+    test "renders severity icon and behavior" do
+      result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
+      assert result =~ "🔴"
+      assert result =~ "CRITICAL"
+      assert result =~ "cyclomatic_complexity_under_10"
+      assert result =~ "0.41"
+    end
+
+    test "renders fix hint" do
+      result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
+      assert result =~ "Reduce branching"
+    end
+
+    test "omits block section when top_blocks is empty" do
+      report = Map.put(@sample_report, :top_blocks, [])
+      result = Formatter.format_markdown(report, :default, :plain)
+      refute result =~ "## Blocks"
+    end
+
+    test "omits block section when top_blocks key absent" do
+      result = Formatter.format_markdown(@sample_report, :default, :plain)
+      refute result =~ "## Blocks"
     end
   end
 
@@ -283,7 +397,11 @@ defmodule CodeQA.HealthReport.FormatterTest do
       }
 
       report = %{
-        metadata: %{path: "/home/user/project", timestamp: "2026-03-11T00:00:00Z", total_files: 10},
+        metadata: %{
+          path: "/home/user/project",
+          timestamp: "2026-03-11T00:00:00Z",
+          total_files: 10
+        },
         overall_score: 42,
         overall_grade: "D+",
         categories: [category]
@@ -321,7 +439,11 @@ defmodule CodeQA.HealthReport.FormatterTest do
       }
 
       report = %{
-        metadata: %{path: "/home/user/project", timestamp: "2026-03-11T00:00:00Z", total_files: 10},
+        metadata: %{
+          path: "/home/user/project",
+          timestamp: "2026-03-11T00:00:00Z",
+          total_files: 10
+        },
         overall_score: 42,
         overall_grade: "D+",
         categories: [category]
@@ -347,7 +469,11 @@ defmodule CodeQA.HealthReport.FormatterTest do
       }
 
       report = %{
-        metadata: %{path: "/home/user/project", timestamp: "2026-03-11T00:00:00Z", total_files: 10},
+        metadata: %{
+          path: "/home/user/project",
+          timestamp: "2026-03-11T00:00:00Z",
+          total_files: 10
+        },
         overall_score: 42,
         overall_grade: "D+",
         categories: [category]
@@ -384,7 +510,11 @@ defmodule CodeQA.HealthReport.FormatterTest do
       }
 
       report = %{
-        metadata: %{path: "/home/user/project", timestamp: "2026-03-11T00:00:00Z", total_files: 10},
+        metadata: %{
+          path: "/home/user/project",
+          timestamp: "2026-03-11T00:00:00Z",
+          total_files: 10
+        },
         overall_score: 42,
         overall_grade: "D+",
         categories: [category]
@@ -421,7 +551,11 @@ defmodule CodeQA.HealthReport.FormatterTest do
       }
 
       report = %{
-        metadata: %{path: "/home/user/project", timestamp: "2026-03-11T00:00:00Z", total_files: 10},
+        metadata: %{
+          path: "/home/user/project",
+          timestamp: "2026-03-11T00:00:00Z",
+          total_files: 10
+        },
         overall_score: 42,
         overall_grade: "D+",
         categories: [category]
@@ -472,7 +606,11 @@ defmodule CodeQA.HealthReport.FormatterTest do
       }
 
       report = %{
-        metadata: %{path: "/home/user/project", timestamp: "2026-03-11T00:00:00Z", total_files: 10},
+        metadata: %{
+          path: "/home/user/project",
+          timestamp: "2026-03-11T00:00:00Z",
+          total_files: 10
+        },
         overall_score: 32,
         overall_grade: "F",
         categories: [category]
@@ -500,7 +638,11 @@ defmodule CodeQA.HealthReport.FormatterTest do
       }
 
       report = %{
-        metadata: %{path: "/home/user/project", timestamp: "2026-03-11T00:00:00Z", total_files: 10},
+        metadata: %{
+          path: "/home/user/project",
+          timestamp: "2026-03-11T00:00:00Z",
+          total_files: 10
+        },
         overall_score: 32,
         overall_grade: "F",
         categories: [category]
@@ -542,7 +684,11 @@ defmodule CodeQA.HealthReport.FormatterTest do
       }
 
       report = %{
-        metadata: %{path: "/home/user/project", timestamp: "2026-03-11T00:00:00Z", total_files: 10},
+        metadata: %{
+          path: "/home/user/project",
+          timestamp: "2026-03-11T00:00:00Z",
+          total_files: 10
+        },
         overall_score: 10,
         overall_grade: "F",
         categories: [category]
@@ -861,7 +1007,11 @@ defmodule CodeQA.HealthReport.FormatterTest do
       }
 
       report = %{
-        metadata: %{path: "/home/user/project", timestamp: "2026-03-11T00:00:00Z", total_files: 10},
+        metadata: %{
+          path: "/home/user/project",
+          timestamp: "2026-03-11T00:00:00Z",
+          total_files: 10
+        },
         overall_score: 42,
         overall_grade: "D+",
         categories: [category]
@@ -898,7 +1048,11 @@ defmodule CodeQA.HealthReport.FormatterTest do
       }
 
       report = %{
-        metadata: %{path: "/home/user/project", timestamp: "2026-03-11T00:00:00Z", total_files: 10},
+        metadata: %{
+          path: "/home/user/project",
+          timestamp: "2026-03-11T00:00:00Z",
+          total_files: 10
+        },
         overall_score: 42,
         overall_grade: "D+",
         categories: [category]
@@ -1025,7 +1179,11 @@ defmodule CodeQA.HealthReport.FormatterTest do
       }
 
       report = %{
-        metadata: %{path: "/home/user/project", timestamp: "2026-03-11T00:00:00Z", total_files: 10},
+        metadata: %{
+          path: "/home/user/project",
+          timestamp: "2026-03-11T00:00:00Z",
+          total_files: 10
+        },
         overall_score: 10,
         overall_grade: "F",
         categories: [category]

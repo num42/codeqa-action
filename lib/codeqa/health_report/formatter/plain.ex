@@ -4,10 +4,13 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
   @spec render(map(), atom()) :: String.t()
   def render(report, detail) do
     [
+      pr_summary_section(Map.get(report, :pr_summary)),
       header(report),
       cosine_legend(),
+      delta_section(Map.get(report, :codebase_delta)),
       overall_table(report),
       top_issues_section(Map.get(report, :top_issues, []), detail),
+      blocks_section(Map.get(report, :top_blocks, [])),
       category_sections(report.categories, detail)
     ]
     |> List.flatten()
@@ -116,6 +119,49 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     end)
   end
 
+  defp worst_offenders_section(_cat, :summary), do: []
+
+  defp worst_offenders_section(cat, _detail) do
+    offenders = Map.get(cat, :worst_offenders, [])
+
+    if offenders == [] do
+      []
+    else
+      averages = Map.new(cat.metric_scores, &{&1.name, &1.value})
+
+      rows =
+        Enum.map(offenders, fn f ->
+          metric_issues =
+            Enum.map_join(f.metric_scores, "<br>", fn m ->
+              avg = Map.get(averages, m.name)
+              avg_str = if avg, do: " (avg: #{format_num(avg)})", else: ""
+              "#{direction(m.good)}#{m.name}=#{format_num(m.value)}#{avg_str}"
+            end)
+
+          where_part = format_where_part(Map.get(f, :top_nodes, []))
+          fix_hint = threshold_fix_hint(f.metric_scores)
+          fix_part = if fix_hint, do: "**Fix:** #{fix_hint}", else: nil
+
+          extra =
+            [where_part, fix_part]
+            |> Enum.reject(&is_nil/1)
+            |> Enum.map_join("", &"<br>#{&1}")
+
+          issues = metric_issues <> extra
+
+          "| #{format_path(f.path)}<br>#{format_lines(f[:lines])} lines · #{format_size(f[:bytes])} | #{f.grade} | #{issues} |"
+        end)
+
+      [
+        "### Worst Offenders",
+        "",
+        "| File | Grade | Issues |",
+        "|------|-------|--------|"
+        | rows
+      ] ++ [""]
+    end
+  end
+
   defp format_cosine_details(f, fix_hint) do
     why_part = format_why_part(Map.get(f, :top_metrics, []))
     where_part = format_where_part(Map.get(f, :top_nodes, []))
@@ -201,49 +247,6 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     end
   end
 
-  defp worst_offenders_section(_cat, :summary), do: []
-
-  defp worst_offenders_section(cat, _detail) do
-    offenders = Map.get(cat, :worst_offenders, [])
-
-    if offenders == [] do
-      []
-    else
-      averages = Map.new(cat.metric_scores, &{&1.name, &1.value})
-
-      rows =
-        Enum.map(offenders, fn f ->
-          metric_issues =
-            Enum.map_join(f.metric_scores, "<br>", fn m ->
-              avg = Map.get(averages, m.name)
-              avg_str = if avg, do: " (avg: #{format_num(avg)})", else: ""
-              "#{direction(m.good)}#{m.name}=#{format_num(m.value)}#{avg_str}"
-            end)
-
-          where_part = format_where_part(Map.get(f, :top_nodes, []))
-          fix_hint = threshold_fix_hint(f.metric_scores)
-          fix_part = if fix_hint, do: "**Fix:** #{fix_hint}", else: nil
-
-          extra =
-            [where_part, fix_part]
-            |> Enum.reject(&is_nil/1)
-            |> Enum.map_join("", &"<br>#{&1}")
-
-          issues = metric_issues <> extra
-
-          "| #{format_path(f.path)}<br>#{format_lines(f[:lines])} lines · #{format_size(f[:bytes])} | #{f.grade} | #{issues} |"
-        end)
-
-      [
-        "### Worst Offenders",
-        "",
-        "| File | Grade | Issues |",
-        "|------|-------|--------|"
-        | rows
-      ] ++ [""]
-    end
-  end
-
   defp threshold_fix_hint(metric_scores) do
     worst = Enum.min_by(metric_scores, & &1.score, fn -> nil end)
 
@@ -308,4 +311,103 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
       | rows
     ] ++ [""]
   end
+
+  defp pr_summary_section(nil), do: []
+
+  defp pr_summary_section(summary) do
+    delta_str =
+      if summary.score_delta >= 0,
+        do: "+#{summary.score_delta}",
+        else: "#{summary.score_delta}"
+
+    status_str = "#{summary.files_modified} modified, #{summary.files_added} added"
+
+    [
+      "> **Score:** #{summary.base_grade} → #{summary.head_grade}  |  **Δ** #{delta_str} pts  |  **#{summary.blocks_flagged}** blocks flagged across #{summary.files_changed} files  |  #{status_str}",
+      ""
+    ]
+  end
+
+  defp delta_section(nil), do: []
+
+  defp delta_section(delta) do
+    base_agg = delta.base.aggregate
+    head_agg = delta.head.aggregate
+
+    metrics = [
+      {"Readability", "readability", "mean_flesch_adapted"},
+      {"Complexity", "halstead", "mean_difficulty"},
+      {"Duplication", "compression", "mean_redundancy"},
+      {"Structure", "branching", "mean_branch_count"}
+    ]
+
+    rows =
+      Enum.flat_map(metrics, fn {label, group, key} ->
+        base_val = get_in(base_agg, [group, key])
+        head_val = get_in(head_agg, [group, key])
+
+        if is_number(base_val) and is_number(head_val) do
+          diff = Float.round(head_val - base_val, 2)
+          diff_str = if diff >= 0, do: "+#{format_num(diff)}", else: "#{format_num(diff)}"
+          ["| #{label} | #{format_num(base_val)} | #{format_num(head_val)} | #{diff_str} |"]
+        else
+          []
+        end
+      end)
+
+    if rows == [] do
+      []
+    else
+      [
+        "## Metric Changes",
+        "",
+        "| Category | Base | Head | Δ |",
+        "|----------|------|------|---|"
+        | rows
+      ] ++ [""]
+    end
+  end
+
+  defp blocks_section([]), do: []
+
+  defp blocks_section(top_blocks) do
+    total = Enum.sum(Enum.map(top_blocks, fn g -> length(g.blocks) end))
+
+    file_parts =
+      Enum.flat_map(top_blocks, fn group ->
+        status_str = if group.status, do: "  [#{group.status}]", else: ""
+
+        block_lines =
+          Enum.flat_map(group.blocks, fn block ->
+            end_line = block.end_line || block.start_line
+
+            header =
+              "**lines #{block.start_line}–#{end_line}** · #{block.type} · #{block.token_count} tokens"
+
+            potential_lines =
+              Enum.flat_map(block.potentials, fn p ->
+                icon = severity_icon(p.severity)
+                delta_str = format_num(p.cosine_delta)
+                label = "#{String.upcase(to_string(p.severity))}"
+                line = "  #{icon} #{label}  #{p.category} / #{p.behavior}  (Δ #{delta_str})"
+                fix = if p.fix_hint, do: ["    → #{p.fix_hint}"], else: []
+                [line | fix]
+              end)
+
+            [header | potential_lines] ++ [""]
+          end)
+
+        ["### #{group.path}#{status_str}", "" | block_lines]
+      end)
+
+    [
+      "## Blocks  (#{total} flagged across #{length(top_blocks)} files)",
+      ""
+      | file_parts
+    ]
+  end
+
+  defp severity_icon(:critical), do: "🔴"
+  defp severity_icon(:high), do: "🟠"
+  defp severity_icon(:medium), do: "🟡"
 end
