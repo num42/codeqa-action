@@ -4,8 +4,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksFileTest do
   alias CodeQA.Metrics.File.NearDuplicateBlocksFile
 
   defp ctx(code, path \\ "test.ex") do
-    base = Pipeline.build_file_context(code)
-    Map.put(base, :path, path)
+    Pipeline.build_file_context(code, path: path)
   end
 
   describe "name/0" do
