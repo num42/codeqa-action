@@ -13,27 +13,35 @@ defmodule CodeQA.CombinedMetrics.CosineVector do
 
   Returns a one-element list `[result_map]` on success or `[]` when the behavior
   has no non-zero scalars (no sample data) and should be excluded.
+
+  ## Options
+
+    * `:log_metrics` - precomputed log-metric map `%{group => %{key => log_val}}`.
+      When present, values are looked up directly instead of being recomputed via
+      `:math.log/1`. Falls back to inline computation when absent or when a key is
+      not found in the map.
   """
-  @spec compute(String.t(), String.t(), map(), map(), String.t()) :: [map()]
-  def compute(yaml_path, behavior, behavior_data, aggregate, category) do
+  @spec compute(String.t(), String.t(), map(), map(), String.t(), keyword()) :: [map()]
+  def compute(yaml_path, behavior, behavior_data, aggregate, category, opts \\ []) do
     scalars = Scorer.scalars_for(yaml_path, behavior)
 
     if map_size(scalars) == 0 do
       []
     else
-      build_result(yaml_path, behavior, behavior_data, aggregate, category, scalars)
+      build_result(yaml_path, behavior, behavior_data, aggregate, category, scalars, opts)
     end
   end
 
   # --- Internal helpers ---
 
-  defp build_result(yaml_path, behavior, behavior_data, aggregate, category, scalars) do
+  defp build_result(yaml_path, behavior, behavior_data, aggregate, category, scalars, opts) do
     log_baseline = Map.get(behavior_data, "_log_baseline", 0.0) / 1.0
+    log_metrics = Keyword.get(opts, :log_metrics)
 
     {dot, norm_s_sq, norm_v_sq, contributions} =
       Enum.reduce(scalars, {0.0, 0.0, 0.0, []}, fn {{group, key}, scalar},
                                                    {d, ns, nv, contribs} ->
-        log_m = :math.log(Scorer.get(aggregate, group, key))
+        log_m = lookup_log_metric(log_metrics, aggregate, group, key)
         contrib = scalar * log_m
 
         {d + contrib, ns + scalar * scalar, nv + log_m * log_m,
@@ -65,5 +73,18 @@ defmodule CodeQA.CombinedMetrics.CosineVector do
         top_metrics: top_metrics
       }
     ]
+  end
+
+  # Returns a precomputed log value when available, otherwise computes inline.
+  # Both paths apply the same max(val, 1.0e-300) floor guard to ensure identical
+  # results regardless of whether log_metrics was precomputed or not.
+  defp lookup_log_metric(nil, aggregate, group, key),
+    do: :math.log(max(Scorer.get(aggregate, group, key) / 1.0, 1.0e-300))
+
+  defp lookup_log_metric(log_metrics, aggregate, group, key) do
+    case get_in(log_metrics, [group, key]) do
+      nil -> :math.log(max(Scorer.get(aggregate, group, key) / 1.0, 1.0e-300))
+      log_val -> log_val
+    end
   end
 end

@@ -179,26 +179,55 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     top_n = Keyword.get(opts, :top, 15)
     language = Keyword.get(opts, :language)
     languages = Keyword.get(opts, :languages)
+    behavior_map = Keyword.get(opts, :behavior_map)
 
-    Scorer.all_yamls()
-    |> Enum.sort_by(fn {path, _} -> path end)
-    |> Enum.flat_map(fn {yaml_path, data} ->
-      category = yaml_path |> Path.basename() |> String.trim_trailing(".yml")
+    log_metrics = precompute_log_metrics(aggregate)
+    cosine_opts = [log_metrics: log_metrics]
 
-      data
-      |> Enum.filter(fn {_k, v} -> is_map(v) end)
-      |> Enum.flat_map(fn {behavior, behavior_data} ->
-        maybe_diagnose_behavior(
-          yaml_path,
-          behavior,
-          behavior_data,
-          aggregate,
-          category,
-          language,
-          languages
-        )
-      end)
-    end)
+    behaviors_stream =
+      if behavior_map do
+        behavior_map
+        |> Enum.sort_by(fn {category, _} -> category end)
+        |> Enum.flat_map(fn {category, behaviors} ->
+          Enum.flat_map(behaviors, fn {behavior, behavior_data} ->
+            yaml_path = "priv/combined_metrics/#{category}.yml"
+
+            maybe_diagnose_behavior(
+              yaml_path,
+              behavior,
+              behavior_data,
+              aggregate,
+              category,
+              language,
+              languages,
+              cosine_opts
+            )
+          end)
+        end)
+      else
+        Scorer.all_yamls()
+        |> Enum.sort_by(fn {path, _} -> path end)
+        |> Enum.flat_map(fn {yaml_path, data} ->
+          category = yaml_path |> Path.basename() |> String.trim_trailing(".yml")
+
+          data
+          |> Enum.filter(fn {_k, v} -> is_map(v) end)
+          |> Enum.flat_map(fn {behavior, behavior_data} ->
+            maybe_diagnose_behavior(
+              yaml_path,
+              behavior,
+              behavior_data,
+              aggregate,
+              category,
+              language,
+              languages,
+              cosine_opts
+            )
+          end)
+        end)
+      end
+
+    behaviors_stream
     |> Enum.sort_by(& &1.cosine)
     |> Enum.take(top_n)
   end
@@ -355,6 +384,26 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   # Cosine diagnosis (delegates vector math to CosineVector)
   # ---------------------------------------------------------------------------
 
+  # Builds a nested map of precomputed log values for all numeric entries in the
+  # aggregate: %{group => %{key => :math.log(max(val, 1.0e-300))}}.
+  # Called once per diagnose_aggregate/2 invocation so the inner reduce in
+  # CosineVector.build_result can do O(1) lookups instead of recomputing log
+  # for every (behavior, metric) pair.
+  defp precompute_log_metrics(aggregate) do
+    aggregate
+    |> Enum.filter(fn {_group, sub_map} -> is_map(sub_map) end)
+    |> Map.new(fn {group, sub_map} ->
+      log_sub =
+        sub_map
+        |> Enum.filter(fn {_key, val} -> is_number(val) end)
+        |> Map.new(fn {key, val} ->
+          {key, :math.log(max(val / 1.0, 1.0e-300))}
+        end)
+
+      {group, log_sub}
+    end)
+  end
+
   defp maybe_diagnose_behavior(
          yaml_path,
          behavior,
@@ -362,12 +411,13 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
          aggregate,
          category,
          language,
-         languages
+         languages,
+         cosine_opts \\ []
        ) do
     behavior_langs = Map.get(behavior_data, "_languages", [])
 
     if behavior_language_applies?(behavior_langs, language, languages) do
-      CosineVector.compute(yaml_path, behavior, behavior_data, aggregate, category)
+      CosineVector.compute(yaml_path, behavior, behavior_data, aggregate, category, cosine_opts)
     else
       []
     end
