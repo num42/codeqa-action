@@ -45,7 +45,7 @@ The existing `render/3` is not changed. It continues to produce the full single-
 
 **File:** `lib/codeqa/cli/health_report.ex`
 
-Add `render_parts(report, opts)` → `[String.t()]` — returns a flat list `[part_1, part_2, part_3a, part_3b, ...]`. Used internally when the `comment: true` path is active.
+Add `render_parts(report, opts)` → `[String.t()]` — returns a flat list `[part_1, part_2, part_3a, part_3b, ...]`. Used internally when the `comment: true` path is active. `comment: true` is an **existing** flag (already parsed from `INPUT_COMMENT` env var in `run.sh` and passed as `--comment` to the CLI); no new flag is introduced.
 
 When writing output for comment mode, the CLI writes each part to a numbered temp file:
 
@@ -68,17 +68,29 @@ If a previous run produced 4 parts and the current run produces 2, the old parts
 
 The sticky comment action overwrites the stale comment with the placeholder rather than leaving old content. The minimum of 3 is sufficient for the current fixed-section design. Real content is written for any blocks overflow to part 4+.
 
+**Known limitation:** if run N produces more than 3 parts (e.g., 5) and run N+1 produces fewer (e.g., 3), parts 4 and 5 from run N remain stale permanently — the minimum-3 floor does not cover them. This is accepted as an edge case; the stale comments are cosmetic (they hold the placeholder text), and a future cleanup step can address it if needed.
+
 ## Action / run.sh Changes
 
 **File:** `scripts/run.sh`
 
-After generating part files, loop over them and post each using `gh pr comment` (or the GitHub API directly). Each part uses its own sticky header `codeqa-health-report-{N}`.
+After generating part files, loop over them and post each as a sticky PR comment. Use the GitHub REST API directly (`curl -s -X POST/PATCH`) with the following sticky update-or-create logic:
 
-`run.sh` takes ownership of the posting loop since it already has access to all required env vars. This avoids duplicating logic across multiple YAML steps.
+1. Search existing PR comments for one whose body contains the sentinel `<!-- codeqa-health-report-{N} -->` (appended to each part by the formatter)
+2. If found: `PATCH /repos/{owner}/{repo}/issues/comments/{id}` with the new body
+3. If not found: `POST /repos/{owner}/{repo}/issues/{pr_number}/comments` with the new body
+
+Each part's markdown ends with the sentinel HTML comment so future runs can locate and update it:
+
+```
+<!-- codeqa-health-report-{N} -->
+```
+
+This replicates the sticky semantics of `marocchino/sticky-pull-request-comment@v2` without depending on that action for a variable number of posts. `run.sh` uses `GITHUB_TOKEN` (already available in the action environment) and `GITHUB_API_URL`, `GITHUB_REPOSITORY`, and `PR_NUMBER` (sourced from the workflow env).
 
 **File:** `.github/workflows/health-report.yml`
 
-The current single `marocchino/sticky-pull-request-comment@v2` step is replaced. The YAML posting step becomes a no-op for comment posting; run.sh handles it entirely. No YAML changes are needed as the number of parts varies — a shell loop in run.sh handles the variable count cleanly.
+Remove the `marocchino/sticky-pull-request-comment@v2` step. `run.sh` now owns posting entirely. The workflow passes `PR_NUMBER: ${{ github.event.pull_request.number }}` as an env var to the run step.
 
 ## Key Constraints
 
