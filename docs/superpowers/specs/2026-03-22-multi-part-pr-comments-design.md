@@ -39,7 +39,15 @@ Add three new rendering entry points alongside the existing `render/3`:
 - `render_part_2(report, opts)` → `String.t()` — top issues, all category detail sections
 - `render_parts_3(report, opts)` → `[String.t()]` — blocks section sliced into 60,000-char chunks; returns `[""]` when no blocks exist
 
-The existing `render/3` is not changed. It continues to produce the full single-string report for `--output file` usage.
+**Each rendered part must end with a sentinel HTML comment as its final line:**
+
+```
+<!-- codeqa-health-report-{N} -->
+```
+
+where `N` is the 1-based part index. This sentinel is the sole mechanism by which `run.sh` locates an existing comment to update (the `marocchino` action and its header concept are removed entirely). Without the sentinel, every run would create a new comment instead of updating the previous one.
+
+The existing `render/3` is not changed. It continues to produce the full single-string report for `--output file` usage and does not append a sentinel.
 
 ## CLI Changes
 
@@ -54,7 +62,7 @@ When writing output for comment mode, the CLI writes each part to a numbered tem
 - `$TMPDIR/codeqa-part-3.md`
 - … etc.
 
-It also writes `$TMPDIR/codeqa-part-count.txt` containing the integer count of parts.
+It also writes `$TMPDIR/codeqa-part-count.txt` containing the **padded** part count (i.e., `max(actual_parts, 3)`), which is the number of files `run.sh` should iterate over. The padding ensures stale cleanup files are always written.
 
 The existing `--output` flag behaviour (write single file) is unchanged.
 
