@@ -34,10 +34,15 @@ defmodule CodeQA.Engine.Pipeline do
     lines = content |> String.split("\n") |> trim_trailing_empty()
     encoded = content
 
+    skip_structural = Keyword.get(opts, :skip_structural, false)
+
     {path, blocks} =
       case Keyword.get(opts, :path) do
         nil ->
           {nil, nil}
+
+        p when skip_structural ->
+          {p, nil}
 
         p ->
           lang_mod = Language.detect(p)

@@ -3,7 +3,6 @@ defmodule CodeQA.CLI.HealthReport do
 
   @behaviour CodeQA.CLI.Command
 
-  alias CodeQA.BlockImpactAnalyzer
   alias CodeQA.CLI.Options
   alias CodeQA.Config
   alias CodeQA.Engine.Analyzer
@@ -48,7 +47,8 @@ defmodule CodeQA.CLI.HealthReport do
     format: :string,
     ignore_paths: :string,
     base_ref: :string,
-    head_ref: :string
+    head_ref: :string,
+    telemetry: :boolean
   ]
 
   def run(args) do
@@ -69,8 +69,10 @@ defmodule CodeQA.CLI.HealthReport do
 
     IO.puts(:stderr, "Analyzing #{map_size(files)} files for health report...")
 
+    telemetry_pid = if opts[:telemetry], do: attach_block_impact_telemetry()
+
     analyze_opts =
-      Options.build_analyze_opts(opts) ++ Config.near_duplicate_blocks_opts()
+      Options.build_analyze_opts(opts) ++ Config.near_duplicate_blocks_opts() ++ [compute_nodes: true]
 
     start_time = System.monotonic_time(:millisecond)
     results = Analyzer.analyze_codebase(files, analyze_opts)
@@ -78,8 +80,7 @@ defmodule CodeQA.CLI.HealthReport do
 
     IO.puts(:stderr, "Analysis completed in #{end_time - start_time}ms")
 
-    nodes_top = opts[:nodes_top] || 3
-    results = BlockImpactAnalyzer.analyze(results, files, nodes_top: nodes_top)
+    if telemetry_pid, do: print_block_impact_telemetry(telemetry_pid)
 
     total_bytes = results["files"] |> Map.values() |> Enum.map(& &1["bytes"]) |> Enum.sum()
 
@@ -149,4 +150,113 @@ defmodule CodeQA.CLI.HealthReport do
     IO.puts(:stderr, "Warning: unknown format '#{other}', using 'plain'")
     :plain
   end
+
+  # ---------------------------------------------------------------------------
+  # Block impact telemetry
+  # ---------------------------------------------------------------------------
+
+  defp attach_block_impact_telemetry do
+    {:ok, pid} = Agent.start_link(fn -> %{nodes: [], files: [], codebase_cosines_us: 0} end)
+
+    :telemetry.attach_many(
+      "block-impact-reporter",
+      [
+        [:codeqa, :block_impact, :codebase_cosines],
+        [:codeqa, :block_impact, :file],
+        [:codeqa, :block_impact, :node]
+      ],
+      fn event, measurements, metadata, ^pid ->
+        case event do
+          [:codeqa, :block_impact, :codebase_cosines] ->
+            Agent.update(pid, &Map.put(&1, :codebase_cosines_us, measurements.duration))
+
+          [:codeqa, :block_impact, :file] ->
+            Agent.update(pid, fn state ->
+              Map.update!(state, :files, &[{metadata.path, measurements} | &1])
+            end)
+
+          [:codeqa, :block_impact, :node] ->
+            Agent.update(pid, fn state ->
+              Map.update!(state, :nodes, &[{metadata.path, measurements} | &1])
+            end)
+        end
+      end,
+      pid
+    )
+
+    pid
+  end
+
+  defp print_block_impact_telemetry(pid) do
+    state = Agent.get(pid, & &1)
+    Agent.stop(pid)
+    :telemetry.detach("block-impact-reporter")
+
+    nodes = state.nodes
+    files = state.files
+
+    total_nodes = length(nodes)
+    total_files = length(files)
+
+    node_totals = Enum.map(nodes, fn {_, m} -> m end)
+    file_totals = Enum.map(files, fn {_, m} -> m end)
+
+    IO.puts(:stderr, """
+
+    ── Block Impact Telemetry ──────────────────────────────
+    Codebase cosines:     #{us(state.codebase_cosines_us)}
+    Files processed:      #{total_files}
+    Nodes processed:      #{total_nodes}
+
+    Per-file breakdown (avg across #{total_files} files):
+      tokenize:           #{avg_us(file_totals, :tokenize_us)}
+      parse blocks:       #{avg_us(file_totals, :parse_us)}
+      file cosines:       #{avg_us(file_totals, :file_cosines_us)}
+      total/file:         #{avg_us(file_totals, :duration)}
+
+    Per-node breakdown (avg across #{total_nodes} nodes):
+      reconstruct:        #{avg_us(node_totals, :reconstruct_us)}
+      analyze_file:       #{avg_us(node_totals, :analyze_file_us)}
+      aggregate:          #{avg_us(node_totals, :aggregate_us)}
+      refactoring cosine: #{avg_us(node_totals, :refactoring_us)}
+      total/node:         #{avg_us(node_totals, :duration)}
+
+    Top 5 slowest files (total node time):
+    #{top_slow_files(files, nodes)}
+    ────────────────────────────────────────────────────────
+    """)
+  end
+
+  defp top_slow_files(files, nodes) do
+    node_time_by_file =
+      nodes
+      |> Enum.group_by(fn {path, _} -> path end, fn {_, m} -> m.duration end)
+      |> Map.new(fn {path, durations} -> {path, Enum.sum(durations)} end)
+
+    files
+    |> Enum.map(fn {path, fm} ->
+      node_time = Map.get(node_time_by_file, path, 0)
+      {path, fm.node_count, node_time}
+    end)
+    |> Enum.sort_by(fn {_, _, t} -> -t end)
+    |> Enum.take(5)
+    |> Enum.map_join("\n", fn {path, node_count, node_time} ->
+      "  #{path}  (#{node_count} nodes, #{us(node_time)} node time)"
+    end)
+  end
+
+  defp avg_us([], _key), do: "n/a"
+
+  defp avg_us(measurements, key) do
+    total = Enum.sum(Enum.map(measurements, &Map.get(&1, key, 0)))
+    us(div(total, length(measurements)))
+  end
+
+  defp us(microseconds) when microseconds >= 1_000_000,
+    do: "#{Float.round(microseconds / 1_000_000, 2)}s"
+
+  defp us(microseconds) when microseconds >= 1_000,
+    do: "#{Float.round(microseconds / 1_000, 1)}ms"
+
+  defp us(microseconds), do: "#{microseconds}µs"
 end

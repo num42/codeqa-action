@@ -3,7 +3,6 @@ defmodule CodeQA.CLI.Analyze do
 
   @behaviour CodeQA.CLI.Command
 
-  alias CodeQA.BlockImpactAnalyzer
   alias CodeQA.CLI.Options
   alias CodeQA.Config
   alias CodeQA.Engine.Analyzer
@@ -64,9 +63,6 @@ defmodule CodeQA.CLI.Analyze do
     end_time = System.monotonic_time(:millisecond)
 
     IO.puts(:stderr, "Analysis completed in #{end_time - start_time}ms")
-
-    nodes_top = opts[:nodes_top] || 3
-    results = BlockImpactAnalyzer.analyze(results, files, nodes_top: nodes_top)
 
     total_bytes = results["files"] |> Map.values() |> Enum.map(& &1["bytes"]) |> Enum.sum()
     results = filter_files_for_output(results, opts, "json")

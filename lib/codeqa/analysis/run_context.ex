@@ -6,11 +6,10 @@ defmodule CodeQA.Analysis.RunContext do
   cached state without named process registration.
   """
 
-  defstruct [:behavior_config_pid, :file_context_pid, :file_metrics_pid]
+  defstruct [:behavior_config_pid, :file_context_pid]
 
   @type t :: %__MODULE__{
           behavior_config_pid: pid(),
-          file_context_pid: pid(),
-          file_metrics_pid: pid()
+          file_context_pid: pid()
         }
 end

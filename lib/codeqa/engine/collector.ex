@@ -7,6 +7,8 @@ defmodule CodeQA.Engine.Collector do
     .next coverage
   ])
 
+  @default_ignore_patterns ~w[**/*.md **/*.mdx]
+
   @spec source_extensions() :: MapSet.t()
   def source_extensions do
     CodeQA.Language.all()
@@ -57,7 +59,7 @@ defmodule CodeQA.Engine.Collector do
     Enum.reject(list, fn item -> ignored?(key_fn.(item), patterns) end)
   end
 
-  defp all_ignore_patterns(extra), do: extra ++ CodeQA.Config.ignore_paths()
+  defp all_ignore_patterns(extra), do: extra ++ @default_ignore_patterns ++ CodeQA.Config.ignore_paths()
 
   defp do_reject_ignored_map(files_map, []), do: files_map
 

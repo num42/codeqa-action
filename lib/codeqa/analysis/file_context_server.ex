@@ -35,7 +35,7 @@ defmodule CodeQA.Analysis.FileContextServer do
   Returns a cached (or freshly built) `FileContext` for `content`.
 
   The language is resolved from `opts` (`:language` or `:path`); defaults to
-  `Unknown`, consistent with how `FileImpact` calls `build_file_context/2`.
+  `Unknown`.
   """
   @spec get(pid(), String.t(), keyword()) :: FileContext.t()
   def get(pid, content, opts \\ []) do

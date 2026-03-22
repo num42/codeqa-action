@@ -2,7 +2,7 @@ defmodule CodeQA.Analysis.RunSupervisor do
   @moduledoc """
   One-shot supervisor for the per-analysis-run GenServers.
 
-  Started at the top of `BlockImpactAnalyzer.analyze/3` and stopped (via
+  Started at the top of `Analyzer.with_run_context/2` and stopped (via
   `Supervisor.stop/1`) in an `after` block when the run completes.
 
   Servers are not registered by name, preventing collisions when multiple
@@ -11,7 +11,7 @@ defmodule CodeQA.Analysis.RunSupervisor do
 
   use Supervisor
 
-  alias CodeQA.Analysis.{BehaviorConfigServer, FileContextServer, FileMetricsServer, RunContext}
+  alias CodeQA.Analysis.{BehaviorConfigServer, FileContextServer, RunContext}
 
   @spec start_link(keyword()) :: Supervisor.on_start()
   def start_link(opts \\ []) do
@@ -29,8 +29,7 @@ defmodule CodeQA.Analysis.RunSupervisor do
 
     %RunContext{
       behavior_config_pid: find_pid(children, BehaviorConfigServer),
-      file_context_pid: find_pid(children, FileContextServer),
-      file_metrics_pid: find_pid(children, FileMetricsServer)
+      file_context_pid: find_pid(children, FileContextServer)
     }
   end
 
@@ -38,8 +37,7 @@ defmodule CodeQA.Analysis.RunSupervisor do
   def init(_opts) do
     children = [
       {BehaviorConfigServer, []},
-      {FileContextServer, []},
-      {FileMetricsServer, []}
+      {FileContextServer, []}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

@@ -2,6 +2,7 @@ defmodule CodeQA.Engine.Analyzer do
   @moduledoc "Orchestrates metric computation across files."
 
   alias CodeQA.Analysis.RunSupervisor
+  alias CodeQA.BlockImpactAnalyzer
   alias CodeQA.Engine.Parallel
   alias CodeQA.Engine.Pipeline
   alias CodeQA.Engine.Registry
@@ -41,6 +42,12 @@ defmodule CodeQA.Engine.Analyzer do
     Registry.run_file_metrics(@registry, ctx, [])
   end
 
+  @spec analyze_file_for_loo(String.t(), String.t()) :: map()
+  def analyze_file_for_loo(_path, content) do
+    ctx = Pipeline.build_file_context(content, skip_structural: true)
+    Registry.run_file_metrics(@registry, ctx, [])
+  end
+
   @spec analyze_codebase_aggregate(map(), keyword()) :: map()
   def analyze_codebase_aggregate(files_map, opts \\ []) do
     with_run_context(opts, fn opts ->
@@ -57,6 +64,7 @@ defmodule CodeQA.Engine.Analyzer do
     {:ok, sup} = RunSupervisor.start_link()
     run_ctx = RunSupervisor.run_context(sup)
     opts = Keyword.put(opts, :file_context_pid, run_ctx.file_context_pid)
+    opts = Keyword.put(opts, :behavior_config_pid, run_ctx.behavior_config_pid)
 
     try do
       fun.(opts)
@@ -67,15 +75,34 @@ defmodule CodeQA.Engine.Analyzer do
 
   defp do_analyze_codebase(files, opts) do
     registry = @registry
-
     file_results = Parallel.analyze_files(files, opts)
-    codebase_metrics = Registry.run_codebase_metrics(registry, files, opts)
     aggregate = aggregate_file_metrics(file_results)
 
-    %{
-      "files" => file_results,
-      "codebase" => Map.put(codebase_metrics, "aggregate", aggregate)
-    }
+    if Keyword.get(opts, :compute_nodes, false) do
+      nodes_opts =
+        [baseline_codebase_agg: aggregate] ++
+          Keyword.take(opts, [:nodes_top, :workers, :behavior_config_pid])
+
+      pipeline_result = %{
+        "files" => file_results,
+        "codebase" => %{"aggregate" => aggregate}
+      }
+
+      updated_pipeline_result = BlockImpactAnalyzer.analyze(pipeline_result, files, nodes_opts)
+      codebase_metrics = Registry.run_codebase_metrics(registry, files, opts)
+
+      updated_codebase =
+        Map.merge(codebase_metrics, updated_pipeline_result["codebase"])
+
+      Map.put(updated_pipeline_result, "codebase", updated_codebase)
+    else
+      codebase_metrics = Registry.run_codebase_metrics(registry, files, opts)
+
+      %{
+        "files" => file_results,
+        "codebase" => Map.put(codebase_metrics, "aggregate", aggregate)
+      }
+    end
   end
 
   defp metric_data_to_triples({metric_name, metric_data}) do
