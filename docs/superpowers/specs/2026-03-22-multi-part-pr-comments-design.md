@@ -37,7 +37,7 @@ Add three new rendering entry points alongside the existing `render/3`:
 
 - `render_part_1(report, opts)` → `String.t()` — header, summary table, PR summary, delta, mermaid chart, progress bars
 - `render_part_2(report, opts)` → `String.t()` — top issues, all category detail sections
-- `render_parts_3(report, opts)` → `[String.t()]` — blocks section sliced into 60,000-char chunks; returns `[""]` when no blocks exist
+- `render_parts_3(report, opts)` → `[String.t()]` — blocks section sliced into 60,000-char chunks; returns `["> _No content for this section._"]` when no blocks exist (the CLI does not substitute the placeholder — the formatter is responsible)
 
 **Each rendered part must end with a sentinel HTML comment as its final line:**
 
@@ -62,7 +62,7 @@ When writing output for comment mode, the CLI writes each part to a numbered tem
 - `$TMPDIR/codeqa-part-3.md`
 - … etc.
 
-It also writes `$TMPDIR/codeqa-part-count.txt` containing the **padded** part count (i.e., `max(actual_parts, 3)`), which is the number of files `run.sh` should iterate over. The padding ensures stale cleanup files are always written.
+It also writes `$TMPDIR/codeqa-part-count.txt` containing the **padded** part count (i.e., `max(actual_parts, 3)`). `run.sh` reads this file to determine how many iterations to perform — it does not infer part count from files on disk. The padding ensures stale cleanup files are always written for at least parts 1–3.
 
 The existing `--output` flag behaviour (write single file) is unchanged.
 
