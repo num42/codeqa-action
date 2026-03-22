@@ -115,9 +115,9 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
     end
   end
 
-  describe "grade_cosine_categories/4 languages wiring" do
-    test "accepts languages argument" do
-      result = Grader.grade_cosine_categories(%{}, %{}, [], ["elixir"])
+  describe "grade_cosine_categories/3" do
+    test "returns a list for empty input" do
+      result = Grader.grade_cosine_categories(%{}, %{})
       assert is_list(result)
     end
   end

@@ -25,6 +25,17 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksFileTest do
     end
   end
 
+  describe "analyze/1 with nil blocks" do
+    test "returns zeroed map with all keys when blocks is nil" do
+      ctx = Pipeline.build_file_context("x = 1\n", skip_structural: true)
+      result = NearDuplicateBlocksFile.analyze(ctx)
+      assert Map.has_key?(result, "block_count")
+      assert Map.has_key?(result, "sub_block_count")
+      for d <- 0..8, do: assert(Map.has_key?(result, "near_dup_block_d#{d}"))
+      for {_key, value} <- result, do: assert(value == 0)
+    end
+  end
+
   describe "analyze/1" do
     test "returns a map with all expected keys" do
       result = NearDuplicateBlocksFile.analyze(ctx("x = 1\n"))

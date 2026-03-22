@@ -1,6 +1,7 @@
 defmodule CodeQA.HealthReport.GraderTest do
   use ExUnit.Case, async: true
 
+  alias CodeQA.CombinedMetrics.SampleRunner
   alias CodeQA.Engine.Analyzer
   alias CodeQA.Engine.Collector
   alias CodeQA.HealthReport.Grader
@@ -157,12 +158,14 @@ defmodule CodeQA.HealthReport.GraderTest do
     end
   end
 
-  # Shared aggregate for grade_cosine_categories/3 tests — computed once for the module.
+  # Shared cosines_by_category for grade_cosine_categories/3 tests — computed once for the module.
   setup_all do
     files = Collector.collect_files("lib", [])
     result = Analyzer.analyze_codebase(files)
     aggregate = get_in(result, ["codebase", "aggregate"])
-    {:ok, aggregate: aggregate}
+    all_cosines = SampleRunner.diagnose_aggregate(aggregate, top: 99_999)
+    cosines_by_category = Enum.group_by(all_cosines, & &1.category)
+    {:ok, cosines_by_category: cosines_by_category}
   end
 
   # -----------------------------------------------------------------------
@@ -170,13 +173,13 @@ defmodule CodeQA.HealthReport.GraderTest do
   # -----------------------------------------------------------------------
 
   describe "grade_cosine_categories/3" do
-    test "returns a list", %{aggregate: aggregate} do
-      result = Grader.grade_cosine_categories(aggregate, %{}, @default_scale)
+    test "returns a list", %{cosines_by_category: cosines_by_category} do
+      result = Grader.grade_cosine_categories(cosines_by_category, %{}, @default_scale)
       assert is_list(result)
     end
 
-    test "each entry has required top-level keys", %{aggregate: aggregate} do
-      result = Grader.grade_cosine_categories(aggregate, %{}, @default_scale)
+    test "each entry has required top-level keys", %{cosines_by_category: cosines_by_category} do
+      result = Grader.grade_cosine_categories(cosines_by_category, %{}, @default_scale)
 
       for cat <- result do
         assert Map.has_key?(cat, :type), "missing :type in #{inspect(cat)}"
@@ -188,13 +191,13 @@ defmodule CodeQA.HealthReport.GraderTest do
       end
     end
 
-    test "type is :cosine for every entry", %{aggregate: aggregate} do
-      result = Grader.grade_cosine_categories(aggregate, %{}, @default_scale)
+    test "type is :cosine for every entry", %{cosines_by_category: cosines_by_category} do
+      result = Grader.grade_cosine_categories(cosines_by_category, %{}, @default_scale)
       for cat <- result, do: assert(cat.type == :cosine)
     end
 
-    test "scores are integers in [0, 100]", %{aggregate: aggregate} do
-      result = Grader.grade_cosine_categories(aggregate, %{}, @default_scale)
+    test "scores are integers in [0, 100]", %{cosines_by_category: cosines_by_category} do
+      result = Grader.grade_cosine_categories(cosines_by_category, %{}, @default_scale)
 
       for cat <- result do
         assert is_integer(cat.score), "score not integer in #{cat.key}"
@@ -202,20 +205,20 @@ defmodule CodeQA.HealthReport.GraderTest do
       end
     end
 
-    test "grade is a string", %{aggregate: aggregate} do
-      result = Grader.grade_cosine_categories(aggregate, %{}, @default_scale)
+    test "grade is a string", %{cosines_by_category: cosines_by_category} do
+      result = Grader.grade_cosine_categories(cosines_by_category, %{}, @default_scale)
       for cat <- result, do: assert(is_binary(cat.grade))
     end
 
     test "impact key is absent (HealthReport.generate/2 is responsible for embedding impact)", %{
-      aggregate: aggregate
+      cosines_by_category: cosines_by_category
     } do
-      result = Grader.grade_cosine_categories(aggregate, %{}, @default_scale)
+      result = Grader.grade_cosine_categories(cosines_by_category, %{}, @default_scale)
       for cat <- result, do: refute(Map.has_key?(cat, :impact))
     end
 
-    test "name is humanized from key", %{aggregate: aggregate} do
-      result = Grader.grade_cosine_categories(aggregate, %{}, @default_scale)
+    test "name is humanized from key", %{cosines_by_category: cosines_by_category} do
+      result = Grader.grade_cosine_categories(cosines_by_category, %{}, @default_scale)
 
       for cat <- result do
         # name must be a non-empty string, words capitalized
@@ -226,8 +229,8 @@ defmodule CodeQA.HealthReport.GraderTest do
       end
     end
 
-    test "each behavior entry has required keys", %{aggregate: aggregate} do
-      result = Grader.grade_cosine_categories(aggregate, %{}, @default_scale)
+    test "each behavior entry has required keys", %{cosines_by_category: cosines_by_category} do
+      result = Grader.grade_cosine_categories(cosines_by_category, %{}, @default_scale)
 
       for cat <- result, b <- cat.behaviors do
         assert Map.has_key?(b, :behavior)
@@ -238,8 +241,8 @@ defmodule CodeQA.HealthReport.GraderTest do
       end
     end
 
-    test "behavior scores are integers in [0, 100]", %{aggregate: aggregate} do
-      result = Grader.grade_cosine_categories(aggregate, %{}, @default_scale)
+    test "behavior scores are integers in [0, 100]", %{cosines_by_category: cosines_by_category} do
+      result = Grader.grade_cosine_categories(cosines_by_category, %{}, @default_scale)
 
       for cat <- result, b <- cat.behaviors do
         assert is_integer(b.score)
@@ -247,22 +250,24 @@ defmodule CodeQA.HealthReport.GraderTest do
       end
     end
 
-    test "worst_offenders uses worst_files lookup", %{aggregate: aggregate} do
+    test "worst_offenders uses worst_files lookup", %{cosines_by_category: cosines_by_category} do
       sentinel = [%{file: "lib/sentinel.ex", cosine: -0.99}]
       # Get one real behavior key to inject into worst_files
-      [first_cat | _] = Grader.grade_cosine_categories(aggregate, %{}, @default_scale)
+      [first_cat | _] = Grader.grade_cosine_categories(cosines_by_category, %{}, @default_scale)
       first_behavior = hd(first_cat.behaviors)
       lookup_key = "#{first_cat.key}.#{first_behavior.behavior}"
 
       worst_files = %{lookup_key => sentinel}
-      result = Grader.grade_cosine_categories(aggregate, worst_files, @default_scale)
+      result = Grader.grade_cosine_categories(cosines_by_category, worst_files, @default_scale)
 
       found_cat = Enum.find(result, &(&1.key == first_cat.key))
       found_behavior = Enum.find(found_cat.behaviors, &(&1.behavior == first_behavior.behavior))
       assert found_behavior.worst_offenders == sentinel
     end
 
-    test "top_metrics and top_nodes pass through unmodified", %{aggregate: aggregate} do
+    test "top_metrics and top_nodes pass through unmodified", %{
+      cosines_by_category: cosines_by_category
+    } do
       sentinel = [
         %{
           file: "lib/sentinel.ex",
@@ -272,20 +277,22 @@ defmodule CodeQA.HealthReport.GraderTest do
         }
       ]
 
-      [first_cat | _] = Grader.grade_cosine_categories(aggregate, %{}, @default_scale)
+      [first_cat | _] = Grader.grade_cosine_categories(cosines_by_category, %{}, @default_scale)
       first_behavior = hd(first_cat.behaviors)
       lookup_key = "#{first_cat.key}.#{first_behavior.behavior}"
 
       worst_files = %{lookup_key => sentinel}
-      result = Grader.grade_cosine_categories(aggregate, worst_files, @default_scale)
+      result = Grader.grade_cosine_categories(cosines_by_category, worst_files, @default_scale)
 
       found_cat = Enum.find(result, &(&1.key == first_cat.key))
       found_behavior = Enum.find(found_cat.behaviors, &(&1.behavior == first_behavior.behavior))
       assert found_behavior.worst_offenders == sentinel
     end
 
-    test "worst_offenders defaults to [] when key absent", %{aggregate: aggregate} do
-      result = Grader.grade_cosine_categories(aggregate, %{}, @default_scale)
+    test "worst_offenders defaults to [] when key absent", %{
+      cosines_by_category: cosines_by_category
+    } do
+      result = Grader.grade_cosine_categories(cosines_by_category, %{}, @default_scale)
       for cat <- result, b <- cat.behaviors, do: assert(b.worst_offenders == [])
     end
   end
