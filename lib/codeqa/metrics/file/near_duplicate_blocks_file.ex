@@ -20,6 +20,8 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksFile do
   end
 
   @impl true
+  def analyze(%{blocks: nil}), do: Map.new(keys(), fn k -> {k, 0} end)
+
   def analyze(%{path: path, blocks: blocks}) when is_list(blocks) do
     NearDuplicateBlocks.analyze_from_blocks(
       NearDuplicateBlocks.label_blocks(blocks, path || "unknown"),
