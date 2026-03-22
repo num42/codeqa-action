@@ -1,7 +1,6 @@
 defmodule CodeQA.HealthReport.Grader do
   @moduledoc "Scores metrics and assigns letter grades."
 
-  alias CodeQA.CombinedMetrics.SampleRunner
   alias CodeQA.Config
   alias CodeQA.HealthReport.Categories
 
@@ -228,29 +227,28 @@ defmodule CodeQA.HealthReport.Grader do
   @doc """
   Grade codebase aggregate metrics using cosine similarity.
 
-  Calls `SampleRunner.diagnose_aggregate/2` to get all behaviors with cosine
-  values, groups them by category, and returns a graded category list suitable
-  for use with `overall_score/3`.
+  Accepts `cosines_by_category`, a map of category string keys to lists of
+  behavior cosine entries as returned by
+  `Enum.group_by(SampleRunner.diagnose_aggregate(...), & &1.category)`.
+
+  The caller is responsible for computing `cosines_by_category` so that
+  `diagnose_aggregate/2` is invoked only once across the report pipeline.
 
   Categories with zero behaviors are skipped.
   """
   @spec grade_cosine_categories(
-          aggregate :: map(),
+          cosines_by_category :: %{String.t() => [map()]},
           worst_files :: %{String.t() => [map()]},
-          grade_scale :: [{number(), String.t()}],
-          languages :: [String.t()]
+          grade_scale :: [{number(), String.t()}]
         ) :: [map()]
   def grade_cosine_categories(
-        aggregate,
+        cosines_by_category,
         worst_files,
-        scale \\ Categories.default_grade_scale(),
-        languages \\ []
+        scale \\ Categories.default_grade_scale()
       ) do
     threshold = Config.cosine_significance_threshold()
 
-    aggregate
-    |> SampleRunner.diagnose_aggregate(top: 99_999, languages: languages)
-    |> Enum.group_by(& &1.category)
+    cosines_by_category
     |> Enum.map(fn {category, behaviors} ->
       behavior_entries =
         score_behavior_entries(behaviors, threshold, worst_files, scale, category)

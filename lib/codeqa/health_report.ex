@@ -36,8 +36,13 @@ defmodule CodeQA.HealthReport do
 
     worst_files_map = FileScorer.worst_files_per_behavior(files, combined_top: combined_top)
 
+    all_cosines =
+      SampleRunner.diagnose_aggregate(aggregate, top: 99_999, languages: project_langs)
+
+    cosines_by_category = Enum.group_by(all_cosines, & &1.category)
+
     cosine_grades =
-      Grader.grade_cosine_categories(aggregate, worst_files_map, grade_scale, project_langs)
+      Grader.grade_cosine_categories(cosines_by_category, worst_files_map, grade_scale)
 
     all_categories =
       (threshold_grades ++ cosine_grades)
@@ -48,9 +53,6 @@ defmodule CodeQA.HealthReport do
     {overall_score, overall_grade} = Grader.overall_score(all_categories, grade_scale, impact_map)
 
     metadata = build_metadata(analysis_results)
-
-    all_cosines =
-      SampleRunner.diagnose_aggregate(aggregate, top: 99_999, languages: project_langs)
 
     top_issues = Enum.take(all_cosines, 10)
 
@@ -131,12 +133,15 @@ defmodule CodeQA.HealthReport do
     base_worst_files_map =
       FileScorer.worst_files_per_behavior(base_files, combined_top: combined_top)
 
+    base_cosines_by_category =
+      SampleRunner.diagnose_aggregate(base_aggregate, top: 99_999, languages: base_project_langs)
+      |> Enum.group_by(& &1.category)
+
     base_cosine_grades =
       Grader.grade_cosine_categories(
-        base_aggregate,
+        base_cosines_by_category,
         base_worst_files_map,
-        grade_scale,
-        base_project_langs
+        grade_scale
       )
 
     base_all_categories =

@@ -9,6 +9,24 @@ defmodule CodeQA.HealthReport.TopBlocks do
   @severity_medium 0.10
   @gap_floor 0.01
 
+  defp build_fix_hint_lookup do
+    Scorer.all_yamls()
+    |> Enum.flat_map(fn {yaml_path, data} ->
+      category = yaml_path |> Path.basename() |> String.trim_trailing(".yml")
+      Enum.flat_map(data, &hints_for_behavior(category, &1))
+    end)
+    |> Map.new()
+  end
+
+  defp hints_for_behavior(category, {behavior, behavior_data}) when is_map(behavior_data) do
+    case Map.get(behavior_data, "_fix_hint") do
+      nil -> []
+      hint -> [{{category, behavior}, hint}]
+    end
+  end
+
+  defp hints_for_behavior(_category, _entry), do: []
+
   @spec build(map(), [struct()], map()) :: [map()]
   def build(analysis_results, changed_files, codebase_cosine_lookup) do
     files = Map.get(analysis_results, "files", %{})
@@ -96,21 +114,4 @@ defmodule CodeQA.HealthReport.TopBlocks do
   defp max_delta(%{potentials: potentials}),
     do: Enum.max_by(potentials, & &1.cosine_delta).cosine_delta
 
-  defp build_fix_hint_lookup do
-    Scorer.all_yamls()
-    |> Enum.flat_map(fn {yaml_path, data} ->
-      category = yaml_path |> Path.basename() |> String.trim_trailing(".yml")
-      Enum.flat_map(data, &hints_for_behavior(category, &1))
-    end)
-    |> Map.new()
-  end
-
-  defp hints_for_behavior(category, {behavior, behavior_data}) when is_map(behavior_data) do
-    case Map.get(behavior_data, "_fix_hint") do
-      nil -> []
-      hint -> [{{category, behavior}, hint}]
-    end
-  end
-
-  defp hints_for_behavior(_category, _entry), do: []
 end
