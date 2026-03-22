@@ -48,7 +48,12 @@ defmodule CodeQA.BlockImpact.RefactoringPotentials do
       compute_file_delta(baseline_file_cosines, without_file_metrics, language, behavior_map)
 
     codebase_delta =
-      compute_codebase_delta(baseline_codebase_cosines, without_codebase_agg, languages, behavior_map)
+      compute_codebase_delta(
+        baseline_codebase_cosines,
+        without_codebase_agg,
+        languages,
+        behavior_map
+      )
 
     all_keys = Enum.uniq(Map.keys(file_delta) ++ Map.keys(codebase_delta))
 

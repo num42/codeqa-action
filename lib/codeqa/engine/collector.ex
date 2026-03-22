@@ -59,9 +59,8 @@ defmodule CodeQA.Engine.Collector do
     Enum.reject(list, fn item -> ignored?(key_fn.(item), patterns) end)
   end
 
-  defp all_ignore_patterns(extra), do: extra ++ @default_ignore_patterns ++ CodeQA.Config.ignore_paths()
-
-  defp do_reject_ignored_map(files_map, []), do: files_map
+  defp all_ignore_patterns(extra),
+    do: extra ++ @default_ignore_patterns ++ CodeQA.Config.ignore_paths()
 
   defp do_reject_ignored_map(files_map, patterns) do
     Map.reject(files_map, fn {path, _} -> ignored?(path, patterns) end)

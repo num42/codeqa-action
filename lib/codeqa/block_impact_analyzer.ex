@@ -325,12 +325,14 @@ defmodule CodeQA.BlockImpactAnalyzer do
 
   defp file_metrics_to_triples(metrics) when is_map(metrics) do
     metrics
-    |> Enum.flat_map(fn {metric_name, metric_data} when is_map(metric_data) ->
-      metric_data
-      |> Enum.filter(fn {_k, v} -> is_number(v) end)
-      |> Enum.map(fn {key, value} -> {metric_name, key, value / 1} end)
+    |> Enum.flat_map(fn
+      {metric_name, metric_data} when is_map(metric_data) ->
+        metric_data
+        |> Enum.filter(fn {_k, v} -> is_number(v) end)
+        |> Enum.map(fn {key, value} -> {metric_name, key, value / 1} end)
 
-      _ -> []
+      _ ->
+        []
     end)
   end
 
@@ -345,7 +347,9 @@ defmodule CodeQA.BlockImpactAnalyzer do
       n = length(values)
       sum = Enum.sum(values)
       sum_sq = Enum.reduce(values, 0.0, fn v, acc -> acc + v * v end)
-      {{metric, key}, %{sum: sum, sum_sq: sum_sq, min: Enum.min(values), max: Enum.max(values), count: n}}
+
+      {{metric, key},
+       %{sum: sum, sum_sq: sum_sq, min: Enum.min(values), max: Enum.max(values), count: n}}
     end)
   end
 

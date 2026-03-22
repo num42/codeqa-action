@@ -72,7 +72,8 @@ defmodule CodeQA.CLI.HealthReport do
     telemetry_pid = if opts[:telemetry], do: attach_block_impact_telemetry()
 
     analyze_opts =
-      Options.build_analyze_opts(opts) ++ Config.near_duplicate_blocks_opts() ++ [compute_nodes: true]
+      Options.build_analyze_opts(opts) ++
+        Config.near_duplicate_blocks_opts() ++ [compute_nodes: true]
 
     start_time = System.monotonic_time(:millisecond)
     results = Analyzer.analyze_codebase(files, analyze_opts)
@@ -165,26 +166,27 @@ defmodule CodeQA.CLI.HealthReport do
         [:codeqa, :block_impact, :file],
         [:codeqa, :block_impact, :node]
       ],
-      fn event, measurements, metadata, ^pid ->
-        case event do
-          [:codeqa, :block_impact, :codebase_cosines] ->
-            Agent.update(pid, &Map.put(&1, :codebase_cosines_us, measurements.duration))
-
-          [:codeqa, :block_impact, :file] ->
-            Agent.update(pid, fn state ->
-              Map.update!(state, :files, &[{metadata.path, measurements} | &1])
-            end)
-
-          [:codeqa, :block_impact, :node] ->
-            Agent.update(pid, fn state ->
-              Map.update!(state, :nodes, &[{metadata.path, measurements} | &1])
-            end)
-        end
-      end,
+      &handle_block_impact_event(&1, &2, &3, &4),
       pid
     )
 
     pid
+  end
+
+  defp handle_block_impact_event([:codeqa, :block_impact, :codebase_cosines], measurements, _metadata, pid) do
+    Agent.update(pid, &Map.put(&1, :codebase_cosines_us, measurements.duration))
+  end
+
+  defp handle_block_impact_event([:codeqa, :block_impact, :file], measurements, metadata, pid) do
+    Agent.update(pid, fn state ->
+      Map.update!(state, :files, &[{metadata.path, measurements} | &1])
+    end)
+  end
+
+  defp handle_block_impact_event([:codeqa, :block_impact, :node], measurements, metadata, pid) do
+    Agent.update(pid, fn state ->
+      Map.update!(state, :nodes, &[{metadata.path, measurements} | &1])
+    end)
   end
 
   defp print_block_impact_telemetry(pid) do

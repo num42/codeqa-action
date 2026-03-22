@@ -113,5 +113,4 @@ defmodule CodeQA.HealthReport.TopBlocks do
 
   defp max_delta(%{potentials: potentials}),
     do: Enum.max_by(potentials, & &1.cosine_delta).cosine_delta
-
 end
