@@ -9,6 +9,7 @@ ignore_paths:
   - scripts/**
   - docs/**
   - plans/**
+  - test/**
   - devenv*
   - direnv*
 
