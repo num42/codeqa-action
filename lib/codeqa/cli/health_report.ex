@@ -155,7 +155,7 @@ defmodule CodeQA.CLI.HealthReport do
     actual_count = length(parts)
     padded_count = max(actual_count, 3)
 
-    for n <- (actual_count + 1)..padded_count do
+    for n <- (actual_count + 1)..padded_count//1 do
       path = Path.join(tmpdir, "codeqa-part-#{n}.md")
       placeholder = "> _No content for this section._\n\n<!-- codeqa-health-report-#{n} -->"
       File.write!(path, placeholder)
