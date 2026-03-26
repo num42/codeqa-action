@@ -1,0 +1,1 @@
+doc: "Modules should depend on few external symbols — a low unique-operand count relative to total is a proxy for tight coupling."

@@ -1,0 +1,264 @@
+class_name_is_noun:
+  _doc: "Class and module names should be nouns describing what they represent, not verbs or gerunds."
+  _log_baseline: 2.9861
+  brevity:
+    mean_sample_size: 0.7106
+  compression:
+    mean_raw_bytes: 0.1346
+    mean_redundancy: -0.0605
+    mean_zlib_bytes: 0.2139
+    mean_zlib_ratio: -0.0794
+  entropy:
+    mean_token_entropy: 0.1236
+    mean_token_max_entropy: 0.1716
+    mean_token_normalized: -0.0484
+    mean_vocab_size: 0.7106
+  halstead:
+    mean_difficulty: -1.1493
+    mean_effort: -0.9669
+    mean_estimated_bugs: 0.1818
+    mean_n2_unique_operands: 1.1492
+    mean_time_to_implement_seconds: -0.9669
+    mean_vocabulary: 0.7462
+    mean_volume: 0.1823
+  heaps:
+    mean_beta: 0.4086
+    mean_k: -0.6266
+  identifier_length_variance:
+    mean_max: -0.4031
+    mean_mean: 0.3287
+    mean_std_dev: -0.8347
+    mean_variance: -1.6695
+  ngram:
+    mean_bigram_hapax_fraction: 0.2542
+    mean_bigram_repeated_unique: -0.5967
+    mean_bigram_repetition_rate: -0.9599
+    mean_bigram_unique: 0.6173
+    mean_trigram_hapax_fraction: 0.2449
+    mean_trigram_repeated_unique: -2.0000
+    mean_trigram_repetition_rate: -1.9547
+    mean_trigram_unique: 0.6002
+  punctuation_density:
+    mean_exclamation_density: -0.3314
+  readability:
+    mean_avg_line_length: 0.1418
+  symbol_density:
+    mean_density: -0.1381
+  vocabulary:
+    mean_mattr: 1.4020
+    mean_raw_ttr: 1.4020
+    mean_unique_identifiers: 1.4020
+  vowel_density:
+    mean_total_chars: 0.3287
+  zipf:
+    mean_exponent: -0.2180
+    mean_vocab_size: 0.7106
+
+file_name_matches_primary_export:
+  _doc: "The file name should match the primary class or module it exports (e.g. `user.js` exports `User`)."
+  _fix_hint: "Rename the file to match the primary module it defines"
+  _languages: [elixir]
+  _log_baseline: 0.0000
+  casing_entropy:
+    mean_pascal_case_count: 0.0000
+  vocabulary:
+    mean_unique_identifiers: 0.0000
+
+function_name_is_not_single_word:
+  _doc: "Single-word function names like `run`, `process`, or `handle` are too vague to convey intent."
+  _log_baseline: 17.8470
+  compression:
+    mean_raw_bytes: 0.2434
+    mean_redundancy: 0.0776
+    mean_zlib_bytes: 0.1029
+    mean_zlib_ratio: 0.1405
+  entropy:
+    mean_char_entropy: 0.0241
+    mean_char_normalized: 0.0241
+  identifier_length_variance:
+    mean_max: 0.7685
+    mean_mean: 0.5825
+    mean_std_dev: 1.0000
+    mean_variance: 2.0000
+  readability:
+    mean_avg_line_length: 0.2559
+    mean_avg_sub_words_per_id: 0.3083
+    mean_flesch_adapted: -0.3181
+    mean_fog_adapted: 1.3258
+  symbol_density:
+    mean_density: -0.2431
+  vowel_density:
+    mean_total_chars: 0.5825
+
+function_name_matches_return_type:
+  _doc: "Functions prefixed with `get_`, `fetch_`, or `find_` should return the thing they name."
+  _log_baseline: 7.5638
+  branching:
+    mean_max_nesting_depth: 0.1335
+  brevity:
+    mean_sample_size: 0.0257
+  casing_entropy:
+    mean_entropy: 0.0310
+    mean_other_count: 0.0347
+    mean_snake_case_count: -0.0296
+  compression:
+    mean_raw_bytes: -0.0190
+    mean_redundancy: -0.0180
+    mean_unique_line_ratio: -0.0104
+    mean_zlib_bytes: 0.0143
+    mean_zlib_ratio: -0.0332
+  entropy:
+    mean_char_entropy: 0.0079
+    mean_char_max_entropy: 0.0071
+    mean_token_max_entropy: 0.0059
+    mean_token_normalized: -0.0045
+    mean_total_tokens: 0.0030
+    mean_vocab_size: 0.0257
+  halstead:
+    mean_N1_total_operators: 0.0392
+    mean_N2_total_operands: -0.0539
+    mean_difficulty: 0.0029
+    mean_effort: 0.0080
+    mean_estimated_bugs: 0.0050
+    mean_n1_unique_operators: 0.0629
+    mean_n2_unique_operands: 0.0060
+    mean_time_to_implement_seconds: 0.0080
+    mean_vocabulary: 0.0218
+    mean_volume: 0.0050
+  heaps:
+    mean_beta: 0.0291
+    mean_k: -0.0519
+    mean_r_squared: 0.0038
+  identifier_length_variance:
+    mean_max: 0.1082
+    mean_std_dev: 0.0326
+    mean_variance: 0.0653
+  line_patterns:
+    mean_max_nesting_depth: 0.1335
+    mean_string_literal_ratio: -0.0027
+    mean_unique_line_ratio: -0.0108
+  magic_number_density:
+    mean_density: -0.0108
+    mean_string_literal_ratio: -0.0027
+  near_duplicate_blocks_file:
+    mean_near_dup_block_d0: -0.5899
+    mean_near_dup_block_d5: -0.2282
+    mean_near_dup_block_d7: 0.2282
+    mean_sub_block_count: 0.0314
+  ngram:
+    mean_bigram_hapax_fraction: 0.0106
+    mean_bigram_repeated_unique: 0.0095
+    mean_bigram_repetition_rate: -0.0167
+    mean_bigram_total: 0.0030
+    mean_bigram_unique: 0.0261
+    mean_trigram_hapax_fraction: 0.0174
+    mean_trigram_repeated_unique: -0.0297
+    mean_trigram_repetition_rate: -0.0444
+    mean_trigram_total: 0.0030
+    mean_trigram_unique: 0.0245
+  punctuation_density:
+    mean_bracket_nonalpha_prefix_count: 0.1048
+    mean_colon_suffix_density: -0.0027
+    mean_dot_count: 0.1335
+    mean_id_nonalpha_suffix_density: 0.0266
+    mean_question_mark_density: -2.0000
+  readability:
+    mean_avg_line_length: 0.0175
+    mean_avg_sub_words_per_id: 0.0087
+    mean_avg_tokens_per_line: 0.0030
+    mean_flesch_adapted: -0.0107
+    mean_fog_adapted: 0.0058
+  symbol_density:
+    mean_density: 0.0633
+    mean_distinct_symbol_types: 0.0639
+    mean_symbol_count: 0.0442
+  vocabulary:
+    mean_mattr: 0.0350
+    mean_raw_ttr: 0.0299
+    mean_total_identifiers: -0.0225
+    mean_unique_identifiers: 0.0074
+  vowel_density:
+    mean_total_chars: -0.0235
+  zipf:
+    mean_exponent: -0.0047
+    mean_r_squared: 0.0105
+    mean_total_tokens: 0.0030
+    mean_vocab_size: 0.0257
+
+test_name_starts_with_verb:
+  _doc: "Test descriptions should start with a verb: `creates`, `raises`, `returns`, not a noun phrase."
+  _log_baseline: 7.8915
+  branching:
+    mean_branch_count: 1.9977
+    mean_branching_density: 2.0000
+  brevity:
+    mean_sample_size: 0.0694
+  casing_entropy:
+    mean_entropy: -0.0711
+    mean_snake_case_count: 0.1381
+  compression:
+    mean_raw_bytes: 0.0914
+    mean_redundancy: 0.0182
+    mean_zlib_bytes: 0.0482
+    mean_zlib_ratio: 0.0431
+  entropy:
+    mean_char_max_entropy: 0.0064
+    mean_char_normalized: -0.0121
+    mean_token_entropy: 0.0259
+    mean_token_max_entropy: 0.0155
+    mean_token_normalized: 0.0104
+    mean_total_tokens: 0.0600
+    mean_vocab_size: 0.0694
+  halstead:
+    mean_N1_total_operators: 0.0411
+    mean_difficulty: 0.0577
+    mean_effort: 0.0855
+    mean_estimated_bugs: 0.0277
+    mean_length: 0.0240
+    mean_n1_unique_operators: 0.0577
+    mean_time_to_implement_seconds: 0.0855
+    mean_vocabulary: 0.0164
+    mean_volume: 0.0278
+  heaps:
+    mean_beta: -0.0149
+    mean_k: 0.0795
+    mean_r_squared: -0.0081
+  identifier_length_variance:
+    mean_std_dev: -0.0192
+    mean_variance: -0.0384
+  line_patterns:
+    mean_string_literal_ratio: -0.0611
+  magic_number_density:
+    mean_string_literal_ratio: -0.0611
+  ngram:
+    mean_bigram_hapax_fraction: -0.0506
+    mean_bigram_repeated_unique: 0.1209
+    mean_bigram_repetition_rate: 0.0150
+    mean_bigram_total: 0.0602
+    mean_bigram_unique: 0.0621
+    mean_trigram_hapax_fraction: -0.0206
+    mean_trigram_repeated_unique: 0.0961
+    mean_trigram_repetition_rate: 0.0117
+    mean_trigram_total: 0.0603
+    mean_trigram_unique: 0.0596
+  punctuation_density:
+    mean_arrow_density: -0.1129
+    mean_colon_suffix_density: -0.0591
+    mean_id_nonalpha_suffix_density: -0.0602
+  readability:
+    mean_avg_line_length: 0.0943
+    mean_avg_tokens_per_line: 0.0600
+    mean_fog_adapted: 0.0600
+  symbol_density:
+    mean_density: -0.0912
+  vocabulary:
+    mean_mattr: 0.0463
+    mean_total_identifiers: 0.1129
+    mean_unique_identifiers: 0.1161
+  vowel_density:
+    mean_total_chars: 0.1122
+  zipf:
+    mean_exponent: -0.0239
+    mean_total_tokens: 0.0600
+    mean_vocab_size: 0.0694
+

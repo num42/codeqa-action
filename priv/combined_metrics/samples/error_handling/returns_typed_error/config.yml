@@ -1,0 +1,1 @@
+doc: "Functions should signal failure via a typed return (e.g. `{:error, reason}`) rather than returning `nil` or `false`."

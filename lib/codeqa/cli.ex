@@ -3,27 +3,32 @@ defmodule CodeQA.CLI do
 
   @commands %{
     "analyze" => CodeQA.CLI.Analyze,
-    "compare" => CodeQA.CLI.Compare,
     "history" => CodeQA.CLI.History,
     "correlate" => CodeQA.CLI.Correlate,
-    "stopwords" => CodeQA.CLI.Stopwords,
-    "health-report" => CodeQA.CLI.HealthReport
+    "health-report" => CodeQA.CLI.HealthReport,
+    "diagnose" => CodeQA.CLI.Diagnose
   }
 
   def main(args) do
     case args do
-      [cmd | rest] when is_map_key(@commands, cmd) -> @commands[cmd].run(rest)
-      _ -> print_usage()
+      [cmd | rest] when is_map_key(@commands, cmd) ->
+        output = @commands[cmd].run(rest)
+        unless output == "", do: IO.puts(output)
+        output
+
+      _ ->
+        output = build_usage()
+        IO.puts(output)
+        output
     end
   end
 
-  defp print_usage do
+  defp build_usage do
     command_usages =
       @commands
       |> Enum.sort_by(fn {name, _} -> name end)
-      |> Enum.map(fn {_name, mod} -> mod.usage() end)
-      |> Enum.join("\n")
+      |> Enum.map_join("\n", fn {_name, mod} -> mod.usage() end)
 
-    IO.puts("Usage: codeqa <command> [options]\n\n" <> command_usages)
+    "Usage: codeqa <command> [options]\n\n" <> command_usages
   end
 end

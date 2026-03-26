@@ -1,0 +1,1 @@
+doc: "Errors must be handled or re-raised — empty rescue/catch blocks silently hide failures."

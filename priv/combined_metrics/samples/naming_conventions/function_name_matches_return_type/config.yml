@@ -1,0 +1,1 @@
+doc: "Functions prefixed with `get_`, `fetch_`, or `find_` should return the thing they name."

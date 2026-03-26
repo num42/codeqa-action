@@ -1,0 +1,1 @@
+doc: "Numeric literals should be named constants, not inline magic numbers."

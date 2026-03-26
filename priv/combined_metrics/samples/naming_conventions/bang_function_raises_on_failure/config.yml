@@ -1,0 +1,1 @@
+doc: "Bang functions (`foo!`) should raise on failure rather than returning an error tuple."

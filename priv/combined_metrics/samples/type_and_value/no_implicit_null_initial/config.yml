@@ -1,0 +1,1 @@
+doc: "Initialising a variable to `nil`/`null` and assigning it later in a branch signals missing structure."

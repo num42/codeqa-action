@@ -4,6 +4,9 @@ defmodule CodeQA.CLI.Analyze do
   @behaviour CodeQA.CLI.Command
 
   alias CodeQA.CLI.Options
+  alias CodeQA.Config
+  alias CodeQA.Engine.Analyzer
+  alias CodeQA.Engine.Collector
 
   @version "0.1.0"
 
@@ -32,19 +35,18 @@ defmodule CodeQA.CLI.Analyze do
 
   @impl CodeQA.CLI.Command
   def run(args) when args in [["--help"], ["-h"]] do
-    IO.puts(usage())
+    usage()
   end
 
   def run(args) do
     {opts, [path], _} =
-      Options.parse(args, [output: :string], [o: :output])
-
-    if opts[:telemetry], do: CodeQA.Telemetry.setup()
+      Options.parse(args, [output: :string], o: :output)
 
     Options.validate_dir!(path)
+    Config.load(path)
 
-    ignore_patterns = Options.parse_ignore_paths(opts[:ignore_paths]) ++ Options.load_config_ignore_paths(path)
-    files = CodeQA.Collector.collect_files(path, ignore_patterns: ignore_patterns)
+    files =
+      Collector.collect_files(path, Options.parse_ignore_paths(opts[:ignore_paths]))
 
     if map_size(files) == 0 do
       IO.puts(:stderr, "Warning: no source files found in '#{path}'")
@@ -53,10 +55,11 @@ defmodule CodeQA.CLI.Analyze do
 
     print_progress(opts, files)
 
-    analyze_opts = Options.build_analyze_opts(opts)
+    analyze_opts =
+      Options.build_analyze_opts(opts) ++ Config.near_duplicate_blocks_opts()
 
     start_time = System.monotonic_time(:millisecond)
-    results = CodeQA.Analyzer.analyze_codebase(files, analyze_opts)
+    results = Analyzer.analyze_codebase(files, analyze_opts)
     end_time = System.monotonic_time(:millisecond)
 
     IO.puts(:stderr, "Analysis completed in #{end_time - start_time}ms")
@@ -80,14 +83,13 @@ defmodule CodeQA.CLI.Analyze do
 
     case opts[:output] do
       nil ->
-        IO.puts(json)
+        json
 
       file ->
         File.write!(file, json)
         IO.puts(:stderr, "Report written to #{file}")
+        ""
     end
-
-    if opts[:telemetry], do: CodeQA.Telemetry.print_report()
   end
 
   defp print_progress(opts, files) do

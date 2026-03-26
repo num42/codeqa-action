@@ -1,0 +1,1 @@
+doc: "Names shorter than 3 characters (outside loops) are too opaque."

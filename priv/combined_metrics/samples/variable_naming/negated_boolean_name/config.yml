@@ -1,0 +1,1 @@
+doc: "Negated boolean names (`isNotValid`, `notActive`) are harder to reason about."
