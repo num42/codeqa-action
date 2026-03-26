@@ -38,6 +38,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
 
     min_lines = Keyword.get(opts, :block_min_lines, @default_min_lines)
     max_lines = Keyword.get(opts, :block_max_lines, @default_max_lines)
+    diff_line_ranges = Keyword.get(opts, :diff_line_ranges, %{})
 
     file_entries =
       if changed_files == [] do
@@ -53,11 +54,14 @@ defmodule CodeQA.HealthReport.TopBlocks do
     # Flatten all blocks across all files, enrich with path and source code
     file_entries
     |> Enum.flat_map(fn {path, status, file_data} ->
+      path_diff_ranges = Map.get(diff_line_ranges, path, [])
+
       file_data
       |> Map.get("nodes", [])
       |> Enum.flat_map(&collect_nodes/1)
       |> Enum.filter(&(&1["token_count"] >= @min_tokens))
       |> Enum.filter(&block_in_line_range?(&1, min_lines, max_lines))
+      |> filter_by_diff_overlap(path_diff_ranges, diff_line_ranges)
       |> Enum.map(&enrich_block(&1, codebase_cosine_lookup, fix_hints))
       |> Enum.reject(&(&1.potentials == []))
       |> Enum.map(&Map.merge(&1, %{path: path, status: status}))
@@ -69,11 +73,40 @@ defmodule CodeQA.HealthReport.TopBlocks do
     |> Enum.map(&add_source_code(&1, base_path))
   end
 
+  @spec block_in_line_range?(map(), pos_integer(), pos_integer()) :: boolean()
   defp block_in_line_range?(node, min_lines, max_lines) do
     start_line = node["start_line"] || 1
     end_line = node["end_line"] || start_line
     line_count = end_line - start_line + 1
     line_count >= min_lines and line_count <= max_lines
+  end
+
+  # When no diff_line_ranges provided (empty map), show all blocks - no filtering needed
+  @spec filter_by_diff_overlap([map()], [{pos_integer(), pos_integer()}], map()) :: [map()]
+  defp filter_by_diff_overlap(blocks, _path_ranges, diff_line_ranges)
+       when map_size(diff_line_ranges) == 0,
+       do: blocks
+
+  # When diff_line_ranges provided, filter blocks by overlap
+  defp filter_by_diff_overlap(blocks, path_ranges, _diff_line_ranges) do
+    Enum.filter(blocks, &block_overlaps_diff?(&1, path_ranges))
+  end
+
+  @spec block_overlaps_diff?(map(), [{pos_integer(), pos_integer()}]) :: boolean()
+  defp block_overlaps_diff?(_node, []), do: false
+
+  defp block_overlaps_diff?(node, path_ranges) do
+    block_start = node["start_line"] || 1
+    block_end = node["end_line"] || block_start
+
+    Enum.any?(path_ranges, fn {diff_start, diff_end} ->
+      ranges_overlap?(block_start, block_end, diff_start, diff_end)
+    end)
+  end
+
+  @spec ranges_overlap?(pos_integer(), pos_integer(), pos_integer(), pos_integer()) :: boolean()
+  defp ranges_overlap?(start1, end1, start2, end2) do
+    start1 <= end2 and start2 <= end1
   end
 
   defp collect_nodes(node) do

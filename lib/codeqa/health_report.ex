@@ -9,6 +9,7 @@ defmodule CodeQA.HealthReport do
     config_path = Keyword.get(opts, :config)
     base_results = Keyword.get(opts, :base_results)
     changed_files = Keyword.get(opts, :changed_files, [])
+    diff_line_ranges = Keyword.get(opts, :diff_line_ranges, %{})
 
     %{
       categories: categories,
@@ -64,7 +65,8 @@ defmodule CodeQA.HealthReport do
     top_blocks =
       TopBlocks.build(analysis_results, changed_files, codebase_cosine_lookup,
         block_min_lines: block_min_lines,
-        block_max_lines: block_max_lines
+        block_max_lines: block_max_lines,
+        diff_line_ranges: diff_line_ranges
       )
 
     grading_cfg = %{

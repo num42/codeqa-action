@@ -95,18 +95,29 @@ defmodule CodeQA.CLI.HealthReport do
         "total_bytes" => total_bytes
       })
 
-    {base_results, changed_files} =
+    {base_results, changed_files, diff_line_ranges} =
       if base_ref do
         IO.puts(:stderr, "Collecting base snapshot at #{base_ref}...")
         base_files = Git.collect_files_at_ref(path, base_ref)
         changed = Git.changed_files(path, base_ref, head_ref)
 
+        diff_ranges =
+          case Git.diff_line_ranges(path, base_ref, head_ref) do
+            {:ok, ranges} ->
+              ranges
+
+            {:error, reason} ->
+              IO.puts(:stderr, "Warning: failed to parse diff line ranges: #{inspect(reason)}")
+              IO.puts(:stderr, "Block scoping disabled - showing all blocks in changed files")
+              %{}
+          end
+
         IO.puts(:stderr, "Analyzing base snapshot (#{map_size(base_files)} files)...")
         base_res = Analyzer.analyze_codebase(base_files, analyze_opts)
 
-        {base_res, changed}
+        {base_res, changed, diff_ranges}
       else
-        {nil, []}
+        {nil, [], %{}}
       end
 
     detail = parse_detail(opts[:detail])
@@ -119,7 +130,8 @@ defmodule CodeQA.CLI.HealthReport do
         detail: detail,
         top: top_n,
         base_results: base_results,
-        changed_files: changed_files
+        changed_files: changed_files,
+        diff_line_ranges: diff_line_ranges
       )
 
     if opts[:comment] do

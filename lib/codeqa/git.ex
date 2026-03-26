@@ -43,6 +43,78 @@ defmodule CodeQA.Git do
     |> Enum.flat_map(&parse_change_line/1)
   end
 
+  @doc """
+  Returns a map of file paths to lists of changed line ranges in the head version.
+
+  Each range is a tuple `{start_line, end_line}` representing lines that were
+  added or modified in the diff between base_ref and head_ref.
+  """
+  @spec diff_line_ranges(String.t(), String.t(), String.t()) ::
+          {:ok, %{String.t() => [{pos_integer(), pos_integer()}]}} | {:error, term()}
+  def diff_line_ranges(repo_path, base_ref, head_ref) do
+    case System.cmd(
+           "git",
+           ["diff", "-U0", "#{base_ref}..#{head_ref}"],
+           cd: repo_path,
+           stderr_to_stdout: false
+         ) do
+      {output, 0} ->
+        {:ok, parse_diff_hunks(output)}
+
+      {_output, code} ->
+        {:error, "git diff exited with code #{code}"}
+    end
+  end
+
+  @typep parse_state :: {String.t() | nil, %{String.t() => [{pos_integer(), pos_integer()}]}}
+
+  @spec parse_diff_hunks(String.t()) :: %{String.t() => [{pos_integer(), pos_integer()}]}
+  defp parse_diff_hunks(diff_output) do
+    diff_output
+    |> String.split("\n")
+    |> Enum.reduce({nil, %{}}, &parse_diff_line/2)
+    |> elem(1)
+    |> Map.new(fn {path, ranges} -> {path, Enum.reverse(ranges)} end)
+  end
+
+  @spec parse_diff_line(String.t(), parse_state()) :: parse_state()
+  defp parse_diff_line("diff --git a/" <> rest, {_current_file, acc}) do
+    # Extract the "b/..." path from the diff header
+    case Regex.run(~r/ b\/(.+)$/, rest) do
+      [_, path] -> {path, acc}
+      nil -> {nil, acc}
+    end
+  end
+
+  defp parse_diff_line("@@ " <> rest, {current_file, acc}) when is_binary(current_file) do
+    # Parse hunk header: @@ -old_start,old_count +new_start,new_count @@
+    case Regex.run(~r/\+(\d+)(?:,(\d+))?/, rest) do
+      [_, start_str] ->
+        # Single line change (no count means 1 line)
+        start = String.to_integer(start_str)
+        updated = Map.update(acc, current_file, [{start, start}], &[{start, start} | &1])
+        {current_file, updated}
+
+      [_, start_str, count_str] ->
+        start = String.to_integer(start_str)
+        count = String.to_integer(count_str)
+
+        if count == 0 do
+          # Deletion only, no new lines
+          {current_file, acc}
+        else
+          end_line = start + count - 1
+          updated = Map.update(acc, current_file, [{start, end_line}], &[{start, end_line} | &1])
+          {current_file, updated}
+        end
+
+      nil ->
+        {current_file, acc}
+    end
+  end
+
+  defp parse_diff_line(_line, state), do: state
+
   def read_file_at_ref(repo_path, ref, path) do
     case System.cmd("git", ["show", "#{ref}:#{path}"], cd: repo_path, stderr_to_stdout: true) do
       {output, 0} -> output

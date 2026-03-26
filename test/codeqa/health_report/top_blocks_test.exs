@@ -280,4 +280,192 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
       assert length(blocks) == 1
     end
   end
+
+  describe "diff_line_ranges filtering" do
+    test "when diff_line_ranges is empty map, shows all blocks" do
+      node = make_node(0.60)
+      [block] = TopBlocks.build(make_results([node]), [], lookup(), diff_line_ranges: %{})
+      assert block.path == "lib/foo.ex"
+    end
+
+    test "when diff_line_ranges provided, only shows blocks overlapping diff" do
+      # Block at lines 1-10
+      node = make_node(0.60)
+
+      # Diff changes lines 5-7 (overlaps with block)
+      diff_ranges = %{"lib/foo.ex" => [{5, 7}]}
+
+      [block] =
+        TopBlocks.build(make_results([node]), [], lookup(), diff_line_ranges: diff_ranges)
+
+      assert block.path == "lib/foo.ex"
+    end
+
+    test "excludes blocks that don't overlap with diff" do
+      # Block at lines 1-10
+      node = make_node(0.60)
+
+      # Diff changes lines 50-55 (no overlap)
+      diff_ranges = %{"lib/foo.ex" => [{50, 55}]}
+
+      blocks = TopBlocks.build(make_results([node]), [], lookup(), diff_line_ranges: diff_ranges)
+      assert blocks == []
+    end
+
+    test "excludes blocks when file has no diff ranges" do
+      node = make_node(0.60)
+
+      # Diff only has ranges for different file
+      diff_ranges = %{"lib/other.ex" => [{1, 10}]}
+
+      blocks = TopBlocks.build(make_results([node]), [], lookup(), diff_line_ranges: diff_ranges)
+      assert blocks == []
+    end
+
+    test "includes block with exact overlap" do
+      # Block at lines 5-15
+      node =
+        make_node(0.60)
+        |> put_in(["start_line"], 5)
+        |> put_in(["end_line"], 15)
+
+      # Diff changes exactly lines 5-15
+      diff_ranges = %{"lib/foo.ex" => [{5, 15}]}
+
+      [block] =
+        TopBlocks.build(make_results([node]), [], lookup(), diff_line_ranges: diff_ranges)
+
+      assert block.start_line == 5
+      assert block.end_line == 15
+    end
+
+    test "includes block with partial overlap at start" do
+      # Block at lines 10-20
+      node =
+        make_node(0.60)
+        |> put_in(["start_line"], 10)
+        |> put_in(["end_line"], 20)
+
+      # Diff changes lines 5-12 (overlaps start of block)
+      diff_ranges = %{"lib/foo.ex" => [{5, 12}]}
+
+      [block] =
+        TopBlocks.build(make_results([node]), [], lookup(), diff_line_ranges: diff_ranges)
+
+      assert block.start_line == 10
+    end
+
+    test "includes block with partial overlap at end" do
+      # Block at lines 10-20
+      node =
+        make_node(0.60)
+        |> put_in(["start_line"], 10)
+        |> put_in(["end_line"], 20)
+
+      # Diff changes lines 18-25 (overlaps end of block)
+      diff_ranges = %{"lib/foo.ex" => [{18, 25}]}
+
+      [block] =
+        TopBlocks.build(make_results([node]), [], lookup(), diff_line_ranges: diff_ranges)
+
+      assert block.end_line == 20
+    end
+
+    test "includes block when diff is entirely inside block" do
+      # Block at lines 1-10
+      node = make_node(0.60)
+
+      # Diff changes lines 3-5 (inside block)
+      diff_ranges = %{"lib/foo.ex" => [{3, 5}]}
+
+      [block] =
+        TopBlocks.build(make_results([node]), [], lookup(), diff_line_ranges: diff_ranges)
+
+      assert block.path == "lib/foo.ex"
+      assert block.start_line == 1
+      assert block.end_line == 10
+    end
+
+    test "works with multiple diff ranges for same file" do
+      # Block at lines 1-10
+      node = make_node(0.60)
+
+      # Diff changes lines 50-55 and 5-7 (second range overlaps)
+      diff_ranges = %{"lib/foo.ex" => [{50, 55}, {5, 7}]}
+
+      [block] =
+        TopBlocks.build(make_results([node]), [], lookup(), diff_line_ranges: diff_ranges)
+
+      assert block.path == "lib/foo.ex"
+      assert block.start_line == 1
+      assert block.end_line == 10
+    end
+
+    test "excludes adjacent but non-overlapping ranges" do
+      # Block at lines 1-10
+      node = make_node(0.60)
+
+      # Diff changes line 11 (adjacent but not overlapping)
+      diff_ranges = %{"lib/foo.ex" => [{11, 11}]}
+
+      blocks = TopBlocks.build(make_results([node]), [], lookup(), diff_line_ranges: diff_ranges)
+      assert blocks == []
+    end
+
+    test "excludes blocks when file has empty diff ranges list" do
+      node = make_node(0.60)
+
+      # File is present but with empty ranges (e.g., only deletions)
+      diff_ranges = %{"lib/foo.ex" => []}
+
+      blocks = TopBlocks.build(make_results([node]), [], lookup(), diff_line_ranges: diff_ranges)
+      assert blocks == []
+    end
+
+    test "single-line block overlapping single-line diff" do
+      # Single-line block at line 5
+      node =
+        make_node(0.60)
+        |> put_in(["start_line"], 5)
+        |> put_in(["end_line"], 5)
+
+      diff_ranges = %{"lib/foo.ex" => [{5, 5}]}
+
+      # Need to adjust min_lines for this test since block is only 1 line
+      [block] =
+        TopBlocks.build(make_results([node]), [], lookup(),
+          diff_line_ranges: diff_ranges,
+          block_min_lines: 1
+        )
+
+      assert block.start_line == 5
+      assert block.end_line == 5
+    end
+
+    test "when both changed_files and diff_line_ranges provided, both filters apply" do
+      node = make_node(0.60)
+      changed = [%ChangedFile{path: "lib/foo.ex", status: "modified"}]
+      diff_ranges = %{"lib/foo.ex" => [{5, 7}]}
+
+      [block] =
+        TopBlocks.build(make_results([node]), changed, lookup(), diff_line_ranges: diff_ranges)
+
+      assert block.path == "lib/foo.ex"
+      assert block.status == "modified"
+      assert block.start_line == 1
+      assert block.end_line == 10
+    end
+
+    test "changed_files filter applies before diff_line_ranges filter" do
+      node = make_node(0.60)
+      # File is in diff_ranges but not in changed_files
+      changed = [%ChangedFile{path: "lib/other.ex", status: "modified"}]
+      diff_ranges = %{"lib/foo.ex" => [{5, 7}]}
+
+      blocks =
+        TopBlocks.build(make_results([node]), changed, lookup(), diff_line_ranges: diff_ranges)
+
+      assert blocks == []
+    end
+  end
 end
