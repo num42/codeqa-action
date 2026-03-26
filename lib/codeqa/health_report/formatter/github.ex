@@ -320,7 +320,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     line_count = (block.end_line || block.start_line) - block.start_line + 1
     location = "#{block.path}:#{block.start_line}-#{block.end_line}"
 
-    if line_count >= 4 and line_count <= 10 and block.source do
+    if line_count >= 1 and line_count <= 15 and block.source do
       lang = block.language || ""
 
       [
