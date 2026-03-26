@@ -9,6 +9,8 @@ defmodule CodeQA.HealthReport.TopBlocks do
   @severity_medium 0.10
   @gap_floor 0.01
   @top_n 10
+  @default_min_lines 3
+  @default_max_lines 20
 
   defp build_fix_hint_lookup do
     Scorer.all_yamls()
@@ -28,11 +30,14 @@ defmodule CodeQA.HealthReport.TopBlocks do
 
   defp hints_for_behavior(_category, _entry), do: []
 
-  @spec build(map(), [struct()], map()) :: [map()]
-  def build(analysis_results, changed_files, codebase_cosine_lookup) do
+  @spec build(map(), [struct()], map(), keyword()) :: [map()]
+  def build(analysis_results, changed_files, codebase_cosine_lookup, opts \\ []) do
     files = Map.get(analysis_results, "files", %{})
     base_path = get_in(analysis_results, ["metadata", "path"]) || "."
     fix_hints = build_fix_hint_lookup()
+
+    min_lines = Keyword.get(opts, :block_min_lines, @default_min_lines)
+    max_lines = Keyword.get(opts, :block_max_lines, @default_max_lines)
 
     file_entries =
       if changed_files == [] do
@@ -52,6 +57,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
       |> Map.get("nodes", [])
       |> Enum.flat_map(&collect_nodes/1)
       |> Enum.filter(&(&1["token_count"] >= @min_tokens))
+      |> Enum.filter(&block_in_line_range?(&1, min_lines, max_lines))
       |> Enum.map(&enrich_block(&1, codebase_cosine_lookup, fix_hints))
       |> Enum.reject(&(&1.potentials == []))
       |> Enum.map(&Map.merge(&1, %{path: path, status: status}))
@@ -61,6 +67,13 @@ defmodule CodeQA.HealthReport.TopBlocks do
     |> Enum.take(@top_n)
     # Add source code for each block
     |> Enum.map(&add_source_code(&1, base_path))
+  end
+
+  defp block_in_line_range?(node, min_lines, max_lines) do
+    start_line = node["start_line"] || 1
+    end_line = node["end_line"] || start_line
+    line_count = end_line - start_line + 1
+    line_count >= min_lines and line_count <= max_lines
   end
 
   defp collect_nodes(node) do

@@ -203,8 +203,13 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
 
   describe "top N limiting" do
     test "returns at most 10 blocks" do
-      # Create 15 nodes
-      nodes = for i <- 1..15, do: put_in(make_node(0.60 + i * 0.01), ["start_line"], i * 10)
+      # Create 15 nodes, each 10 lines (within default 3-20 range)
+      nodes =
+        for i <- 1..15 do
+          make_node(0.60 + i * 0.01)
+          |> put_in(["start_line"], i * 20)
+          |> put_in(["end_line"], i * 20 + 9)
+        end
 
       results = %{
         "files" => %{"lib/foo.ex" => %{"nodes" => nodes}},
@@ -213,6 +218,66 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
 
       blocks = TopBlocks.build(results, [], lookup())
       assert length(blocks) == 10
+    end
+  end
+
+  describe "line range filtering" do
+    test "blocks outside line range are excluded" do
+      # 2-line block (below min of 3)
+      small_node =
+        make_node(0.60)
+        |> put_in(["start_line"], 1)
+        |> put_in(["end_line"], 2)
+
+      # 25-line block (above max of 20)
+      large_node =
+        make_node(0.60)
+        |> put_in(["start_line"], 10)
+        |> put_in(["end_line"], 34)
+
+      results = %{
+        "files" => %{"lib/foo.ex" => %{"nodes" => [small_node, large_node]}},
+        "metadata" => %{"path" => "/tmp"}
+      }
+
+      blocks = TopBlocks.build(results, [], lookup())
+      assert blocks == []
+    end
+
+    test "blocks within line range are included" do
+      # 10-line block (within 3-20 range)
+      node =
+        make_node(0.60)
+        |> put_in(["start_line"], 1)
+        |> put_in(["end_line"], 10)
+
+      results = %{
+        "files" => %{"lib/foo.ex" => %{"nodes" => [node]}},
+        "metadata" => %{"path" => "/tmp"}
+      }
+
+      blocks = TopBlocks.build(results, [], lookup())
+      assert length(blocks) == 1
+    end
+
+    test "line range is configurable" do
+      # 2-line block
+      small_node =
+        make_node(0.60)
+        |> put_in(["start_line"], 1)
+        |> put_in(["end_line"], 2)
+
+      results = %{
+        "files" => %{"lib/foo.ex" => %{"nodes" => [small_node]}},
+        "metadata" => %{"path" => "/tmp"}
+      }
+
+      # Default range (3-20) excludes it
+      assert TopBlocks.build(results, [], lookup()) == []
+
+      # Custom range (1-5) includes it
+      blocks = TopBlocks.build(results, [], lookup(), block_min_lines: 1, block_max_lines: 5)
+      assert length(blocks) == 1
     end
   end
 end

@@ -7,14 +7,18 @@ defmodule CodeQA.HealthReport.Config do
           categories: [map()],
           grade_scale: [{number(), String.t()}],
           impact_map: %{String.t() => pos_integer()},
-          combined_top: pos_integer()
+          combined_top: pos_integer(),
+          block_min_lines: pos_integer(),
+          block_max_lines: pos_integer()
         }
   def load(nil) do
     %{
       categories: Categories.defaults(),
       grade_scale: Categories.default_grade_scale(),
       impact_map: CodeQA.Config.impact_map(),
-      combined_top: CodeQA.Config.combined_top()
+      combined_top: CodeQA.Config.combined_top(),
+      block_min_lines: 3,
+      block_max_lines: 20
     }
   end
 
@@ -43,12 +47,16 @@ defmodule CodeQA.HealthReport.Config do
     grade_scale = parse_grade_scale(Map.get(yaml, "grade_scale"))
     impact_map = parse_impact(Map.get(yaml, "impact"))
     combined_top = Map.get(yaml, "combined_top", 2)
+    block_min_lines = Map.get(yaml, "block_min_lines", 3)
+    block_max_lines = Map.get(yaml, "block_max_lines", 20)
 
     %{
       categories: categories,
       grade_scale: grade_scale,
       impact_map: impact_map,
-      combined_top: combined_top
+      combined_top: combined_top,
+      block_min_lines: block_min_lines,
+      block_max_lines: block_max_lines
     }
   end
 
