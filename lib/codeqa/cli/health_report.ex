@@ -31,6 +31,7 @@ defmodule CodeQA.CLI.HealthReport do
       --ignore-paths PATHS  Comma-separated list of path patterns to ignore (supports wildcards, e.g. "test/*,docs/*")
       --base-ref REF        Base git ref for PR comparison (enables delta and block scoping)
       --head-ref REF        Head git ref (default: HEAD)
+      --comment             Multi-part mode: writes numbered part files to TMPDIR for PR comments
     """
   end
 
@@ -48,7 +49,8 @@ defmodule CodeQA.CLI.HealthReport do
     ignore_paths: :string,
     base_ref: :string,
     head_ref: :string,
-    telemetry: :boolean
+    telemetry: :boolean,
+    comment: :boolean
   ]
 
   def run(args) do
@@ -120,17 +122,52 @@ defmodule CodeQA.CLI.HealthReport do
         changed_files: changed_files
       )
 
-    markdown = HealthReport.to_markdown(report, detail, format)
+    if opts[:comment] do
+      write_comment_parts(report, detail)
+    else
+      markdown = HealthReport.to_markdown(report, detail, format)
 
-    case opts[:output] do
-      nil ->
-        markdown
+      case opts[:output] do
+        nil ->
+          markdown
 
-      file ->
-        File.write!(file, markdown)
-        IO.puts(:stderr, "Health report written to #{file}")
-        ""
+        file ->
+          File.write!(file, markdown)
+          IO.puts(:stderr, "Health report written to #{file}")
+          ""
+      end
     end
+  end
+
+  defp write_comment_parts(report, detail) do
+    tmpdir = System.get_env("TMPDIR", "/tmp")
+    parts = HealthReport.Formatter.render_parts(report, detail: detail)
+
+    # Write each part to a numbered file
+    Enum.with_index(parts, 1)
+    |> Enum.each(fn {content, n} ->
+      path = Path.join(tmpdir, "codeqa-part-#{n}.md")
+      File.write!(path, content)
+      IO.puts(:stderr, "Part #{n} written to #{path} (#{byte_size(content)} bytes)")
+    end)
+
+    # Ensure at least 3 parts exist for stale cleanup
+    actual_count = length(parts)
+    padded_count = max(actual_count, 3)
+
+    for n <- (actual_count + 1)..padded_count do
+      path = Path.join(tmpdir, "codeqa-part-#{n}.md")
+      placeholder = "> _No content for this section._\n\n<!-- codeqa-health-report-#{n} -->"
+      File.write!(path, placeholder)
+      IO.puts(:stderr, "Part #{n} (placeholder) written to #{path}")
+    end
+
+    # Write part count for run.sh to read
+    count_path = Path.join(tmpdir, "codeqa-part-count.txt")
+    File.write!(count_path, to_string(padded_count))
+    IO.puts(:stderr, "Part count (#{padded_count}) written to #{count_path}")
+
+    ""
   end
 
   defp parse_detail(nil), do: :default
@@ -173,7 +210,12 @@ defmodule CodeQA.CLI.HealthReport do
     pid
   end
 
-  defp handle_block_impact_event([:codeqa, :block_impact, :codebase_cosines], measurements, _metadata, pid) do
+  defp handle_block_impact_event(
+         [:codeqa, :block_impact, :codebase_cosines],
+         measurements,
+         _metadata,
+         pid
+       ) do
     Agent.update(pid, &Map.put(&1, :codebase_cosines_us, measurements.duration))
   end
 

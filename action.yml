@@ -93,14 +93,8 @@ runs:
         INPUT_VERSION: ${{ inputs.version }}
         INPUT_BUILD: ${{ inputs.build }}
         GITHUB_ACTION_PATH: ${{ github.action_path }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
       run: ${{ github.action_path }}/scripts/run.sh
-
-    - name: Post PR comment
-      if: inputs.comment == 'true' && github.event_name == 'pull_request'
-      uses: marocchino/sticky-pull-request-comment@v2
-      with:
-        header: codeqa-${{ inputs.command }}
-        path: ${{ steps.run.outputs.report-file }}
 
     - name: Check grade threshold
       if: inputs.fail-grade != '' && inputs.command == 'health-report'

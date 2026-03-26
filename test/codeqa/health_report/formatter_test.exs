@@ -498,4 +498,123 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert result =~ "61.00"
     end
   end
+
+  describe "render_parts/2" do
+    test "returns at least 3 parts" do
+      parts = Formatter.render_parts(@sample_report)
+      assert length(parts) >= 3
+    end
+
+    test "each part ends with sentinel comment" do
+      parts = Formatter.render_parts(@sample_report)
+
+      Enum.with_index(parts, 1)
+      |> Enum.each(fn {part, n} ->
+        assert part =~ "<!-- codeqa-health-report-#{n} -->"
+      end)
+    end
+
+    test "part 1 contains header and grade" do
+      [part_1 | _] = Formatter.render_parts(@sample_report)
+      assert part_1 =~ "Code Health: B+"
+      assert part_1 =~ "(79/100)"
+    end
+
+    test "part 1 contains mermaid chart by default" do
+      [part_1 | _] = Formatter.render_parts(@sample_report)
+      assert part_1 =~ "```mermaid"
+    end
+
+    test "part 1 contains progress bars" do
+      [part_1 | _] = Formatter.render_parts(@sample_report)
+      assert part_1 =~ "████"
+    end
+
+    test "part 2 contains category details" do
+      [_, part_2 | _] = Formatter.render_parts(@sample_report)
+      assert part_2 =~ "<details>"
+      assert part_2 =~ "Readability"
+    end
+
+    test "part 3 is placeholder when no blocks" do
+      [_, _, part_3 | _] = Formatter.render_parts(@sample_report)
+      assert part_3 =~ "_No content for this section._"
+    end
+
+    test "part 3 contains blocks when present" do
+      report = Map.put(@sample_report, :top_blocks, @top_blocks_gh)
+      [_, _, part_3 | _] = Formatter.render_parts(report)
+      assert part_3 =~ "lib/foo.ex"
+      assert part_3 =~ "Blocks"
+    end
+  end
+
+  describe "Github.render_parts_3/2 slicing" do
+    alias CodeQA.HealthReport.Formatter.Github
+
+    @many_blocks Enum.map(1..100, fn i ->
+                   %{
+                     path: "lib/file_#{i}.ex",
+                     status: "modified",
+                     blocks:
+                       Enum.map(1..10, fn j ->
+                         %{
+                           start_line: j * 10,
+                           end_line: j * 10 + 20,
+                           type: "function",
+                           token_count: 150,
+                           potentials: [
+                             %{
+                               category: "function_design",
+                               behavior: "single_responsibility",
+                               cosine_delta: 0.35,
+                               severity: :high,
+                               fix_hint: "Consider extracting helper function"
+                             }
+                           ]
+                         }
+                       end)
+                   }
+                 end)
+
+    test "slices large blocks section into multiple parts" do
+      report = Map.put(@sample_report, :top_blocks, @many_blocks)
+      parts = Github.render_parts_3(report)
+
+      # With 100 files × 10 blocks, this should produce multiple parts
+      assert length(parts) > 1
+    end
+
+    test "each sliced part ends with sentinel" do
+      report = Map.put(@sample_report, :top_blocks, @many_blocks)
+      parts = Github.render_parts_3(report)
+
+      Enum.with_index(parts, 3)
+      |> Enum.each(fn {part, n} ->
+        assert part =~ "<!-- codeqa-health-report-#{n} -->"
+      end)
+    end
+
+    test "non-final parts have truncation warning" do
+      report = Map.put(@sample_report, :top_blocks, @many_blocks)
+      parts = Github.render_parts_3(report)
+
+      if length(parts) > 1 do
+        non_final = Enum.take(parts, length(parts) - 1)
+
+        Enum.each(non_final, fn part ->
+          assert part =~ "Truncated at 60,000 chars"
+        end)
+      end
+    end
+
+    test "each part is under 65536 chars" do
+      report = Map.put(@sample_report, :top_blocks, @many_blocks)
+      parts = Github.render_parts_3(report)
+
+      Enum.each(parts, fn part ->
+        assert byte_size(part) < 65_536, "Part exceeds GitHub comment limit"
+      end)
+    end
+  end
 end

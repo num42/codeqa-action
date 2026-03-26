@@ -4,6 +4,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   @bar_width 20
   @filled "█"
   @empty "░"
+  @part_char_limit 60_000
 
   @spec render(map(), atom(), keyword()) :: String.t()
   def render(report, detail, opts \\ []) do
@@ -25,6 +26,136 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     |> List.flatten()
     |> Enum.join("\n")
   end
+
+  @doc """
+  Renders Part 1: header, summary table, PR summary, delta, mermaid chart, progress bars.
+  Each part ends with a sentinel HTML comment for sticky comment identification.
+  """
+  @spec render_part_1(map(), keyword()) :: String.t()
+  def render_part_1(report, opts \\ []) do
+    chart? = Keyword.get(opts, :chart, true)
+    display_categories = merge_cosine_categories(report.categories)
+
+    [
+      pr_summary_section(Map.get(report, :pr_summary)),
+      header(report),
+      cosine_legend(),
+      delta_section(Map.get(report, :codebase_delta)),
+      if(chart?, do: mermaid_chart(display_categories), else: []),
+      progress_bars(display_categories),
+      sentinel(1)
+    ]
+    |> List.flatten()
+    |> Enum.join("\n")
+  end
+
+  @doc """
+  Renders Part 2: top issues + all category detail sections.
+  """
+  @spec render_part_2(map(), keyword()) :: String.t()
+  def render_part_2(report, opts \\ []) do
+    detail = Keyword.get(opts, :detail, :default)
+    display_categories = merge_cosine_categories(report.categories)
+
+    [
+      top_issues_section(Map.get(report, :top_issues, []), detail),
+      category_sections(display_categories, detail),
+      sentinel(2)
+    ]
+    |> List.flatten()
+    |> Enum.join("\n")
+  end
+
+  @doc """
+  Renders Part 3+: blocks section sliced into 60,000-char chunks.
+  Returns a list of strings, one per part. If no blocks, returns a single placeholder.
+  """
+  @spec render_parts_3(map(), keyword()) :: [String.t()]
+  def render_parts_3(report, _opts \\ []) do
+    top_blocks = Map.get(report, :top_blocks, [])
+
+    if top_blocks == [] do
+      ["> _No content for this section._\n\n" <> sentinel_str(3)]
+    else
+      blocks_content = blocks_section(top_blocks) |> List.flatten() |> Enum.join("\n")
+      slice_blocks_content(blocks_content, 3)
+    end
+  end
+
+  defp slice_blocks_content(content, start_part) do
+    slice_blocks_content(content, start_part, [])
+  end
+
+  defp slice_blocks_content("", part_num, acc) do
+    # No more content; finalize the last part if any, or emit placeholder
+    case acc do
+      [] -> ["> _No content for this section._\n\n" <> sentinel_str(part_num)]
+      _ -> Enum.reverse(acc)
+    end
+  end
+
+  defp slice_blocks_content(content, part_num, acc) do
+    sentinel = sentinel_str(part_num)
+    truncation_warning = "\n\n> ⚠️ Truncated at 60,000 chars — continued in next comment\n\n"
+
+    # Reserve space for sentinel and potential truncation warning
+    available = @part_char_limit - byte_size(sentinel) - byte_size(truncation_warning) - 10
+
+    if byte_size(content) <= available + byte_size(truncation_warning) do
+      # Fits in this part
+      final_part = content <> "\n\n" <> sentinel
+      Enum.reverse([final_part | acc])
+    else
+      # Need to split
+      {chunk, rest} = split_at_safe_boundary(content, available)
+      part_content = chunk <> truncation_warning <> sentinel
+      slice_blocks_content(rest, part_num + 1, [part_content | acc])
+    end
+  end
+
+  defp split_at_safe_boundary(content, max_bytes) do
+    # Try to split at a </details> boundary to avoid breaking HTML structure
+    prefix = binary_part(content, 0, min(max_bytes, byte_size(content)))
+
+    case :binary.matches(prefix, "</details>") do
+      [] ->
+        # No good boundary, split at newline
+        split_at_newline(content, max_bytes)
+
+      matches ->
+        {pos, len} = List.last(matches)
+        split_pos = pos + len
+
+        if split_pos > div(max_bytes, 2) do
+          # Good split point
+          {binary_part(content, 0, split_pos),
+           binary_part(content, split_pos, byte_size(content) - split_pos)}
+        else
+          # Too early, try newline
+          split_at_newline(content, max_bytes)
+        end
+    end
+  end
+
+  defp split_at_newline(content, max_bytes) do
+    prefix = binary_part(content, 0, min(max_bytes, byte_size(content)))
+
+    case :binary.matches(prefix, "\n") do
+      [] ->
+        # No newline, hard split
+        {prefix, binary_part(content, byte_size(prefix), byte_size(content) - byte_size(prefix))}
+
+      matches ->
+        {pos, _len} = List.last(matches)
+
+        {binary_part(content, 0, pos),
+         binary_part(content, pos + 1, byte_size(content) - pos - 1)}
+    end
+  end
+
+  defp sentinel(n), do: [sentinel_str(n)]
+
+  defp sentinel_str(n), do: "<!-- codeqa-health-report-#{n} -->"
 
   defp merge_cosine_categories(categories) do
     {cosine, threshold} = Enum.split_with(categories, &(&1.type == :cosine))
@@ -300,6 +431,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   end
 
   defp footer do
+    # Legacy footer for single-part render/3 (used by --output file mode)
     ["<!-- Sticky Pull Request Commentcodeqa-health-report -->", ""]
   end
 

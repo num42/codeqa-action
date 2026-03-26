@@ -194,9 +194,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
       else
         Scorer.all_yamls()
         |> Enum.sort_by(fn {path, _} -> path end)
-        |> Enum.flat_map(
-          &diagnose_from_yaml(&1, aggregate, language, languages, cosine_opts)
-        )
+        |> Enum.flat_map(&diagnose_from_yaml(&1, aggregate, language, languages, cosine_opts))
       end
 
     behaviors_stream
@@ -376,11 +374,26 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     end)
   end
 
-  defp diagnose_from_behavior_map_entry({category, behaviors}, aggregate, language, languages, cosine_opts) do
+  defp diagnose_from_behavior_map_entry(
+         {category, behaviors},
+         aggregate,
+         language,
+         languages,
+         cosine_opts
+       ) do
     yaml_path = "priv/combined_metrics/#{category}.yml"
 
     Enum.flat_map(behaviors, fn {behavior, behavior_data} ->
-      maybe_diagnose_behavior(yaml_path, behavior, behavior_data, aggregate, category, language, languages, cosine_opts)
+      maybe_diagnose_behavior(
+        yaml_path,
+        behavior,
+        behavior_data,
+        aggregate,
+        category,
+        language,
+        languages,
+        cosine_opts
+      )
     end)
   end
 
@@ -390,7 +403,16 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     data
     |> Enum.filter(fn {_k, v} -> is_map(v) end)
     |> Enum.flat_map(fn {behavior, behavior_data} ->
-      maybe_diagnose_behavior(yaml_path, behavior, behavior_data, aggregate, category, language, languages, cosine_opts)
+      maybe_diagnose_behavior(
+        yaml_path,
+        behavior,
+        behavior_data,
+        aggregate,
+        category,
+        language,
+        languages,
+        cosine_opts
+      )
     end)
   end
 
