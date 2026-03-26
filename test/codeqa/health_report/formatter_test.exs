@@ -282,15 +282,13 @@ defmodule CodeQA.HealthReport.FormatterTest do
       %{
         path: "lib/foo.ex",
         status: "modified",
-        blocks: [
-          %{
-            start_line: 42,
-            end_line: 67,
-            type: "code",
-            token_count: 84,
-            potentials: [@block_potential]
-          }
-        ]
+        start_line: 42,
+        end_line: 67,
+        type: "code",
+        token_count: 84,
+        source: "def foo do\n  :bar\nend",
+        language: "elixir",
+        potentials: [@block_potential]
       }
     ]
 
@@ -298,11 +296,10 @@ defmodule CodeQA.HealthReport.FormatterTest do
 
     test "renders block section header" do
       result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
-      assert result =~ "Blocks"
-      assert result =~ "1 flagged"
+      assert result =~ "Top 1 Code Blocks by Impact"
     end
 
-    test "renders file group with status" do
+    test "renders file path with status" do
       result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
       assert result =~ "lib/foo.ex"
       assert result =~ "modified"
@@ -310,8 +307,7 @@ defmodule CodeQA.HealthReport.FormatterTest do
 
     test "renders block location and type" do
       result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
-      assert result =~ "lines 42"
-      assert result =~ "67"
+      assert result =~ "42-67"
       assert result =~ "84 tokens"
     end
 
@@ -328,15 +324,21 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert result =~ "Reduce branching"
     end
 
+    test "renders source code" do
+      result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
+      assert result =~ "def foo do"
+      assert result =~ ":bar"
+    end
+
     test "omits block section when top_blocks is empty" do
       report = Map.put(@sample_report, :top_blocks, [])
       result = Formatter.format_markdown(report, :default, :plain)
-      refute result =~ "## Blocks"
+      refute result =~ "Code Blocks"
     end
 
     test "omits block section when top_blocks key absent" do
       result = Formatter.format_markdown(@sample_report, :default, :plain)
-      refute result =~ "## Blocks"
+      refute result =~ "Code Blocks"
     end
   end
 
@@ -434,23 +436,21 @@ defmodule CodeQA.HealthReport.FormatterTest do
       %{
         path: "lib/foo.ex",
         status: "modified",
-        blocks: [
-          %{
-            start_line: 42,
-            end_line: 67,
-            type: "code",
-            token_count: 84,
-            potentials: [@block_potential]
-          }
-        ]
+        start_line: 42,
+        end_line: 67,
+        type: "code",
+        token_count: 84,
+        source: "def foo do\n  :bar\nend",
+        language: "elixir",
+        potentials: [@block_potential]
       }
     ]
 
     @report_with_blocks_gh Map.put(@sample_report, :top_blocks, @top_blocks_gh)
 
-    test "renders block section with details wrapper per file" do
+    test "renders block section with details wrapper per block" do
       result = Formatter.format_markdown(@report_with_blocks_gh, :default, :github)
-      assert result =~ "Blocks"
+      assert result =~ "Top 1 Code Blocks by Impact"
       assert result =~ "<details>"
       assert result =~ "lib/foo.ex"
       assert result =~ "modified"
@@ -461,6 +461,12 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert result =~ "🔴"
       assert result =~ "cyclomatic_complexity_under_10"
       assert result =~ "Reduce branching"
+    end
+
+    test "renders source code in collapsed block" do
+      result = Formatter.format_markdown(@report_with_blocks_gh, :default, :github)
+      assert result =~ "```elixir"
+      assert result =~ "def foo do"
     end
   end
 
@@ -538,83 +544,107 @@ defmodule CodeQA.HealthReport.FormatterTest do
 
     test "part 3 is placeholder when no blocks" do
       [_, _, part_3 | _] = Formatter.render_parts(@sample_report)
-      assert part_3 =~ "_No content for this section._"
+      assert part_3 =~ "_No near-duplicate blocks detected._"
     end
 
     test "part 3 contains blocks when present" do
       report = Map.put(@sample_report, :top_blocks, @top_blocks_gh)
       [_, _, part_3 | _] = Formatter.render_parts(report)
       assert part_3 =~ "lib/foo.ex"
-      assert part_3 =~ "Blocks"
+      assert part_3 =~ "Code Blocks"
     end
   end
 
-  describe "Github.render_parts_3/2 slicing" do
+  describe "Github.render_parts_3/2" do
     alias CodeQA.HealthReport.Formatter.Github
 
-    @many_blocks Enum.map(1..100, fn i ->
-                   %{
-                     path: "lib/file_#{i}.ex",
-                     status: "modified",
-                     blocks:
-                       Enum.map(1..10, fn j ->
-                         %{
-                           start_line: j * 10,
-                           end_line: j * 10 + 20,
-                           type: "function",
-                           token_count: 150,
-                           potentials: [
-                             %{
-                               category: "function_design",
-                               behavior: "single_responsibility",
-                               cosine_delta: 0.35,
-                               severity: :high,
-                               fix_hint: "Consider extracting helper function"
-                             }
-                           ]
-                         }
-                       end)
-                   }
-                 end)
-
-    test "slices large blocks section into multiple parts" do
-      report = Map.put(@sample_report, :top_blocks, @many_blocks)
-      parts = Github.render_parts_3(report)
-
-      # With 100 files × 10 blocks, this should produce multiple parts
-      assert length(parts) > 1
-    end
-
-    test "each sliced part ends with sentinel" do
-      report = Map.put(@sample_report, :top_blocks, @many_blocks)
-      parts = Github.render_parts_3(report)
-
-      Enum.with_index(parts, 3)
-      |> Enum.each(fn {part, n} ->
-        assert part =~ "<!-- codeqa-health-report-#{n} -->"
-      end)
-    end
-
-    test "non-final parts have truncation warning" do
-      report = Map.put(@sample_report, :top_blocks, @many_blocks)
-      parts = Github.render_parts_3(report)
-
-      if length(parts) > 1 do
-        non_final = Enum.take(parts, length(parts) - 1)
-
-        Enum.each(non_final, fn part ->
-          assert part =~ "Truncated at 60,000 chars"
+    test "returns single part with blocks (top 10 limit means no slicing needed)" do
+      blocks =
+        Enum.map(1..10, fn i ->
+          %{
+            path: "lib/file_#{i}.ex",
+            status: "modified",
+            start_line: 10,
+            end_line: 30,
+            type: "function",
+            token_count: 150,
+            source: "def foo, do: :bar",
+            language: "elixir",
+            potentials: [
+              %{
+                category: "function_design",
+                behavior: "single_responsibility",
+                cosine_delta: 0.35,
+                severity: :high,
+                fix_hint: "Consider extracting helper function"
+              }
+            ]
+          }
         end)
-      end
-    end
 
-    test "each part is under 65536 chars" do
-      report = Map.put(@sample_report, :top_blocks, @many_blocks)
+      report = Map.put(@sample_report, :top_blocks, blocks)
       parts = Github.render_parts_3(report)
 
-      Enum.each(parts, fn part ->
-        assert byte_size(part) < 65_536, "Part exceeds GitHub comment limit"
-      end)
+      # With top 10 blocks, should be a single part
+      assert length(parts) == 1
+    end
+
+    test "part ends with sentinel" do
+      blocks = [
+        %{
+          path: "lib/foo.ex",
+          status: nil,
+          start_line: 1,
+          end_line: 10,
+          type: "code",
+          token_count: 50,
+          source: "def foo, do: :bar",
+          language: "elixir",
+          potentials: [
+            %{
+              category: "function_design",
+              behavior: "single_responsibility",
+              cosine_delta: 0.35,
+              severity: :high,
+              fix_hint: nil
+            }
+          ]
+        }
+      ]
+
+      report = Map.put(@sample_report, :top_blocks, blocks)
+      [part] = Github.render_parts_3(report)
+      assert part =~ "<!-- codeqa-health-report-3 -->"
+    end
+
+    test "renders source code in fenced block" do
+      blocks = [
+        %{
+          path: "lib/foo.ex",
+          status: nil,
+          start_line: 1,
+          end_line: 10,
+          type: "code",
+          token_count: 50,
+          source: "def hello do\n  :world\nend",
+          language: "elixir",
+          potentials: [
+            %{
+              category: "function_design",
+              behavior: "single_responsibility",
+              cosine_delta: 0.35,
+              severity: :high,
+              fix_hint: nil
+            }
+          ]
+        }
+      ]
+
+      report = Map.put(@sample_report, :top_blocks, blocks)
+      [part] = Github.render_parts_3(report)
+      assert part =~ "```elixir"
+      assert part =~ "def hello do"
+      assert part =~ ":world"
     end
   end
 end

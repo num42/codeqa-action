@@ -4,7 +4,6 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   @bar_width 20
   @filled "█"
   @empty "░"
-  @part_char_limit 60_000
 
   @spec render(map(), atom(), keyword()) :: String.t()
   def render(report, detail, opts \\ []) do
@@ -67,89 +66,18 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   end
 
   @doc """
-  Renders Part 3+: blocks section sliced into 60,000-char chunks.
-  Returns a list of strings, one per part. If no blocks, returns a single placeholder.
+  Renders Part 3: blocks section (top 10 blocks with code).
+  Returns a list with a single part since blocks are now limited to top 10.
   """
   @spec render_parts_3(map(), keyword()) :: [String.t()]
   def render_parts_3(report, _opts \\ []) do
     top_blocks = Map.get(report, :top_blocks, [])
 
     if top_blocks == [] do
-      ["> _No content for this section._\n\n" <> sentinel_str(3)]
+      ["> _No near-duplicate blocks detected._\n\n" <> sentinel_str(3)]
     else
       blocks_content = blocks_section(top_blocks) |> List.flatten() |> Enum.join("\n")
-      slice_blocks_content(blocks_content, 3)
-    end
-  end
-
-  defp slice_blocks_content(content, start_part) do
-    slice_blocks_content(content, start_part, [])
-  end
-
-  defp slice_blocks_content("", part_num, acc) do
-    # No more content; finalize the last part if any, or emit placeholder
-    case acc do
-      [] -> ["> _No content for this section._\n\n" <> sentinel_str(part_num)]
-      _ -> Enum.reverse(acc)
-    end
-  end
-
-  defp slice_blocks_content(content, part_num, acc) do
-    sentinel = sentinel_str(part_num)
-    truncation_warning = "\n\n> ⚠️ Truncated at 60,000 chars — continued in next comment\n\n"
-
-    # Reserve space for sentinel and potential truncation warning
-    available = @part_char_limit - byte_size(sentinel) - byte_size(truncation_warning) - 10
-
-    if byte_size(content) <= available + byte_size(truncation_warning) do
-      # Fits in this part
-      final_part = content <> "\n\n" <> sentinel
-      Enum.reverse([final_part | acc])
-    else
-      # Need to split
-      {chunk, rest} = split_at_safe_boundary(content, available)
-      part_content = chunk <> truncation_warning <> sentinel
-      slice_blocks_content(rest, part_num + 1, [part_content | acc])
-    end
-  end
-
-  defp split_at_safe_boundary(content, max_bytes) do
-    # Try to split at a </details> boundary to avoid breaking HTML structure
-    prefix = binary_part(content, 0, min(max_bytes, byte_size(content)))
-
-    case :binary.matches(prefix, "</details>") do
-      [] ->
-        # No good boundary, split at newline
-        split_at_newline(content, max_bytes)
-
-      matches ->
-        {pos, len} = List.last(matches)
-        split_pos = pos + len
-
-        if split_pos > div(max_bytes, 2) do
-          # Good split point
-          {binary_part(content, 0, split_pos),
-           binary_part(content, split_pos, byte_size(content) - split_pos)}
-        else
-          # Too early, try newline
-          split_at_newline(content, max_bytes)
-        end
-    end
-  end
-
-  defp split_at_newline(content, max_bytes) do
-    prefix = binary_part(content, 0, min(max_bytes, byte_size(content)))
-
-    case :binary.matches(prefix, "\n") do
-      [] ->
-        # No newline, hard split
-        {prefix, binary_part(content, byte_size(prefix), byte_size(content) - byte_size(prefix))}
-
-      matches ->
-        {pos, _len} = List.last(matches)
-
-        {binary_part(content, 0, pos),
-         binary_part(content, pos + 1, byte_size(content) - pos - 1)}
+      [blocks_content <> "\n\n" <> sentinel_str(3)]
     end
   end
 
@@ -518,51 +446,78 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   defp blocks_section([]), do: []
 
   defp blocks_section(top_blocks) do
-    total = Enum.sum(Enum.map(top_blocks, fn g -> length(g.blocks) end))
-
-    file_cards =
-      Enum.flat_map(top_blocks, fn group ->
-        status_str = if group.status, do: " [#{group.status}]", else: ""
-        summary_line = "🔍 #{group.path}#{status_str} — #{length(group.blocks)} block(s)"
-
-        inner =
-          group.blocks |> Enum.flat_map(&format_block/1) |> List.flatten() |> Enum.join("\n")
-
-        [
-          "<details>",
-          "<summary>#{summary_line}</summary>",
-          "",
-          inner,
-          "</details>",
-          ""
-        ]
-      end)
+    block_cards = Enum.flat_map(top_blocks, &format_block_card/1)
 
     [
-      "## 🔍 Blocks  (#{total} flagged across #{length(top_blocks)} files)",
+      "## 🔍 Top #{length(top_blocks)} Code Blocks by Impact",
+      "",
+      "> Ranked by cosine delta — highest anti-pattern signal first.",
       ""
-      | file_cards
+      | block_cards
     ]
   end
 
-  defp format_block(block) do
+  defp format_block_card(block) do
     end_line = block.end_line || block.start_line
+    top_potential = List.first(block.potentials)
+    icon = severity_icon(top_potential.severity)
+    delta_str = format_num(top_potential.cosine_delta)
+    status_str = if block.status, do: " [#{block.status}]", else: ""
 
-    header =
-      "**lines #{block.start_line}–#{end_line}** · #{block.type} · #{block.token_count} tokens"
+    summary_line =
+      "#{icon} <code>#{block.path}:#{block.start_line}-#{end_line}</code>#{status_str} — #{block.type} (#{block.token_count} tokens) — Δ#{delta_str}"
 
-    potential_lines = Enum.flat_map(block.potentials, &format_potential/1)
-    [header] ++ potential_lines ++ [""]
+    issues = format_block_issues(block.potentials)
+    code_block = format_code_block(block)
+
+    [
+      "<details>",
+      "<summary>#{summary_line}</summary>",
+      "",
+      "**Issues:**",
+      ""
+      | issues
+    ] ++ ["", code_block, "", "</details>", ""]
   end
 
-  defp format_potential(p) do
-    icon = severity_icon(p.severity)
-    delta_str = format_num(p.cosine_delta)
-    label = String.upcase(to_string(p.severity))
-    line = "**#{icon} #{label}** `#{p.category}/#{p.behavior}` (Δ #{delta_str})"
-    fix = if p.fix_hint, do: ["> #{p.fix_hint}"], else: []
-    [line | fix]
+  defp format_block_issues(potentials) do
+    Enum.flat_map(potentials, fn p ->
+      icon = severity_icon(p.severity)
+      label = String.upcase(to_string(p.severity))
+      delta_str = format_num(p.cosine_delta)
+      line = "- #{icon} **#{label}** `#{p.category}/#{p.behavior}` (Δ #{delta_str})"
+      fix = if p.fix_hint, do: ["  > #{p.fix_hint}"], else: []
+      [line | fix]
+    end)
   end
+
+  defp format_code_block(%{source: nil}), do: "_Source code not available_"
+
+  defp format_code_block(%{source: source, language: lang, start_line: start_line}) do
+    lang_hint = code_fence_lang(lang)
+    # Add line number comments for context
+    lines = String.split(source, "\n")
+
+    numbered_lines =
+      lines
+      |> Enum.with_index(start_line)
+      |> Enum.map(fn {line, num} -> "#{String.pad_leading(to_string(num), 4)} │ #{line}" end)
+      |> Enum.join("\n")
+
+    "```#{lang_hint}\n#{numbered_lines}\n```"
+  end
+
+  defp code_fence_lang("elixir"), do: "elixir"
+  defp code_fence_lang("ruby"), do: "ruby"
+  defp code_fence_lang("javascript"), do: "javascript"
+  defp code_fence_lang("typescript"), do: "typescript"
+  defp code_fence_lang("python"), do: "python"
+  defp code_fence_lang("swift"), do: "swift"
+  defp code_fence_lang("kotlin"), do: "kotlin"
+  defp code_fence_lang("java"), do: "java"
+  defp code_fence_lang("go"), do: "go"
+  defp code_fence_lang("rust"), do: "rust"
+  defp code_fence_lang(_), do: ""
 
   defp severity_icon(:critical), do: "🔴"
   defp severity_icon(:high), do: "🟠"

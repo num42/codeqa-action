@@ -152,7 +152,7 @@ defmodule CodeQA.HealthReport do
 
     {base_score, base_grade} = Grader.overall_score(base_all_categories, grade_scale, impact_map)
 
-    blocks_flagged = Enum.sum(Enum.map(top_blocks, fn g -> length(g.blocks) end))
+    blocks_flagged = length(top_blocks)
     files_added = Enum.count(changed_files, &(&1.status == "added"))
     files_modified = Enum.count(changed_files, &(&1.status == "modified"))
 

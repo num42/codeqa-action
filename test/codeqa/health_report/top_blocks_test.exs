@@ -23,7 +23,7 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
   end
 
   defp make_results(nodes) do
-    %{"files" => %{"lib/foo.ex" => %{"nodes" => nodes}}}
+    %{"files" => %{"lib/foo.ex" => %{"nodes" => nodes}}, "metadata" => %{"path" => "/tmp"}}
   end
 
   defp lookup(cosine \\ 0.0) do
@@ -33,20 +33,20 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
   describe "severity classification" do
     test ":critical when severity_ratio > 0.50" do
       # gap = max(0.01, 1.0 - 0.0) = 1.0, ratio = 0.60 / 1.0 = 0.60 > 0.50
-      [group] = TopBlocks.build(make_results([make_node(0.60)]), [], lookup())
-      assert hd(hd(group.blocks).potentials).severity == :critical
+      [block] = TopBlocks.build(make_results([make_node(0.60)]), [], lookup())
+      assert hd(block.potentials).severity == :critical
     end
 
     test ":high when severity_ratio > 0.25 and <= 0.50" do
       # ratio = 0.30 / 1.0 = 0.30
-      [group] = TopBlocks.build(make_results([make_node(0.30)]), [], lookup())
-      assert hd(hd(group.blocks).potentials).severity == :high
+      [block] = TopBlocks.build(make_results([make_node(0.30)]), [], lookup())
+      assert hd(block.potentials).severity == :high
     end
 
     test ":medium when severity_ratio > 0.10 and <= 0.25" do
       # ratio = 0.15 / 1.0 = 0.15
-      [group] = TopBlocks.build(make_results([make_node(0.15)]), [], lookup())
-      assert hd(hd(group.blocks).potentials).severity == :medium
+      [block] = TopBlocks.build(make_results([make_node(0.15)]), [], lookup())
+      assert hd(block.potentials).severity == :medium
     end
 
     test "filtered when severity_ratio <= 0.10" do
@@ -56,30 +56,30 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
 
     test "gap floor prevents division by zero when codebase_cosine = 1.0" do
       # gap = max(0.01, 1.0 - 1.0) = 0.01, ratio = 0.02 / 0.01 = 2.0 → :critical
-      [group] = TopBlocks.build(make_results([make_node(0.02)]), [], lookup(1.0))
-      assert hd(hd(group.blocks).potentials).severity == :critical
+      [block] = TopBlocks.build(make_results([make_node(0.02)]), [], lookup(1.0))
+      assert hd(block.potentials).severity == :critical
     end
 
     test "gap handles negative codebase_cosine" do
       # codebase_cosine = -0.5, gap = max(0.01, 1.0 - (-0.5)) = 1.5
       # ratio = 0.60 / 1.5 = 0.40 → :high
-      [group] = TopBlocks.build(make_results([make_node(0.60)]), [], lookup(-0.5))
-      assert hd(hd(group.blocks).potentials).severity == :high
+      [block] = TopBlocks.build(make_results([make_node(0.60)]), [], lookup(-0.5))
+      assert hd(block.potentials).severity == :high
     end
 
     test "unknown behavior defaults codebase_cosine to 0.0" do
       lookup_empty = %{}
       # gap = 1.0, ratio = 0.60 → :critical
-      [group] = TopBlocks.build(make_results([make_node(0.60)]), [], lookup_empty)
-      assert hd(hd(group.blocks).potentials).severity == :critical
+      [block] = TopBlocks.build(make_results([make_node(0.60)]), [], lookup_empty)
+      assert hd(block.potentials).severity == :critical
     end
   end
 
   describe "changed_files filtering" do
     test "when changed_files is empty, shows all files" do
-      [group] = TopBlocks.build(make_results([make_node(0.60)]), [], lookup())
-      assert group.path == "lib/foo.ex"
-      assert group.status == nil
+      [block] = TopBlocks.build(make_results([make_node(0.60)]), [], lookup())
+      assert block.path == "lib/foo.ex"
+      assert block.status == nil
     end
 
     test "when changed_files given, only shows matching files" do
@@ -89,8 +89,8 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
 
     test "status comes from ChangedFile struct" do
       changed = [%ChangedFile{path: "lib/foo.ex", status: "modified"}]
-      [group] = TopBlocks.build(make_results([make_node(0.60)]), changed, lookup())
-      assert group.status == "modified"
+      [block] = TopBlocks.build(make_results([make_node(0.60)]), changed, lookup())
+      assert block.status == "modified"
     end
   end
 
@@ -102,10 +102,14 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
     test "blocks are ordered by highest cosine_delta descending" do
       node_low = make_node(0.20)
       node_high = put_in(make_node(0.60), ["start_line"], 20)
-      results = %{"files" => %{"lib/foo.ex" => %{"nodes" => [node_low, node_high]}}}
 
-      [group] = TopBlocks.build(results, [], lookup())
-      deltas = Enum.map(group.blocks, fn b -> hd(b.potentials).cosine_delta end)
+      results = %{
+        "files" => %{"lib/foo.ex" => %{"nodes" => [node_low, node_high]}},
+        "metadata" => %{"path" => "/tmp"}
+      }
+
+      blocks = TopBlocks.build(results, [], lookup())
+      deltas = Enum.map(blocks, fn b -> hd(b.potentials).cosine_delta end)
       assert deltas == Enum.sort(deltas, :desc)
     end
 
@@ -119,8 +123,8 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
         "children" => [make_node(0.60)]
       }
 
-      [group] = TopBlocks.build(make_results([parent]), [], lookup())
-      assert length(group.blocks) == 1
+      blocks = TopBlocks.build(make_results([parent]), [], lookup())
+      assert length(blocks) == 1
     end
   end
 
@@ -143,8 +147,8 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
       }
 
       hint_lookup = %{{"naming_conventions", "file_name_matches_primary_export"} => 0.0}
-      [group] = TopBlocks.build(make_results([node]), [], hint_lookup)
-      potential = hd(hd(group.blocks).potentials)
+      [block] = TopBlocks.build(make_results([node]), [], hint_lookup)
+      potential = hd(block.potentials)
       assert is_binary(potential.fix_hint)
     end
 
@@ -160,8 +164,55 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
         "children" => []
       }
 
-      [group] = TopBlocks.build(make_results([node]), [], %{})
-      assert hd(hd(group.blocks).potentials).fix_hint == nil
+      [block] = TopBlocks.build(make_results([node]), [], %{})
+      assert hd(block.potentials).fix_hint == nil
+    end
+  end
+
+  describe "source code extraction" do
+    test "includes source code when file exists" do
+      # Create a temp file
+      tmp_dir = System.tmp_dir!()
+      test_dir = Path.join(tmp_dir, "top_blocks_test_#{:rand.uniform(100_000)}")
+      File.mkdir_p!(test_dir)
+      file_path = Path.join(test_dir, "test.ex")
+      File.write!(file_path, "line 1\nline 2\nline 3\nline 4\nline 5")
+
+      results = %{
+        "files" => %{"test.ex" => %{"nodes" => [make_node(0.60) |> Map.put("end_line", 3)]}},
+        "metadata" => %{"path" => test_dir}
+      }
+
+      [block] = TopBlocks.build(results, [], lookup())
+      assert block.source == "line 1\nline 2\nline 3"
+      assert block.language == "elixir"
+
+      File.rm_rf!(test_dir)
+    end
+
+    test "source is nil when file does not exist" do
+      results = %{
+        "files" => %{"nonexistent.ex" => %{"nodes" => [make_node(0.60)]}},
+        "metadata" => %{"path" => "/nonexistent/path"}
+      }
+
+      [block] = TopBlocks.build(results, [], lookup())
+      assert block.source == nil
+    end
+  end
+
+  describe "top N limiting" do
+    test "returns at most 10 blocks" do
+      # Create 15 nodes
+      nodes = for i <- 1..15, do: put_in(make_node(0.60 + i * 0.01), ["start_line"], i * 10)
+
+      results = %{
+        "files" => %{"lib/foo.ex" => %{"nodes" => nodes}},
+        "metadata" => %{"path" => "/tmp"}
+      }
+
+      blocks = TopBlocks.build(results, [], lookup())
+      assert length(blocks) == 10
     end
   end
 end

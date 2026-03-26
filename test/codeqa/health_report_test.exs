@@ -25,21 +25,22 @@ defmodule CodeQA.HealthReportTest do
     end
 
     @tag :slow
-    test "without base_results: top_blocks shows all files with significant blocks" do
+    test "without base_results: top_blocks shows top 10 blocks by impact" do
       files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
       results = Analyzer.analyze_codebase(files)
       results = BlockImpactAnalyzer.analyze(results, files)
 
       report = HealthReport.generate(results)
 
-      # top_blocks is a list of file groups (may be empty if no blocks above threshold)
+      # top_blocks is a flat list of blocks (may be empty if no blocks above threshold)
       assert is_list(report.top_blocks)
 
-      Enum.each(report.top_blocks, fn group ->
-        assert Map.has_key?(group, :path)
-        assert Map.has_key?(group, :status)
-        assert Map.has_key?(group, :blocks)
-        assert group.status == nil
+      Enum.each(report.top_blocks, fn block ->
+        assert Map.has_key?(block, :path)
+        assert Map.has_key?(block, :status)
+        assert Map.has_key?(block, :potentials)
+        assert Map.has_key?(block, :source)
+        assert block.status == nil
       end)
     end
 

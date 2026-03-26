@@ -209,30 +209,41 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
   defp blocks_section([]), do: []
 
   defp blocks_section(top_blocks) do
-    total = Enum.sum(Enum.map(top_blocks, fn g -> length(g.blocks) end))
-
-    file_parts =
-      Enum.flat_map(top_blocks, fn group ->
-        status_str = if group.status, do: "  [#{group.status}]", else: ""
-        block_lines = Enum.flat_map(group.blocks, &format_block/1)
-        ["### #{group.path}#{status_str}", "" | block_lines]
-      end)
+    block_parts = Enum.flat_map(top_blocks, &format_block/1)
 
     [
-      "## Blocks  (#{total} flagged across #{length(top_blocks)} files)",
+      "## Top #{length(top_blocks)} Code Blocks by Impact",
       ""
-      | file_parts
+      | block_parts
     ]
   end
 
   defp format_block(block) do
     end_line = block.end_line || block.start_line
+    status_str = if block.status, do: " [#{block.status}]", else: ""
 
     header =
-      "**lines #{block.start_line}–#{end_line}** · #{block.type} · #{block.token_count} tokens"
+      "### #{block.path}:#{block.start_line}-#{end_line}#{status_str}"
+
+    subheader =
+      "#{block.type} · #{block.token_count} tokens"
 
     potential_lines = Enum.flat_map(block.potentials, &format_potential/1)
-    [header | potential_lines] ++ [""]
+    code_lines = format_code_block(block)
+    [header, subheader, "" | potential_lines] ++ ["" | code_lines] ++ [""]
+  end
+
+  defp format_code_block(%{source: nil}), do: ["_Source code not available_"]
+
+  defp format_code_block(%{source: source, start_line: start_line}) do
+    lines = String.split(source, "\n")
+
+    numbered_lines =
+      lines
+      |> Enum.with_index(start_line)
+      |> Enum.map(fn {line, num} -> "  #{String.pad_leading(to_string(num), 4)} │ #{line}" end)
+
+    ["```" | numbered_lines] ++ ["```"]
   end
 
   defp format_potential(p) do

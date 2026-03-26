@@ -8,6 +8,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
   @severity_high 0.25
   @severity_medium 0.10
   @gap_floor 0.01
+  @top_n 10
 
   defp build_fix_hint_lookup do
     Scorer.all_yamls()
@@ -30,6 +31,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
   @spec build(map(), [struct()], map()) :: [map()]
   def build(analysis_results, changed_files, codebase_cosine_lookup) do
     files = Map.get(analysis_results, "files", %{})
+    base_path = get_in(analysis_results, ["metadata", "path"]) || "."
     fix_hints = build_fix_hint_lookup()
 
     file_entries =
@@ -43,21 +45,22 @@ defmodule CodeQA.HealthReport.TopBlocks do
         |> Enum.map(fn {path, data} -> {path, Map.get(changed_index, path), data} end)
       end
 
+    # Flatten all blocks across all files, enrich with path and source code
     file_entries
-    |> Enum.map(fn {path, status, file_data} ->
-      blocks =
-        file_data
-        |> Map.get("nodes", [])
-        |> Enum.flat_map(&collect_nodes/1)
-        |> Enum.filter(&(&1["token_count"] >= @min_tokens))
-        |> Enum.map(&enrich_block(&1, codebase_cosine_lookup, fix_hints))
-        |> Enum.reject(&(&1.potentials == []))
-        |> Enum.sort_by(&(-max_delta(&1)))
-
-      %{path: path, status: status, blocks: blocks}
+    |> Enum.flat_map(fn {path, status, file_data} ->
+      file_data
+      |> Map.get("nodes", [])
+      |> Enum.flat_map(&collect_nodes/1)
+      |> Enum.filter(&(&1["token_count"] >= @min_tokens))
+      |> Enum.map(&enrich_block(&1, codebase_cosine_lookup, fix_hints))
+      |> Enum.reject(&(&1.potentials == []))
+      |> Enum.map(&Map.merge(&1, %{path: path, status: status}))
     end)
-    |> Enum.reject(&(&1.blocks == []))
-    |> Enum.sort_by(& &1.path)
+    # Rank by highest cosine_delta and take top N
+    |> Enum.sort_by(&(-max_delta(&1)))
+    |> Enum.take(@top_n)
+    # Add source code for each block
+    |> Enum.map(&add_source_code(&1, base_path))
   end
 
   defp collect_nodes(node) do
@@ -113,4 +116,25 @@ defmodule CodeQA.HealthReport.TopBlocks do
 
   defp max_delta(%{potentials: potentials}),
     do: Enum.max_by(potentials, & &1.cosine_delta).cosine_delta
+
+  defp add_source_code(block, base_path) do
+    full_path = Path.join(base_path, block.path)
+    start_line = block.start_line
+    end_line = block.end_line || start_line
+
+    source =
+      case File.read(full_path) do
+        {:ok, content} ->
+          content
+          |> String.split("\n")
+          |> Enum.slice((start_line - 1)..(end_line - 1)//1)
+          |> Enum.join("\n")
+
+        {:error, _} ->
+          nil
+      end
+
+    lang = CodeQA.Language.detect(block.path).name()
+    Map.merge(block, %{source: source, language: lang})
+  end
 end
