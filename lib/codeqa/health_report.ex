@@ -62,11 +62,21 @@ defmodule CodeQA.HealthReport do
     codebase_cosine_lookup =
       Map.new(all_cosines, fn i -> {{i.category, i.behavior}, i.cosine} end)
 
+    block_opts = [
+      block_min_lines: block_min_lines,
+      block_max_lines: block_max_lines,
+      diff_line_ranges: diff_line_ranges
+    ]
+
     top_blocks =
-      TopBlocks.build(analysis_results, changed_files, codebase_cosine_lookup,
-        block_min_lines: block_min_lines,
-        block_max_lines: block_max_lines,
-        diff_line_ranges: diff_line_ranges
+      TopBlocks.build(analysis_results, changed_files, codebase_cosine_lookup, block_opts)
+
+    worst_blocks_by_category =
+      TopBlocks.worst_per_category(
+        analysis_results,
+        changed_files,
+        codebase_cosine_lookup,
+        block_opts
       )
 
     grading_cfg = %{
@@ -99,7 +109,8 @@ defmodule CodeQA.HealthReport do
       codebase_delta: codebase_delta,
       categories: all_categories,
       top_issues: top_issues,
-      top_blocks: top_blocks
+      top_blocks: top_blocks,
+      worst_blocks_by_category: worst_blocks_by_category
     }
   end
 

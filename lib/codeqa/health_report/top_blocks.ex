@@ -32,8 +32,49 @@ defmodule CodeQA.HealthReport.TopBlocks do
 
   @spec build(map(), [struct()], map(), keyword()) :: [map()]
   def build(analysis_results, changed_files, codebase_cosine_lookup, opts \\ []) do
-    files = Map.get(analysis_results, "files", %{})
     base_path = get_in(analysis_results, ["metadata", "path"]) || "."
+
+    analysis_results
+    |> collect_enriched_blocks(changed_files, codebase_cosine_lookup, opts)
+    # Rank by highest cosine_delta and take top N
+    |> Enum.sort_by(&(-max_delta(&1)))
+    |> Enum.take(@top_n)
+    # Add source code for each block
+    |> Enum.map(&add_source_code(&1, base_path))
+  end
+
+  @doc """
+  Returns a map of category => worst offending block for that category.
+  Only includes blocks that overlap with the diff (if diff_line_ranges provided).
+  """
+  @spec worst_per_category(map(), [struct()], map(), keyword()) :: %{String.t() => map()}
+  def worst_per_category(analysis_results, changed_files, codebase_cosine_lookup, opts \\ []) do
+    base_path = get_in(analysis_results, ["metadata", "path"]) || "."
+
+    all_blocks =
+      collect_enriched_blocks(analysis_results, changed_files, codebase_cosine_lookup, opts)
+
+    # Group blocks by category, finding the worst block per category
+    all_blocks
+    |> Enum.flat_map(fn block ->
+      # Each block may contribute to multiple categories via its potentials
+      block.potentials
+      |> Enum.map(fn potential ->
+        {potential.category, block, potential.cosine_delta}
+      end)
+    end)
+    |> Enum.group_by(&elem(&1, 0), fn {_cat, block, delta} -> {block, delta} end)
+    |> Enum.map(fn {category, block_deltas} ->
+      # Find the block with highest cosine_delta for this category
+      {worst_block, _delta} = Enum.max_by(block_deltas, fn {_block, delta} -> delta end)
+      {category, add_source_code(worst_block, base_path)}
+    end)
+    |> Map.new()
+  end
+
+  # Shared logic for collecting and enriching blocks
+  defp collect_enriched_blocks(analysis_results, changed_files, codebase_cosine_lookup, opts) do
+    files = Map.get(analysis_results, "files", %{})
     fix_hints = build_fix_hint_lookup()
 
     min_lines = Keyword.get(opts, :block_min_lines, @default_min_lines)
@@ -51,7 +92,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
         |> Enum.map(fn {path, data} -> {path, Map.get(changed_index, path), data} end)
       end
 
-    # Flatten all blocks across all files, enrich with path and source code
+    # Flatten all blocks across all files, enrich with path
     file_entries
     |> Enum.flat_map(fn {path, status, file_data} ->
       path_diff_ranges = Map.get(diff_line_ranges, path, [])
@@ -66,11 +107,6 @@ defmodule CodeQA.HealthReport.TopBlocks do
       |> Enum.reject(&(&1.potentials == []))
       |> Enum.map(&Map.merge(&1, %{path: path, status: status}))
     end)
-    # Rank by highest cosine_delta and take top N
-    |> Enum.sort_by(&(-max_delta(&1)))
-    |> Enum.take(@top_n)
-    # Add source code for each block
-    |> Enum.map(&add_source_code(&1, base_path))
   end
 
   @spec block_in_line_range?(map(), pos_integer(), pos_integer()) :: boolean()

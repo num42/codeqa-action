@@ -9,6 +9,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   def render(report, detail, opts \\ []) do
     chart? = Keyword.get(opts, :chart, true)
     display_categories = merge_cosine_categories(report.categories)
+    worst_blocks = Map.get(report, :worst_blocks_by_category, %{})
 
     [
       pr_summary_section(Map.get(report, :pr_summary)),
@@ -19,7 +20,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       progress_bars(display_categories),
       top_issues_section(Map.get(report, :top_issues, []), detail),
       blocks_section(Map.get(report, :top_blocks, [])),
-      category_sections(display_categories, detail),
+      category_sections(display_categories, detail, worst_blocks),
       footer()
     ]
     |> List.flatten()
@@ -55,10 +56,11 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   def render_part_2(report, opts \\ []) do
     detail = Keyword.get(opts, :detail, :default)
     display_categories = merge_cosine_categories(report.categories)
+    worst_blocks = Map.get(report, :worst_blocks_by_category, %{})
 
     [
       top_issues_section(Map.get(report, :top_issues, []), detail),
-      category_sections(display_categories, detail),
+      category_sections(display_categories, detail, worst_blocks),
       sentinel(2)
     ]
     |> List.flatten()
@@ -186,18 +188,18 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     String.duplicate(@filled, filled) <> String.duplicate(@empty, empty)
   end
 
-  defp category_sections(_categories, :summary), do: []
+  defp category_sections(_categories, :summary, _worst_blocks), do: []
 
-  defp category_sections(categories, detail) do
-    Enum.flat_map(categories, &render_category(&1, detail))
+  defp category_sections(categories, detail, worst_blocks) do
+    Enum.flat_map(categories, &render_category(&1, detail, worst_blocks))
   end
 
-  defp render_category(%{type: :cosine_group} = group, detail) do
+  defp render_category(%{type: :cosine_group} = group, detail, worst_blocks) do
     emoji = grade_emoji(group.grade)
     summary_line = "#{emoji} #{group.name} — #{group.grade} (#{group.score}/100)"
 
     inner =
-      cosine_group_content(group, detail)
+      cosine_group_content(group, detail, worst_blocks)
       |> List.flatten()
       |> Enum.join("\n")
 
@@ -212,12 +214,12 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     ]
   end
 
-  defp render_category(%{type: :cosine} = cat, detail) do
+  defp render_category(%{type: :cosine} = cat, detail, worst_blocks) do
     emoji = grade_emoji(cat.grade)
     summary_line = "#{emoji} #{cat.name} — #{cat.grade} (#{cat.score}/100)"
 
     inner =
-      cosine_section_content(cat, detail)
+      cosine_section_content(cat, detail, worst_blocks)
       |> List.flatten()
       |> Enum.join("\n")
 
@@ -232,7 +234,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     ]
   end
 
-  defp render_category(cat, detail) do
+  defp render_category(cat, detail, _worst_blocks) do
     emoji = grade_emoji(cat.grade)
     summary_line = "#{emoji} #{cat.name} — #{cat.grade} (#{cat.score}/100)"
 
@@ -252,7 +254,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     ]
   end
 
-  defp cosine_group_content(group, detail) do
+  defp cosine_group_content(group, detail, worst_blocks) do
     rows =
       Enum.map(group.categories, fn cat ->
         emoji = grade_emoji(cat.grade)
@@ -270,7 +272,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
         emoji = grade_emoji(cat.grade)
 
         inner =
-          cosine_section_content(cat, detail)
+          cosine_section_content(cat, detail, worst_blocks)
           |> List.flatten()
           |> Enum.join("\n")
 
@@ -288,8 +290,9 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     summary_table ++ [""] ++ sub_sections
   end
 
-  defp cosine_section_content(cat, _detail) do
+  defp cosine_section_content(cat, _detail, worst_blocks) do
     n = length(cat.behaviors)
+    category_key = to_string(cat.key)
 
     behaviors_rows =
       Enum.map(cat.behaviors, fn b ->
@@ -304,7 +307,35 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       | behaviors_rows
     ]
 
-    behaviors_table ++ [""]
+    worst_block_section =
+      case Map.get(worst_blocks, category_key) do
+        nil -> []
+        block -> render_worst_block(block)
+      end
+
+    behaviors_table ++ [""] ++ worst_block_section
+  end
+
+  defp render_worst_block(block) do
+    line_count = (block.end_line || block.start_line) - block.start_line + 1
+    location = "#{block.path}:#{block.start_line}-#{block.end_line}"
+
+    if line_count >= 4 and line_count <= 10 and block.source do
+      lang = block.language || ""
+
+      [
+        "> **Worst offender** (`#{location}`):",
+        "> ```#{lang}",
+        block.source |> String.split("\n") |> Enum.map(&"> #{&1}") |> Enum.join("\n"),
+        "> ```",
+        ""
+      ]
+    else
+      [
+        "> **Worst offender**: `#{location}` (#{line_count} lines)",
+        ""
+      ]
+    end
   end
 
   defp section_content(cat, _detail) do
