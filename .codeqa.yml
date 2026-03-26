@@ -12,6 +12,8 @@ ignore_paths:
   - test/**
   - devenv*
   - direnv*
+  - README.md
+  - action.yml
 
 # Impact weights for overall score calculation.
 # Combined metric categories default to 1 (can be overridden here).
