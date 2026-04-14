@@ -1,5 +1,6 @@
 docstring_is_nonempty:
   _doc: "Docstrings must contain meaningful content, not just a placeholder or empty string."
+  _languages: [elixir]
   _log_baseline: 28.4942
   branching:
     mean_branch_count: 0.3089
@@ -111,6 +112,7 @@ docstring_is_nonempty:
 
 file_has_license_header:
   _doc: "Source files should begin with a license or copyright header."
+  _languages: [elixir]
   _log_baseline: 5.8777
   branching:
     mean_branching_density: -0.0081
@@ -198,6 +200,7 @@ file_has_license_header:
 
 file_has_module_docstring:
   _doc: "Files should have a module-level docstring explaining purpose and usage."
+  _languages: [elixir]
   _log_baseline: 24.1681
   branching:
     mean_branch_count: 0.3854
@@ -301,6 +304,7 @@ file_has_module_docstring:
 
 file_has_no_commented_out_code:
   _doc: "Files should not contain commented-out code blocks left from development."
+  _languages: [elixir]
   _log_baseline: -8.5677
   branching:
     mean_branching_density: 0.0368
@@ -408,6 +412,7 @@ file_has_no_commented_out_code:
 
 function_has_docstring:
   _doc: "Public functions should have a docstring describing behaviour, params, and return value."
+  _languages: [elixir]
   _log_baseline: 41.6283
   branching:
     mean_branch_count: 0.5279
@@ -526,6 +531,7 @@ function_has_docstring:
 
 function_todo_comment_in_body:
   _doc: "Functions should not contain TODO/FIXME comments indicating unfinished work."
+  _languages: [elixir]
   _log_baseline: 7.2394
   branching:
     mean_branch_count: -0.0287
