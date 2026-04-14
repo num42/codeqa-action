@@ -1,6 +1,5 @@
 boolean_function_has_question_mark:
   _doc: "Functions returning a boolean should end with `?` (Elixir/Ruby) or start with `is_`/`has_` (JS/Python)."
-  _languages: [elixir, javascript, python, ruby]
   _log_baseline: -6.4663
   brevity:
     mean_sample_size: 0.0127
@@ -76,7 +75,6 @@ boolean_function_has_question_mark:
 
 cyclomatic_complexity_under_10:
   _doc: "Functions should have a cyclomatic complexity under 10."
-  _languages: [elixir]
   _log_baseline: -1.4896
   branching:
     mean_branch_count: -0.2373
@@ -182,7 +180,6 @@ cyclomatic_complexity_under_10:
 
 has_verb_in_name:
   _doc: "Function names should contain a verb describing the action performed."
-  _languages: [elixir]
   _log_baseline: 14.8350
   compression:
     mean_raw_bytes: 0.0816
@@ -208,7 +205,6 @@ has_verb_in_name:
 
 is_less_than_20_lines:
   _doc: "Functions should be 20 lines or fewer."
-  _languages: [elixir]
   _log_baseline: 23.9658
   branching:
     mean_branch_count: -0.0820
@@ -322,7 +318,6 @@ is_less_than_20_lines:
 
 nesting_depth_under_4:
   _doc: "Code should not nest deeper than 4 levels."
-  _languages: [elixir]
   _log_baseline: 1.0611
   branching:
     mean_branch_count: -0.3267
@@ -434,7 +429,6 @@ nesting_depth_under_4:
 
 no_boolean_parameter:
   _doc: "Functions should not take boolean parameters — a flag usually means the function does two things."
-  _languages: [elixir]
   _log_baseline: 13.6290
   branching:
     mean_branch_count: -2.0000
@@ -549,7 +543,6 @@ no_boolean_parameter:
 
 no_magic_numbers:
   _doc: "Numeric literals should be named constants, not inline magic numbers."
-  _languages: [elixir]
   _log_baseline: 45.8808
   branching:
     mean_branch_count: -0.2708
@@ -656,7 +649,6 @@ no_magic_numbers:
 
 parameter_count_under_4:
   _doc: "Functions should take fewer than 4 parameters."
-  _languages: [elixir]
   _log_baseline: 1.9637
   branching:
     mean_non_blank_count: 0.0967
@@ -765,7 +757,6 @@ parameter_count_under_4:
 
 uses_ternary_expression:
   _doc: "Simple conditional assignments should use inline expressions rather than full if-blocks."
-  _languages: [elixir]
   _log_baseline: -4.5289
   branching:
     mean_branch_count: -0.4160
