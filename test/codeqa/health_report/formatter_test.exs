@@ -294,9 +294,10 @@ defmodule CodeQA.HealthReport.FormatterTest do
 
     @sample_report_with_blocks Map.put(@sample_report, :top_blocks, @top_blocks)
 
-    test "renders block section header" do
+    test "renders block verdict header" do
       result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
-      assert result =~ "Top 1 Code Blocks by Impact"
+      assert result =~ "review required"
+      assert result =~ "🔴"
     end
 
     test "renders file path with status" do
@@ -330,15 +331,15 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert result =~ ":bar"
     end
 
-    test "omits block section when top_blocks is empty" do
+    test "shows green verdict when top_blocks is empty" do
       report = Map.put(@sample_report, :top_blocks, [])
       result = Formatter.format_markdown(report, :default, :plain)
-      refute result =~ "Code Blocks"
+      assert result =~ "No block-level issues detected"
     end
 
-    test "omits block section when top_blocks key absent" do
+    test "shows green verdict when top_blocks key absent" do
       result = Formatter.format_markdown(@sample_report, :default, :plain)
-      refute result =~ "Code Blocks"
+      refute result =~ "review required"
     end
   end
 
@@ -448,12 +449,11 @@ defmodule CodeQA.HealthReport.FormatterTest do
 
     @report_with_blocks_gh Map.put(@sample_report, :top_blocks, @top_blocks_gh)
 
-    test "renders block section with details wrapper per block" do
+    test "renders block section with verdict and details per block" do
       result = Formatter.format_markdown(@report_with_blocks_gh, :default, :github)
-      assert result =~ "Top 1 Code Blocks by Impact"
+      assert result =~ "review required"
       assert result =~ "<details>"
       assert result =~ "lib/foo.ex"
-      assert result =~ "modified"
     end
 
     test "renders severity and fix hint" do
@@ -542,16 +542,16 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert part_2 =~ "Readability"
     end
 
-    test "part 3 is placeholder when no blocks" do
+    test "part 3 shows green verdict when no blocks" do
       [_, _, part_3 | _] = Formatter.render_parts(@sample_report)
-      assert part_3 =~ "_No near-duplicate blocks detected._"
+      assert part_3 =~ "No block-level issues detected"
     end
 
-    test "part 3 contains blocks when present" do
+    test "part 3 contains verdict and blocks when present" do
       report = Map.put(@sample_report, :top_blocks, @top_blocks_gh)
       [_, _, part_3 | _] = Formatter.render_parts(report)
       assert part_3 =~ "lib/foo.ex"
-      assert part_3 =~ "Code Blocks"
+      assert part_3 =~ "review required"
     end
   end
 

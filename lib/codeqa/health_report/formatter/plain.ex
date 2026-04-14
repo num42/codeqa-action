@@ -206,17 +206,82 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     end
   end
 
-  defp blocks_section([]), do: []
+  defp blocks_section([]), do: ["## Code Blocks: 🟢 No block-level issues detected", ""]
 
   defp blocks_section(top_blocks) do
-    block_parts = Enum.flat_map(top_blocks, &format_block/1)
+    alias CodeQA.HealthReport.BehaviorLabels
 
-    [
-      "## Top #{length(top_blocks)} Code Blocks by Impact",
-      ""
-      | block_parts
-    ]
+    severity_counts = count_severities(top_blocks)
+    worst = worst_severity(severity_counts)
+    {icon, verdict} = verdict_text(worst, severity_counts)
+
+    {actionable, medium_blocks} =
+      Enum.split_with(top_blocks, fn b ->
+        top = List.first(b.potentials)
+        top && top.severity in [:critical, :high]
+      end)
+
+    header = ["## Code Blocks: #{icon} #{verdict}", ""]
+
+    action_table =
+      if actionable != [] do
+        rows =
+          Enum.map(actionable, fn block ->
+            top = List.first(block.potentials)
+            label = BehaviorLabels.label(top.category, top.behavior)
+            location = "#{block.path}:#{block.start_line}-#{block.end_line || block.start_line}"
+            action = BehaviorLabels.action(top.category, top.behavior)
+            "| #{label} | #{location} | #{action} |"
+          end)
+
+        [
+          "| What | Where | Action |",
+          "|------|-------|--------|"
+          | rows
+        ] ++ [""]
+      else
+        []
+      end
+
+    block_details = Enum.flat_map(actionable ++ medium_blocks, &format_block/1)
+
+    header ++ action_table ++ block_details
   end
+
+  defp count_severities(blocks) do
+    blocks
+    |> Enum.map(fn b -> (List.first(b.potentials) || %{severity: :medium}).severity end)
+    |> Enum.frequencies()
+  end
+
+  defp worst_severity(counts) do
+    cond do
+      Map.get(counts, :critical, 0) > 0 -> :critical
+      Map.get(counts, :high, 0) > 0 -> :high
+      Map.get(counts, :medium, 0) > 0 -> :medium
+      true -> :none
+    end
+  end
+
+  defp verdict_text(:critical, counts) do
+    n = Map.get(counts, :critical, 0)
+    {"🔴", "#{n} critical #{pl(n, "block")} — review required before merge"}
+  end
+
+  defp verdict_text(:high, counts) do
+    n = Map.get(counts, :high, 0) + Map.get(counts, :critical, 0)
+    {"🟠", "#{n} #{pl(n, "block")} need attention before merge"}
+  end
+
+  defp verdict_text(:medium, counts) do
+    n = Map.get(counts, :medium, 0)
+    {"🟡", "#{n} #{pl(n, "block")} with minor issues (safe to merge)"}
+  end
+
+  defp verdict_text(:none, _), do: {"🟢", "No block-level issues detected"}
+
+  defp pl(1, word), do: word
+  defp pl(_, word), do: word <> "s"
 
   defp format_block(block) do
     end_line = block.end_line || block.start_line
