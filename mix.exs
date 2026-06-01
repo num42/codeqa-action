@@ -54,7 +54,8 @@ defmodule CodeQA.MixProject do
       {:yaml_elixir, "~> 2.11"},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:credo, "~> 1.7", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.4", only: :dev, runtime: false}
+      {:dialyxir, "~> 1.4", only: :dev, runtime: false},
+      {:number42_refactors, github: "num42/num42_refactors", only: [:dev], runtime: false}
     ]
   end
 end
