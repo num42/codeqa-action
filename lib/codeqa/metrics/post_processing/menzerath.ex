@@ -38,9 +38,10 @@ defmodule CodeQA.Metrics.PostProcessing.Menzerath do
   @impl true
   def analyze(pipeline_result, files_map, _opts) do
     file_scores =
-      Map.new(files_map, fn {path, content} ->
+      for {path, content} <- files_map do
         {path, %{"menzerath" => score_file(content)}}
-      end)
+      end
+      |> Map.new()
 
     codebase_score = compute_codebase_score(pipeline_result)
 

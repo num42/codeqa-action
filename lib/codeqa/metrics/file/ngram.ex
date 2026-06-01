@@ -70,6 +70,9 @@ defmodule CodeQA.Metrics.File.Ngram do
   end
 
   defp rename_keys(map, prefix) do
-    Map.new(map, fn {k, v} -> {"#{prefix}_#{k}", v} end)
+    for {k, v} <- map do
+      {"#{prefix}_#{k}", v}
+    end
+    |> Map.new()
   end
 end

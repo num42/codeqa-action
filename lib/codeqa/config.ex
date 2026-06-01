@@ -85,7 +85,12 @@ defmodule CodeQA.Config do
   defp parse_ignore_paths(_), do: []
 
   defp parse_impact(%{"impact" => overrides}) when is_map(overrides) do
-    string_overrides = Map.new(overrides, fn {k, v} -> {to_string(k), v} end)
+    string_overrides =
+      for {k, v} <- overrides do
+        {to_string(k), v}
+      end
+      |> Map.new()
+
     Map.merge(@default_impact, string_overrides)
   end
 

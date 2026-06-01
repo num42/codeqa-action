@@ -68,6 +68,9 @@ defmodule CodeQA.Metrics.File.CasingEntropy do
   end
 
   defp counts_to_output(counts) do
-    Map.new(counts, fn {k, v} -> {"#{k}_count", v} end)
+    for {k, v} <- counts do
+      {"#{k}_count", v}
+    end
+    |> Map.new()
   end
 end

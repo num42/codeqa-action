@@ -66,7 +66,10 @@ defmodule CodeQA.HealthReport do
     top_issues = all_cosines |> Enum.take(10)
 
     codebase_cosine_lookup =
-      Map.new(all_cosines, fn i -> {{i.category, i.behavior}, i.cosine} end)
+      for i <- all_cosines do
+        {{i.category, i.behavior}, i.cosine}
+      end
+      |> Map.new()
 
     block_opts = [
       block_min_lines: block_min_lines,

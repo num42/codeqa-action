@@ -64,7 +64,12 @@ defmodule CodeQA.HealthReport.Config do
   defp parse_impact(nil), do: Config.impact_map()
 
   defp parse_impact(overrides) when is_map(overrides) do
-    string_overrides = Map.new(overrides, fn {k, v} -> {to_string(k), v} end)
+    string_overrides =
+      for {k, v} <- overrides do
+        {to_string(k), v}
+      end
+      |> Map.new()
+
     Map.merge(Config.impact_map(), string_overrides)
   end
 

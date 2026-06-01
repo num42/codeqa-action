@@ -165,8 +165,10 @@ defmodule CodeQA.CombinedMetrics.FileScorerTest do
 
     test "top_nodes is [] when file_data nodes is nil" do
       files_map =
-        build_files_map()
-        |> Map.new(fn {path, data} -> {path, Map.put(data, "nodes", nil)} end)
+        for {path, data} <- build_files_map() do
+          {path, Map.put(data, "nodes", nil)}
+        end
+        |> Map.new()
 
       result = FileScorer.worst_files_per_behavior(files_map)
 
@@ -177,8 +179,10 @@ defmodule CodeQA.CombinedMetrics.FileScorerTest do
 
     test "top_nodes is [] when file_data nodes is []" do
       files_map =
-        build_files_map()
-        |> Map.new(fn {path, data} -> {path, Map.put(data, "nodes", [])} end)
+        for {path, data} <- build_files_map() do
+          {path, Map.put(data, "nodes", [])}
+        end
+        |> Map.new()
 
       result = FileScorer.worst_files_per_behavior(files_map)
 

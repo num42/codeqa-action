@@ -411,8 +411,18 @@ defmodule CodeQA.BlockImpactAnalyzer do
   end
 
   defp swap_file_in_agg(inc_agg, old_triples, new_triples) do
-    old_map = Map.new(old_triples, fn {metric, key, val} -> {{metric, key}, val} end)
-    new_map = Map.new(new_triples, fn {metric, key, val} -> {{metric, key}, val} end)
+    old_map =
+      for {metric, key, val} <- old_triples do
+        {{metric, key}, val}
+      end
+      |> Map.new()
+
+    new_map =
+      for {metric, key, val} <- new_triples do
+        {{metric, key}, val}
+      end
+      |> Map.new()
+
     all_keys = (Map.keys(old_map) ++ Map.keys(new_map)) |> Enum.uniq()
 
     all_keys

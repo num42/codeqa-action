@@ -25,7 +25,12 @@ defmodule CodeQA.CombinedMetrics.FileScorer do
   @spec file_to_aggregate(map()) :: map()
   def file_to_aggregate(metrics) do
     Map.new(metrics, fn {group, keys} ->
-      prefixed_keys = Map.new(keys, fn {key, value} -> {"mean_" <> key, value} end)
+      prefixed_keys =
+        for {key, value} <- keys do
+          {"mean_" <> key, value}
+        end
+        |> Map.new()
+
       {group, prefixed_keys}
     end)
   end

@@ -106,7 +106,10 @@ defmodule CodeQA.BlockImpact.RefactoringPotentials do
 
   defp cosines_to_delta(baseline_cosines, without_cosines) do
     without_map =
-      Map.new(without_cosines, fn %{category: c, behavior: b, cosine: cos} -> {{c, b}, cos} end)
+      for %{category: c, behavior: b, cosine: cos} <- without_cosines do
+        {{c, b}, cos}
+      end
+      |> Map.new()
 
     Map.new(baseline_cosines, fn %{category: c, behavior: b, cosine: cos} ->
       without_cos = Map.get(without_map, {c, b}, 0.0)
