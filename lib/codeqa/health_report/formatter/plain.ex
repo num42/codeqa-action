@@ -265,23 +265,23 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
 
   defp verdict_text(:critical, counts) do
     n = Map.get(counts, :critical, 0)
-    {"🔴", "#{n} critical #{pl(n, "block")} — review required before merge"}
+    {"🔴", "#{n} critical #{pluralize(n, "block")} — review required before merge"}
   end
 
   defp verdict_text(:high, counts) do
     n = Map.get(counts, :high, 0) + Map.get(counts, :critical, 0)
-    {"🟠", "#{n} #{pl(n, "block")} need attention before merge"}
+    {"🟠", "#{n} #{pluralize(n, "block")} need attention before merge"}
   end
 
   defp verdict_text(:medium, counts) do
     n = Map.get(counts, :medium, 0)
-    {"🟡", "#{n} #{pl(n, "block")} with minor issues (safe to merge)"}
+    {"🟡", "#{n} #{pluralize(n, "block")} with minor issues (safe to merge)"}
   end
 
   defp verdict_text(:none, _), do: {"🟢", "No block-level issues detected"}
 
-  defp pl(1, word), do: word
-  defp pl(_, word), do: word <> "s"
+  defp pluralize(1, word), do: word
+  defp pluralize(_, word), do: word <> "s"
 
   defp format_block(block) do
     end_line = block.end_line || block.start_line
