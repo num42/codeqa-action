@@ -12,9 +12,18 @@ jobs:
   compare:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Cache Mix deps and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-mix-1.19-27.3-${{ hashFiles('mix.lock', 'mix.exs') }}
+          restore-keys: ${{ runner.os }}-mix-1.19-27.3-
 
       - name: Get fork point
         id: fork-point
