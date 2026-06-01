@@ -1,6 +1,5 @@
 class_name_is_noun:
   _doc: "Class and module names should be nouns describing what they represent, not verbs or gerunds."
-  _languages: [elixir]
   _log_baseline: 2.9861
   brevity:
     mean_sample_size: 0.7106
@@ -67,8 +66,7 @@ file_name_matches_primary_export:
 
 function_name_is_not_single_word:
   _doc: "Single-word function names like `run`, `process`, or `handle` are too vague to convey intent."
-  _languages: [elixir]
-  _log_baseline: 17.8470
+  _log_baseline: 23.5472
   compression:
     mean_raw_bytes: 0.2434
     mean_redundancy: 0.0776
@@ -87,6 +85,8 @@ function_name_is_not_single_word:
     mean_avg_sub_words_per_id: 0.3083
     mean_flesch_adapted: -0.3181
     mean_fog_adapted: 1.3258
+  separator_counts:
+    mean_underscore_count: 1.8529
   symbol_density:
     mean_density: -0.2431
   vowel_density:
@@ -94,8 +94,7 @@ function_name_is_not_single_word:
 
 function_name_matches_return_type:
   _doc: "Functions prefixed with `get_`, `fetch_`, or `find_` should return the thing they name."
-  _languages: [elixir]
-  _log_baseline: 7.5638
+  _log_baseline: 7.7877
   branching:
     mean_max_nesting_depth: 0.1335
   brevity:
@@ -171,6 +170,10 @@ function_name_matches_return_type:
     mean_avg_tokens_per_line: 0.0030
     mean_flesch_adapted: -0.0107
     mean_fog_adapted: 0.0058
+  separator_counts:
+    mean_dot_count: 0.1335
+    mean_slash_count: 0.2282
+    mean_underscore_count: 0.0064
   symbol_density:
     mean_density: 0.0633
     mean_distinct_symbol_types: 0.0639
@@ -190,7 +193,6 @@ function_name_matches_return_type:
 
 test_name_starts_with_verb:
   _doc: "Test descriptions should start with a verb: `creates`, `raises`, `returns`, not a noun phrase."
-  _languages: [elixir]
   _log_baseline: 7.8915
   branching:
     mean_branch_count: 1.9977
