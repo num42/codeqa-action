@@ -1,7 +1,12 @@
 defmodule CodeQA.CollectorTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
-  alias CodeQA.Collector
+  alias CodeQA.Engine.Collector
+
+  setup do
+    CodeQA.Config.reset()
+    on_exit(&CodeQA.Config.reset/0)
+  end
 
   describe "ignored?/2" do
     test "matches simple wildcard pattern" do
@@ -93,7 +98,7 @@ defmodule CodeQA.CollectorTest do
         %{path: "lib/bar.ex", status: "modified"}
       ]
 
-      result = Collector.reject_ignored(items, ["test/*"], & &1.path)
+      result = Collector.reject_ignored(items, & &1.path, ["test/*"])
 
       assert length(result) == 1
       assert hd(result).path == "lib/bar.ex"
@@ -101,7 +106,32 @@ defmodule CodeQA.CollectorTest do
 
     test "empty patterns returns list unchanged" do
       items = [%{path: "test/foo.ex"}]
-      assert Collector.reject_ignored(items, [], & &1.path) == items
+      assert Collector.reject_ignored(items, & &1.path, []) == items
+    end
+  end
+
+  describe "collect_files/2 respects .gitignore" do
+    setup do
+      tmp_dir =
+        Path.join(System.tmp_dir!(), "codeqa_git_collector_#{System.unique_integer([:positive])}")
+
+      File.mkdir_p!(Path.join(tmp_dir, "lib"))
+      System.cmd("git", ["init"], cd: tmp_dir)
+      System.cmd("git", ["config", "user.email", "test@test.com"], cd: tmp_dir)
+      System.cmd("git", ["config", "user.name", "Test"], cd: tmp_dir)
+      File.write!(Path.join(tmp_dir, "lib/app.ex"), "defmodule App do\nend")
+      File.write!(Path.join(tmp_dir, "lib/generated.ex"), "defmodule Gen do\nend")
+      File.write!(Path.join(tmp_dir, ".gitignore"), "lib/generated.ex\n")
+
+      on_exit(fn -> File.rm_rf!(tmp_dir) end)
+
+      %{tmp_dir: tmp_dir}
+    end
+
+    test "excludes files listed in .gitignore", %{tmp_dir: tmp_dir} do
+      files = Collector.collect_files(tmp_dir)
+      assert Map.has_key?(files, "lib/app.ex")
+      refute Map.has_key?(files, "lib/generated.ex")
     end
   end
 
@@ -125,9 +155,21 @@ defmodule CodeQA.CollectorTest do
     end
 
     test "with ignore patterns excludes matching files", %{tmp_dir: tmp_dir} do
-      files = Collector.collect_files(tmp_dir, ignore_patterns: ["test/*"])
+      files = Collector.collect_files(tmp_dir, ["test/*"])
       assert Map.has_key?(files, "lib/app.ex")
       refute Map.has_key?(files, "test/app_test.exs")
+    end
+
+    test "respects ignore_paths from .codeqa.yml", %{tmp_dir: tmp_dir} do
+      File.mkdir_p!(Path.join(tmp_dir, "generated"))
+      File.write!(Path.join(tmp_dir, "generated/schema.ex"), "defmodule Schema do\nend")
+      File.write!(Path.join(tmp_dir, ".codeqa.yml"), "ignore_paths:\n  - generated/**\n")
+
+      CodeQA.Config.load(tmp_dir)
+      files = Collector.collect_files(tmp_dir)
+
+      assert Map.has_key?(files, "lib/app.ex")
+      refute Map.has_key?(files, "generated/schema.ex")
     end
   end
 end

@@ -1,6 +1,8 @@
 defmodule CodeQA.CLI.Progress do
   @moduledoc false
 
+  alias CodeQA.CLI.UI
+
   @spec callback(integer(), integer(), String.t(), integer()) :: :ok
   def callback(completed, total, path, start_time) do
     now = System.monotonic_time(:millisecond)
@@ -11,8 +13,8 @@ defmodule CodeQA.CLI.Progress do
     label = if String.length(path) > 30, do: "..." <> String.slice(path, -27..-1), else: path
 
     output =
-      CodeQA.CLI.UI.progress_bar(completed, total,
-        eta: CodeQA.CLI.UI.format_eta(eta_ms),
+      UI.progress_bar(completed, total,
+        eta: UI.format_eta(eta_ms),
         label: label
       )
 

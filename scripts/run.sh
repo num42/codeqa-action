@@ -47,17 +47,20 @@ esac
 # --- Build CLI arguments ---
 ARGS=("$INPUT_COMMAND" "$INPUT_PATH")
 CAPTURE_STDOUT=false
+COMMENT_MODE=false
 
 case "$INPUT_COMMAND" in
   health-report)
-    ARGS+=("--output" "$OUTPUT_FILE")
     ARGS+=("--detail" "$INPUT_DETAIL")
     ARGS+=("--top" "$INPUT_TOP")
     if [[ -n "$INPUT_CONFIG" ]]; then
       ARGS+=("--config" "$INPUT_CONFIG")
     fi
     if [[ "${INPUT_COMMENT:-false}" == "true" ]]; then
-      ARGS+=("--format" "github")
+      ARGS+=("--comment")
+      COMMENT_MODE=true
+    else
+      ARGS+=("--output" "$OUTPUT_FILE")
     fi
     ;;
   compare)
@@ -115,6 +118,77 @@ if [[ "${CAPTURE_STDOUT}" == "true" ]]; then
   "$CODEQA" "${ARGS[@]}" > "$OUTPUT_FILE"
 else
   "$CODEQA" "${ARGS[@]}"
+fi
+
+# --- Post multi-part PR comments (health-report with comment mode) ---
+if [[ "$COMMENT_MODE" == "true" ]]; then
+  TMPDIR="${TMPDIR:-/tmp}"
+  PART_COUNT_FILE="${TMPDIR}/codeqa-part-count.txt"
+
+  if [[ ! -f "$PART_COUNT_FILE" ]]; then
+    echo "::error::Part count file not found at ${PART_COUNT_FILE}"
+    exit 1
+  fi
+
+  PART_COUNT=$(cat "$PART_COUNT_FILE")
+  echo "Posting ${PART_COUNT} comment parts..."
+
+  # GitHub API settings
+  API_URL="${GITHUB_API_URL:-https://api.github.com}"
+  REPO="${GITHUB_REPOSITORY}"
+  PR_NUMBER="${PR_NUMBER:-}"
+
+  if [[ -z "$PR_NUMBER" ]]; then
+    echo "::error::PR_NUMBER not set. Cannot post PR comments."
+    exit 1
+  fi
+
+  for i in $(seq 1 "$PART_COUNT"); do
+    PART_FILE="${TMPDIR}/codeqa-part-${i}.md"
+    SENTINEL="<!-- codeqa-health-report-${i} -->"
+
+    if [[ ! -f "$PART_FILE" ]]; then
+      echo "::warning::Part file ${PART_FILE} not found, skipping"
+      continue
+    fi
+
+    BODY=$(cat "$PART_FILE")
+
+    # Search for existing comment with this sentinel
+    echo "Searching for existing comment with sentinel: ${SENTINEL}"
+    COMMENTS_JSON=$(curl -fsSL \
+      -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+      -H "Accept: application/vnd.github+json" \
+      "${API_URL}/repos/${REPO}/issues/${PR_NUMBER}/comments?per_page=100" 2>/dev/null || echo "[]")
+
+    # Find comment ID containing the sentinel
+    COMMENT_ID=$(echo "$COMMENTS_JSON" | jq -r --arg sentinel "$SENTINEL" \
+      '.[] | select(.body | contains($sentinel)) | .id' | head -1)
+
+    # Prepare JSON payload
+    PAYLOAD=$(jq -n --arg body "$BODY" '{"body": $body}')
+
+    if [[ -n "$COMMENT_ID" && "$COMMENT_ID" != "null" ]]; then
+      echo "Updating existing comment ${COMMENT_ID} for part ${i}..."
+      curl -fsSL -X PATCH \
+        -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+        -H "Accept: application/vnd.github+json" \
+        "${API_URL}/repos/${REPO}/issues/comments/${COMMENT_ID}" \
+        -d "$PAYLOAD" > /dev/null
+    else
+      echo "Creating new comment for part ${i}..."
+      curl -fsSL -X POST \
+        -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+        -H "Accept: application/vnd.github+json" \
+        "${API_URL}/repos/${REPO}/issues/${PR_NUMBER}/comments" \
+        -d "$PAYLOAD" > /dev/null
+    fi
+  done
+
+  echo "All ${PART_COUNT} comment parts posted successfully"
+
+  # Use part 1 as the main output file for grade extraction
+  OUTPUT_FILE="${TMPDIR}/codeqa-part-1.md"
 fi
 
 # --- Extract grade (health-report only) ---
