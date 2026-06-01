@@ -85,7 +85,7 @@ defmodule CodeQA.CLI.Options do
   end
 
   @spec maybe_add(keyword(), any(), {atom(), any()}) :: keyword()
-  def maybe_add(opts, val, item) do
-    if val, do: [item | opts], else: opts
-  end
+  def maybe_add(opts, val, item) when val not in [nil, false], do: [item | opts]
+
+  def maybe_add(opts, _val, _item), do: opts
 end

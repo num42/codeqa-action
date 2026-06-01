@@ -211,20 +211,20 @@ defmodule CodeQA.HealthReport.Grader do
         category_grades,
         scale \\ Categories.default_grade_scale(),
         impact_map \\ %{}
-      ) do
-    if category_grades == [] do
-      {0, "F"}
-    else
-      {weighted_sum, total_impact} =
-        category_grades
-        |> Enum.reduce({0, 0}, fn g, {ws, ti} ->
-          impact = Map.get(impact_map, to_string(g.key), 1)
-          {ws + g.score * impact, ti + impact}
-        end)
+      )
 
-      score = round(weighted_sum / total_impact)
-      {score, grade_letter(score, scale)}
-    end
+  def overall_score([], _scale, _impact_map), do: {0, "F"}
+
+  def overall_score(category_grades, scale, impact_map) do
+    {weighted_sum, total_impact} =
+      category_grades
+      |> Enum.reduce({0, 0}, fn g, {ws, ti} ->
+        impact = Map.get(impact_map, to_string(g.key), 1)
+        {ws + g.score * impact, ti + impact}
+      end)
+
+    score = round(weighted_sum / total_impact)
+    {score, grade_letter(score, scale)}
   end
 
   @doc """

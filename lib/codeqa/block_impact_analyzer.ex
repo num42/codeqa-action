@@ -152,6 +152,16 @@ defmodule CodeQA.BlockImpactAnalyzer do
   end
 
   defp compute_nodes_timed(
+         _path,
+         "",
+         _baseline_file_metrics,
+         _file_results,
+         _baseline_codebase_cosines,
+         _nodes_top,
+         _cached_behaviors
+       ), do: {[], %{duration: 0, tokenize_us: 0, parse_us: 0, file_cosines_us: 0, node_count: 0}}
+
+  defp compute_nodes_timed(
          path,
          content,
          baseline_file_metrics,
@@ -160,68 +170,64 @@ defmodule CodeQA.BlockImpactAnalyzer do
          nodes_top,
          cached_behaviors
        ) do
-    if content == "" do
-      {[], %{duration: 0, tokenize_us: 0, parse_us: 0, file_cosines_us: 0, node_count: 0}}
-    else
-      t0 = now()
+    t0 = now()
 
-      {root_tokens, tokenize_us} = timed(fn -> TokenNormalizer.normalize_structural(content) end)
-      {top_level_nodes, parse_us} = timed(fn -> Parser.detect_blocks(root_tokens, Unknown) end)
+    {root_tokens, tokenize_us} = timed(fn -> TokenNormalizer.normalize_structural(content) end)
+    {top_level_nodes, parse_us} = timed(fn -> Parser.detect_blocks(root_tokens, Unknown) end)
 
-      baseline_file_agg = FileScorer.file_to_aggregate(baseline_file_metrics)
-      lang_mod = Language.detect(path)
-      language = lang_mod.name()
+    baseline_file_agg = FileScorer.file_to_aggregate(baseline_file_metrics)
+    lang_mod = Language.detect(path)
+    language = lang_mod.name()
 
-      {baseline_file_cosines, file_cosines_us} =
-        timed(fn ->
-          SampleRunner.diagnose_aggregate(baseline_file_agg,
-            top: 99_999,
-            language: language,
-            behavior_map: cached_behaviors
-          )
-        end)
-
-      inc_agg = build_incremental_agg(file_results)
-      old_file_triples = file_metrics_to_triples(baseline_file_metrics)
-      project_langs = project_languages(file_results)
-
-      node_ctx = %{
-        inc_agg: inc_agg,
-        old_file_triples: old_file_triples,
-        project_langs: project_langs,
-        cached_behaviors: cached_behaviors,
-        lang_mod: lang_mod,
-        baseline_file_metrics: baseline_file_metrics
-      }
-
-      nodes =
-        top_level_nodes
-        |> Enum.map(
-          &serialize_node(
-            &1,
-            path,
-            root_tokens,
-            baseline_file_cosines,
-            baseline_codebase_cosines,
-            nodes_top,
-            language,
-            node_ctx
-          )
+    {baseline_file_cosines, file_cosines_us} =
+      timed(fn ->
+        SampleRunner.diagnose_aggregate(baseline_file_agg,
+          top: 99_999,
+          language: language,
+          behavior_map: cached_behaviors
         )
-        |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
+      end)
 
-      measurements = %{
-        duration: now() - t0,
-        tokenize_us: tokenize_us,
-        parse_us: parse_us,
-        file_cosines_us: file_cosines_us,
-        node_count: length(top_level_nodes),
-        token_count: length(root_tokens),
-        bytes: byte_size(content)
-      }
+    inc_agg = build_incremental_agg(file_results)
+    old_file_triples = file_metrics_to_triples(baseline_file_metrics)
+    project_langs = project_languages(file_results)
 
-      {nodes, measurements}
-    end
+    node_ctx = %{
+      inc_agg: inc_agg,
+      old_file_triples: old_file_triples,
+      project_langs: project_langs,
+      cached_behaviors: cached_behaviors,
+      lang_mod: lang_mod,
+      baseline_file_metrics: baseline_file_metrics
+    }
+
+    nodes =
+      top_level_nodes
+      |> Enum.map(
+        &serialize_node(
+          &1,
+          path,
+          root_tokens,
+          baseline_file_cosines,
+          baseline_codebase_cosines,
+          nodes_top,
+          language,
+          node_ctx
+        )
+      )
+      |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
+
+    measurements = %{
+      duration: now() - t0,
+      tokenize_us: tokenize_us,
+      parse_us: parse_us,
+      file_cosines_us: file_cosines_us,
+      node_count: length(top_level_nodes),
+      token_count: length(root_tokens),
+      bytes: byte_size(content)
+    }
+
+    {nodes, measurements}
   end
 
   defp serialize_node(
