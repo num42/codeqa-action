@@ -139,7 +139,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
         ordered: false,
         timeout: :infinity
       )
-      |> Enum.reduce(%{}, fn {:ok, {path, data}}, acc -> Map.put(acc, path, data) end)
+      |> Map.new(fn {:ok, {path, data}} -> {path, data} end)
 
     :telemetry.execute(
       [:codeqa, :block_impact, :analyze],
