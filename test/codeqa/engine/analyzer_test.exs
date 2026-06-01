@@ -1,8 +1,8 @@
 defmodule CodeQA.Engine.AnalyzerTest do
   use ExUnit.Case, async: true
 
-  alias CodeQA.Engine.Analyzer
   alias CodeQA.CombinedMetrics.Scorer
+  alias CodeQA.Engine.Analyzer
 
   describe "analyze_file/2" do
     test "returns a metrics map with group keys" do

@@ -1,8 +1,8 @@
 defmodule CodeQA.CollectorTest do
   use ExUnit.Case, async: false
 
-  alias CodeQA.Engine.Collector
   alias CodeQA.Config
+  alias CodeQA.Engine.Collector
 
   setup do
     Config.reset()
