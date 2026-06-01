@@ -276,7 +276,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
       |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
 
     first_token = List.first(node.tokens)
-    char_length = node.tokens |> Enum.reduce(0, fn t, acc -> acc + byte_size(t.content) end)
+    char_length = node.tokens |> Enum.sum_by(fn t -> byte_size(t.content) end)
 
     %{
       "start_line" => node.start_line,

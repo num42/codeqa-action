@@ -137,7 +137,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
 
       # sub_block_count derived from the already-computed children_count in decorated.
       sub_block_count =
-        decorated |> Enum.reduce(0, fn {_, _, _, _, _, cc, _, _}, acc -> acc + cc end)
+        decorated |> Enum.sum_by(fn {_, _, _, _, _, cc, _, _} -> cc end)
 
       # IDF: prune bigrams that appear in more than idf_max_freq fraction of blocks.
       # These are structural noise (e.g. "end nil", "return false") that inflate the
