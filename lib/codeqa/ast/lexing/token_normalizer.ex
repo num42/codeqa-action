@@ -21,7 +21,7 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
   """
   @spec normalize_structural(String.t()) :: [Token.t()]
   def normalize_structural(code) do
-    code = String.replace(code, ~r/[^\x00-\x7F]/, " ")
+    code = code |> String.replace(~r/[^\x00-\x7F]/, " ")
     lines = String.split(code, "\n")
     last_idx = length(lines) - 1
 

@@ -93,7 +93,8 @@ defmodule CodeQA.CLI.HealthReport do
     total_bytes = results["files"] |> Map.values() |> Enum.map(& &1["bytes"]) |> Enum.sum()
 
     results =
-      Map.put(results, "metadata", %{
+      results
+      |> Map.put("metadata", %{
         "path" => Path.expand(path),
         "timestamp" => DateTime.utc_now() |> DateTime.to_iso8601(),
         "total_files" => map_size(files),

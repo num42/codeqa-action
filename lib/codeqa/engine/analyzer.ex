@@ -107,8 +107,8 @@ defmodule CodeQA.Engine.Analyzer do
   defp with_run_context(opts, fun) do
     {:ok, sup} = RunSupervisor.start_link()
     run_ctx = RunSupervisor.run_context(sup)
-    opts = Keyword.put(opts, :file_context_pid, run_ctx.file_context_pid)
-    opts = Keyword.put(opts, :behavior_config_pid, run_ctx.behavior_config_pid)
+    opts = opts |> Keyword.put(:file_context_pid, run_ctx.file_context_pid)
+    opts = opts |> Keyword.put(:behavior_config_pid, run_ctx.behavior_config_pid)
 
     try do
       fun.(opts)

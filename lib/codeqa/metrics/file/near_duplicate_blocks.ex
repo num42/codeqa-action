@@ -84,7 +84,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
       end
 
     result =
-      Map.merge(result, %{"block_count" => block_count, "sub_block_count" => sub_block_count})
+      result |> Map.merge(%{"block_count" => block_count, "sub_block_count" => sub_block_count})
 
     case include_pairs do
       true ->

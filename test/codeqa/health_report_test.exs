@@ -11,7 +11,7 @@ defmodule CodeQA.HealthReportTest do
     test "without base_results: pr_summary and codebase_delta are nil" do
       files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
       results = Analyzer.analyze_codebase(files)
-      results = BlockImpactAnalyzer.analyze(results, files)
+      results = results |> BlockImpactAnalyzer.analyze(files)
 
       report = HealthReport.generate(results)
 
@@ -28,7 +28,7 @@ defmodule CodeQA.HealthReportTest do
     test "without base_results: top_blocks shows top 10 blocks by impact" do
       files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
       results = Analyzer.analyze_codebase(files)
-      results = BlockImpactAnalyzer.analyze(results, files)
+      results = results |> BlockImpactAnalyzer.analyze(files)
 
       report = HealthReport.generate(results)
 
@@ -48,7 +48,7 @@ defmodule CodeQA.HealthReportTest do
     test "worst_offenders is always empty in categories" do
       files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
       results = Analyzer.analyze_codebase(files)
-      results = BlockImpactAnalyzer.analyze(results, files)
+      results = results |> BlockImpactAnalyzer.analyze(files)
 
       report = HealthReport.generate(results)
 
@@ -63,7 +63,7 @@ defmodule CodeQA.HealthReportTest do
     test "pr_summary is populated" do
       files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
       head_results = Analyzer.analyze_codebase(files)
-      head_results = BlockImpactAnalyzer.analyze(head_results, files)
+      head_results = head_results |> BlockImpactAnalyzer.analyze(files)
       base_results = Analyzer.analyze_codebase(files)
 
       changed = [%ChangedFile{path: "lib/foo.ex", status: "modified"}]
@@ -96,7 +96,7 @@ defmodule CodeQA.HealthReportTest do
     test "codebase_delta is populated" do
       files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
       head_results = Analyzer.analyze_codebase(files)
-      head_results = BlockImpactAnalyzer.analyze(head_results, files)
+      head_results = head_results |> BlockImpactAnalyzer.analyze(files)
       base_results = Analyzer.analyze_codebase(files)
 
       report = HealthReport.generate(head_results, base_results: base_results)
@@ -113,7 +113,7 @@ defmodule CodeQA.HealthReportTest do
       }
 
       head_results = Analyzer.analyze_codebase(files)
-      head_results = BlockImpactAnalyzer.analyze(head_results, files)
+      head_results = head_results |> BlockImpactAnalyzer.analyze(files)
       base_results = Analyzer.analyze_codebase(files)
 
       changed = [%ChangedFile{path: "lib/foo.ex", status: "modified"}]

@@ -55,8 +55,8 @@ defmodule CodeQA.Math do
 
   def pearson_correlation(x, y) do
     n = Nx.size(x) |> Nx.tensor(type: :f64)
-    x = Nx.as_type(x, :f64)
-    y = Nx.as_type(y, :f64)
+    x = x |> Nx.as_type(:f64)
+    y = y |> Nx.as_type(:f64)
 
     sum_x = Nx.sum(x)
     sum_y = Nx.sum(y)

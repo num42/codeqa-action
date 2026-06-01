@@ -302,7 +302,7 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
   defp build_results_map(computed_ncd, target_paths, target_set, top_n) do
     results =
       Enum.reduce(computed_ncd, %{}, fn {name_a, name_b, ncd}, acc ->
-        acc = maybe_add_similarity(acc, name_a, name_b, ncd, target_set)
+        acc = acc |> maybe_add_similarity(name_a, name_b, ncd, target_set)
         maybe_add_similarity(acc, name_b, name_a, ncd, target_set)
       end)
 

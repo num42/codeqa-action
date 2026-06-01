@@ -49,7 +49,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Candidates do
     Enum.reduce(decorated, {%{}, %{}}, fn {idx, _block, _values, hash, _len, _children, _newlines,
                                            bigrams},
                                           {exact_acc, shingle_acc} ->
-      exact_acc = Map.update(exact_acc, hash, [idx], &[idx | &1])
+      exact_acc = exact_acc |> Map.update(hash, [idx], &[idx | &1])
 
       shingle_acc =
         bigrams
