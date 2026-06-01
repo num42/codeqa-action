@@ -1,8 +1,6 @@
 defmodule CodeQA.Diagnostics do
   alias CodeQA.Language
 
-  import CodeQA.Shared, only: [project_languages_shared: 1]
-
   @moduledoc """
   Diagnoses a codebase by identifying likely code quality issues using
   cosine similarity against combined metric behavior profiles.
@@ -13,6 +11,7 @@ defmodule CodeQA.Diagnostics do
   alias CodeQA.Engine.Analyzer
   alias CodeQA.Engine.Collector
   alias CodeQA.HealthReport.Grader
+  import CodeQA.Shared, only: [project_languages_shared: 1]
 
   @doc """
   Runs diagnostics on the given path and returns results as a string.

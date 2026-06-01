@@ -1,9 +1,8 @@
 defmodule CodeQA.AST.Nodes.DocNode do
   @moduledoc "AST node for documentation strings and comment blocks."
 
-  import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
-
   alias CodeQA.AST.Enrichment.Node
+  import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
 
   defstruct [:tokens, :line_count, :children, :start_line, :end_line, :label]
 

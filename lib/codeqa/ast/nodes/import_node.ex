@@ -1,9 +1,8 @@
 defmodule CodeQA.AST.Nodes.ImportNode do
   @moduledoc "AST node for import, require, use, alias, or include statements."
 
-  import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
-
   alias CodeQA.AST.Enrichment.Node
+  import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
 
   defstruct [:tokens, :line_count, :children, :start_line, :end_line, :label, :target]
 

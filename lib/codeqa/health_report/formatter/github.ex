@@ -1,10 +1,10 @@
 defmodule CodeQA.HealthReport.Formatter.Github do
   @moduledoc "Renders health report as rich GitHub-flavored markdown."
 
+  alias CodeQA.HealthReport.BehaviorLabels
+
   import CodeQA.HealthReport.Formatter.Shared,
     only: [count_severities_shared: 1, pr_summary_section: 1, worst_severity_shared: 1]
-
-  alias CodeQA.HealthReport.BehaviorLabels
 
   @bar_width 20
   @filled "█"

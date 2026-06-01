@@ -3,8 +3,6 @@ defmodule CodeQA.BlockImpactAnalyzer do
   alias CodeQA.AST.Lexing.WhitespaceToken
   alias CodeQA.Language
 
-  import CodeQA.Shared, only: [project_languages_shared: 1]
-
   @moduledoc """
   Orchestrates block impact analysis across all files in a pipeline result.
 
@@ -48,6 +46,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
   alias CodeQA.CombinedMetrics.SampleRunner
   alias CodeQA.Engine.Analyzer
   alias CodeQA.Languages.Unknown
+  import CodeQA.Shared, only: [project_languages_shared: 1]
 
   @min_tokens 10
 

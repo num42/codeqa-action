@@ -1,6 +1,4 @@
 defmodule CodeQA.CombinedMetrics.SampleRunner do
-  import CodeQA.Shared, only: [humanize_category_shared: 1]
-
   @moduledoc """
   Discovers sample directories, analyzes them, and scores each behavior formula.
 
@@ -13,6 +11,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   alias CodeQA.CombinedMetrics.Scorer
   alias CodeQA.Engine.Analyzer
   alias CodeQA.Engine.Collector
+  import CodeQA.Shared, only: [humanize_category_shared: 1]
 
   @samples_root "priv/combined_metrics/samples"
 

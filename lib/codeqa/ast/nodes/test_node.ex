@@ -1,9 +1,8 @@
 defmodule CodeQA.AST.Nodes.TestNode do
   @moduledoc "AST node for test cases, describe blocks, and it blocks."
 
-  import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
-
   alias CodeQA.AST.Enrichment.Node
+  import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
 
   defstruct [:tokens, :line_count, :children, :start_line, :end_line, :label, :description]
 

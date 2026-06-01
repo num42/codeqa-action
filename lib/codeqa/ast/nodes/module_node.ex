@@ -1,9 +1,8 @@
 defmodule CodeQA.AST.Nodes.ModuleNode do
   @moduledoc "AST node for module, class, namespace, or struct definitions."
 
-  import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
-
   alias CodeQA.AST.Enrichment.Node
+  import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
 
   defstruct [:tokens, :line_count, :children, :start_line, :end_line, :label, :name, :kind]
 

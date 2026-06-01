@@ -1,10 +1,10 @@
 defmodule CodeQA.HealthReport.Formatter.Plain do
   @moduledoc "Renders health report as plain markdown."
 
+  alias CodeQA.HealthReport.BehaviorLabels
+
   import CodeQA.HealthReport.Formatter.Shared,
     only: [count_severities_shared: 1, pr_summary_section: 1, worst_severity_shared: 1]
-
-  alias CodeQA.HealthReport.BehaviorLabels
 
   @spec render(map(), atom()) :: String.t()
   def render(report, detail) do

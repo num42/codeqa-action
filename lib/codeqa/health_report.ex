@@ -1,8 +1,6 @@
 defmodule CodeQA.HealthReport do
   @moduledoc "Orchestrates health report generation from analysis results."
 
-  import CodeQA.Shared, only: [project_languages_shared: 1]
-
   alias CodeQA.CombinedMetrics.FileScorer
   alias CodeQA.CombinedMetrics.SampleRunner
   alias CodeQA.HealthReport.Config
@@ -10,6 +8,7 @@ defmodule CodeQA.HealthReport do
   alias CodeQA.HealthReport.Formatter
   alias CodeQA.HealthReport.Grader
   alias CodeQA.HealthReport.TopBlocks
+  import CodeQA.Shared, only: [project_languages_shared: 1]
 
   @spec generate(map(), keyword()) :: map()
   def generate(analysis_results, opts \\ []) do

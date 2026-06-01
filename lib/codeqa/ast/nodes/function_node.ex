@@ -1,9 +1,8 @@
 defmodule CodeQA.AST.Nodes.FunctionNode do
   @moduledoc "AST node for function, method, or callable definitions."
 
-  import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
-
   alias CodeQA.AST.Enrichment.Node
+  import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
 
   defstruct [
     :tokens,

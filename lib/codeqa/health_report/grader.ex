@@ -1,10 +1,9 @@
 defmodule CodeQA.HealthReport.Grader do
   @moduledoc "Scores metrics and assigns letter grades."
 
-  import CodeQA.Shared, only: [humanize_category_shared: 1]
-
   alias CodeQA.Config
   alias CodeQA.HealthReport.Categories
+  import CodeQA.Shared, only: [humanize_category_shared: 1]
 
   @doc """
   Score a single metric value (0-100) based on thresholds and direction.
