@@ -171,16 +171,7 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   # ---------------------------------------------------------------------------
 
   defp dir_languages(dir) do
-    case File.ls(dir) do
-      {:ok, files} ->
-        files
-        |> Enum.map(&Language.detect/1)
-        |> Enum.map(& &1.name())
-        |> MapSet.new()
-
-      _ ->
-        MapSet.new()
-    end
+    File.ls(dir) |> handle_dir_languages_ls()
   end
 
   defp languages_for_behavior(category, behavior) do
@@ -212,5 +203,18 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
 
   defp handle_read_behavior_doc_read(_) do
     nil
+  end
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_dir_languages_ls({:ok, files}) do
+    files
+    |> Enum.map(&Language.detect/1)
+    |> Enum.map(& &1.name())
+    |> MapSet.new()
+  end
+
+  defp handle_dir_languages_ls(_) do
+    MapSet.new()
   end
 end

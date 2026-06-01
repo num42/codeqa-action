@@ -96,13 +96,20 @@ defmodule CodeQA.Config do
   # FIXME: extracted automatically by ExtractCaseToHelper — review
   # the parameter list and consider a better name.
   defp handle_parse_read({:ok, contents}) do
-    case YamlElixir.read_from_string(contents) do
-      {:ok, yaml} -> from_yaml(yaml)
-      _ -> %__MODULE__{}
-    end
+    YamlElixir.read_from_string(contents) |> handle_read_from_string()
   end
 
   defp handle_parse_read({:error, _}) do
+    %__MODULE__{}
+  end
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_read_from_string({:ok, yaml}) do
+    from_yaml(yaml)
+  end
+
+  defp handle_read_from_string(_) do
     %__MODULE__{}
   end
 end

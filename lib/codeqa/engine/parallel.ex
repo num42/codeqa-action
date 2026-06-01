@@ -70,18 +70,23 @@ defmodule CodeQA.Engine.Parallel do
   # FIXME: extracted automatically by ExtractCaseToHelper — review
   # the parameter list and consider a better name.
   defp handle_maybe_cached_analyze_read({:ok, cached}, cache_file, content, opts, path) do
-    case Jason.decode(cached) do
-      {:ok, data} ->
-        data
-
-      _ ->
-        data = analyze_single_file(path, content, opts)
-        File.write!(cache_file, Jason.encode!(data))
-        data
-    end
+    Jason.decode(cached)
+    |> handle_maybe_cached_analyze_read_decode(cache_file, content, opts, path)
   end
 
   defp handle_maybe_cached_analyze_read(_, cache_file, content, opts, path) do
+    data = analyze_single_file(path, content, opts)
+    File.write!(cache_file, Jason.encode!(data))
+    data
+  end
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_maybe_cached_analyze_read_decode({:ok, data}, _cache_file, _content, _opts, _path) do
+    data
+  end
+
+  defp handle_maybe_cached_analyze_read_decode(_, cache_file, content, opts, path) do
     data = analyze_single_file(path, content, opts)
     File.write!(cache_file, Jason.encode!(data))
     data
