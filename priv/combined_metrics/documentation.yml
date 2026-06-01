@@ -1,7 +1,6 @@
 docstring_is_nonempty:
   _doc: "Docstrings must contain meaningful content, not just a placeholder or empty string."
-  _languages: [elixir]
-  _log_baseline: 28.4942
+  _log_baseline: 29.7782
   branching:
     mean_branch_count: 0.3089
     mean_branching_density: 0.2652
@@ -93,6 +92,11 @@ docstring_is_nonempty:
     mean_avg_tokens_per_line: 0.0601
     mean_fog_adapted: 0.0452
     mean_total_lines: 0.0437
+  separator_counts:
+    mean_dot_count: 0.1435
+    mean_hyphen_count: 0.2418
+    mean_slash_count: 0.1709
+    mean_underscore_count: 0.0631
   symbol_density:
     mean_density: -0.0578
     mean_distinct_symbol_types: 0.0505
@@ -112,8 +116,7 @@ docstring_is_nonempty:
 
 file_has_license_header:
   _doc: "Source files should begin with a license or copyright header."
-  _languages: [elixir]
-  _log_baseline: 5.8777
+  _log_baseline: 6.0103
   branching:
     mean_branching_density: -0.0081
     mean_non_blank_count: 0.0080
@@ -183,6 +186,8 @@ file_has_license_header:
   readability:
     mean_avg_tokens_per_line: 0.0091
     mean_fog_adapted: 0.0060
+  separator_counts:
+    mean_dot_count: 0.0423
   symbol_density:
     mean_density: -0.0042
     mean_symbol_count: 0.0065
@@ -200,8 +205,7 @@ file_has_license_header:
 
 file_has_module_docstring:
   _doc: "Files should have a module-level docstring explaining purpose and usage."
-  _languages: [elixir]
-  _log_baseline: 24.1681
+  _log_baseline: 24.4917
   branching:
     mean_branch_count: 0.3854
     mean_branching_density: -2.0000
@@ -286,6 +290,8 @@ file_has_module_docstring:
     mean_flesch_adapted: 0.0205
     mean_fog_adapted: -0.0266
     mean_total_lines: 0.0908
+  separator_counts:
+    mean_dot_count: 0.0777
   symbol_density:
     mean_density: -0.0727
     mean_distinct_symbol_types: 0.0618
@@ -304,8 +310,7 @@ file_has_module_docstring:
 
 file_has_no_commented_out_code:
   _doc: "Files should not contain commented-out code blocks left from development."
-  _languages: [elixir]
-  _log_baseline: -8.5677
+  _log_baseline: -8.4785
   branching:
     mean_branching_density: 0.0368
     mean_non_blank_count: -0.0367
@@ -395,6 +400,10 @@ file_has_no_commented_out_code:
     mean_flesch_adapted: 0.0114
     mean_fog_adapted: -0.0779
     mean_total_lines: 0.0785
+  separator_counts:
+    mean_dot_count: -0.0411
+    mean_hyphen_count: 0.1390
+    mean_underscore_count: -0.0181
   symbol_density:
     mean_density: -0.0172
     mean_symbol_count: -0.0237
@@ -412,8 +421,7 @@ file_has_no_commented_out_code:
 
 function_has_docstring:
   _doc: "Public functions should have a docstring describing behaviour, params, and return value."
-  _languages: [elixir]
-  _log_baseline: 41.6283
+  _log_baseline: 43.3959
   branching:
     mean_branch_count: 0.5279
     mean_branching_density: 0.3832
@@ -513,6 +521,11 @@ function_has_docstring:
     mean_flesch_adapted: 0.0026
     mean_fog_adapted: 0.0948
     mean_total_lines: 0.1394
+  separator_counts:
+    mean_dot_count: 0.1816
+    mean_hyphen_count: 0.2506
+    mean_slash_count: 0.3105
+    mean_underscore_count: 0.1737
   symbol_density:
     mean_density: -0.0353
     mean_distinct_symbol_types: 0.0427
@@ -531,8 +544,7 @@ function_has_docstring:
 
 function_todo_comment_in_body:
   _doc: "Functions should not contain TODO/FIXME comments indicating unfinished work."
-  _languages: [elixir]
-  _log_baseline: 7.2394
+  _log_baseline: 8.0649
   branching:
     mean_branch_count: -0.0287
     mean_branching_density: -0.0435
@@ -621,6 +633,11 @@ function_todo_comment_in_body:
     mean_flesch_adapted: -0.0053
     mean_fog_adapted: -0.0109
     mean_total_lines: 0.0381
+  separator_counts:
+    mean_dot_count: 0.0485
+    mean_hyphen_count: 0.0317
+    mean_slash_count: 0.2758
+    mean_underscore_count: 0.0645
   symbol_density:
     mean_density: 0.0116
     mean_distinct_symbol_types: -0.0140
