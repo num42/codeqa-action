@@ -139,7 +139,7 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
   # so callers get O(1) access to the final token without List.last/1.
   defp scan_content(text, line_num, col_offset) do
     {reversed, last} = do_scan(text, line_num, col_offset, [], nil)
-    {Enum.reverse(reversed), last}
+    {reversed |> Enum.reverse(), last}
   end
 
   defp do_scan("", _line, _col, acc, last), do: {acc, last}
@@ -157,7 +157,8 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
     rules = dispatch_rules(first)
 
     result =
-      Enum.find_value(rules, fn {type, regex} ->
+      rules
+      |> Enum.find_value(fn {type, regex} ->
         case Regex.run(regex, text) do
           [m | _] -> {type, m}
           nil -> nil

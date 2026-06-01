@@ -54,13 +54,13 @@ defmodule CodeQA.CombinedMetrics.YamlFormatter do
 
   defp languages_line(nil), do: []
   defp languages_line([]), do: []
-  defp languages_line(langs), do: ["  _languages: [#{Enum.join(langs, ", ")}]"]
+  defp languages_line(langs), do: ["  _languages: [#{langs |> Enum.join(", ")}]"]
 
   defp excludes_block_types_line(nil), do: []
   defp excludes_block_types_line([]), do: []
 
   defp excludes_block_types_line(types),
-    do: ["  _excludes_block_types: [#{Enum.join(types, ", ")}]"]
+    do: ["  _excludes_block_types: [#{types |> Enum.join(", ")}]"]
 
   defp group_lines(groups) do
     groups

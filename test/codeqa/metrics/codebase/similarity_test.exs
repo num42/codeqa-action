@@ -64,7 +64,7 @@ defmodule CodeQA.Metrics.Codebase.SimilarityTest do
       pairs = result["ncd_pairs"]
 
       scores = pairs |> Map.values() |> List.flatten() |> Enum.map(& &1["score"])
-      assert Enum.all?(scores, &(&1 < 0.2))
+      assert scores |> Enum.all?(&(&1 < 0.2))
     end
 
     test "ncd_paths restricts which files are compared" do

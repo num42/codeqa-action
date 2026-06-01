@@ -39,9 +39,9 @@ defmodule CodeQA.AST.Nodes.ImportNode do
     def label(n), do: n.label
 
     def flat_tokens(n) do
-      if Enum.empty?(n.children),
+      if n.children |> Enum.empty?(),
         do: n.tokens,
-        else: Enum.flat_map(n.children, &NodeProtocol.flat_tokens/1)
+        else: n.children |> Enum.flat_map(&NodeProtocol.flat_tokens/1)
     end
   end
 end

@@ -63,8 +63,8 @@ defimpl CodeQA.AST.Classification.NodeProtocol, for: CodeQA.AST.Enrichment.Node 
   def label(n), do: n.label
 
   def flat_tokens(n) do
-    if Enum.empty?(n.children),
+    if n.children |> Enum.empty?(),
       do: n.tokens,
-      else: Enum.flat_map(n.children, &CodeQA.AST.Classification.NodeProtocol.flat_tokens/1)
+      else: n.children |> Enum.flat_map(&CodeQA.AST.Classification.NodeProtocol.flat_tokens/1)
   end
 end

@@ -78,7 +78,8 @@ defmodule CodeQA.CLI.Options do
         {:ncd_paths, opts[:ncd_paths] && String.split(opts[:ncd_paths], ",")}
       )
 
-    Enum.reduce(passthrough_keys, base, fn key, acc ->
+    passthrough_keys
+    |> Enum.reduce(base, fn key, acc ->
       if opts[key], do: [{key, opts[key]} | acc], else: acc
     end)
   end

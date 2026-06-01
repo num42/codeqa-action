@@ -125,7 +125,8 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
   end
 
   defp index_fingerprint_set(set, doc_id, acc) do
-    Enum.reduce(set, acc, fn fingerprint, idx_acc ->
+    set
+    |> Enum.reduce(acc, fn fingerprint, idx_acc ->
       Map.update(idx_acc, fingerprint, [doc_id], &[doc_id | &1])
     end)
   end
@@ -179,7 +180,8 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
 
     if has_progress, do: IO.puts(:stderr, "")
 
-    Enum.map(candidates, fn {{i, j}, jaccard} ->
+    candidates
+    |> Enum.map(fn {{i, j}, jaccard} ->
       {Enum.at(names, i), i, Enum.at(names, j), j, jaccard}
     end)
   end
@@ -196,12 +198,14 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
     collisions = count_collisions(set, inverted_index, i)
 
     size_a = MapSet.size(set)
-    name_a = Enum.at(names, i)
+    name_a = names |> Enum.at(i)
 
     is_target_a = MapSet.member?(target_set, name_a)
 
     collisions
-    |> Enum.filter(fn {j, _} -> is_target_a or MapSet.member?(target_set, Enum.at(names, j)) end)
+    |> Enum.filter(fn {j, _} ->
+      is_target_a or MapSet.member?(target_set, names |> Enum.at(j))
+    end)
     |> Enum.reduce([], fn {j, intersection}, acc_pairs ->
       jaccard = compute_jaccard(size_a, MapSet.size(Map.get(fingerprints_by_id, j)), intersection)
       if jaccard >= threshold, do: [{{i, j}, jaccard} | acc_pairs], else: acc_pairs
@@ -214,19 +218,22 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
   end
 
   defp count_collisions(set, inverted_index, i) do
-    Enum.reduce(set, %{}, fn fp, coll_acc ->
+    set
+    |> Enum.reduce(%{}, fn fp, coll_acc ->
       inverted_index |> Map.get(fp, []) |> count_forward_docs(i, coll_acc)
     end)
   end
 
   defp count_forward_docs(docs, i, acc) do
-    Enum.reduce(docs, acc, fn doc_id, c_acc ->
+    docs
+    |> Enum.reduce(acc, fn doc_id, c_acc ->
       if doc_id > i, do: Map.update(c_acc, doc_id, 1, &(&1 + 1)), else: c_acc
     end)
   end
 
   defp merge_valid_pairs(valid_pairs, acc) do
-    Enum.reduce(valid_pairs, acc, fn {pair, jaccard}, inner_acc ->
+    valid_pairs
+    |> Enum.reduce(acc, fn {pair, jaccard}, inner_acc ->
       Map.put(inner_acc, pair, jaccard)
     end)
   end
@@ -301,7 +308,8 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
 
   defp build_results_map(computed_ncd, target_paths, target_set, top_n) do
     results =
-      Enum.reduce(computed_ncd, %{}, fn {name_a, name_b, ncd}, acc ->
+      computed_ncd
+      |> Enum.reduce(%{}, fn {name_a, name_b, ncd}, acc ->
         acc = acc |> maybe_add_similarity(name_a, name_b, ncd, target_set)
         maybe_add_similarity(acc, name_b, name_a, ncd, target_set)
       end)
@@ -309,8 +317,8 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
     target_paths
     |> Enum.map(fn path ->
       similarities = Map.get(results, path, [])
-      sorted = Enum.sort_by(similarities, & &1["score"])
-      sorted = if top_n, do: Enum.take(sorted, top_n), else: sorted
+      sorted = similarities |> Enum.sort_by(& &1["score"])
+      sorted = if top_n, do: sorted |> Enum.take(top_n), else: sorted
       {path, sorted}
     end)
     |> Enum.into(%{})
@@ -343,7 +351,7 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
       |> Enum.map(fn c -> byte_size(:zlib.compress(c)) end)
       |> Enum.sum()
 
-    joined = Enum.intersperse(contents, "\n")
+    joined = contents |> Enum.intersperse("\n")
     combined = byte_size(:zlib.compress(joined))
 
     Float.round(individual_sum / max(1, combined), 4)

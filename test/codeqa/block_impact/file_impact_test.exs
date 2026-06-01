@@ -43,7 +43,7 @@ defmodule CodeQA.BlockImpact.FileImpactTest do
       tokens = TokenNormalizer.normalize_structural(tiny_content)
       nodes = Parser.detect_blocks(tokens, Unknown)
       # Find or construct a node with < 10 tokens
-      small_nodes = Enum.filter(nodes, fn n -> length(n.tokens) < 10 end)
+      small_nodes = nodes |> Enum.filter(fn n -> length(n.tokens) < 10 end)
 
       if small_nodes != [] do
         node = List.first(small_nodes)

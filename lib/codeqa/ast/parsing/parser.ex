@@ -109,7 +109,7 @@ defmodule CodeQA.AST.Parsing.Parser do
         block
 
       candidates ->
-        children = Enum.map(candidates, &parse_block(&1, lang_mod))
+        children = candidates |> Enum.map(&parse_block(&1, lang_mod))
         %{block | children: children}
     end
   end
@@ -142,7 +142,7 @@ defmodule CodeQA.AST.Parsing.Parser do
     |> Enum.uniq()
     |> Enum.sort()
     |> Enum.reject(fn {s, e} -> s == 0 and e == n - 1 end)
-    |> Enum.map(fn {s, e} -> Enum.slice(search_tokens, s..e) end)
+    |> Enum.map(fn {s, e} -> search_tokens |> Enum.slice(s..e) end)
     |> Enum.reject(&whitespace_only?/1)
   end
 
@@ -156,7 +156,7 @@ defmodule CodeQA.AST.Parsing.Parser do
 
     if last && MapSet.member?(@open_brackets, first.kind) &&
          Map.get(@matching_close, first.kind) == last.kind do
-      {Enum.drop(rest, -1), 1}
+      {rest |> Enum.drop(-1), 1}
     else
       {tokens, 0}
     end
@@ -173,7 +173,7 @@ defmodule CodeQA.AST.Parsing.Parser do
   end
 
   defp inside_protected?(idx, ranges) do
-    Enum.any?(ranges, fn {lo, hi} -> idx >= lo and idx <= hi end)
+    ranges |> Enum.any?(fn {lo, hi} -> idx >= lo and idx <= hi end)
   end
 
   # When TripleQuoteSignal splits `@doc """` mid-line, the tokens before the
@@ -209,11 +209,11 @@ defmodule CodeQA.AST.Parsing.Parser do
 
     boundaries
     |> Enum.chunk_every(2, 1, :discard)
-    |> Enum.map(fn [start, stop] -> Enum.slice(tokens, start..(stop - 1)//1) end)
+    |> Enum.map(fn [start, stop] -> tokens |> Enum.slice(start..(stop - 1)//1) end)
   end
 
   defp whitespace_only?(tokens) do
-    Enum.all?(tokens, &(&1.kind in [WhitespaceToken.kind(), NewlineToken.kind()]))
+    tokens |> Enum.all?(&(&1.kind in [WhitespaceToken.kind(), NewlineToken.kind()]))
   end
 
   defp block_start_line([%{line: line} | _]), do: line

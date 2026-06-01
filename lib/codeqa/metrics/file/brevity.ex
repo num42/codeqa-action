@@ -27,9 +27,9 @@ defmodule CodeQA.Metrics.File.Brevity do
   end
 
   def analyze(%{token_counts: token_counts}) do
-    pairs = Enum.map(token_counts, fn {token, freq} -> {String.length(token), freq} end)
-    lengths = Enum.map(pairs, &elem(&1, 0))
-    freqs = Enum.map(pairs, &elem(&1, 1))
+    pairs = token_counts |> Enum.map(fn {token, freq} -> {String.length(token), freq} end)
+    lengths = pairs |> Enum.map(&elem(&1, 0))
+    freqs = pairs |> Enum.map(&elem(&1, 1))
 
     %{
       "correlation" => Math.pearson_correlation_list(lengths, freqs),

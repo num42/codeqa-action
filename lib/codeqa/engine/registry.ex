@@ -49,7 +49,8 @@ defmodule CodeQA.Engine.Registry do
   defp generate_combinations([{k1, v1} | rest], acc) do
     # Generate all pairs for the head with the rest of the list
     new_acc =
-      Enum.reduce(rest, acc, fn {k2, v2}, current_acc ->
+      rest
+      |> Enum.reduce(acc, fn {k2, v2}, current_acc ->
         combined = %{
           "keys" => [k1, k2],
           "add" => v1 + v2,

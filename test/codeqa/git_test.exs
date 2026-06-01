@@ -136,7 +136,7 @@ defmodule CodeQA.GitTest do
 
     test "handles multiple hunks in same file" do
       in_tmp_git_repo(fn repo ->
-        lines = Enum.map_join(1..20, "\n", &"line#{&1}")
+        lines = 1..20 |> Enum.map_join("\n", &"line#{&1}")
         File.write!(Path.join(repo, "foo.ex"), lines <> "\n")
         {_, 0} = System.cmd("git", ["add", "."], cd: repo)
         {_, 0} = System.cmd("git", ["commit", "-m", "initial"], cd: repo)
@@ -253,7 +253,7 @@ defmodule CodeQA.GitTest do
 
     test "returns ranges in ascending order" do
       in_tmp_git_repo(fn repo ->
-        lines = Enum.map_join(1..20, "\n", &"line#{&1}")
+        lines = 1..20 |> Enum.map_join("\n", &"line#{&1}")
         File.write!(Path.join(repo, "foo.ex"), lines <> "\n")
         {_, 0} = System.cmd("git", ["add", "."], cd: repo)
         {_, 0} = System.cmd("git", ["commit", "-m", "initial"], cd: repo)

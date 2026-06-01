@@ -74,7 +74,7 @@ defmodule CodeQA.Git do
     |> String.split("\n")
     |> Enum.reduce({nil, %{}}, &parse_diff_line/2)
     |> elem(1)
-    |> Map.new(fn {path, ranges} -> {path, Enum.reverse(ranges)} end)
+    |> Map.new(fn {path, ranges} -> {path, ranges |> Enum.reverse()} end)
   end
 
   @spec parse_diff_line(String.t(), parse_state()) :: parse_state()

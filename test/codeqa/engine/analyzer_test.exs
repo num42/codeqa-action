@@ -11,7 +11,8 @@ defmodule CodeQA.Engine.AnalyzerTest do
       assert is_map(result)
       assert map_size(result) > 0
       # Each value should be a map of metric keys to numbers
-      Enum.each(result, fn {_group, keys} ->
+      result
+      |> Enum.each(fn {_group, keys} ->
         assert is_map(keys)
       end)
     end
@@ -27,7 +28,8 @@ defmodule CodeQA.Engine.AnalyzerTest do
       agg = Analyzer.analyze_codebase_aggregate(files)
       assert is_map(agg)
       # At least one group should have mean_ keys
-      Enum.each(agg, fn {_group, keys} ->
+      agg
+      |> Enum.each(fn {_group, keys} ->
         Enum.each(keys, fn {key, val} ->
           assert String.starts_with?(key, "mean_") or String.starts_with?(key, "std_") or
                    String.starts_with?(key, "min_") or String.starts_with?(key, "max_")
@@ -72,7 +74,8 @@ defmodule CodeQA.Engine.AnalyzerTest do
       sentinel = %{"sentinel_key" => 99.0}
 
       tampered_baseline =
-        Enum.reduce(baseline, %{}, fn {name, _val}, acc ->
+        baseline
+        |> Enum.reduce(%{}, fn {name, _val}, acc ->
           if name in Scorer.referenced_file_metric_names() do
             Map.put(acc, name, baseline[name])
           else

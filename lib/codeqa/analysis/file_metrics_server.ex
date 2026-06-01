@@ -37,12 +37,14 @@ defmodule CodeQA.Analysis.FileMetricsServer do
     tid = get_tid(pid)
     files_data = Map.get(pipeline_result, "files", %{})
 
-    Enum.each(files_data, fn {path, file_data} ->
+    files_data
+    |> Enum.each(fn {path, file_data} ->
       metrics = Map.get(file_data, "metrics", %{})
       :ets.insert(tid, {{:path, path}, metrics})
     end)
 
-    Enum.each(files_map, fn {path, content} ->
+    files_map
+    |> Enum.each(fn {path, content} ->
       hash = md5(content)
 
       case :ets.lookup(tid, {:path, path}) do

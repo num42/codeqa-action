@@ -48,7 +48,7 @@ defmodule CodeQA.HealthReport do
     all_cosines =
       SampleRunner.diagnose_aggregate(aggregate, top: 99_999, languages: project_langs)
 
-    cosines_by_category = Enum.group_by(all_cosines, & &1.category)
+    cosines_by_category = all_cosines |> Enum.group_by(& &1.category)
 
     cosine_grades =
       Grader.grade_cosine_categories(cosines_by_category, worst_files_map, grade_scale)
@@ -63,7 +63,7 @@ defmodule CodeQA.HealthReport do
 
     metadata = build_metadata(analysis_results)
 
-    top_issues = Enum.take(all_cosines, 10)
+    top_issues = all_cosines |> Enum.take(10)
 
     codebase_cosine_lookup =
       Map.new(all_cosines, fn i -> {{i.category, i.behavior}, i.cosine} end)
@@ -178,8 +178,8 @@ defmodule CodeQA.HealthReport do
     {base_score, base_grade} = Grader.overall_score(base_all_categories, grade_scale, impact_map)
 
     blocks_flagged = length(top_blocks)
-    files_added = Enum.count(changed_files, &(&1.status == "added"))
-    files_modified = Enum.count(changed_files, &(&1.status == "modified"))
+    files_added = changed_files |> Enum.count(&(&1.status == "added"))
+    files_modified = changed_files |> Enum.count(&(&1.status == "modified"))
 
     summary = %{
       base_score: base_score,

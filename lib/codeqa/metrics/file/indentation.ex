@@ -21,10 +21,10 @@ defmodule CodeQA.Metrics.File.Indentation do
   @spec analyze(map()) :: map()
   @impl true
   def analyze(%{lines: lines}) do
-    uses_tabs = Enum.any?(lines, &String.match?(&1, ~r/^\t/))
+    uses_tabs = lines |> Enum.any?(&String.match?(&1, ~r/^\t/))
 
     total_lines = length(lines)
-    blank_count = Enum.count(lines, &(String.trim(&1) == ""))
+    blank_count = lines |> Enum.count(&(String.trim(&1) == ""))
 
     blank_line_ratio =
       if total_lines > 0, do: Float.round(blank_count / total_lines, 4), else: 0.0
@@ -57,7 +57,7 @@ defmodule CodeQA.Metrics.File.Indentation do
       %{
         "mean_depth" => Float.round(mean, 4),
         "variance" => Float.round(variance, 4),
-        "max_depth" => Enum.max(depths),
+        "max_depth" => depths |> Enum.max(),
         "uses_tabs" => uses_tabs,
         "blank_line_ratio" => blank_line_ratio
       }

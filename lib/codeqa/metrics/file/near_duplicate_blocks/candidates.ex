@@ -32,8 +32,8 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Candidates do
     |> Enum.map(fn {block, i} ->
       values = canonical_values(NodeProtocol.flat_tokens(block))
       children_count = length(NodeProtocol.children(block))
-      newline_count = Enum.count(values, &(&1 == @nl_kind))
-      bigrams = Enum.chunk_every(values, 2, 1, :discard)
+      newline_count = values |> Enum.count(&(&1 == @nl_kind))
+      bigrams = values |> Enum.chunk_every(2, 1, :discard)
 
       {i, block, values, :erlang.phash2(values), length(values), children_count, newline_count,
        bigrams}
@@ -46,9 +46,10 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Candidates do
   """
   @spec build_indexes([tuple()]) :: {map(), map()}
   def build_indexes(decorated) do
-    Enum.reduce(decorated, {%{}, %{}}, fn {idx, _block, _values, hash, _len, _children, _newlines,
-                                           bigrams},
-                                          {exact_acc, shingle_acc} ->
+    decorated
+    |> Enum.reduce({%{}, %{}}, fn {idx, _block, _values, hash, _len, _children, _newlines,
+                                   bigrams},
+                                  {exact_acc, shingle_acc} ->
       exact_acc = exact_acc |> Map.update(hash, [idx], &[idx | &1])
 
       shingle_acc =
@@ -89,7 +90,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Candidates do
   @doc "Remove bigrams whose hash is in the pruned set from a decorated tuple."
   @spec prune_bigrams(tuple(), MapSet.t()) :: tuple()
   def prune_bigrams({i, b, v, h, l, c, n, bigrams}, pruned) do
-    {i, b, v, h, l, c, n, Enum.reject(bigrams, &MapSet.member?(pruned, :erlang.phash2(&1)))}
+    {i, b, v, h, l, c, n, bigrams |> Enum.reject(&MapSet.member?(pruned, :erlang.phash2(&1)))}
   end
 
   @doc """
@@ -136,7 +137,8 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Candidates do
     # counter is O(1) (a single :counters.get), much cheaper than the previous
     # HAMT-based Map.update accumulator on a per-block basis.
     touched =
-      Enum.reduce(bigrams_a, [], fn bigram, touched_acc ->
+      bigrams_a
+      |> Enum.reduce([], fn bigram, touched_acc ->
         h = :erlang.phash2(bigram)
 
         shingle_index
@@ -158,7 +160,8 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Candidates do
     end
 
     near_pairs =
-      Enum.flat_map(touched, fn j ->
+      touched
+      |> Enum.flat_map(fn j ->
         count = :counters.get(counter, j + 1)
 
         if count >= min_shared and not in_exact?.(j) do
@@ -188,7 +191,8 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Candidates do
   # one drop_while (strip trailing), one :lists.reverse.
   defp canonical_values(tokens) do
     {reversed, _in_content} =
-      Enum.reduce(tokens, {[], false}, fn t, {acc, in_content} ->
+      tokens
+      |> Enum.reduce({[], false}, fn t, {acc, in_content} ->
         kind = t.kind
         is_skip = kind == @nl_kind or kind == @ws_kind
 

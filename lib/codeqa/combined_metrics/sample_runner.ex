@@ -399,7 +399,8 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
        ) do
     yaml_path = "priv/combined_metrics/#{category}.yml"
 
-    Enum.flat_map(behaviors, fn {behavior, behavior_data} ->
+    behaviors
+    |> Enum.flat_map(fn {behavior, behavior_data} ->
       maybe_diagnose_behavior(
         yaml_path,
         behavior,
@@ -493,7 +494,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     do: language in behavior_langs
 
   defp behavior_language_applies?(behavior_langs, nil, languages) when is_list(languages),
-    do: Enum.any?(behavior_langs, &(&1 in languages))
+    do: behavior_langs |> Enum.any?(&(&1 in languages))
 
   defp behavior_language_applies?(behavior_langs, language, languages)
        when is_binary(language) and is_list(languages),

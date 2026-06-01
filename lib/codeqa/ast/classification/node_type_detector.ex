@@ -15,6 +15,6 @@ defmodule CodeQA.AST.Classification.NodeTypeDetector do
   """
   @spec detect_types([Node.t()], module()) :: [term()]
   def detect_types(blocks, lang_mod) do
-    Enum.map(blocks, &NodeClassifier.classify(&1, lang_mod))
+    blocks |> Enum.map(&NodeClassifier.classify(&1, lang_mod))
   end
 end

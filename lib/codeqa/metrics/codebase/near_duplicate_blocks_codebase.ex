@@ -31,7 +31,8 @@ defmodule CodeQA.Metrics.Codebase.NearDuplicateBlocksCodebase do
     pid = Keyword.fetch!(opts, :file_context_pid)
 
     all_blocks =
-      Enum.flat_map(files, fn {path, content} ->
+      files
+      |> Enum.flat_map(fn {path, content} ->
         ctx = FileContextServer.get(pid, content, path: path)
         NearDuplicateBlocks.label_blocks(ctx.blocks, path)
       end)

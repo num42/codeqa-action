@@ -38,7 +38,7 @@ defmodule CodeQA.Metrics.File.LinePatterns do
         "string_literal_ratio" => 0.0
       }
     else
-      blank_count = Enum.count(lines, &(String.trim(&1) == ""))
+      blank_count = lines |> Enum.count(&(String.trim(&1) == ""))
       blank_ratio = Float.round(blank_count / total_lines, 4)
 
       non_blank = lines |> Enum.map(&String.trim/1) |> Enum.reject(&(&1 == ""))
@@ -46,7 +46,7 @@ defmodule CodeQA.Metrics.File.LinePatterns do
       unique_ratio =
         if non_blank == [],
           do: 1.0,
-          else: Float.round(length(Enum.uniq(non_blank)) / length(non_blank), 4)
+          else: Float.round(length(non_blank |> Enum.uniq()) / length(non_blank), 4)
 
       string_count = @string_literal |> Regex.scan(content) |> length()
 

@@ -58,8 +58,8 @@ defmodule CodeQA.Metrics.File.Heaps do
 
   defp fit_heaps(data_points) do
     # log(V) = log(k) + β * log(n)  →  linear regression in log-space
-    ns = Enum.map(data_points, &elem(&1, 0))
-    vs = Enum.map(data_points, &elem(&1, 1))
+    ns = data_points |> Enum.map(&elem(&1, 0))
+    vs = data_points |> Enum.map(&elem(&1, 1))
 
     log_ns = Nx.tensor(ns, type: :f64) |> Nx.log()
     log_vs = Nx.tensor(vs, type: :f64) |> Nx.log()

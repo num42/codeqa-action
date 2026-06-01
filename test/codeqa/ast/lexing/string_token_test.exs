@@ -104,7 +104,7 @@ defmodule CodeQA.AST.StringTokenTest do
 
     test "non-string tokens are still plain Token structs" do
       tokens = TokenNormalizer.normalize_structural("foo = 42")
-      id = Enum.find(tokens, &(&1.kind == "<ID>"))
+      id = tokens |> Enum.find(&(&1.kind == "<ID>"))
       refute match?(%StringToken{}, id)
     end
   end

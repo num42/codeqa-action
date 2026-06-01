@@ -66,14 +66,15 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
     if opts[:apply_scalars] do
       stats = SampleRunner.apply_scalars(opts)
       IO.puts("\nApplied scalars to YAML configs:")
-      Enum.each(stats, &print_scalar_stats/1)
+      stats |> Enum.each(&print_scalar_stats/1)
     end
 
     if opts[:apply_languages] do
       stats = SampleRunner.apply_languages(opts)
       IO.puts("\nApplied language coverage to YAML configs:")
 
-      Enum.each(stats, fn %{category: cat, behaviors_with_languages: n} ->
+      stats
+      |> Enum.each(fn %{category: cat, behaviors_with_languages: n} ->
         IO.puts("  #{cat}: #{n} behaviors with language coverage")
       end)
     end
@@ -96,7 +97,7 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
         "ok?"
     )
 
-    Enum.each(results, &print_row(&1, opts))
+    results |> Enum.each(&print_row(&1, opts))
   end
 
   defp print_row(r, opts) do
@@ -120,7 +121,7 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
     )
 
     if opts[:verbose] do
-      Enum.each(r.metric_detail, &print_metric_detail/1)
+      r.metric_detail |> Enum.each(&print_metric_detail/1)
     end
   end
 
@@ -166,12 +167,12 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
       IO.puts("\nTop #{top_n} likely issues (by cosine similarity):")
       IO.puts(String.duplicate("-", 75))
       IO.puts("  " <> pad("behavior", 38) <> pad("cosine", 9) <> "score")
-      Enum.each(issues, &print_issue_row/1)
+      issues |> Enum.each(&print_issue_row/1)
 
       IO.puts("\nFull breakdown by category:")
       combined = SampleRunner.score_aggregate(aggregate)
       IO.puts("")
-      Enum.each(combined, &print_combined_category/1)
+      combined |> Enum.each(&print_combined_category/1)
     else
       IO.puts("\nNo supported files found at: #{path}")
     end
@@ -180,7 +181,8 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
   defp print_issue_row(%{category: cat, behavior: b, cosine: cos, score: s, top_metrics: metrics}) do
     IO.puts("  " <> pad("#{cat}.#{b}", 38) <> pad(fmt(cos), 9) <> fmt(s))
 
-    Enum.each(metrics, fn %{metric: m, contribution: c} ->
+    metrics
+    |> Enum.each(fn %{metric: m, contribution: c} ->
       IO.puts("      " <> pad(m, 44) <> fmt(c))
     end)
   end

@@ -53,7 +53,8 @@ defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
       blocks = detect_types(code)
 
       code_block =
-        Enum.find(blocks, fn b ->
+        blocks
+        |> Enum.find(fn b ->
           Enum.any?(b.tokens, &(&1.kind == "<ID>" and &1.content == "def"))
         end)
 

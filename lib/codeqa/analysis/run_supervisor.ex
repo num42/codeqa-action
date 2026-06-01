@@ -47,7 +47,7 @@ defmodule CodeQA.Analysis.RunSupervisor do
 
   defp find_pid(children, module) do
     {_id, pid, _type, _modules} =
-      Enum.find(children, fn {id, _pid, _type, _modules} -> id == module end)
+      children |> Enum.find(fn {id, _pid, _type, _modules} -> id == module end)
 
     pid
   end

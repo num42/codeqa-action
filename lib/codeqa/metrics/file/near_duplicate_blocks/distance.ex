@@ -32,7 +32,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Distance do
     a_arr = List.to_tuple(a)
     b_arr = List.to_tuple(b)
     lb = tuple_size(b_arr)
-    init_row = List.to_tuple(Enum.to_list(0..lb))
+    init_row = List.to_tuple(0..lb |> Enum.to_list())
     result_row = levenshtein_rows(a_arr, b_arr, tuple_size(a_arr), lb, init_row, 1)
     elem(result_row, lb)
   end
@@ -67,7 +67,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Distance do
     a_arr = List.to_tuple(a)
     b_arr = List.to_tuple(b)
     lb = tuple_size(b_arr)
-    init_row = List.to_tuple(Enum.to_list(0..lb))
+    init_row = List.to_tuple(0..lb |> Enum.to_list())
     levenshtein_rows_bounded(a_arr, b_arr, tuple_size(a_arr), lb, init_row, max_distance, 1)
   end
 

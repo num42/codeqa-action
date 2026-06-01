@@ -44,7 +44,7 @@ defmodule CodeQA.Metrics.File.BradfordTest do
     # k2 = 3/3 = 1.0  — tail needs the same number of lines as the middle
     # k_ratio = 1.0   — perfectly symmetric: no zone is more stretched than another
     test "uniform file has k = 1" do
-      code = Enum.map_join(1..9, "\n", fn _ -> "a b c" end)
+      code = 1..9 |> Enum.map_join("\n", fn _ -> "a b c" end)
       assert result(code) == %{"k1" => 1.0, "k2" => 1.0, "k_ratio" => 1.0}
     end
   end
@@ -62,9 +62,9 @@ defmodule CodeQA.Metrics.File.BradfordTest do
     #                    meaning extreme concentration is at the very top, not spread across zones
     test "concentrated file produces k1=4.0, k2=2.0, k_ratio=0.5" do
       dense = "a b c d e f g h i j"
-      medium = Enum.map_join(1..3, "\n", fn _ -> "a b c" end)
-      sparse = Enum.map_join(1..9, "\n", fn _ -> "a" end)
-      code = Enum.join([dense, medium, sparse], "\n")
+      medium = 1..3 |> Enum.map_join("\n", fn _ -> "a b c" end)
+      sparse = 1..9 |> Enum.map_join("\n", fn _ -> "a" end)
+      code = [dense, medium, sparse] |> Enum.join("\n")
 
       assert result(code) == %{
                # 1 dense line does the work of 4 middle lines — extreme core
@@ -79,12 +79,12 @@ defmodule CodeQA.Metrics.File.BradfordTest do
     test "concentrated file has higher k1 than uniform" do
       # k1 is the primary concentration signal: how many times more lines the
       # middle zone needs compared to the core. A uniform file scores 1.0 here.
-      uniform = Enum.map_join(1..9, "\n", fn _ -> "a b c" end)
+      uniform = 1..9 |> Enum.map_join("\n", fn _ -> "a b c" end)
 
       dense = "a b c d e f g h i j"
-      medium = Enum.map_join(1..3, "\n", fn _ -> "a b c" end)
-      sparse = Enum.map_join(1..9, "\n", fn _ -> "a" end)
-      concentrated = Enum.join([dense, medium, sparse], "\n")
+      medium = 1..3 |> Enum.map_join("\n", fn _ -> "a b c" end)
+      sparse = 1..9 |> Enum.map_join("\n", fn _ -> "a" end)
+      concentrated = [dense, medium, sparse] |> Enum.join("\n")
 
       assert result(concentrated)["k1"] > result(uniform)["k1"]
     end
@@ -97,24 +97,22 @@ defmodule CodeQA.Metrics.File.BradfordTest do
       # k_ratio > 1  →  k2 > k1  →  the tail is more stretched than the core jump,
       #                               typical of many medium lines plus a huge sparse tail
       code =
-        Enum.join(
-          [
-            "a b c d e f g h i j",
-            "a b c",
-            "a b c",
-            "a b c",
-            "a",
-            "a",
-            "a",
-            "a",
-            "a",
-            "a",
-            "a",
-            "a",
-            "a"
-          ],
-          "\n"
-        )
+        [
+          "a b c d e f g h i j",
+          "a b c",
+          "a b c",
+          "a b c",
+          "a",
+          "a",
+          "a",
+          "a",
+          "a",
+          "a",
+          "a",
+          "a",
+          "a"
+        ]
+        |> Enum.join("\n")
 
       assert result(code)["k_ratio"] < 1.0
     end

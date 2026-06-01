@@ -39,7 +39,8 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
 
   defp overall_table(report) do
     rows =
-      Enum.map(report.categories, fn cat ->
+      report.categories
+      |> Enum.map(fn cat ->
         summary = Map.get(cat, :summary, "")
         impact = Map.get(cat, :impact, "")
         "| #{cat.name} | #{cat.grade} | #{cat.score} | #{impact} | #{summary} |"
@@ -55,7 +56,8 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
   defp category_sections(_categories, :summary), do: []
 
   defp category_sections(categories, detail) do
-    Enum.flat_map(categories, fn cat ->
+    categories
+    |> Enum.flat_map(fn cat ->
       render_category(cat, detail)
     end)
   end
@@ -81,7 +83,8 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
 
   defp cosine_behaviors_table(cat) do
     rows =
-      Enum.map(cat.behaviors, fn b ->
+      cat.behaviors
+      |> Enum.map(fn b ->
         "| #{b.behavior} | #{format_num(b.cosine)} | #{b.score} | #{b.grade} |"
       end)
 
@@ -94,7 +97,7 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
 
   defp section_header(cat) do
     metric_summary =
-      Enum.map_join(cat.metric_scores, ", ", fn m -> "#{m.name}=#{format_num(m.value)}" end)
+      cat.metric_scores |> Enum.map_join(", ", fn m -> "#{m.name}=#{format_num(m.value)}" end)
 
     [
       "## #{cat.name} — #{cat.grade}",
@@ -106,7 +109,8 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
 
   defp metric_detail(cat) do
     rows =
-      Enum.map(cat.metric_scores, fn m ->
+      cat.metric_scores
+      |> Enum.map(fn m ->
         "| #{m.source}.#{m.name} | #{format_num(m.value)} | #{m.score} |"
       end)
 
@@ -136,7 +140,8 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
 
   defp top_issues_section(issues, _detail) do
     rows =
-      Enum.map(issues, fn i ->
+      issues
+      |> Enum.map(fn i ->
         "| #{i.category}.#{i.behavior} | #{format_num(i.cosine)} | #{format_num(i.score)} |"
       end)
 
@@ -180,7 +185,7 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
       {"Structure", "branching", "mean_branch_count"}
     ]
 
-    rows = Enum.flat_map(metrics, &format_metric_row(&1, base_agg, head_agg))
+    rows = metrics |> Enum.flat_map(&format_metric_row(&1, base_agg, head_agg))
 
     if rows == [] do
       []
@@ -216,7 +221,8 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     {icon, verdict} = verdict_text(worst, severity_counts)
 
     {actionable, medium_blocks} =
-      Enum.split_with(top_blocks, fn b ->
+      top_blocks
+      |> Enum.split_with(fn b ->
         top = List.first(b.potentials)
         top && top.severity in [:critical, :high]
       end)
@@ -226,7 +232,8 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     action_table =
       if actionable != [] do
         rows =
-          Enum.map(actionable, fn block ->
+          actionable
+          |> Enum.map(fn block ->
             top = List.first(block.potentials)
             label = BehaviorLabels.label(top.category, top.behavior)
             location = "#{block.path}:#{block.start_line}-#{block.end_line || block.start_line}"
@@ -243,7 +250,7 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
         []
       end
 
-    block_details = Enum.flat_map(actionable ++ medium_blocks, &format_block/1)
+    block_details = (actionable ++ medium_blocks) |> Enum.flat_map(&format_block/1)
 
     header ++ action_table ++ block_details
   end
@@ -293,7 +300,7 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     subheader =
       "#{block.type} · #{block.token_count} tokens"
 
-    potential_lines = Enum.flat_map(block.potentials, &format_potential/1)
+    potential_lines = block.potentials |> Enum.flat_map(&format_potential/1)
     code_lines = format_code_block(block)
     [header, subheader, "" | potential_lines] ++ ["" | code_lines] ++ [""]
   end

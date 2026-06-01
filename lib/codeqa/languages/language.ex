@@ -67,7 +67,7 @@ defmodule CodeQA.Language do
   @spec all() :: [module()]
   def all do
     {:ok, modules} = :application.get_key(:codeqa, :modules)
-    Enum.filter(modules, &implements?/1)
+    modules |> Enum.filter(&implements?/1)
   end
 
   @spec all_keywords() :: [String.t()]
@@ -157,7 +157,8 @@ defmodule CodeQA.Language do
   defp strip_block_comments(content, []), do: content
 
   defp strip_block_comments(content, pairs) do
-    Enum.reduce(pairs, content, fn {open, close}, acc ->
+    pairs
+    |> Enum.reduce(content, fn {open, close}, acc ->
       regex = Regex.compile!(Regex.escape(open) <> ".*?" <> Regex.escape(close), [:dotall])
 
       Regex.replace(regex, acc, fn match ->
@@ -169,7 +170,7 @@ defmodule CodeQA.Language do
   defp strip_line_comments(content, []), do: content
 
   defp strip_line_comments(content, prefixes) do
-    pattern = Enum.map_join(prefixes, "|", &Regex.escape/1)
+    pattern = prefixes |> Enum.map_join("|", &Regex.escape/1)
     Regex.replace(Regex.compile!("(#{pattern}).*$", [:multiline]), content, "")
   end
 

@@ -34,8 +34,8 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilder do
     # trailing whitespace — BlankLineRule places blank-line <NL> tokens at the
     # END of the node that precedes the split, not at the start of the new one.
     {current, _, compounds} =
-      Enum.reduce(blocks, {empty_compound(), [], []}, fn block,
-                                                         {current, prev_trailing_ws, acc} ->
+      blocks
+      |> Enum.reduce({empty_compound(), [], []}, fn block, {current, prev_trailing_ws, acc} ->
         {content_tokens, trailing_ws} = split_trailing_whitespace(block.tokens)
         clean_block = %{block | tokens: content_tokens}
         # Check the PREVIOUS node's trailing whitespace for blank-line boundary
@@ -94,7 +94,8 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilder do
 
   # Separates children by type — :doc/:typespec go up to the compound level.
   defp promote_sub_blocks(children) do
-    Enum.reduce(children, {[], [], []}, fn sub, {docs, specs, code} ->
+    children
+    |> Enum.reduce({[], [], []}, fn sub, {docs, specs, code} ->
       case sub.type do
         :doc -> {docs ++ [sub], specs, code}
         :typespec -> {docs, specs ++ [sub], code}
@@ -120,7 +121,7 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilder do
 
       rev_idx ->
         content_len = length(tokens) - rev_idx
-        {Enum.slice(tokens, 0, content_len), Enum.slice(tokens, content_len..-1//1)}
+        {tokens |> Enum.slice(0, content_len), tokens |> Enum.slice(content_len..-1//1)}
     end
   end
 
@@ -135,13 +136,11 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilder do
   # docs → typespecs → code. Reads col directly from Token structs.
   defp finalize(%CompoundNode{} = compound) do
     all_blocks = compound.docs ++ compound.typespecs ++ compound.code
-    all_tokens = Enum.flat_map(all_blocks, &NodeProtocol.flat_tokens/1)
+    all_tokens = all_blocks |> Enum.flat_map(&NodeProtocol.flat_tokens/1)
 
     first_token =
-      Enum.find(
-        all_tokens,
-        &(is_map(&1) and &1.kind not in [WhitespaceToken.kind(), NewlineToken.kind()])
-      )
+      all_tokens
+      |> Enum.find(&(is_map(&1) and &1.kind not in [WhitespaceToken.kind(), NewlineToken.kind()]))
 
     last_token =
       all_tokens

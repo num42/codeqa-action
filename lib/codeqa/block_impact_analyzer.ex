@@ -276,7 +276,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
       |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
 
     first_token = List.first(node.tokens)
-    char_length = Enum.reduce(node.tokens, 0, fn t, acc -> acc + byte_size(t.content) end)
+    char_length = node.tokens |> Enum.reduce(0, fn t, acc -> acc + byte_size(t.content) end)
 
     %{
       "start_line" => node.start_line,
@@ -329,7 +329,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
     {reconstructed, reconstruct_us} =
       timed(fn -> FileImpact.reconstruct_without(root_tokens, node) end)
 
-    block_content = Enum.map_join(node.tokens, "", & &1.content)
+    block_content = node.tokens |> Enum.map_join("", & &1.content)
 
     {without_file_metrics, analyze_file_us} =
       timed(fn ->
@@ -402,20 +402,21 @@ defmodule CodeQA.BlockImpactAnalyzer do
     |> Enum.group_by(fn {metric, key, _val} -> {metric, key} end, fn {_, _, val} -> val end)
     |> Map.new(fn {{metric, key}, values} ->
       n = length(values)
-      sum = Enum.sum(values)
-      sum_sq = Enum.reduce(values, 0.0, fn v, acc -> acc + v * v end)
+      sum = values |> Enum.sum()
+      sum_sq = values |> Enum.reduce(0.0, fn v, acc -> acc + v * v end)
 
       {{metric, key},
-       %{sum: sum, sum_sq: sum_sq, min: Enum.min(values), max: Enum.max(values), count: n}}
+       %{sum: sum, sum_sq: sum_sq, min: values |> Enum.min(), max: values |> Enum.max(), count: n}}
     end)
   end
 
   defp swap_file_in_agg(inc_agg, old_triples, new_triples) do
     old_map = Map.new(old_triples, fn {metric, key, val} -> {{metric, key}, val} end)
     new_map = Map.new(new_triples, fn {metric, key, val} -> {{metric, key}, val} end)
-    all_keys = Enum.uniq(Map.keys(old_map) ++ Map.keys(new_map))
+    all_keys = (Map.keys(old_map) ++ Map.keys(new_map)) |> Enum.uniq()
 
-    Enum.reduce(all_keys, inc_agg, fn mk, acc ->
+    all_keys
+    |> Enum.reduce(inc_agg, fn mk, acc ->
       case Map.get(acc, mk) do
         nil ->
           acc
@@ -436,7 +437,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
   end
 
   defp incremental_agg_to_aggregate(inc_agg) do
-    Enum.reduce(inc_agg, %{}, fn {{metric, key}, state}, acc ->
+    inc_agg
+    |> Enum.reduce(%{}, fn {{metric, key}, state}, acc ->
       n = state.count
       mean = if n > 0, do: state.sum / n, else: 0.0
       variance = if n > 0, do: max(state.sum_sq / n - mean * mean, 0.0), else: 0.0
@@ -459,7 +461,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
   defp filter_behaviors_by_languages(behaviors_map, project_langs) do
     Map.new(behaviors_map, fn {category, behaviors} ->
       filtered =
-        Enum.filter(behaviors, fn {_behavior, behavior_data} ->
+        behaviors
+        |> Enum.filter(fn {_behavior, behavior_data} ->
           behavior_langs = Map.get(behavior_data, "_languages", [])
           behavior_langs == [] or Enum.any?(behavior_langs, &(&1 in project_langs))
         end)

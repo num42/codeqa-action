@@ -39,8 +39,8 @@ defmodule CodeQA.CombinedMetrics.CosineVector do
     log_metrics = Keyword.get(opts, :log_metrics)
 
     {dot, norm_s_sq, norm_v_sq, contributions} =
-      Enum.reduce(scalars, {0.0, 0.0, 0.0, []}, fn {{group, key}, scalar},
-                                                   {d, ns, nv, contribs} ->
+      scalars
+      |> Enum.reduce({0.0, 0.0, 0.0, []}, fn {{group, key}, scalar}, {d, ns, nv, contribs} ->
         log_m = lookup_log_metric(log_metrics, aggregate, group, key)
         contrib = scalar * log_m
 

@@ -79,11 +79,11 @@ defmodule CodeQA.Metrics.File.FunctionMetrics do
 
       n = length(lengths)
       avg_len = Float.round(Enum.sum(lengths) / n, 4)
-      max_len = Enum.max(lengths)
+      max_len = lengths |> Enum.max()
 
       n_p = length(param_counts)
       avg_params = Float.round(Enum.sum(param_counts) / n_p, 4)
-      max_params = Enum.max(param_counts)
+      max_params = param_counts |> Enum.max()
 
       %{
         "function_count" => n,

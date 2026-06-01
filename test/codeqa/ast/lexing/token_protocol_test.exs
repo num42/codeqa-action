@@ -135,7 +135,7 @@ defmodule CodeQA.AST.Lexing.TokenProtocolTest do
         %Token{kind: "<NL>", content: "\n", line: 2, col: 3}
       ]
 
-      kinds = Enum.map(tokens, &TokenProtocol.kind/1)
+      kinds = tokens |> Enum.map(&TokenProtocol.kind/1)
       assert kinds == ["<ID>", "<STR>", "<DOC>", "<NL>"]
     end
   end

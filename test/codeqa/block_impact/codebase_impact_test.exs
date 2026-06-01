@@ -42,7 +42,7 @@ defmodule CodeQA.BlockImpact.CodebaseImpactTest do
       assert is_map(result)
       # Should have at least one group with mean_ keys
       all_keys = result |> Map.values() |> Enum.flat_map(&Map.keys/1)
-      assert Enum.any?(all_keys, &String.starts_with?(&1, "mean_"))
+      assert all_keys |> Enum.any?(&String.starts_with?(&1, "mean_"))
     end
 
     test "produces a different aggregate than the baseline when a large node is removed" do

@@ -79,7 +79,7 @@ defmodule CodeQA.CombinedMetrics.FileScorerTest do
       result = FileScorer.worst_files_per_behavior(files_map, combined_top: 99)
 
       for {_key, entries} <- result do
-        cosines = Enum.map(entries, & &1.cosine)
+        cosines = entries |> Enum.map(& &1.cosine)
         assert cosines == Enum.sort(cosines)
       end
     end
@@ -93,7 +93,7 @@ defmodule CodeQA.CombinedMetrics.FileScorerTest do
       result = FileScorer.worst_files_per_behavior(files_map)
 
       for {_key, entries} <- result do
-        file_paths = Enum.map(entries, & &1.file)
+        file_paths = entries |> Enum.map(& &1.file)
         refute "lib/empty.ex" in file_paths
         refute "lib/nokey.ex" in file_paths
       end
@@ -197,7 +197,8 @@ defmodule CodeQA.CombinedMetrics.FileScorerTest do
 
       # Any behavior that only applies to rust should not have this .ex file in results
       rust_only_keys =
-        Enum.filter(results, fn {key, entries} ->
+        results
+        |> Enum.filter(fn {key, entries} ->
           [cat, beh] = String.split(key, ".", parts: 2)
           yaml_path = "priv/combined_metrics/#{cat}.yml"
 

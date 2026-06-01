@@ -55,14 +55,14 @@ defmodule CodeQA.Metrics.File.Vocabulary do
   end
 
   defp compute_mattr(identifiers, total) when total < @window_size do
-    length(Enum.uniq(identifiers)) / max(total, 1)
+    length(identifiers |> Enum.uniq()) / max(total, 1)
   end
 
   defp compute_mattr(identifiers, _total) do
     # Rolling frequency map optimization: O(N) instead of O(N*K)
     # Start with the first window
-    {first_window, rest} = Enum.split(identifiers, @window_size)
-    initial_freqs = Enum.frequencies(first_window)
+    {first_window, rest} = identifiers |> Enum.split(@window_size)
+    initial_freqs = first_window |> Enum.frequencies()
     initial_count = map_size(initial_freqs)
 
     # Use a recursive reducer to slide the window

@@ -17,7 +17,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
     Scorer.all_yamls()
     |> Enum.flat_map(fn {yaml_path, data} ->
       category = yaml_path |> Path.basename() |> String.trim_trailing(".yml")
-      Enum.flat_map(data, &hints_for_behavior(category, &1))
+      data |> Enum.flat_map(&hints_for_behavior(category, &1))
     end)
     |> Map.new()
   end
@@ -67,7 +67,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
     |> Enum.group_by(&elem(&1, 0), fn {_cat, block, delta} -> {block, delta} end)
     |> Enum.map(fn {category, block_deltas} ->
       # Find the block with highest cosine_delta for this category
-      {worst_block, _delta} = Enum.max_by(block_deltas, fn {_block, delta} -> delta end)
+      {worst_block, _delta} = block_deltas |> Enum.max_by(fn {_block, delta} -> delta end)
       {category, add_source_code(worst_block, base_path)}
     end)
     |> Map.new()
@@ -84,7 +84,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
 
     file_entries =
       if changed_files == [] do
-        Enum.map(files, fn {path, data} -> {path, nil, data} end)
+        files |> Enum.map(fn {path, data} -> {path, nil, data} end)
       else
         changed_index = Map.new(changed_files, &{&1.path, &1.status})
 
@@ -126,7 +126,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
 
   # When diff_line_ranges provided, filter blocks by overlap
   defp filter_by_diff_overlap(blocks, path_ranges, _diff_line_ranges) do
-    Enum.filter(blocks, &block_overlaps_diff?(&1, path_ranges))
+    blocks |> Enum.filter(&block_overlaps_diff?(&1, path_ranges))
   end
 
   @spec block_overlaps_diff?(map(), [{pos_integer(), pos_integer()}]) :: boolean()
@@ -136,7 +136,8 @@ defmodule CodeQA.HealthReport.TopBlocks do
     block_start = node["start_line"] || 1
     block_end = node["end_line"] || block_start
 
-    Enum.any?(path_ranges, fn {diff_start, diff_end} ->
+    path_ranges
+    |> Enum.any?(fn {diff_start, diff_end} ->
       ranges_overlap?(block_start, block_end, diff_start, diff_end)
     end)
   end

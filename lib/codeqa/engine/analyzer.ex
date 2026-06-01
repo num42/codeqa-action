@@ -65,8 +65,8 @@ defmodule CodeQA.Engine.Analyzer do
       :timer.tc(fn -> Pipeline.build_file_context(content, skip_structural: true) end)
 
     {result, breakdown} =
-      Enum.reduce(baseline_metrics, {[], %{ctx: ctx_us}}, fn {name, baseline_value},
-                                                             {acc, breakdown} ->
+      baseline_metrics
+      |> Enum.reduce({[], %{ctx: ctx_us}}, fn {name, baseline_value}, {acc, breakdown} ->
         if MapSet.member?(referenced, name) do
           mod = registered_module_for(name)
 
@@ -208,7 +208,7 @@ defmodule CodeQA.Engine.Analyzer do
   defp compute_stats(values) do
     n = length(values)
     mean = Enum.sum(values) / n
-    sum_squares = Enum.reduce(values, 0.0, fn v, acc -> acc + (v - mean) ** 2 end)
+    sum_squares = values |> Enum.reduce(0.0, fn v, acc -> acc + (v - mean) ** 2 end)
     variance = sum_squares / n
     std = :math.sqrt(variance)
 

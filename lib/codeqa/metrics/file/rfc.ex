@@ -62,7 +62,7 @@ defmodule CodeQA.Metrics.File.RFC do
   # Uses a sliding window of two adjacent tokens.
   defp scan_tokens(tokens) do
     tokens
-    |> Enum.zip(Enum.drop(tokens, 1))
+    |> Enum.zip(tokens |> Enum.drop(1))
     |> Enum.reduce({0, MapSet.new()}, fn {tok, next}, {defs, calls} ->
       cond do
         # Function definition: keyword followed by an identifier

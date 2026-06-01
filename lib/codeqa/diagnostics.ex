@@ -82,7 +82,8 @@ defmodule CodeQA.Diagnostics do
     case format do
       :json ->
         files_json =
-          Enum.map(file_diagnoses, fn {file_path, diagnoses} ->
+          file_diagnoses
+          |> Enum.map(fn {file_path, diagnoses} ->
             %{file: file_path, behaviors: Enum.map(diagnoses, &diagnosis_to_map/1)}
           end)
 
@@ -90,7 +91,8 @@ defmodule CodeQA.Diagnostics do
 
       _ ->
         file_rows =
-          Enum.flat_map(file_diagnoses, fn {file_path, diagnoses} ->
+          file_diagnoses
+          |> Enum.flat_map(fn {file_path, diagnoses} ->
             diagnoses_to_rows(file_path, diagnoses)
           end)
 
@@ -107,7 +109,8 @@ defmodule CodeQA.Diagnostics do
   end
 
   defp diagnoses_to_rows(file_path, diagnoses) do
-    Enum.map(diagnoses, fn %{category: cat, behavior: beh, cosine: cosine, score: score} ->
+    diagnoses
+    |> Enum.map(fn %{category: cat, behavior: beh, cosine: cosine, score: score} ->
       {file_path, "#{cat}.#{beh}", cosine, score}
     end)
   end
@@ -122,20 +125,20 @@ defmodule CodeQA.Diagnostics do
 
   defp issues_table(issues) do
     rows =
-      Enum.map(issues, fn %{category: cat, behavior: beh, cosine: cosine, score: score} ->
+      issues
+      |> Enum.map(fn %{category: cat, behavior: beh, cosine: cosine, score: score} ->
         cosine_str = :erlang.float_to_binary(cosine / 1.0, decimals: 2)
         score_str = :erlang.float_to_binary(score / 1.0, decimals: 2)
         "| #{cat}.#{beh} | #{cosine_str} | #{score_str} |"
       end)
 
-    Enum.join(
-      ["| Behavior | Cosine | Score |", "|----------|--------|-------|"] ++ rows ++ [""],
-      "\n"
-    )
+    (["| Behavior | Cosine | Score |", "|----------|--------|-------|"] ++ rows ++ [""])
+    |> Enum.join("\n")
   end
 
   defp categories_text(categories) do
-    Enum.map_join(categories, "\n", fn %{name: name, behaviors: behaviors} ->
+    categories
+    |> Enum.map_join("\n", fn %{name: name, behaviors: behaviors} ->
       rows =
         Enum.map(behaviors, fn %{behavior: beh, score: score} ->
           score_str = :erlang.float_to_binary(score / 1.0, decimals: 2)
@@ -164,10 +167,8 @@ defmodule CodeQA.Diagnostics do
         "| #{file_path} | #{behavior_key} | #{cosine_str} | #{cosine_score} |"
       end)
 
-    Enum.join(
-      ["| File | Behavior | Cosine | Score |", "|------|----------|--------|-------|"] ++
-        data_rows,
-      "\n"
-    )
+    (["| File | Behavior | Cosine | Score |", "|------|----------|--------|-------|"] ++
+       data_rows)
+    |> Enum.join("\n")
   end
 end

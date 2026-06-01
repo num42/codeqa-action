@@ -83,7 +83,7 @@ defmodule CodeQA.HealthReport.Config do
     %{
       key: String.to_atom(key),
       name: Map.get(override, "name", key),
-      metrics: Enum.map(Map.get(override, "metrics", []), &parse_metric/1)
+      metrics: Map.get(override, "metrics", []) |> Enum.map(&parse_metric/1)
     }
     |> maybe_put_top(override)
   end
@@ -107,7 +107,8 @@ defmodule CodeQA.HealthReport.Config do
     default_names = MapSet.new(defaults, & &1.name)
 
     merged_defaults =
-      Enum.map(defaults, fn default_metric ->
+      defaults
+      |> Enum.map(fn default_metric ->
         case Map.get(overrides_by_name, default_metric.name) do
           nil -> default_metric
           override -> merge_metric(default_metric, override)

@@ -116,7 +116,8 @@ defmodule CodeQA.AST.Classification.NodeClassifier do
   end
 
   defp tally(emissions) do
-    Enum.reduce(emissions, %{}, fn {_src, _grp, name, weight}, acc ->
+    emissions
+    |> Enum.reduce(%{}, fn {_src, _grp, name, weight}, acc ->
       Map.update(acc, name, weight, &(&1 + weight))
     end)
   end
@@ -124,7 +125,7 @@ defmodule CodeQA.AST.Classification.NodeClassifier do
   defp winner(votes) when map_size(votes) == 0, do: :code
 
   defp winner(votes) do
-    {vote_name, _weight} = Enum.max_by(votes, fn {_, w} -> w end)
+    {vote_name, _weight} = votes |> Enum.max_by(fn {_, w} -> w end)
     vote_to_type(vote_name)
   end
 

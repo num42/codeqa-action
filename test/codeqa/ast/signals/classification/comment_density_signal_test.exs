@@ -10,7 +10,7 @@ defmodule CodeQA.AST.Signals.Classification.CommentDensitySignalTest do
 
   defp token(content, kind \\ "<ID>"), do: %{kind: kind, content: content, line: 1, col: 0}
   defp nl, do: %{kind: "<NL>", content: "\n", line: 1, col: 0}
-  defp on_line(tokens, line), do: Enum.map(tokens, &%{&1 | line: line})
+  defp on_line(tokens, line), do: tokens |> Enum.map(&%{&1 | line: line})
 
   test "votes comment when >60% of lines start with #" do
     tokens =

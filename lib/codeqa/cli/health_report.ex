@@ -179,7 +179,8 @@ defmodule CodeQA.CLI.HealthReport do
     parts = HealthReport.Formatter.render_parts(report, detail: detail)
 
     # Write each part to a numbered file
-    Enum.with_index(parts, 1)
+    parts
+    |> Enum.with_index(1)
     |> Enum.each(fn {content, n} ->
       path = Path.join(tmpdir, "codeqa-part-#{n}.md")
       File.write!(path, content)
@@ -321,7 +322,8 @@ defmodule CodeQA.CLI.HealthReport do
   defp handle_event([:codeqa, :loo_breakdown], measurements, _metadata, pid) do
     Agent.update(pid, fn state ->
       merged =
-        Enum.reduce(measurements, state.loo_breakdown, fn {k, v}, acc ->
+        measurements
+        |> Enum.reduce(state.loo_breakdown, fn {k, v}, acc ->
           Map.update(acc, k, v, &(&1 + v))
         end)
 
@@ -334,7 +336,8 @@ defmodule CodeQA.CLI.HealthReport do
   defp handle_event([:codeqa, :cosine_breakdown], measurements, _metadata, pid) do
     Agent.update(pid, fn state ->
       merged =
-        Enum.reduce(measurements, state.cosine_breakdown, fn {k, v}, acc ->
+        measurements
+        |> Enum.reduce(state.cosine_breakdown, fn {k, v}, acc ->
           Map.update(acc, k, v, &(&1 + v))
         end)
 
@@ -355,8 +358,8 @@ defmodule CodeQA.CLI.HealthReport do
     total_nodes = length(nodes)
     total_files = length(files)
 
-    node_totals = Enum.map(nodes, fn {_, m} -> m end)
-    file_totals = Enum.map(files, fn {_, m} -> m end)
+    node_totals = nodes |> Enum.map(fn {_, m} -> m end)
+    file_totals = files |> Enum.map(fn {_, m} -> m end)
 
     IO.puts(:stderr, """
 
@@ -423,13 +426,13 @@ defmodule CodeQA.CLI.HealthReport do
   end
 
   defp format_scaling(files, nodes) do
-    nodes_by_path = Enum.group_by(nodes, fn {p, _} -> p end, fn {_, m} -> m end)
+    nodes_by_path = nodes |> Enum.group_by(fn {p, _} -> p end, fn {_, m} -> m end)
 
     rows =
       files
       |> Enum.map(fn {path, fm} ->
         node_durations = nodes_by_path |> Map.get(path, []) |> Enum.map(& &1.duration)
-        total_node_us = Enum.sum(node_durations)
+        total_node_us = node_durations |> Enum.sum()
 
         %{
           path: path,
@@ -451,23 +454,23 @@ defmodule CodeQA.CLI.HealthReport do
     bin_rows =
       bins
       |> Enum.map(fn {label, pred} ->
-        bucket = Enum.filter(rows, pred)
+        bucket = rows |> Enum.filter(pred)
         n = length(bucket)
 
         if n == 0 do
           "  #{label}  (none)"
         else
-          avg_bytes = div(Enum.sum(Enum.map(bucket, & &1.bytes)), n)
-          avg_tokens = div(Enum.sum(Enum.map(bucket, & &1.tokens)), n)
-          avg_nodes = div(Enum.sum(Enum.map(bucket, & &1.nodes)), n)
-          avg_node_us = div(Enum.sum(Enum.map(bucket, & &1.total_node_us)), n)
+          avg_bytes = div(Enum.map(bucket, & &1.bytes) |> Enum.sum(), n)
+          avg_tokens = div(Enum.map(bucket, & &1.tokens) |> Enum.sum(), n)
+          avg_nodes = div(Enum.map(bucket, & &1.nodes) |> Enum.sum(), n)
+          avg_node_us = div(Enum.map(bucket, & &1.total_node_us) |> Enum.sum(), n)
           per_node_us = if avg_nodes > 0, do: div(avg_node_us, avg_nodes), else: 0
 
           "  #{label}  files=#{n}  avg bytes=#{avg_bytes} tokens=#{avg_tokens} nodes=#{avg_nodes}  total_node=#{us(avg_node_us)}  per_node=#{us(per_node_us)}"
         end
       end)
 
-    Enum.join(bin_rows, "\n")
+    bin_rows |> Enum.join("\n")
   end
 
   defp format_phases(phases) when map_size(phases) == 0, do: "  (no phases recorded)"
@@ -520,7 +523,7 @@ defmodule CodeQA.CLI.HealthReport do
     node_time_by_file =
       nodes
       |> Enum.group_by(fn {path, _} -> path end, fn {_, m} -> m.duration end)
-      |> Map.new(fn {path, durations} -> {path, Enum.sum(durations)} end)
+      |> Map.new(fn {path, durations} -> {path, durations |> Enum.sum()} end)
 
     files
     |> Enum.map(fn {path, fm} ->
@@ -537,7 +540,7 @@ defmodule CodeQA.CLI.HealthReport do
   defp avg_us([], _key), do: "n/a"
 
   defp avg_us(measurements, key) do
-    total = Enum.sum(Enum.map(measurements, &Map.get(&1, key, 0)))
+    total = Enum.map(measurements, &Map.get(&1, key, 0)) |> Enum.sum()
     us(div(total, length(measurements)))
   end
 

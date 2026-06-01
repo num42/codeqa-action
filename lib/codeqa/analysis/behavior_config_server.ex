@@ -109,7 +109,7 @@ defmodule CodeQA.Analysis.BehaviorConfigServer do
     behavior_data
     |> Enum.flat_map(fn
       {group, keys} when is_map(keys) ->
-        Enum.map(keys, fn {key, scalar} -> {{group, key}, scalar / 1.0} end)
+        keys |> Enum.map(fn {key, scalar} -> {{group, key}, scalar / 1.0} end)
 
       _ ->
         []

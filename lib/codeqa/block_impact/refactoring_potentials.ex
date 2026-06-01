@@ -57,7 +57,7 @@ defmodule CodeQA.BlockImpact.RefactoringPotentials do
         behavior_map
       )
 
-    all_keys = Enum.uniq(Map.keys(file_delta) ++ Map.keys(codebase_delta))
+    all_keys = (Map.keys(file_delta) ++ Map.keys(codebase_delta)) |> Enum.uniq()
 
     all_keys
     |> Enum.reject(fn {category, behavior} ->

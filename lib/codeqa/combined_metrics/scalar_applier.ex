@@ -80,7 +80,7 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
       File.write!(yaml_path, YamlFormatter.format(updated))
 
       behaviors_with_languages =
-        Enum.count(updated, fn {_b, groups} -> Map.has_key?(groups, "_languages") end)
+        updated |> Enum.count(fn {_b, groups} -> Map.has_key?(groups, "_languages") end)
 
       %{category: category, behaviors_with_languages: behaviors_with_languages}
     end)
@@ -128,8 +128,9 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   end
 
   defp groups_from_report(metrics) do
-    Enum.reduce(metrics, {%{}, 0.0, 0, 0}, fn {metric_key, data},
-                                              {groups, log_baseline, n_updated, n_deadzoned} ->
+    metrics
+    |> Enum.reduce({%{}, 0.0, 0, 0}, fn {metric_key, data},
+                                        {groups, log_baseline, n_updated, n_deadzoned} ->
       [group, key] = String.split(metric_key, ".", parts: 2)
 
       if deadzone?(data.ratio) do

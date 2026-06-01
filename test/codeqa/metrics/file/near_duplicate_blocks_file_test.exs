@@ -45,7 +45,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksFileTest do
 
     test "no _pairs keys in output" do
       result = NearDuplicateBlocksFile.analyze(ctx("x = 1\n"))
-      refute Enum.any?(Map.keys(result), &String.ends_with?(&1, "_pairs"))
+      refute Map.keys(result) |> Enum.any?(&String.ends_with?(&1, "_pairs"))
     end
 
     test "detects exact duplicate blocks at d0" do

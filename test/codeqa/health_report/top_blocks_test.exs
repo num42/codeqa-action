@@ -109,7 +109,7 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
       }
 
       blocks = TopBlocks.build(results, [], lookup())
-      deltas = Enum.map(blocks, fn b -> hd(b.potentials).cosine_delta end)
+      deltas = blocks |> Enum.map(fn b -> hd(b.potentials).cosine_delta end)
       assert deltas == Enum.sort(deltas, :desc)
     end
 

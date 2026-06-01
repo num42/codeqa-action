@@ -55,7 +55,7 @@ defmodule CodeQA.AST.Signals.Structural.ColonIndentSignal do
     end
 
     defp close_dedented(stack, ci) do
-      {to_close, keep} = Enum.split_while(stack, fn e -> ci <= e.colon_indent end)
+      {to_close, keep} = stack |> Enum.split_while(fn e -> ci <= e.colon_indent end)
       {build_emissions(to_close), keep}
     end
 
@@ -68,7 +68,8 @@ defmodule CodeQA.AST.Signals.Structural.ColonIndentSignal do
     defp maybe_open_block(stack, _, _, _), do: stack
 
     defp build_emissions(entries) do
-      Enum.reduce(entries, MapSet.new(), fn
+      entries
+      |> Enum.reduce(MapSet.new(), fn
         %{sub_start: s, last_content_idx: e}, acc when e != nil ->
           MapSet.put(acc, {:colon_indent_enclosure, {s, e}})
 

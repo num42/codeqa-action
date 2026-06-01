@@ -45,7 +45,7 @@ defmodule CodeQA.Metrics.File.Bradford do
       |> Enum.map(fn {_line, toks} -> length(toks) end)
       |> Enum.sort(:desc)
 
-    total = Enum.sum(counts)
+    total = counts |> Enum.sum()
 
     # Need at least 3 lines and 3 tokens to form meaningful zones.
     if total < 3 or length(counts) < 3 do

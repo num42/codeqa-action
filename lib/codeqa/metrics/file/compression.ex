@@ -40,7 +40,7 @@ defmodule CodeQA.Metrics.File.Compression do
     unique_line_ratio =
       case length(non_blank) do
         0 -> 0.0
-        n -> Float.round(length(Enum.uniq(non_blank)) / n, 4)
+        n -> Float.round(length(non_blank |> Enum.uniq()) / n, 4)
       end
 
     %{

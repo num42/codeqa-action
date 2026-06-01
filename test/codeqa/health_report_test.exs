@@ -35,7 +35,8 @@ defmodule CodeQA.HealthReportTest do
       # top_blocks is a flat list of blocks (may be empty if no blocks above threshold)
       assert is_list(report.top_blocks)
 
-      Enum.each(report.top_blocks, fn block ->
+      report.top_blocks
+      |> Enum.each(fn block ->
         assert Map.has_key?(block, :path)
         assert Map.has_key?(block, :status)
         assert Map.has_key?(block, :potentials)
@@ -52,7 +53,8 @@ defmodule CodeQA.HealthReportTest do
 
       report = HealthReport.generate(results)
 
-      Enum.each(report.categories, fn cat ->
+      report.categories
+      |> Enum.each(fn cat ->
         assert Map.get(cat, :worst_offenders, []) == []
       end)
     end
@@ -124,7 +126,7 @@ defmodule CodeQA.HealthReportTest do
           changed_files: changed
         )
 
-      paths = Enum.map(report.top_blocks, & &1.path)
+      paths = report.top_blocks |> Enum.map(& &1.path)
       refute "lib/bar.ex" in paths
     end
   end

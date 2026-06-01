@@ -514,7 +514,8 @@ defmodule CodeQA.HealthReport.FormatterTest do
     test "each part ends with sentinel comment" do
       parts = Formatter.render_parts(@sample_report)
 
-      Enum.with_index(parts, 1)
+      parts
+      |> Enum.with_index(1)
       |> Enum.each(fn {part, n} ->
         assert part =~ "<!-- codeqa-health-report-#{n} -->"
       end)
@@ -560,7 +561,8 @@ defmodule CodeQA.HealthReport.FormatterTest do
 
     test "returns single part with blocks (top 10 limit means no slicing needed)" do
       blocks =
-        Enum.map(1..10, fn i ->
+        1..10
+        |> Enum.map(fn i ->
           %{
             path: "lib/file_#{i}.ex",
             status: "modified",

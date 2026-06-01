@@ -75,7 +75,8 @@ defmodule Mix.Tasks.Codeqa.SignalDebug do
     emissions_per_signal =
       SignalStream.run(tokens, signals, lang_mod)
 
-    Enum.zip(signals, emissions_per_signal)
+    signals
+    |> Enum.zip(emissions_per_signal)
     |> Enum.each(fn {signal, emissions} ->
       print_signal_section(signal, emissions, tokens, lines)
     end)
@@ -84,7 +85,8 @@ defmodule Mix.Tasks.Codeqa.SignalDebug do
   defp filter_signals(signals, nil), do: signals
 
   defp filter_signals(signals, name_filter) do
-    Enum.filter(signals, fn signal ->
+    signals
+    |> Enum.filter(fn signal ->
       module_name =
         signal.__struct__
         |> Module.split()
@@ -118,10 +120,11 @@ defmodule Mix.Tasks.Codeqa.SignalDebug do
     Mix.shell().info("Emissions: #{length(emissions)}")
     Mix.shell().info("")
 
-    if Enum.empty?(emissions) do
+    if emissions |> Enum.empty?() do
       Mix.shell().info("  (no emissions)")
     else
-      Enum.each(emissions, fn {_source, group, emission_name, value} ->
+      emissions
+      |> Enum.each(fn {_source, group, emission_name, value} ->
         print_emission(group, emission_name, value, tokens, lines)
       end)
     end
@@ -130,7 +133,7 @@ defmodule Mix.Tasks.Codeqa.SignalDebug do
   end
 
   defp print_emission(:split, name, token_idx, tokens, lines) do
-    token = Enum.at(tokens, token_idx)
+    token = tokens |> Enum.at(token_idx)
 
     line_num = token && token.line
     line_src = line_num && Enum.at(lines, line_num - 1)
@@ -149,8 +152,8 @@ defmodule Mix.Tasks.Codeqa.SignalDebug do
   end
 
   defp print_emission(:enclosure, name, {start_idx, end_idx}, tokens, lines) do
-    start_token = Enum.at(tokens, start_idx)
-    end_token = Enum.at(tokens, end_idx)
+    start_token = tokens |> Enum.at(start_idx)
+    end_token = tokens |> Enum.at(end_idx)
 
     start_line = start_token && start_token.line
     end_line = end_token && end_token.line
@@ -161,13 +164,13 @@ defmodule Mix.Tasks.Codeqa.SignalDebug do
 
     if start_line do
       Mix.shell().info(
-        "    open:  #{inspect(Enum.at(lines, start_line - 1) |> String.trim_trailing())}"
+        "    open:  #{inspect(lines |> Enum.at(start_line - 1) |> String.trim_trailing())}"
       )
     end
 
     if end_line && end_line != start_line do
       Mix.shell().info(
-        "    close: #{inspect(Enum.at(lines, end_line - 1) |> String.trim_trailing())}"
+        "    close: #{inspect(lines |> Enum.at(end_line - 1) |> String.trim_trailing())}"
       )
     end
 

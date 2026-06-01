@@ -67,13 +67,13 @@ defmodule CodeQA.Metrics.PostProcessing.Menzerath do
     root_tokens = TokenNormalizer.normalize_structural(content)
     top_nodes = Parser.detect_blocks(root_tokens, Unknown)
 
-    blocks = Enum.map(top_nodes, &score_node(&1, file_lines))
+    blocks = top_nodes |> Enum.map(&score_node(&1, file_lines))
     all_ratios = collect_ratios(blocks)
     n = length(all_ratios)
 
     mean_ratio = if(n == 0, do: 0.0, else: round4(Enum.sum(all_ratios) / n))
-    max_ratio = if(n == 0, do: 0.0, else: round4(Enum.max(all_ratios)))
-    violation_count = Enum.count(all_ratios, &(&1 >= @violation_threshold))
+    max_ratio = if(n == 0, do: 0.0, else: round4(all_ratios |> Enum.max()))
+    violation_count = all_ratios |> Enum.count(&(&1 >= @violation_threshold))
 
     %{
       "blocks" => blocks,
@@ -105,7 +105,7 @@ defmodule CodeQA.Metrics.PostProcessing.Menzerath do
   defp score_node(node, parent_lines) do
     ratio = if parent_lines > 0, do: round4(node.line_count / parent_lines), else: 0.0
 
-    children = Enum.map(node.children, &score_node(&1, node.line_count))
+    children = node.children |> Enum.map(&score_node(&1, node.line_count))
 
     base = %{
       "start_line" => node.start_line,
@@ -122,7 +122,7 @@ defmodule CodeQA.Metrics.PostProcessing.Menzerath do
         base
 
       kids ->
-        child_ratios = Enum.map(kids, & &1["ratio"])
+        child_ratios = kids |> Enum.map(& &1["ratio"])
         avg = round4(Enum.sum(child_ratios) / length(child_ratios))
 
         base
@@ -154,7 +154,8 @@ defmodule CodeQA.Metrics.PostProcessing.Menzerath do
   end
 
   defp collect_ratios(blocks) do
-    Enum.flat_map(blocks, fn block ->
+    blocks
+    |> Enum.flat_map(fn block ->
       [block["ratio"] | collect_ratios(block["children"])]
     end)
   end
@@ -189,8 +190,8 @@ defmodule CodeQA.Metrics.PostProcessing.Menzerath do
           "Not enough files with function data to compute Menzerath conformance (need ≥ 3, got #{n})."
       }
     else
-      xs = Enum.map(pairs, &elem(&1, 0))
-      ys = Enum.map(pairs, &elem(&1, 1))
+      xs = pairs |> Enum.map(&elem(&1, 0))
+      ys = pairs |> Enum.map(&elem(&1, 1))
       correlation = round4(pearson(xs, ys))
       {exponent, r_squared} = fit_power_law(xs, ys)
 
@@ -221,11 +222,11 @@ defmodule CodeQA.Metrics.PostProcessing.Menzerath do
 
   defp pearson(xs, ys) do
     n = length(xs)
-    sum_x = Enum.sum(xs)
-    sum_y = Enum.sum(ys)
-    sum_xy = Enum.zip(xs, ys) |> Enum.reduce(0.0, fn {x, y}, acc -> acc + x * y end)
-    sum_x2 = Enum.reduce(xs, 0.0, fn x, acc -> acc + x * x end)
-    sum_y2 = Enum.reduce(ys, 0.0, fn y, acc -> acc + y * y end)
+    sum_x = xs |> Enum.sum()
+    sum_y = ys |> Enum.sum()
+    sum_xy = xs |> Enum.zip(ys) |> Enum.reduce(0.0, fn {x, y}, acc -> acc + x * y end)
+    sum_x2 = xs |> Enum.reduce(0.0, fn x, acc -> acc + x * x end)
+    sum_y2 = ys |> Enum.reduce(0.0, fn y, acc -> acc + y * y end)
 
     num = n * sum_xy - sum_x * sum_y
     den = :math.sqrt((n * sum_x2 - sum_x * sum_x) * (n * sum_y2 - sum_y * sum_y))
@@ -236,20 +237,21 @@ defmodule CodeQA.Metrics.PostProcessing.Menzerath do
   defp fit_power_law(xs, ys) do
     # Linearize: log(y) = log(a) + b * log(x), fit via OLS on log-log scale
     pairs =
-      Enum.zip(xs, ys)
+      xs
+      |> Enum.zip(ys)
       |> Enum.filter(fn {x, y} -> x > 0 and y > 0 end)
 
     if length(pairs) < 2 do
       {nil, nil}
     else
-      log_xs = Enum.map(pairs, fn {x, _} -> :math.log(x) end)
-      log_ys = Enum.map(pairs, fn {_, y} -> :math.log(y) end)
+      log_xs = pairs |> Enum.map(fn {x, _} -> :math.log(x) end)
+      log_ys = pairs |> Enum.map(fn {_, y} -> :math.log(y) end)
 
       n = length(pairs)
-      sum_lx = Enum.sum(log_xs)
-      sum_ly = Enum.sum(log_ys)
-      sum_lx2 = Enum.reduce(log_xs, 0.0, fn x, acc -> acc + x * x end)
-      sum_lxly = Enum.zip(log_xs, log_ys) |> Enum.reduce(0.0, fn {x, y}, acc -> acc + x * y end)
+      sum_lx = log_xs |> Enum.sum()
+      sum_ly = log_ys |> Enum.sum()
+      sum_lx2 = log_xs |> Enum.reduce(0.0, fn x, acc -> acc + x * x end)
+      sum_lxly = log_xs |> Enum.zip(log_ys) |> Enum.reduce(0.0, fn {x, y}, acc -> acc + x * y end)
 
       denom = n * sum_lx2 - sum_lx * sum_lx
 
@@ -266,10 +268,11 @@ defmodule CodeQA.Metrics.PostProcessing.Menzerath do
     log_a = (sum_ly - b * sum_lx) / n
     mean_ly = sum_ly / n
 
-    ss_tot = Enum.reduce(log_ys, 0.0, fn ly, acc -> acc + (ly - mean_ly) ** 2 end)
+    ss_tot = log_ys |> Enum.reduce(0.0, fn ly, acc -> acc + (ly - mean_ly) ** 2 end)
 
     ss_res =
-      Enum.zip(log_xs, log_ys)
+      log_xs
+      |> Enum.zip(log_ys)
       |> Enum.reduce(0.0, fn {lx, ly}, acc ->
         acc + (ly - (log_a + b * lx)) ** 2
       end)

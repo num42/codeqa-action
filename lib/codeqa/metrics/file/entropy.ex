@@ -68,7 +68,8 @@ defmodule CodeQA.Metrics.File.Entropy do
     max_entropy = if alphabet_size > 1, do: :math.log2(alphabet_size), else: 0.0
 
     entropy =
-      Enum.reduce(counts, 0.0, fn {_k, c}, acc ->
+      counts
+      |> Enum.reduce(0.0, fn {_k, c}, acc ->
         p = c / total
         acc - p * :math.log2(p)
       end)

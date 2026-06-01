@@ -96,7 +96,8 @@ defmodule CodeQA.HealthReport.Grader do
   @doc "Convert a numeric score (0-100) to a letter grade using the given scale."
   @spec grade_letter(number(), [{number(), String.t()}]) :: String.t()
   def grade_letter(score, scale \\ Categories.default_grade_scale()) do
-    Enum.find_value(scale, "F", fn {min, letter} ->
+    scale
+    |> Enum.find_value("F", fn {min, letter} ->
       if score >= min, do: letter
     end)
   end
@@ -145,10 +146,10 @@ defmodule CodeQA.HealthReport.Grader do
   defp weighted_category_score([]), do: 0
 
   defp weighted_category_score(scored) do
-    total_weight = Enum.reduce(scored, 0.0, fn s, acc -> acc + s.weight end)
+    total_weight = scored |> Enum.reduce(0.0, fn s, acc -> acc + s.weight end)
 
     if total_weight > 0 do
-      weighted = Enum.reduce(scored, 0.0, fn s, acc -> acc + s.score * s.weight end)
+      weighted = scored |> Enum.reduce(0.0, fn s, acc -> acc + s.score * s.weight end)
       round(weighted / total_weight)
     else
       0
@@ -165,7 +166,7 @@ defmodule CodeQA.HealthReport.Grader do
         file_metrics,
         scale \\ Categories.default_grade_scale()
       ) do
-    Enum.map(categories, &grade_category(&1, file_metrics, scale))
+    categories |> Enum.map(&grade_category(&1, file_metrics, scale))
   end
 
   @doc """
@@ -188,7 +189,7 @@ defmodule CodeQA.HealthReport.Grader do
         {source, values}
       end)
 
-    Enum.map(categories, &grade_category(&1, file_like, scale))
+    categories |> Enum.map(&grade_category(&1, file_like, scale))
   end
 
   @doc """
@@ -214,7 +215,8 @@ defmodule CodeQA.HealthReport.Grader do
       {0, "F"}
     else
       {weighted_sum, total_impact} =
-        Enum.reduce(category_grades, {0, 0}, fn g, {ws, ti} ->
+        category_grades
+        |> Enum.reduce({0, 0}, fn g, {ws, ti} ->
           impact = Map.get(impact_map, to_string(g.key), 1)
           {ws + g.score * impact, ti + impact}
         end)
@@ -279,7 +281,7 @@ defmodule CodeQA.HealthReport.Grader do
   defp average_behavior_score([]), do: 50
 
   defp average_behavior_score(entries) do
-    round(Enum.sum(Enum.map(entries, & &1.score)) / length(entries))
+    round(Enum.sum(entries |> Enum.map(& &1.score)) / length(entries))
   end
 
   defp build_cosine_category(category, category_score, behavior_entries, scale) do
@@ -351,7 +353,7 @@ defmodule CodeQA.HealthReport.Grader do
 
   defp node_impact_score(%{"refactoring_potentials" => potentials})
        when is_list(potentials) and potentials != [] do
-    Enum.sum(Enum.map(potentials, & &1["cosine_delta"]))
+    Enum.map(potentials, & &1["cosine_delta"]) |> Enum.sum()
   end
 
   defp node_impact_score(_), do: 0.0
