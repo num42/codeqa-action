@@ -104,14 +104,7 @@ defmodule CodeQA.AST.Parsing.Parser do
       end_line: end_line
     }
 
-    case find_sub_candidates(tokens, lang_mod) do
-      [] ->
-        block
-
-      candidates ->
-        children = candidates |> Enum.map(&parse_block(&1, lang_mod))
-        %{block | children: children}
-    end
+    find_sub_candidates(tokens, lang_mod) |> handle_find_sub_candidates(block, lang_mod)
   end
 
   # Collect enclosure regions from rules.
@@ -229,5 +222,16 @@ defmodule CodeQA.AST.Parsing.Parser do
       nil -> tokens |> List.last() |> Map.get(:line)
       token -> token.line
     end
+  end
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_find_sub_candidates([], block, _lang_mod) do
+    block
+  end
+
+  defp handle_find_sub_candidates(candidates, block, lang_mod) do
+    children = candidates |> Enum.map(&parse_block(&1, lang_mod))
+    %{block | children: children}
   end
 end

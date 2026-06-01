@@ -160,16 +160,7 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   defp read_behavior_doc(category, behavior) do
     config_path = Path.join([@samples_root, category, behavior, "config.yml"])
 
-    case File.read(config_path) do
-      {:ok, content} ->
-        case YamlElixir.read_from_string(content) do
-          {:ok, %{"doc" => doc}} when is_binary(doc) -> doc
-          _ -> nil
-        end
-
-      _ ->
-        nil
-    end
+    File.read(config_path) |> handle_read_behavior_doc_read()
   end
 
   defp maybe_put_doc(groups, nil), do: groups
@@ -208,5 +199,18 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
 
   defp sample_path(category, behavior, kind) do
     Path.join([@samples_root, category, behavior, kind])
+  end
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_read_behavior_doc_read({:ok, content}) do
+    case YamlElixir.read_from_string(content) do
+      {:ok, %{"doc" => doc}} when is_binary(doc) -> doc
+      _ -> nil
+    end
+  end
+
+  defp handle_read_behavior_doc_read(_) do
+    nil
   end
 end

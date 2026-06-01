@@ -468,14 +468,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   end
 
   defp track_behavior_us(behavior, us) do
-    case Process.get(:codeqa_cosine_breakdown) do
-      nil ->
-        :ok
-
-      breakdown ->
-        cur = Map.get(breakdown, behavior, 0)
-        Process.put(:codeqa_cosine_breakdown, Map.put(breakdown, behavior, cur + us))
-    end
+    Process.get(:codeqa_cosine_breakdown) |> handle_track_behavior_us_get(behavior, us)
   end
 
   # ---------------------------------------------------------------------------
@@ -507,4 +500,15 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   # ---------------------------------------------------------------------------
 
   defp humanize(slug), do: humanize_category_shared(slug)
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_track_behavior_us_get(nil, _behavior, _us) do
+    :ok
+  end
+
+  defp handle_track_behavior_us_get(breakdown, behavior, us) do
+    cur = Map.get(breakdown, behavior, 0)
+    Process.put(:codeqa_cosine_breakdown, Map.put(breakdown, behavior, cur + us))
+  end
 end

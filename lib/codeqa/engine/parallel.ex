@@ -49,23 +49,7 @@ defmodule CodeQA.Engine.Parallel do
     hash = :crypto.hash(:sha256, content) |> Base.encode16(case: :lower)
     cache_file = Path.join(cache_dir, hash <> ".json")
 
-    case File.read(cache_file) do
-      {:ok, cached} ->
-        case Jason.decode(cached) do
-          {:ok, data} ->
-            data
-
-          _ ->
-            data = analyze_single_file(path, content, opts)
-            File.write!(cache_file, Jason.encode!(data))
-            data
-        end
-
-      _ ->
-        data = analyze_single_file(path, content, opts)
-        File.write!(cache_file, Jason.encode!(data))
-        data
-    end
+    File.read(cache_file) |> handle_maybe_cached_analyze_read(cache_file, content, opts, path)
   end
 
   defp analyze_single_file(path, content, opts) do
@@ -81,5 +65,25 @@ defmodule CodeQA.Engine.Parallel do
       "lines" => ctx.line_count,
       "metrics" => metrics
     }
+  end
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_maybe_cached_analyze_read({:ok, cached}, cache_file, content, opts, path) do
+    case Jason.decode(cached) do
+      {:ok, data} ->
+        data
+
+      _ ->
+        data = analyze_single_file(path, content, opts)
+        File.write!(cache_file, Jason.encode!(data))
+        data
+    end
+  end
+
+  defp handle_maybe_cached_analyze_read(_, cache_file, content, opts, path) do
+    data = analyze_single_file(path, content, opts)
+    File.write!(cache_file, Jason.encode!(data))
+    data
   end
 end

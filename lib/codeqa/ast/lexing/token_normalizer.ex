@@ -145,10 +145,7 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
   defp do_scan("", _line, _col, acc, last), do: {acc, last}
 
   defp do_scan(<<first, _::binary>> = text, line, col, acc, last) do
-    case next_token(first, text, line, col) do
-      {:skip, rest, advance} -> do_scan(rest, line, col + advance, acc, last)
-      {token, rest, advance} -> do_scan(rest, line, col + advance, [token | acc], token)
-    end
+    next_token(first, text, line, col) |> handle_next_token(acc, col, last, line)
   end
 
   # next_token/4: dispatches on the first byte to select only candidate rules,
@@ -260,5 +257,15 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
       interpolations: interpolations,
       quotes: quotes
     }
+  end
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_next_token({:skip, rest, advance}, acc, col, last, line) do
+    do_scan(rest, line, col + advance, acc, last)
+  end
+
+  defp handle_next_token({token, rest, advance}, acc, col, _last, line) do
+    do_scan(rest, line, col + advance, [token | acc], token)
   end
 end

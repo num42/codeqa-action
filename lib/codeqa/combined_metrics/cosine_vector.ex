@@ -82,9 +82,16 @@ defmodule CodeQA.CombinedMetrics.CosineVector do
     do: :math.log(max(Scorer.get(aggregate, group, key) / 1.0, 1.0e-300))
 
   defp lookup_log_metric(log_metrics, aggregate, group, key) do
-    case get_in(log_metrics, [group, key]) do
-      nil -> :math.log(max(Scorer.get(aggregate, group, key) / 1.0, 1.0e-300))
-      log_val -> log_val
-    end
+    get_in(log_metrics, [group, key]) |> handle_get_in(aggregate, group, key)
+  end
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_get_in(nil, aggregate, group, key) do
+    :math.log(max(Scorer.get(aggregate, group, key) / 1.0, 1.0e-300))
+  end
+
+  defp handle_get_in(log_val, _aggregate, _group, _key) do
+    log_val
   end
 end

@@ -23,10 +23,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
   end
 
   defp hints_for_behavior(category, {behavior, behavior_data}) when is_map(behavior_data) do
-    case Map.get(behavior_data, "_fix_hint") do
-      nil -> []
-      hint -> [{{category, behavior}, hint}]
-    end
+    Map.get(behavior_data, "_fix_hint") |> handle_hints_for_behavior_get(behavior, category)
   end
 
   defp hints_for_behavior(_category, _entry), do: []
@@ -220,5 +217,15 @@ defmodule CodeQA.HealthReport.TopBlocks do
 
     lang = Language.detect(block.path).name()
     Map.merge(block, %{source: source, language: lang})
+  end
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_hints_for_behavior_get(nil, _behavior, _category) do
+    []
+  end
+
+  defp handle_hints_for_behavior_get(hint, behavior, category) do
+    [{{category, behavior}, hint}]
   end
 end

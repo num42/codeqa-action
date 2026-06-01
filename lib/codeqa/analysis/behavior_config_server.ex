@@ -81,15 +81,7 @@ defmodule CodeQA.Analysis.BehaviorConfigServer do
   # --- Private helpers ---
 
   defp load_configs(tid) do
-    case File.ls(@yaml_dir) do
-      {:ok, files} ->
-        files
-        |> Enum.filter(&String.ends_with?(&1, ".yml"))
-        |> Enum.each(&load_yml_file(&1, tid))
-
-      {:error, _} ->
-        :ok
-    end
+    File.ls(@yaml_dir) |> handle_load_configs_ls(tid)
   end
 
   defp load_yml_file(yml_file, tid) do
@@ -115,5 +107,17 @@ defmodule CodeQA.Analysis.BehaviorConfigServer do
         []
     end)
     |> Map.new()
+  end
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_load_configs_ls({:ok, files}, tid) do
+    files
+    |> Enum.filter(&String.ends_with?(&1, ".yml"))
+    |> Enum.each(&load_yml_file(&1, tid))
+  end
+
+  defp handle_load_configs_ls({:error, _}, _tid) do
+    :ok
   end
 end

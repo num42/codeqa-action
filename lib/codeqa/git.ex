@@ -52,18 +52,13 @@ defmodule CodeQA.Git do
   @spec diff_line_ranges(String.t(), String.t(), String.t()) ::
           {:ok, %{String.t() => [{pos_integer(), pos_integer()}]}} | {:error, term()}
   def diff_line_ranges(repo_path, base_ref, head_ref) do
-    case System.cmd(
-           "git",
-           ["diff", "-U0", "#{base_ref}..#{head_ref}"],
-           cd: repo_path,
-           stderr_to_stdout: false
-         ) do
-      {output, 0} ->
-        {:ok, parse_diff_hunks(output)}
-
-      {_output, code} ->
-        {:error, "git diff exited with code #{code}"}
-    end
+    System.cmd(
+      "git",
+      ["diff", "-U0", "#{base_ref}..#{head_ref}"],
+      cd: repo_path,
+      stderr_to_stdout: false
+    )
+    |> handle_diff_line_ranges_cmd()
   end
 
   @typep parse_state :: {String.t() | nil, %{String.t() => [{pos_integer(), pos_integer()}]}}
@@ -157,5 +152,15 @@ defmodule CodeQA.Git do
   defp source_file?(path) do
     ext = path |> Path.extname() |> String.downcase()
     MapSet.member?(Collector.source_extensions(), ext)
+  end
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_diff_line_ranges_cmd({output, 0}) do
+    {:ok, parse_diff_hunks(output)}
+  end
+
+  defp handle_diff_line_ranges_cmd({_output, code}) do
+    {:error, "git diff exited with code #{code}"}
   end
 end

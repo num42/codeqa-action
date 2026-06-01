@@ -298,21 +298,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
   # indent 0. Lets NodeClassifier see the keyword that drove the bracket-split
   # (`alias`, `@name`, etc.) when classifying a sub-block.
   defp parent_context_for(parent_tokens, child) do
-    case List.first(child.tokens) do
-      nil ->
-        []
-
-      child_first ->
-        nl_kind = NewlineToken.kind()
-        ws_kind = WhitespaceToken.kind()
-
-        parent_tokens
-        |> Enum.take_while(&(&1 != child_first))
-        |> Enum.reverse()
-        |> Enum.take_while(&(&1.kind != nl_kind))
-        |> Enum.reverse()
-        |> Enum.drop_while(&(&1.kind == ws_kind))
-    end
+    List.first(child.tokens) |> handle_parent_context_for_first(parent_tokens)
   end
 
   defp compute_potentials_timed(
@@ -492,4 +478,22 @@ defmodule CodeQA.BlockImpactAnalyzer do
   end
 
   defp now, do: System.monotonic_time(:microsecond)
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_parent_context_for_first(nil, _parent_tokens) do
+    []
+  end
+
+  defp handle_parent_context_for_first(child_first, parent_tokens) do
+    nl_kind = NewlineToken.kind()
+    ws_kind = WhitespaceToken.kind()
+
+    parent_tokens
+    |> Enum.take_while(&(&1 != child_first))
+    |> Enum.reverse()
+    |> Enum.take_while(&(&1.kind != nl_kind))
+    |> Enum.reverse()
+    |> Enum.drop_while(&(&1.kind == ws_kind))
+  end
 end

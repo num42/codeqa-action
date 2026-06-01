@@ -96,14 +96,7 @@ defmodule CodeQA.Metrics.File.FunctionMetrics do
   end
 
   defp count_params(line) do
-    case Regex.run(~r/\(([^)]*)\)/, line) do
-      [_, args] ->
-        args = String.trim(args)
-        if args == "", do: 0, else: count_top_level_commas(args) + 1
-
-      _ ->
-        0
-    end
+    Regex.run(~r/\(([^)]*)\)/, line) |> handle_count_params_run()
   end
 
   defp count_top_level_commas(args) do
@@ -118,5 +111,16 @@ defmodule CodeQA.Metrics.File.FunctionMetrics do
       end
     end)
     |> elem(1)
+  end
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_count_params_run([_, args]) do
+    args = String.trim(args)
+    if args == "", do: 0, else: count_top_level_commas(args) + 1
+  end
+
+  defp handle_count_params_run(_) do
+    0
   end
 end
