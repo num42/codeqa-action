@@ -21,25 +21,25 @@ defmodule CodeQA.AST.Signals.Structural.KeywordSignal do
       keywords = Language.declaration_keywords(lang_mod)
 
       %{
-        idx: 0,
-        bracket_depth: 0,
-        indent: 0,
         at_line_start: true,
-        seen_content: false,
-        keywords: keywords
+        bracket_depth: 0,
+        idx: 0,
+        indent: 0,
+        keywords: keywords,
+        seen_content: false
       }
     end
 
     def emit(_, {_, %NewlineToken{}, _}, %{idx: idx} = state),
       do: {MapSet.new(), %{state | idx: idx + 1, indent: 0, at_line_start: true}}
 
-    def emit(_, {_, %WhitespaceToken{}, _}, %{idx: idx, indent: i, at_line_start: true} = state),
+    def emit(_, {_, %WhitespaceToken{}, _}, %{at_line_start: true, idx: idx, indent: i} = state),
       do: {MapSet.new(), %{state | idx: idx + 1, indent: i + 1, at_line_start: true}}
 
     def emit(_, {_, %WhitespaceToken{}, _}, %{idx: idx} = state),
       do: {MapSet.new(), %{state | idx: idx + 1}}
 
-    def emit(_, {_, %{kind: k}, _}, %{idx: idx, bracket_depth: bd} = state)
+    def emit(_, {_, %{kind: k}, _}, %{bracket_depth: bd, idx: idx} = state)
         when k in ["(", "[", "{"],
         do:
           {MapSet.new(),
@@ -51,7 +51,7 @@ defmodule CodeQA.AST.Signals.Structural.KeywordSignal do
                at_line_start: false
            }}
 
-    def emit(_, {_, %{kind: k}, _}, %{idx: idx, bracket_depth: bd} = state)
+    def emit(_, {_, %{kind: k}, _}, %{bracket_depth: bd, idx: idx} = state)
         when k in [")", "]", "}"],
         do:
           {MapSet.new(),
@@ -74,7 +74,7 @@ defmodule CodeQA.AST.Signals.Structural.KeywordSignal do
       {emissions, base}
     end
 
-    defp keyword_split?(%{seen_content: true, bracket_depth: 0, indent: 0, keywords: kw}, %{
+    defp keyword_split?(%{bracket_depth: 0, indent: 0, keywords: kw, seen_content: true}, %{
            content: c
          }),
          do: MapSet.member?(kw, c)

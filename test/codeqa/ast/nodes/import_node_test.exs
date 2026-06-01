@@ -9,13 +9,13 @@ defmodule CodeQA.AST.Nodes.ImportNodeTest do
   describe "ImportNode" do
     test "implements NodeProtocol" do
       node = %ImportNode{
-        tokens: [:i],
-        line_count: 1,
         children: [],
-        start_line: 3,
         end_line: 3,
         label: nil,
-        target: "MyApp.Repo"
+        line_count: 1,
+        start_line: 3,
+        target: "MyApp.Repo",
+        tokens: [:i]
       }
 
       assert NodeProtocol.tokens(node) == [:i]
@@ -23,7 +23,7 @@ defmodule CodeQA.AST.Nodes.ImportNodeTest do
     end
 
     test "target defaults to nil" do
-      node = %ImportNode{tokens: [], line_count: 0, children: []}
+      node = %ImportNode{children: [], line_count: 0, tokens: []}
       assert node.target == nil
     end
   end
@@ -31,14 +31,14 @@ defmodule CodeQA.AST.Nodes.ImportNodeTest do
   describe "AttributeNode" do
     test "implements NodeProtocol" do
       node = %AttributeNode{
-        tokens: [:a],
-        line_count: 1,
         children: [],
-        start_line: 2,
         end_line: 2,
+        kind: :annotation,
         label: nil,
+        line_count: 1,
         name: "moduledoc",
-        kind: :annotation
+        start_line: 2,
+        tokens: [:a]
       }
 
       assert NodeProtocol.tokens(node) == [:a]
@@ -47,7 +47,7 @@ defmodule CodeQA.AST.Nodes.ImportNodeTest do
     end
 
     test "supports :typespec kind" do
-      node = %AttributeNode{tokens: [], line_count: 0, children: [], kind: :typespec}
+      node = %AttributeNode{children: [], kind: :typespec, line_count: 0, tokens: []}
       assert node.kind == :typespec
     end
   end
@@ -55,13 +55,13 @@ defmodule CodeQA.AST.Nodes.ImportNodeTest do
   describe "TestNode" do
     test "implements NodeProtocol" do
       node = %TestNode{
-        tokens: [:t],
-        line_count: 4,
         children: [],
-        start_line: 10,
+        description: "returns the sum",
         end_line: 13,
         label: nil,
-        description: "returns the sum"
+        line_count: 4,
+        start_line: 10,
+        tokens: [:t]
       }
 
       assert NodeProtocol.tokens(node) == [:t]
@@ -69,7 +69,7 @@ defmodule CodeQA.AST.Nodes.ImportNodeTest do
     end
 
     test "description defaults to nil" do
-      node = %TestNode{tokens: [], line_count: 0, children: []}
+      node = %TestNode{children: [], line_count: 0, tokens: []}
       assert node.description == nil
     end
   end

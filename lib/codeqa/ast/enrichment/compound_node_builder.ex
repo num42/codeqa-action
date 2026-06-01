@@ -65,7 +65,7 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilder do
 
   defp empty_compound, do: %CompoundNode{}
 
-  defp empty_compound?(%CompoundNode{docs: [], typespecs: [], code: []}), do: true
+  defp empty_compound?(%CompoundNode{code: [], docs: [], typespecs: []}), do: true
   defp empty_compound?(_), do: false
 
   defp add_block(%CompoundNode{} = compound, block) when is_struct(block, DocNode) do

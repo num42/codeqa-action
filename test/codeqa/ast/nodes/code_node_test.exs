@@ -10,12 +10,12 @@ defmodule CodeQA.AST.Nodes.CodeNodeTest do
   describe "CodeNode" do
     setup do
       node = %CodeNode{
-        tokens: @tokens,
-        line_count: 2,
         children: [],
-        start_line: 1,
         end_line: 2,
-        label: "f.ex:1"
+        label: "f.ex:1",
+        line_count: 2,
+        start_line: 1,
+        tokens: @tokens
       }
 
       %{node: node}
@@ -31,7 +31,7 @@ defmodule CodeQA.AST.Nodes.CodeNodeTest do
     end
 
     test "all common fields default to nil except children" do
-      node = %CodeNode{tokens: [], line_count: 0, children: []}
+      node = %CodeNode{children: [], line_count: 0, tokens: []}
       assert NodeProtocol.start_line(node) == nil
       assert NodeProtocol.end_line(node) == nil
       assert NodeProtocol.label(node) == nil
@@ -41,12 +41,12 @@ defmodule CodeQA.AST.Nodes.CodeNodeTest do
   describe "DocNode" do
     test "implements NodeProtocol" do
       node = %DocNode{
-        tokens: @tokens,
-        line_count: 1,
         children: [],
-        start_line: 5,
         end_line: 5,
-        label: nil
+        label: nil,
+        line_count: 1,
+        start_line: 5,
+        tokens: @tokens
       }
 
       assert NodeProtocol.tokens(node) == @tokens

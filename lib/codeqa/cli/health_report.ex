@@ -235,17 +235,17 @@ defmodule CodeQA.CLI.HealthReport do
     {:ok, pid} =
       Agent.start_link(fn ->
         %{
-          nodes: [],
-          files: [],
           codebase_cosines_us: 0,
-          stages: %{},
-          file_metrics: %{},
           codebase_metrics: %{},
-          phases: %{},
+          cosine_breakdown: %{},
+          cosine_breakdown_calls: 0,
+          file_metrics: %{},
+          files: [],
           loo_breakdown: %{},
           loo_breakdown_calls: 0,
-          cosine_breakdown: %{},
-          cosine_breakdown_calls: 0
+          nodes: [],
+          phases: %{},
+          stages: %{}
         }
       end)
 
@@ -434,11 +434,11 @@ defmodule CodeQA.CLI.HealthReport do
         total_node_us = node_durations |> Enum.sum()
 
         %{
-          path: path,
           bytes: Map.get(fm, :bytes, 0),
-          tokens: Map.get(fm, :token_count, 0),
-          nodes: Map.get(fm, :node_count, 0),
           file_us: fm.duration,
+          nodes: Map.get(fm, :node_count, 0),
+          path: path,
+          tokens: Map.get(fm, :token_count, 0),
           total_node_us: total_node_us
         }
       end)

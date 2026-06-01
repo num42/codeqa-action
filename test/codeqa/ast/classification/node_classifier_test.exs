@@ -39,9 +39,9 @@ defmodule CodeQA.AST.NodeClassifierTest do
 
   defp node_with_tokens(tokens),
     do: %Node{
-      tokens: tokens,
+      children: [],
       line_count: 1,
-      children: []
+      tokens: tokens
     }
 
   describe "classify/1 — function detection" do
@@ -150,8 +150,8 @@ defmodule CodeQA.AST.NodeClassifierTest do
     end
 
     test "direct <DOC> token in node → DocNode" do
-      doc_token = %Token{kind: "<DOC>", content: ~s("""), line: 1, col: 0}
-      nl = %Token{kind: "<NL>", content: "\n", line: 2, col: 0}
+      doc_token = %Token{col: 0, content: ~s("""), kind: "<DOC>", line: 1}
+      nl = %Token{col: 0, content: "\n", kind: "<NL>", line: 2}
       node = node_with_tokens([doc_token, nl])
       assert %DocNode{} = NodeClassifier.classify(node, Unknown)
     end
@@ -201,7 +201,7 @@ defmodule CodeQA.AST.NodeClassifierTest do
     end
 
     test "empty-like node with only whitespace tokens → CodeNode" do
-      nl = %Token{kind: "<NL>", content: "\n", line: 1, col: 0}
+      nl = %Token{col: 0, content: "\n", kind: "<NL>", line: 1}
       node = node_with_tokens([nl])
 
       assert %CodeNode{} =

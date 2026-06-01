@@ -1,7 +1,7 @@
 defmodule CodeQA.Engine.Registry do
   @moduledoc "Metric registration and execution."
 
-  defstruct file_metrics: [], codebase_metrics: []
+  defstruct codebase_metrics: [], file_metrics: []
 
   def new, do: %__MODULE__{}
 

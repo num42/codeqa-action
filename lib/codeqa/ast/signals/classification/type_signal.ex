@@ -20,7 +20,7 @@ defmodule CodeQA.AST.Signals.Classification.TypeSignal do
     def group(_), do: :classification
 
     def init(_, _lang_mod),
-      do: %{at_line_start: true, indent: 0, saw_at: false, is_first: true}
+      do: %{at_line_start: true, indent: 0, is_first: true, saw_at: false}
 
     def emit(_, {_prev, token, _next}, state) do
       case token.kind do

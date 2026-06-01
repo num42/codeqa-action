@@ -21,10 +21,10 @@ defmodule CodeQA.Metrics.File.Zipf do
 
   @spec analyze(map()) :: map()
   @impl true
-  def analyze(%{tokens: [], token_counts: _token_counts}),
+  def analyze(%{token_counts: _token_counts, tokens: []}),
     do: %{"exponent" => 0.0, "r_squared" => 0.0, "vocab_size" => 0, "total_tokens" => 0}
 
-  def analyze(%{tokens: tokens, token_counts: token_counts}) do
+  def analyze(%{token_counts: token_counts, tokens: tokens}) do
     frequencies = token_counts |> Map.values() |> Enum.sort(:desc)
     vocab_size = length(frequencies)
     total_tokens = length(tokens)

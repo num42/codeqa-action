@@ -20,10 +20,10 @@ defmodule CodeQA.AST.Signals.Classification.ConfigSignal do
     def group(_), do: :classification
 
     def init(_, _lang_mod),
-      do: %{at_line_start: true, indent: 0, bracket_depth: 0, is_first: true}
+      do: %{at_line_start: true, bracket_depth: 0, indent: 0, is_first: true}
 
     def emit(_, {_prev, token, _next}, state) do
-      %{at_line_start: als, indent: ind, bracket_depth: bd, is_first: first} = state
+      %{at_line_start: als, bracket_depth: bd, indent: ind, is_first: first} = state
 
       case token.kind do
         @nl ->

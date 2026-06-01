@@ -63,13 +63,13 @@ defmodule CodeQA.AST.Classification.NodeClassifier do
   ]
 
   @type_modules %{
-    doc: DocNode,
     attribute: AttributeNode,
+    code: CodeNode,
+    doc: DocNode,
     function: FunctionNode,
-    module: ModuleNode,
     import: ImportNode,
-    test: TestNode,
-    code: CodeNode
+    module: ModuleNode,
+    test: TestNode
   }
 
   @doc """

@@ -101,12 +101,12 @@ defmodule CodeQA.HealthReport.Formatter.Github do
           round(Enum.sum(cosine |> Enum.map(&(&1.score * &1.impact))) / max(total_impact, 1))
 
         combined = %{
-          type: :cosine_group,
+          categories: cosine,
+          grade: grade_letter_from_score(combined_score),
           key: "combined_metrics",
           name: "Combined Metrics",
           score: combined_score,
-          grade: grade_letter_from_score(combined_score),
-          categories: cosine
+          type: :cosine_group
         }
 
         threshold ++ [combined]
@@ -588,7 +588,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
   defp format_code_block(%{source: nil}), do: "_Source code not available_"
 
-  defp format_code_block(%{source: source, language: lang, start_line: start_line}) do
+  defp format_code_block(%{language: lang, source: source, start_line: start_line}) do
     lang_hint = code_fence_lang(lang)
     # Add line number comments for context
     lines = String.split(source, "\n")

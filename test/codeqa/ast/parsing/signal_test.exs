@@ -42,14 +42,14 @@ defmodule CodeQA.AST.SignalTest do
   end
 
   test "emit returns {MapSet of {name, value} pairs, new_state}" do
-    token = %CodeQA.AST.Lexing.Token{kind: "<ID>", content: "foo", line: 1, col: 0}
+    token = %CodeQA.AST.Lexing.Token{col: 0, content: "foo", kind: "<ID>", line: 1}
     {emissions, new_state} = Signal.emit(%TestSignal{}, token, %{count: 0})
     assert MapSet.member?(emissions, {:tick, 0})
     assert new_state == %{count: 1}
   end
 
   test "emit may return empty MapSet for no emission" do
-    token = %CodeQA.AST.Lexing.Token{kind: "<NL>", content: "\n", line: 1, col: 0}
+    token = %CodeQA.AST.Lexing.Token{col: 0, content: "\n", kind: "<NL>", line: 1}
     {emissions, _state} = Signal.emit(%SilentSignal{}, token, %{})
     assert MapSet.size(emissions) == 0
   end

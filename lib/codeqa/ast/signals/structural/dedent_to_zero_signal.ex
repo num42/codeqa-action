@@ -19,21 +19,21 @@ defmodule CodeQA.AST.Signals.Structural.DedentToZeroSignal do
 
     def init(_, _lang_mod),
       do: %{
-        idx: 0,
         at_line_start: true,
-        seen_content: false,
-        current_line_has_indent: false,
         current_line_has_content: false,
-        prev_line_had_indent: false
+        current_line_has_indent: false,
+        idx: 0,
+        prev_line_had_indent: false,
+        seen_content: false
       }
 
     def emit(
           _,
           {_, %NewlineToken{}, _},
           %{
-            idx: idx,
             current_line_has_content: clhc,
             current_line_has_indent: clhi,
+            idx: idx,
             prev_line_had_indent: plhi
           } = state
         ) do
@@ -50,7 +50,7 @@ defmodule CodeQA.AST.Signals.Structural.DedentToZeroSignal do
        }}
     end
 
-    def emit(_, {_, %WhitespaceToken{}, _}, %{idx: idx, at_line_start: true} = state),
+    def emit(_, {_, %WhitespaceToken{}, _}, %{at_line_start: true, idx: idx} = state),
       do:
         {MapSet.new(),
          %{state | idx: idx + 1, current_line_has_indent: true, at_line_start: true}}

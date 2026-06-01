@@ -117,11 +117,11 @@ defmodule CodeQA.HealthReport.Grader do
     score = weighted_category_score(scored)
 
     %{
-      key: category.key,
-      name: category.name,
-      score: score,
       grade: grade_letter(score, scale),
-      metric_scores: scored
+      key: category.key,
+      metric_scores: scored,
+      name: category.name,
+      score: score
     }
   end
 
@@ -130,12 +130,12 @@ defmodule CodeQA.HealthReport.Grader do
 
     if value do
       %{
-        name: metric_def.name,
-        source: metric_def.source,
-        weight: metric_def.weight,
         good: metric_def.good,
+        name: metric_def.name,
+        score: score_metric(metric_def, value),
+        source: metric_def.source,
         value: value,
-        score: score_metric(metric_def, value)
+        weight: metric_def.weight
       }
     end
   end
@@ -268,8 +268,8 @@ defmodule CodeQA.HealthReport.Grader do
     %{
       behavior: b.behavior,
       cosine: b.cosine,
-      score: cosine_score,
       grade: grade_letter(cosine_score, scale),
+      score: cosine_score,
       worst_offenders: Map.get(worst_files, "#{category}.#{b.behavior}", [])
     }
   end
@@ -281,12 +281,12 @@ defmodule CodeQA.HealthReport.Grader do
 
   defp build_cosine_category(category, category_score, behavior_entries, scale),
     do: %{
-      type: :cosine,
+      behaviors: behavior_entries,
+      grade: grade_letter(category_score, scale),
       key: category,
       name: humanize_category(category),
       score: category_score,
-      grade: grade_letter(category_score, scale),
-      behaviors: behavior_entries
+      type: :cosine
     }
 
   defp humanize_category(slug), do: humanize_category_shared(slug)
@@ -311,12 +311,12 @@ defmodule CodeQA.HealthReport.Grader do
       graded = grade_category(category, metrics, scale)
 
       %{
+        bytes: file_data["bytes"],
+        grade: graded.grade,
+        lines: file_data["lines"],
+        metric_scores: graded.metric_scores,
         path: path,
         score: graded.score,
-        grade: graded.grade,
-        metric_scores: graded.metric_scores,
-        lines: file_data["lines"],
-        bytes: file_data["bytes"],
         top_nodes: top_3_nodes(Map.get(file_data, "nodes"))
       }
     end)

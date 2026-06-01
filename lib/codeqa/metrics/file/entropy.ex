@@ -41,10 +41,10 @@ defmodule CodeQA.Metrics.File.Entropy do
     compute_entropy(counts, total, "char")
   end
 
-  defp token_entropy(%{tokens: [], token_counts: _token_counts}),
+  defp token_entropy(%{token_counts: _token_counts, tokens: []}),
     do: zero_entropy_map("token") |> Map.merge(%{"vocab_size" => 0, "total_tokens" => 0})
 
-  defp token_entropy(%{tokens: tokens, token_counts: token_counts}) do
+  defp token_entropy(%{token_counts: token_counts, tokens: tokens}) do
     total = length(tokens)
     vocab_size = map_size(token_counts)
 

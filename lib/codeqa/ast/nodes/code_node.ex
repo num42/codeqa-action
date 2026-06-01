@@ -4,15 +4,15 @@ defmodule CodeQA.AST.Nodes.CodeNode do
   alias CodeQA.AST.Enrichment.Node
   import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
 
-  defstruct [:tokens, :line_count, :children, :start_line, :end_line, :label]
+  defstruct [:children, :end_line, :label, :line_count, :start_line, :tokens]
 
   @type t :: %__MODULE__{
-          tokens: [term()],
-          line_count: non_neg_integer(),
           children: [term()],
-          start_line: non_neg_integer() | nil,
           end_line: non_neg_integer() | nil,
-          label: term() | nil
+          label: term() | nil,
+          line_count: non_neg_integer(),
+          start_line: non_neg_integer() | nil,
+          tokens: [term()]
         }
 
   @doc "Build a CodeNode from a raw %Node{}, copying all base fields."

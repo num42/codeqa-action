@@ -29,7 +29,7 @@ defmodule CodeQA.AST.Enrichment.NodeAnalyzer do
     tokens
     |> Enum.chunk_every(2, 1, :discard)
     |> Enum.flat_map(fn
-      [%Token{kind: "<ID>", content: name}, %Token{kind: "="}] ->
+      [%Token{content: name, kind: "<ID>"}, %Token{kind: "="}] ->
         [String.downcase(name)]
 
       _ ->
@@ -50,7 +50,7 @@ defmodule CodeQA.AST.Enrichment.NodeAnalyzer do
       %NewlineToken{}, {_, acc} ->
         {[], acc}
 
-      %Token{kind: "<ID>", content: name}, {lhs_ids, acc} ->
+      %Token{content: name, kind: "<ID>"}, {lhs_ids, acc} ->
         {[name | lhs_ids], acc}
 
       _, {lhs_ids, acc} ->

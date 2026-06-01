@@ -75,15 +75,15 @@ defmodule CodeQA.HealthReportTest do
         )
 
       assert %{
-               base_score: base_score,
-               head_score: head_score,
-               score_delta: delta,
                base_grade: _,
-               head_grade: _,
+               base_score: base_score,
                blocks_flagged: flagged,
-               files_changed: 1,
                files_added: 0,
-               files_modified: 1
+               files_changed: 1,
+               files_modified: 1,
+               head_grade: _,
+               head_score: head_score,
+               score_delta: delta
              } = report.pr_summary
 
       assert is_integer(base_score)
@@ -101,7 +101,7 @@ defmodule CodeQA.HealthReportTest do
 
       report = HealthReport.generate(head_results, base_results: base_results)
 
-      assert %{base: %{aggregate: _}, head: %{aggregate: _}, delta: %{aggregate: _}} =
+      assert %{base: %{aggregate: _}, delta: %{aggregate: _}, head: %{aggregate: _}} =
                report.codebase_delta
     end
 

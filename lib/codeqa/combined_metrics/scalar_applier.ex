@@ -82,7 +82,7 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
       behaviors_with_languages =
         updated |> Enum.count(fn {_b, groups} -> Map.has_key?(groups, "_languages") end)
 
-      %{category: category, behaviors_with_languages: behaviors_with_languages}
+      %{behaviors_with_languages: behaviors_with_languages, category: category}
     end)
   end
 
@@ -93,7 +93,7 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   defp apply_to_category(existing, category, report) do
     existing
     |> Enum.filter(fn {_k, v} -> is_map(v) end)
-    |> Enum.reduce({%{}, %{updated: 0, deadzoned: 0, skipped: 0}}, fn
+    |> Enum.reduce({%{}, %{deadzoned: 0, skipped: 0, updated: 0}}, fn
       {behavior, current_groups}, {acc_yaml, stats} ->
         report_key = "#{category}.#{behavior}"
         doc = read_behavior_doc(category, behavior)

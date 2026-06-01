@@ -58,7 +58,7 @@ defmodule CodeQA.Diagnostics do
 
     case format do
       :json ->
-        Jason.encode!(%{issues: issues, categories: categories}, pretty: true)
+        Jason.encode!(%{categories: categories, issues: issues}, pretty: true)
 
       _ ->
         "## Diagnose: aggregate\n\n" <>
@@ -85,7 +85,7 @@ defmodule CodeQA.Diagnostics do
         files_json =
           file_diagnoses
           |> Enum.map(fn {file_path, diagnoses} ->
-            %{file: file_path, behaviors: diagnoses |> Enum.map(&diagnosis_to_map/1)}
+            %{behaviors: diagnoses |> Enum.map(&diagnosis_to_map/1), file: file_path}
           end)
 
         Jason.encode!(%{files: files_json}, pretty: true)
@@ -110,7 +110,7 @@ defmodule CodeQA.Diagnostics do
 
   defp diagnoses_to_rows(file_path, diagnoses) do
     diagnoses
-    |> Enum.map(fn %{category: cat, behavior: beh, cosine: cosine, score: score} ->
+    |> Enum.map(fn %{behavior: beh, category: cat, cosine: cosine, score: score} ->
       {file_path, "#{cat}.#{beh}", cosine, score}
     end)
   end
@@ -120,7 +120,7 @@ defmodule CodeQA.Diagnostics do
   defp issues_table(issues) do
     rows =
       issues
-      |> Enum.map(fn %{category: cat, behavior: beh, cosine: cosine, score: score} ->
+      |> Enum.map(fn %{behavior: beh, category: cat, cosine: cosine, score: score} ->
         cosine_str = :erlang.float_to_binary(cosine / 1.0, decimals: 2)
         score_str = :erlang.float_to_binary(score / 1.0, decimals: 2)
         "| #{cat}.#{beh} | #{cosine_str} | #{score_str} |"
@@ -132,7 +132,7 @@ defmodule CodeQA.Diagnostics do
 
   defp categories_text(categories) do
     categories
-    |> Enum.map_join("\n", fn %{name: name, behaviors: behaviors} ->
+    |> Enum.map_join("\n", fn %{behaviors: behaviors, name: name} ->
       rows =
         behaviors
         |> Enum.map(fn %{behavior: beh, score: score} ->

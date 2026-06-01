@@ -8,8 +8,8 @@ defmodule CodeQA.AST.Signals.Classification.CommentDensitySignalTest do
   defp run(tokens, lang_mod \\ Unknown),
     do: SignalStream.run(tokens, [%CommentDensitySignal{}], lang_mod) |> List.flatten()
 
-  defp token(content, kind \\ "<ID>"), do: %{kind: kind, content: content, line: 1, col: 0}
-  defp nl, do: %{kind: "<NL>", content: "\n", line: 1, col: 0}
+  defp token(content, kind \\ "<ID>"), do: %{col: 0, content: content, kind: kind, line: 1}
+  defp nl, do: %{col: 0, content: "\n", kind: "<NL>", line: 1}
   defp on_line(tokens, line), do: tokens |> Enum.map(&%{&1 | line: line})
 
   test "votes comment when >60% of lines start with #" do

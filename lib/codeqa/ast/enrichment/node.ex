@@ -34,12 +34,12 @@ defmodule CodeQA.AST.Enrichment.Node do
   ]
 
   @type t :: %__MODULE__{
-          tokens: [CodeQA.AST.Lexing.Token.t()],
-          line_count: non_neg_integer(),
           children: [term()],
-          label: term() | nil,
-          start_line: non_neg_integer() | nil,
           end_line: non_neg_integer() | nil,
+          label: term() | nil,
+          line_count: non_neg_integer(),
+          start_line: non_neg_integer() | nil,
+          tokens: [CodeQA.AST.Lexing.Token.t()],
           type: :code | :doc | :typespec
         }
 

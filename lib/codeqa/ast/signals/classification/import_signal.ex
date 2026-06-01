@@ -29,8 +29,8 @@ defmodule CodeQA.AST.Signals.Classification.ImportSignal do
         at_line_start: true,
         indent: 0,
         is_first: true,
-        voted: false,
-        keywords: Language.import_keywords(lang_mod)
+        keywords: Language.import_keywords(lang_mod),
+        voted: false
       }
 
     def emit(_, _, %{voted: true} = state), do: {MapSet.new(), state}

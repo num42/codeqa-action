@@ -30,8 +30,8 @@ defmodule CodeQA.AST.Signals.Classification.TestSignal do
         at_line_start: true,
         indent: 0,
         is_first: true,
-        voted: false,
-        keywords: Language.test_keywords(lang_mod)
+        keywords: Language.test_keywords(lang_mod),
+        voted: false
       }
 
     def emit(_, _, %{voted: true} = state), do: {MapSet.new(), state}

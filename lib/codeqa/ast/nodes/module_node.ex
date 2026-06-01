@@ -4,17 +4,17 @@ defmodule CodeQA.AST.Nodes.ModuleNode do
   alias CodeQA.AST.Enrichment.Node
   import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
 
-  defstruct [:tokens, :line_count, :children, :start_line, :end_line, :label, :name, :kind]
+  defstruct [:children, :end_line, :kind, :label, :line_count, :name, :start_line, :tokens]
 
   @type t :: %__MODULE__{
-          tokens: [term()],
-          line_count: non_neg_integer(),
           children: [term()],
-          start_line: non_neg_integer() | nil,
           end_line: non_neg_integer() | nil,
+          kind: :class | :module | :namespace | :struct | nil,
           label: term() | nil,
+          line_count: non_neg_integer(),
           name: String.t() | nil,
-          kind: :class | :module | :namespace | :struct | nil
+          start_line: non_neg_integer() | nil,
+          tokens: [term()]
         }
 
   @doc "Build a ModuleNode from a raw %Node{}, copying all base fields. Type-specific fields default to nil."

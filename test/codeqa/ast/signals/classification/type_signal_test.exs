@@ -5,7 +5,7 @@ defmodule CodeQA.AST.Signals.Classification.TypeSignalTest do
 
   defp run(tokens), do: SignalStream.run(tokens, [%TypeSignal{}], []) |> List.flatten()
 
-  defp token(content, kind \\ "<ID>"), do: %{kind: kind, content: content, line: 1, col: 0}
+  defp token(content, kind \\ "<ID>"), do: %{col: 0, content: content, kind: kind, line: 1}
 
   test "emits type_vote weight 3 for @type at indent 0" do
     emissions = run([token("@", "@"), token("type"), token("t"), token("::"), token("integer")])

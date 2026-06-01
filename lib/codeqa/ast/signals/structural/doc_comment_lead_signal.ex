@@ -18,12 +18,12 @@ defmodule CodeQA.AST.Signals.Structural.DocCommentLeadSignal do
     def source(_), do: CodeQA.AST.Signals.Structural.DocCommentLeadSignal
     def group(_), do: :split
 
-    def init(_, _lang_mod), do: %{idx: 0, at_line_start: true, seen_content: false}
+    def init(_, _lang_mod), do: %{at_line_start: true, idx: 0, seen_content: false}
 
     def emit(_, {_, %NewlineToken{}, _}, %{idx: idx} = state),
       do: {MapSet.new(), %{state | idx: idx + 1, at_line_start: true}}
 
-    def emit(_, {_, %WhitespaceToken{}, _}, %{idx: idx, at_line_start: true} = state),
+    def emit(_, {_, %WhitespaceToken{}, _}, %{at_line_start: true, idx: idx} = state),
       do: {MapSet.new(), %{state | idx: idx + 1, at_line_start: true}}
 
     def emit(_, {_, %WhitespaceToken{}, _}, %{idx: idx} = state),
@@ -32,7 +32,7 @@ defmodule CodeQA.AST.Signals.Structural.DocCommentLeadSignal do
     def emit(
           _,
           {_, %{kind: "//"}, next},
-          %{idx: idx, at_line_start: true, seen_content: true} = state
+          %{at_line_start: true, idx: idx, seen_content: true} = state
         ) do
       base = %{state | idx: idx + 1, at_line_start: false}
 
@@ -47,7 +47,7 @@ defmodule CodeQA.AST.Signals.Structural.DocCommentLeadSignal do
     def emit(
           _,
           {_, %{kind: "/"}, next},
-          %{idx: idx, at_line_start: true, seen_content: true} = state
+          %{at_line_start: true, idx: idx, seen_content: true} = state
         ) do
       base = %{state | idx: idx + 1, at_line_start: false}
 

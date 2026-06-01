@@ -116,7 +116,7 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeAssertionsLanguagesTest do
       |> NodeTypeDetector.detect_types(Unknown)
       |> CompoundNodeBuilder.build()
 
-  defp all_tokens(%CompoundNode{docs: docs, typespecs: typespecs, code: code}),
+  defp all_tokens(%CompoundNode{code: code, docs: docs, typespecs: typespecs}),
     do:
       (docs ++ typespecs ++ code)
       |> Enum.flat_map(&node_tokens/1)

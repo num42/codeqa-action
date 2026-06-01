@@ -97,11 +97,11 @@ defmodule CodeQA.AST.Parsing.Parser do
     line_count = if start_line && end_line, do: end_line - start_line + 1, else: 1
 
     block = %Node{
-      tokens: tokens,
-      line_count: line_count,
       children: [],
+      end_line: end_line,
+      line_count: line_count,
       start_line: start_line,
-      end_line: end_line
+      tokens: tokens
     }
 
     find_sub_candidates(tokens, lang_mod) |> handle_find_sub_candidates(block, lang_mod)

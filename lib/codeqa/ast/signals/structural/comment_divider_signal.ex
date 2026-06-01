@@ -26,12 +26,12 @@ defmodule CodeQA.AST.Signals.Structural.CommentDividerSignal do
       divider_indicators = Language.divider_indicators(lang_mod)
 
       %{
-        idx: 0,
         at_line_start: true,
-        seen_content: false,
-        indent: 0,
         comment_prefixes: comment_prefixes,
-        divider_indicators: divider_indicators
+        divider_indicators: divider_indicators,
+        idx: 0,
+        indent: 0,
+        seen_content: false
       }
     end
 
@@ -41,7 +41,7 @@ defmodule CodeQA.AST.Signals.Structural.CommentDividerSignal do
     def emit(
           _,
           {_, %WhitespaceToken{}, _},
-          %{idx: idx, at_line_start: true, indent: indent} = state
+          %{at_line_start: true, idx: idx, indent: indent} = state
         ),
         do: {MapSet.new(), %{state | idx: idx + 1, at_line_start: true, indent: indent + 1}}
 
@@ -61,11 +61,11 @@ defmodule CodeQA.AST.Signals.Structural.CommentDividerSignal do
 
     defp divider_split?(
            %{
-             seen_content: true,
              at_line_start: true,
-             indent: 0,
              comment_prefixes: cp,
-             divider_indicators: di
+             divider_indicators: di,
+             indent: 0,
+             seen_content: true
            },
            %{kind: k},
            next

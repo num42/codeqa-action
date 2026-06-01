@@ -22,11 +22,11 @@ defmodule CodeQA.AST.Signals.Classification.CommentDensitySignal do
 
     def init(_, lang_mod) do
       prefixes = MapSet.new(lang_mod.comment_prefixes())
-      %{prefixes: prefixes, at_line_start: true, comment_lines: 0, total_lines: 0}
+      %{at_line_start: true, comment_lines: 0, prefixes: prefixes, total_lines: 0}
     end
 
     def emit(_, {_prev, token, next}, state) do
-      %{prefixes: prefixes, at_line_start: als} = state
+      %{at_line_start: als, prefixes: prefixes} = state
 
       state =
         case token.kind do

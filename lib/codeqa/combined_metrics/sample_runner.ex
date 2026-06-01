@@ -142,7 +142,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
         end)
         |> Enum.sort_by(& &1.score)
 
-      %{category: category, name: humanize(category), behaviors: behaviors}
+      %{behaviors: behaviors, category: category, name: humanize(category)}
     end)
   end
 
@@ -294,12 +294,12 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     ratio = if bad_score > 0, do: good_score / bad_score, else: 0.0
 
     base = %{
-      category: category,
-      behavior: behavior,
       bad_score: bad_score,
+      behavior: behavior,
+      category: category,
+      direction_ok: good_score >= bad_score,
       good_score: good_score,
-      ratio: Float.round(ratio, 2),
-      direction_ok: good_score >= bad_score
+      ratio: Float.round(ratio, 2)
     }
 
     if opts[:verbose] do
@@ -315,7 +315,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
       bad_val = Scorer.get(bad_agg, group, key)
       good_val = Scorer.get(good_agg, group, key)
       ratio = if bad_val > 0, do: Float.round(good_val / bad_val, 2), else: 0.0
-      %{group: group, key: key, scalar: scalar, bad: bad_val, good: good_val, ratio: ratio}
+      %{bad: bad_val, good: good_val, group: group, key: key, ratio: ratio, scalar: scalar}
     end)
     |> Enum.sort_by(&abs(&1.ratio - 1.0), :desc)
   end

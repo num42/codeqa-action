@@ -48,7 +48,7 @@ defmodule CodeQA.Metrics.File.Branching do
 
   @spec analyze(CodeQA.Engine.FileContext.t()) :: map()
   @impl true
-  def analyze(%{lines: lines, tokens: tokens, content: content}) do
+  def analyze(%{content: content, lines: lines, tokens: tokens}) do
     non_blank_count = lines |> Enum.count(&(String.trim(&1) != ""))
     branch_count = tokens |> Enum.count(&MapSet.member?(@branching_keywords, &1.content))
 

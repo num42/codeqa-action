@@ -5,26 +5,26 @@ defmodule CodeQA.AST.Nodes.FunctionNode do
   import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
 
   defstruct [
-    :tokens,
-    :line_count,
+    :arity,
     :children,
-    :start_line,
     :end_line,
     :label,
+    :line_count,
     :name,
-    :arity,
+    :start_line,
+    :tokens,
     :visibility
   ]
 
   @type t :: %__MODULE__{
-          tokens: [term()],
-          line_count: non_neg_integer(),
+          arity: non_neg_integer() | nil,
           children: [term()],
-          start_line: non_neg_integer() | nil,
           end_line: non_neg_integer() | nil,
           label: term() | nil,
+          line_count: non_neg_integer(),
           name: String.t() | nil,
-          arity: non_neg_integer() | nil,
+          start_line: non_neg_integer() | nil,
+          tokens: [term()],
           visibility: :public | :private | nil
         }
 

@@ -61,13 +61,13 @@ defmodule CodeQA.CombinedMetrics.CosineVector do
       |> Enum.sort_by(fn {_, c} -> c end)
       |> Enum.take(5)
       |> Enum.map(fn {metric, contribution} ->
-        %{metric: to_string(metric), contribution: Float.round(contribution, 4)}
+        %{contribution: Float.round(contribution, 4), metric: to_string(metric)}
       end)
 
     [
       %{
-        category: category,
         behavior: behavior,
+        category: category,
         cosine: Float.round(cos_sim, 4),
         score: Float.round(calibrated, 4),
         top_metrics: top_metrics

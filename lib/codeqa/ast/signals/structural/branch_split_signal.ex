@@ -23,7 +23,7 @@ defmodule CodeQA.AST.Signals.Structural.BranchSplitSignal do
 
     def init(_, lang_mod) do
       keywords = Language.branch_keywords(lang_mod)
-      %{idx: 0, bracket_depth: 0, seen_content: false, keywords: keywords}
+      %{bracket_depth: 0, idx: 0, keywords: keywords, seen_content: false}
     end
 
     def emit(_, {_, %NewlineToken{}, _}, %{idx: idx} = state),
@@ -32,11 +32,11 @@ defmodule CodeQA.AST.Signals.Structural.BranchSplitSignal do
     def emit(_, {_, %WhitespaceToken{}, _}, %{idx: idx} = state),
       do: {MapSet.new(), %{state | idx: idx + 1}}
 
-    def emit(_, {_, %{kind: k}, _}, %{idx: idx, bracket_depth: bd} = state)
+    def emit(_, {_, %{kind: k}, _}, %{bracket_depth: bd, idx: idx} = state)
         when k in ["(", "[", "{"],
         do: {MapSet.new(), %{state | idx: idx + 1, bracket_depth: bd + 1, seen_content: true}}
 
-    def emit(_, {_, %{kind: k}, _}, %{idx: idx, bracket_depth: bd} = state)
+    def emit(_, {_, %{kind: k}, _}, %{bracket_depth: bd, idx: idx} = state)
         when k in [")", "]", "}"],
         do:
           {MapSet.new(),
@@ -51,7 +51,7 @@ defmodule CodeQA.AST.Signals.Structural.BranchSplitSignal do
       {emissions, base}
     end
 
-    defp branch_split?(%{seen_content: true, bracket_depth: 0, keywords: kw}, %{content: c}),
+    defp branch_split?(%{bracket_depth: 0, keywords: kw, seen_content: true}, %{content: c}),
       do: MapSet.member?(kw, c)
 
     defp branch_split?(_, _), do: false

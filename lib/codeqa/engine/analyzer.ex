@@ -202,7 +202,7 @@ defmodule CodeQA.Engine.Analyzer do
     end)
   end
 
-  defp compute_stats([]), do: %{mean: 0.0, std: 0.0, min: 0.0, max: 0.0}
+  defp compute_stats([]), do: %{max: 0.0, mean: 0.0, min: 0.0, std: 0.0}
 
   defp compute_stats(values) do
     n = length(values)
@@ -212,10 +212,10 @@ defmodule CodeQA.Engine.Analyzer do
     std = :math.sqrt(variance)
 
     %{
+      max: Float.round(Enum.max(values) * 1.0, 4),
       mean: Float.round(mean * 1.0, 4),
-      std: Float.round(std * 1.0, 4),
       min: Float.round(Enum.min(values) * 1.0, 4),
-      max: Float.round(Enum.max(values) * 1.0, 4)
+      std: Float.round(std * 1.0, 4)
     }
   end
 end

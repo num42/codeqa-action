@@ -155,11 +155,11 @@ defmodule CodeQA.HealthReport.TopBlocks do
       |> Enum.sort_by(& &1.cosine_delta, :desc)
 
     %{
-      start_line: node["start_line"],
       end_line: node["end_line"],
-      type: node["type"],
+      potentials: potentials,
+      start_line: node["start_line"],
       token_count: node["token_count"],
-      potentials: potentials
+      type: node["type"]
     }
   end
 
@@ -176,11 +176,11 @@ defmodule CodeQA.HealthReport.TopBlocks do
       nil
     else
       %{
-        category: category,
         behavior: behavior,
+        category: category,
         cosine_delta: cosine_delta,
-        severity: severity,
-        fix_hint: Map.get(fix_hints, {category, behavior})
+        fix_hint: Map.get(fix_hints, {category, behavior}),
+        severity: severity
       }
     end
   end
@@ -213,7 +213,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
       end
 
     lang = Language.detect(block.path).name()
-    Map.merge(block, %{source: source, language: lang})
+    Map.merge(block, %{language: lang, source: source})
   end
 
   # FIXME: extracted automatically by ExtractCaseToHelper — review

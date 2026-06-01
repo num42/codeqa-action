@@ -5,7 +5,7 @@ defmodule CodeQA.AST.SignalStreamTest do
   alias CodeQA.AST.Parsing.SignalStream
   alias CodeQA.Support.CounterSignal
 
-  defp tok(kind, content), do: %Token{kind: kind, content: content, line: 1, col: 0}
+  defp tok(kind, content), do: %Token{col: 0, content: content, kind: kind, line: 1}
 
   test "returns one emission list per signal" do
     tokens = [tok("<ID>", "foo"), tok("<NL>", "\n"), tok("<ID>", "bar")]

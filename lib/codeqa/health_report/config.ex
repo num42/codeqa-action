@@ -5,21 +5,21 @@ defmodule CodeQA.HealthReport.Config do
   alias CodeQA.HealthReport.Categories
 
   @spec load(String.t() | nil) :: %{
-          categories: [map()],
-          grade_scale: [{number(), String.t()}],
-          impact_map: %{String.t() => pos_integer()},
-          combined_top: pos_integer(),
+          block_max_lines: pos_integer(),
           block_min_lines: pos_integer(),
-          block_max_lines: pos_integer()
+          categories: [map()],
+          combined_top: pos_integer(),
+          grade_scale: [{number(), String.t()}],
+          impact_map: %{String.t() => pos_integer()}
         }
   def load(nil),
     do: %{
-      categories: Categories.defaults(),
-      grade_scale: Categories.default_grade_scale(),
-      impact_map: Config.impact_map(),
-      combined_top: Config.combined_top(),
+      block_max_lines: 20,
       block_min_lines: 3,
-      block_max_lines: 20
+      categories: Categories.defaults(),
+      combined_top: Config.combined_top(),
+      grade_scale: Categories.default_grade_scale(),
+      impact_map: Config.impact_map()
     }
 
   def load(path) do
@@ -51,12 +51,12 @@ defmodule CodeQA.HealthReport.Config do
     block_max_lines = Map.get(yaml, "block_max_lines", 20)
 
     %{
-      categories: categories,
-      grade_scale: grade_scale,
-      impact_map: impact_map,
-      combined_top: combined_top,
+      block_max_lines: block_max_lines,
       block_min_lines: block_min_lines,
-      block_max_lines: block_max_lines
+      categories: categories,
+      combined_top: combined_top,
+      grade_scale: grade_scale,
+      impact_map: impact_map
     }
   end
 
@@ -87,8 +87,8 @@ defmodule CodeQA.HealthReport.Config do
     do:
       %{
         key: String.to_atom(key),
-        name: Map.get(override, "name", key),
-        metrics: Map.get(override, "metrics", []) |> Enum.map(&parse_metric/1)
+        metrics: Map.get(override, "metrics", []) |> Enum.map(&parse_metric/1),
+        name: Map.get(override, "name", key)
       }
       |> maybe_put_top(override)
 
@@ -141,21 +141,21 @@ defmodule CodeQA.HealthReport.Config do
         else: default.good
 
     %{
+      good: good,
       name: default.name,
       source: Map.get(override, "source", default.source),
-      weight: Map.get(override, "weight", default.weight),
-      good: good,
-      thresholds: thresholds
+      thresholds: thresholds,
+      weight: Map.get(override, "weight", default.weight)
     }
   end
 
   defp parse_metric(m),
     do: %{
+      good: parse_good(m["good"]),
       name: m["name"],
       source: m["source"],
-      weight: m["weight"],
-      good: parse_good(m["good"]),
-      thresholds: atomize_thresholds(Map.get(m, "thresholds", %{}))
+      thresholds: atomize_thresholds(Map.get(m, "thresholds", %{})),
+      weight: m["weight"]
     }
 
   defp parse_good(nil), do: :low

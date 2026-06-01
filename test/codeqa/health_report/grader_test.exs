@@ -251,7 +251,7 @@ defmodule CodeQA.HealthReport.GraderTest do
     end
 
     test "worst_offenders uses worst_files lookup", %{cosines_by_category: cosines_by_category} do
-      sentinel = [%{file: "lib/sentinel.ex", cosine: -0.99}]
+      sentinel = [%{cosine: -0.99, file: "lib/sentinel.ex"}]
       # Get one real behavior key to inject into worst_files
       [first_cat | _] = Grader.grade_cosine_categories(cosines_by_category, %{}, @default_scale)
       first_behavior = hd(first_cat.behaviors)
@@ -270,9 +270,9 @@ defmodule CodeQA.HealthReport.GraderTest do
     } do
       sentinel = [
         %{
-          file: "lib/sentinel.ex",
           cosine: -0.99,
-          top_metrics: [%{metric: "foo.bar", contribution: -1.5}],
+          file: "lib/sentinel.ex",
+          top_metrics: [%{contribution: -1.5, metric: "foo.bar"}],
           top_nodes: [%{"start_line" => 42, "type" => "block"}]
         }
       ]
@@ -304,16 +304,16 @@ defmodule CodeQA.HealthReport.GraderTest do
   describe "worst_offenders/4 top_nodes" do
     @category %{
       key: :function_design,
-      name: "Function Design",
       metrics: [
         %{
-          source: "halstead",
-          name: "tokens",
-          weight: 1.0,
           good: :low,
-          thresholds: %{a: 10, b: 20, c: 30, d: 40}
+          name: "tokens",
+          source: "halstead",
+          thresholds: %{a: 10, b: 20, c: 30, d: 40},
+          weight: 1.0
         }
-      ]
+      ],
+      name: "Function Design"
     }
 
     test "returns top_nodes: [] when file_data has no nodes key" do

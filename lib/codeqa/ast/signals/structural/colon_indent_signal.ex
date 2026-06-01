@@ -24,9 +24,9 @@ defmodule CodeQA.AST.Signals.Structural.ColonIndentSignal do
 
     def init(_, lang_mod),
       do: %{
+        ci: 0,
         enabled: lang_mod.uses_colon_indent?(),
         idx: 0,
-        ci: 0,
         last_colon_indent: nil,
         stack: []
       }
@@ -39,13 +39,13 @@ defmodule CodeQA.AST.Signals.Structural.ColonIndentSignal do
       {emissions, %{state | idx: idx + 1, ci: 0, stack: []}}
     end
 
-    def emit(_, {_, %WhitespaceToken{}, _}, %{idx: idx, ci: ci} = state),
+    def emit(_, {_, %WhitespaceToken{}, _}, %{ci: ci, idx: idx} = state),
       do: {MapSet.new(), %{state | idx: idx + 1, ci: ci + 1}}
 
-    def emit(_, {_, %{kind: ":"}, _}, %{idx: idx, ci: ci} = state),
+    def emit(_, {_, %{kind: ":"}, _}, %{ci: ci, idx: idx} = state),
       do: {MapSet.new(), %{state | idx: idx + 1, last_colon_indent: ci}}
 
-    def emit(_, {_, _, _}, %{idx: idx, ci: ci} = state) do
+    def emit(_, {_, _, _}, %{ci: ci, idx: idx} = state) do
       {dedent_emissions, remaining} = close_dedented(state.stack, ci)
       new_stack = maybe_open_block(remaining, state.last_colon_indent, ci, idx)
 
@@ -62,14 +62,14 @@ defmodule CodeQA.AST.Signals.Structural.ColonIndentSignal do
 
     defp maybe_open_block(stack, colon_indent, ci, idx)
          when colon_indent != nil and ci > colon_indent,
-         do: [%{colon_indent: colon_indent, sub_start: idx, last_content_idx: idx} | stack]
+         do: [%{colon_indent: colon_indent, last_content_idx: idx, sub_start: idx} | stack]
 
     defp maybe_open_block(stack, _, _, _), do: stack
 
     defp build_emissions(entries) do
       entries
       |> Enum.reduce(MapSet.new(), fn
-        %{sub_start: s, last_content_idx: e}, acc when e != nil ->
+        %{last_content_idx: e, sub_start: s}, acc when e != nil ->
           MapSet.put(acc, {:colon_indent_enclosure, {s, e}})
 
         _entry, acc ->

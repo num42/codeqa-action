@@ -18,12 +18,12 @@ defmodule CodeQA.HealthReport do
     diff_line_ranges = Keyword.get(opts, :diff_line_ranges, %{})
 
     %{
-      categories: categories,
-      grade_scale: grade_scale,
-      impact_map: impact_map,
-      combined_top: combined_top,
+      block_max_lines: block_max_lines,
       block_min_lines: block_min_lines,
-      block_max_lines: block_max_lines
+      categories: categories,
+      combined_top: combined_top,
+      grade_scale: grade_scale,
+      impact_map: impact_map
     } =
       Config.load(config_path)
 
@@ -88,9 +88,9 @@ defmodule CodeQA.HealthReport do
 
     grading_cfg = %{
       category_defs: categories,
+      combined_top: combined_top,
       grade_scale: grade_scale,
-      impact_map: impact_map,
-      combined_top: combined_top
+      impact_map: impact_map
     }
 
     {codebase_delta, pr_summary} =
@@ -109,14 +109,14 @@ defmodule CodeQA.HealthReport do
       end
 
     %{
-      metadata: metadata,
-      pr_summary: pr_summary,
-      overall_score: overall_score,
-      overall_grade: overall_grade,
-      codebase_delta: codebase_delta,
       categories: all_categories,
-      top_issues: top_issues,
+      codebase_delta: codebase_delta,
+      metadata: metadata,
+      overall_grade: overall_grade,
+      overall_score: overall_score,
+      pr_summary: pr_summary,
       top_blocks: top_blocks,
+      top_issues: top_issues,
       worst_blocks_by_category: worst_blocks_by_category
     }
   end
@@ -132,9 +132,9 @@ defmodule CodeQA.HealthReport do
          head_grade,
          %{
            category_defs: category_defs,
+           combined_top: combined_top,
            grade_scale: grade_scale,
-           impact_map: impact_map,
-           combined_top: combined_top
+           impact_map: impact_map
          },
          changed_files,
          top_blocks
@@ -180,15 +180,15 @@ defmodule CodeQA.HealthReport do
     files_modified = changed_files |> Enum.count(&(&1.status == "modified"))
 
     summary = %{
-      base_score: base_score,
-      head_score: head_score,
-      score_delta: head_score - base_score,
       base_grade: base_grade,
-      head_grade: head_grade,
+      base_score: base_score,
       blocks_flagged: blocks_flagged,
-      files_changed: length(changed_files),
       files_added: files_added,
-      files_modified: files_modified
+      files_changed: length(changed_files),
+      files_modified: files_modified,
+      head_grade: head_grade,
+      head_score: head_score,
+      score_delta: head_score - base_score
     }
 
     {delta, summary}

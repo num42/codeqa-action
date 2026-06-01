@@ -32,11 +32,11 @@ defmodule CodeQA.AST.Parsing.SignalRegistry do
   alias CodeQA.AST.Signals.Classification.TestSignal
   alias CodeQA.AST.Signals.Classification.TypeSignal
 
-  defstruct structural: [], classification: []
+  defstruct classification: [], structural: []
 
   @type t :: %__MODULE__{
-          structural: [term()],
-          classification: [term()]
+          classification: [term()],
+          structural: [term()]
         }
 
   @spec new() :: t()

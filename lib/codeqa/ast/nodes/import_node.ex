@@ -4,16 +4,16 @@ defmodule CodeQA.AST.Nodes.ImportNode do
   alias CodeQA.AST.Enrichment.Node
   import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
 
-  defstruct [:tokens, :line_count, :children, :start_line, :end_line, :label, :target]
+  defstruct [:children, :end_line, :label, :line_count, :start_line, :target, :tokens]
 
   @type t :: %__MODULE__{
-          tokens: [term()],
-          line_count: non_neg_integer(),
           children: [term()],
-          start_line: non_neg_integer() | nil,
           end_line: non_neg_integer() | nil,
           label: term() | nil,
-          target: String.t() | nil
+          line_count: non_neg_integer(),
+          start_line: non_neg_integer() | nil,
+          target: String.t() | nil,
+          tokens: [term()]
         }
 
   @doc "Build an ImportNode from a raw %Node{}, copying all base fields. Type-specific fields default to nil."

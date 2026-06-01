@@ -160,7 +160,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
          _nodes_top,
          _cached_behaviors
        ),
-       do: {[], %{duration: 0, tokenize_us: 0, parse_us: 0, file_cosines_us: 0, node_count: 0}}
+       do: {[], %{duration: 0, file_cosines_us: 0, node_count: 0, parse_us: 0, tokenize_us: 0}}
 
   defp compute_nodes_timed(
          path,
@@ -194,12 +194,12 @@ defmodule CodeQA.BlockImpactAnalyzer do
     project_langs = project_languages(file_results)
 
     node_ctx = %{
-      inc_agg: inc_agg,
-      old_file_triples: old_file_triples,
-      project_langs: project_langs,
+      baseline_file_metrics: baseline_file_metrics,
       cached_behaviors: cached_behaviors,
+      inc_agg: inc_agg,
       lang_mod: lang_mod,
-      baseline_file_metrics: baseline_file_metrics
+      old_file_triples: old_file_triples,
+      project_langs: project_langs
     }
 
     nodes =
@@ -219,13 +219,13 @@ defmodule CodeQA.BlockImpactAnalyzer do
       |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
 
     measurements = %{
+      bytes: byte_size(content),
       duration: now() - t0,
-      tokenize_us: tokenize_us,
-      parse_us: parse_us,
       file_cosines_us: file_cosines_us,
       node_count: length(top_level_nodes),
+      parse_us: parse_us,
       token_count: length(root_tokens),
-      bytes: byte_size(content)
+      tokenize_us: tokenize_us
     }
 
     {nodes, measurements}
@@ -361,10 +361,10 @@ defmodule CodeQA.BlockImpactAnalyzer do
     :telemetry.execute(
       [:codeqa, :block_impact, :node],
       %{
+        aggregate_us: aggregate_us,
+        analyze_file_us: analyze_file_us,
         duration: now() - t0,
         reconstruct_us: reconstruct_us,
-        analyze_file_us: analyze_file_us,
-        aggregate_us: aggregate_us,
         refactoring_us: refactoring_us
       },
       %{path: path, token_count: length(node.tokens)}
@@ -399,7 +399,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
       sum_sq = values |> Enum.reduce(0.0, fn v, acc -> acc + v * v end)
 
       {{metric, key},
-       %{sum: sum, sum_sq: sum_sq, min: values |> Enum.min(), max: values |> Enum.max(), count: n}}
+       %{count: n, max: values |> Enum.max(), min: values |> Enum.min(), sum: sum, sum_sq: sum_sq}}
     end)
   end
 
@@ -429,11 +429,11 @@ defmodule CodeQA.BlockImpactAnalyzer do
           new_val = Map.get(new_map, mk, 0.0)
 
           Map.put(acc, mk, %{
-            sum: state.sum - old_val + new_val,
-            sum_sq: state.sum_sq - old_val * old_val + new_val * new_val,
-            min: min(state.min, new_val),
+            count: state.count,
             max: max(state.max, new_val),
-            count: state.count
+            min: min(state.min, new_val),
+            sum: state.sum - old_val + new_val,
+            sum_sq: state.sum_sq - old_val * old_val + new_val * new_val
           })
       end
     end)

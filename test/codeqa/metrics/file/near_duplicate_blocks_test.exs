@@ -20,10 +20,10 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksTest do
   describe "find_pairs/2 idf_max_freq option" do
     defp make_block(tokens, label),
       do: %CodeQA.AST.Enrichment.Node{
+        children: [],
         label: label,
-        tokens: tokens |> Enum.map(&%{kind: &1}),
         line_count: length(tokens),
-        children: []
+        tokens: tokens |> Enum.map(&%{kind: &1})
       }
 
     test "exact duplicates are still detected when all bigrams are high-frequency" do
@@ -57,10 +57,10 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksTest do
       child = make_block(["x"], "child:1")
 
       parent = %CodeQA.AST.Enrichment.Node{
+        children: [child, child],
         label: "a:1",
-        tokens: ["def", "<ID>", "end"] |> Enum.map(&%{kind: &1}),
         line_count: 3,
-        children: [child, child]
+        tokens: ["def", "<ID>", "end"] |> Enum.map(&%{kind: &1})
       }
 
       solo = make_block(["y", "z", "w", "v", "u"], "b:1")

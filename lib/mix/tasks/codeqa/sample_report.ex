@@ -180,14 +180,14 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
     end
   end
 
-  defp print_issue_row(%{category: cat, behavior: b, cosine: cos, score: s, top_metrics: metrics}) do
+  defp print_issue_row(%{behavior: b, category: cat, cosine: cos, score: s, top_metrics: metrics}) do
     IO.puts("  " <> pad("#{cat}.#{b}", 38) <> pad(fmt(cos), 9) <> fmt(s))
 
     metrics
     |> Enum.each(&IO.puts("      " <> pad(&1.metric, 44) <> fmt(&1.contribution)))
   end
 
-  defp print_combined_category(%{name: name, behaviors: behaviors}) do
+  defp print_combined_category(%{behaviors: behaviors, name: name}) do
     IO.puts(name)
     IO.puts(String.duplicate("-", 60))
 
@@ -203,7 +203,7 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
     IO.puts("")
   end
 
-  defp print_scalar_stats(%{category: cat, updated: u, deadzoned: d, skipped: s}),
+  defp print_scalar_stats(%{category: cat, deadzoned: d, skipped: s, updated: u}),
     do: "  #{pad(cat, 30)}  #{u} written  #{d} deadzoned  #{s} skipped (no samples)" |> IO.puts()
 
   defp fmt(f), do: :erlang.float_to_binary(f / 1, decimals: 4)

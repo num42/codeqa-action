@@ -60,7 +60,7 @@ defmodule CodeQA.CombinedMetrics.FileScorer do
   @spec worst_files_per_behavior(map(), keyword()) ::
           %{
             String.t() => [
-              %{file: String.t(), cosine: float(), top_metrics: list(), top_nodes: list()}
+              %{cosine: float(), file: String.t(), top_metrics: list(), top_nodes: list()}
             ]
           }
   def worst_files_per_behavior(files_map, opts \\ []) do
@@ -100,14 +100,14 @@ defmodule CodeQA.CombinedMetrics.FileScorer do
     |> file_to_aggregate()
     |> SampleRunner.diagnose_aggregate(top: 99_999, language: language)
     |> Enum.reduce(acc, fn %{
-                             category: category,
                              behavior: behavior,
+                             category: category,
                              cosine: cosine,
                              top_metrics: top_metrics
                            },
                            inner_acc ->
       key = "#{category}.#{behavior}"
-      entry = %{file: path, cosine: cosine, top_metrics: top_metrics, top_nodes: top_nodes}
+      entry = %{cosine: cosine, file: path, top_metrics: top_metrics, top_nodes: top_nodes}
       Map.update(inner_acc, key, [entry], &[entry | &1])
     end)
   end

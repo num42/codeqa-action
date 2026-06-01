@@ -7,11 +7,11 @@ defmodule CodeQA.AST.StringTokenTest do
   describe "StringToken struct" do
     test "has kind, content, line, col, interpolations, multiline, and quotes fields" do
       tok = %StringToken{
-        kind: "<STR>",
-        content: ~s("hello"),
-        line: 1,
         col: 0,
-        interpolations: nil
+        content: ~s("hello"),
+        interpolations: nil,
+        kind: "<STR>",
+        line: 1
       }
 
       assert tok.kind == "<STR>"
@@ -24,22 +24,22 @@ defmodule CodeQA.AST.StringTokenTest do
     end
 
     test "interpolations defaults to nil" do
-      tok = %StringToken{kind: "<STR>", content: ~s("hello")}
+      tok = %StringToken{content: ~s("hello"), kind: "<STR>"}
       assert tok.interpolations == nil
     end
 
     test "multiline defaults to false" do
-      tok = %StringToken{kind: "<STR>", content: ~s("hello")}
+      tok = %StringToken{content: ~s("hello"), kind: "<STR>"}
       assert tok.multiline == false
     end
 
     test "quotes defaults to :double" do
-      tok = %StringToken{kind: "<STR>", content: ~s("hello")}
+      tok = %StringToken{content: ~s("hello"), kind: "<STR>"}
       assert tok.quotes == :double
     end
 
     test "multiline triple-quote struct" do
-      tok = %StringToken{kind: "<DOC>", content: ~s("""), multiline: true, quotes: :double}
+      tok = %StringToken{content: ~s("""), kind: "<DOC>", multiline: true, quotes: :double}
       assert tok.multiline == true
       assert tok.quotes == :double
     end

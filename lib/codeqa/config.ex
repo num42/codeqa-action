@@ -15,10 +15,10 @@ defmodule CodeQA.Config do
     "testing" => 1
   }
 
-  defstruct ignore_paths: [],
-            impact_map: @default_impact,
-            combined_top: 2,
+  defstruct combined_top: 2,
             cosine_significance_threshold: 0.15,
+            ignore_paths: [],
+            impact_map: @default_impact,
             near_duplicate_blocks: []
 
   @spec load(String.t()) :: :ok
@@ -62,10 +62,10 @@ defmodule CodeQA.Config do
 
   defp from_yaml(yaml),
     do: %__MODULE__{
-      ignore_paths: parse_ignore_paths(yaml),
-      impact_map: parse_impact(yaml),
       combined_top: Map.get(yaml, "combined_top", 2),
       cosine_significance_threshold: Map.get(yaml, "cosine_significance_threshold", 0.15),
+      ignore_paths: parse_ignore_paths(yaml),
+      impact_map: parse_impact(yaml),
       near_duplicate_blocks: parse_near_duplicate_blocks(yaml)
     }
 

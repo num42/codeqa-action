@@ -4,7 +4,7 @@ defmodule CodeQA.AST.Signals.Classification.ConfigSignalTest do
   alias CodeQA.AST.Signals.Classification.ConfigSignal
 
   defp run(tokens), do: SignalStream.run(tokens, [%ConfigSignal{}], []) |> List.flatten()
-  defp token(content, kind \\ "<ID>"), do: %{kind: kind, content: content, line: 1, col: 0}
+  defp token(content, kind \\ "<ID>"), do: %{col: 0, content: content, kind: kind, line: 1}
 
   test "emits config_vote for 'config' keyword at indent 0" do
     emissions = run([token("config"), token(":app"), token(","), token("key:"), token("val")])

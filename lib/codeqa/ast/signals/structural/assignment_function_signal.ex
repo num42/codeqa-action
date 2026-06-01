@@ -20,24 +20,24 @@ defmodule CodeQA.AST.Signals.Structural.AssignmentFunctionSignal do
 
     def init(_, _lang_mod),
       do: %{
+        at_line_start: true,
+        bracket_depth: 0,
         idx: 0,
         indent: 0,
-        bracket_depth: 0,
-        at_line_start: true,
-        seen_content: false,
-        phase: :idle
+        phase: :idle,
+        seen_content: false
       }
 
     def emit(_, {_, %NewlineToken{}, _}, %{idx: idx} = state),
       do: {MapSet.new(), %{state | idx: idx + 1, indent: 0, at_line_start: true, phase: :idle}}
 
-    def emit(_, {_, %WhitespaceToken{}, _}, %{idx: idx, indent: i, at_line_start: true} = state),
+    def emit(_, {_, %WhitespaceToken{}, _}, %{at_line_start: true, idx: idx, indent: i} = state),
       do: {MapSet.new(), %{state | idx: idx + 1, indent: i + 1, at_line_start: true}}
 
     def emit(_, {_, %WhitespaceToken{}, _}, %{idx: idx} = state),
       do: {MapSet.new(), %{state | idx: idx + 1}}
 
-    def emit(_, {_, %{kind: k}, _}, %{idx: idx, bracket_depth: bd, phase: phase} = state)
+    def emit(_, {_, %{kind: k}, _}, %{bracket_depth: bd, idx: idx, phase: phase} = state)
         when k in ["(", "[", "{"] do
       new_bd = bd + 1
       new_phase = advance_phase_open(phase, k)
@@ -53,7 +53,7 @@ defmodule CodeQA.AST.Signals.Structural.AssignmentFunctionSignal do
        }}
     end
 
-    def emit(_, {_, %{kind: k}, _}, %{idx: idx, bracket_depth: bd, phase: phase} = state)
+    def emit(_, {_, %{kind: k}, _}, %{bracket_depth: bd, idx: idx, phase: phase} = state)
         when k in [")", "]", "}"] do
       new_bd = max(0, bd - 1)
       new_phase = advance_phase_close(phase, k)
@@ -73,12 +73,12 @@ defmodule CodeQA.AST.Signals.Structural.AssignmentFunctionSignal do
           _,
           {_, token, _},
           %{
-            idx: idx,
-            seen_content: sc,
-            indent: i,
-            bracket_depth: bd,
             at_line_start: als,
-            phase: phase
+            bracket_depth: bd,
+            idx: idx,
+            indent: i,
+            phase: phase,
+            seen_content: sc
           } = state
         ) do
       {emissions, new_phase} = advance_phase(phase, token, idx, sc, i, bd, als)
@@ -116,10 +116,10 @@ defmodule CodeQA.AST.Signals.Structural.AssignmentFunctionSignal do
 
     defp advance_phase({:saw_id, _}, _, _, _, _, _, _), do: {MapSet.new(), :idle}
 
-    defp advance_phase({:saw_eq, id_idx}, %{kind: "<ID>", content: "function"}, _, _, _, _, _),
+    defp advance_phase({:saw_eq, id_idx}, %{content: "function", kind: "<ID>"}, _, _, _, _, _),
       do: {MapSet.new([{:assignment_function_split, id_idx}]), :idle}
 
-    defp advance_phase({:saw_eq, id_idx}, %{kind: "<ID>", content: "async"}, _, _, _, _, _),
+    defp advance_phase({:saw_eq, id_idx}, %{content: "async", kind: "<ID>"}, _, _, _, _, _),
       do: {MapSet.new(), {:saw_eq, id_idx}}
 
     defp advance_phase({:saw_eq, _}, _, _, _, _, _, _), do: {MapSet.new(), :idle}

@@ -300,14 +300,14 @@ defmodule CodeQA.AST.TokenNormalizerTest do
     test "triple double-quotes emits a StringToken with kind <DOC>" do
       tokens = TokenNormalizer.normalize_structural(~s("""))
 
-      assert [%StringToken{kind: "<DOC>", content: ~s("""), multiline: true, quotes: :double}] =
+      assert [%StringToken{content: ~s("""), kind: "<DOC>", multiline: true, quotes: :double}] =
                tokens
     end
 
     test "triple single-quotes emits a StringToken with kind <DOC>" do
       tokens = TokenNormalizer.normalize_structural("'''")
 
-      assert [%StringToken{kind: "<DOC>", content: "'''", multiline: true, quotes: :single}] =
+      assert [%StringToken{content: "'''", kind: "<DOC>", multiline: true, quotes: :single}] =
                tokens
     end
 

@@ -5,7 +5,7 @@ defmodule CodeQA.AST.Signals.Classification.DataSignalTest do
 
   defp run(tokens), do: SignalStream.run(tokens, [%DataSignal{}], []) |> List.flatten()
 
-  defp token(content, kind), do: %{kind: kind, content: content, line: 1, col: 0}
+  defp token(content, kind), do: %{col: 0, content: content, kind: kind, line: 1}
   defp string_kind_token(v), do: token(v, "<STR>")
   defp num(v), do: token(v, "<NUM>")
   defp id(v), do: token(v, "<ID>")
