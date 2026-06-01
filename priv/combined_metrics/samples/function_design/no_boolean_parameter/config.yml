@@ -1,0 +1,1 @@
+doc: "Functions should not take boolean parameters — a flag usually means the function does two things."

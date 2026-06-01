@@ -1,0 +1,1 @@
+doc: "Boolean variables should be assigned directly from comparisons or predicate calls, not set via conditionals."

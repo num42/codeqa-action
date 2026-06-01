@@ -1,0 +1,1 @@
+doc: "Error values should carry a meaningful message, not just a bare atom or empty string."
