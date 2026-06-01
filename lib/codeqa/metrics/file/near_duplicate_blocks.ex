@@ -66,7 +66,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
   @spec analyze_from_blocks([Node.t()], keyword()) :: map()
   def analyze_from_blocks(all_blocks, opts) do
     workers = Keyword.get(opts, :workers, System.schedulers_online())
-    max_pairs = Keyword.get(opts, :max_pairs_per_bucket, nil)
+    max_pairs = Keyword.get(opts, :max_pairs_per_bucket)
     include_pairs = Keyword.get(opts, :include_pairs, false)
 
     block_count = length(all_blocks)
@@ -126,7 +126,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
   # analyze_from_blocks gets both without a redundant NodeProtocol.children pass.
   defp do_find_pairs(blocks, opts) do
     workers = Keyword.get(opts, :workers, System.schedulers_online())
-    max_pairs = Keyword.get(opts, :max_pairs_per_bucket, nil)
+    max_pairs = Keyword.get(opts, :max_pairs_per_bucket)
     idf_max_freq = Keyword.get(opts, :idf_max_freq, 1.0)
     has_progress = Keyword.has_key?(opts, :on_progress)
 

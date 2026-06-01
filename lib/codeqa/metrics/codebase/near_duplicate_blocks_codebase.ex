@@ -21,7 +21,7 @@ defmodule CodeQA.Metrics.Codebase.NearDuplicateBlocksCodebase do
   @impl true
   def analyze(files, opts \\ []) do
     ndb_opts = Keyword.get(opts, :near_duplicate_blocks, [])
-    max_pairs = Keyword.get(ndb_opts, :max_pairs_per_bucket, nil)
+    max_pairs = Keyword.get(ndb_opts, :max_pairs_per_bucket)
     workers = Keyword.get(opts, :workers, System.schedulers_online())
 
     ndb_opts =
