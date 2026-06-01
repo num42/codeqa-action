@@ -1,6 +1,8 @@
 defmodule CodeQA.CLI.Options do
   @moduledoc false
 
+  alias CodeQA.CLI.Progress
+
   @common_strict [
     workers: :integer,
     cache: :boolean,
@@ -10,13 +12,11 @@ defmodule CodeQA.CLI.Options do
     ncd_top: :integer,
     ncd_paths: :string,
     combinations: :boolean,
-    telemetry: :boolean,
-    experimental_stopwords: :boolean,
-    stopwords_threshold: :float,
     show_files: :boolean,
     show_file_paths: :string,
     ignore_paths: :string,
-    progress: :boolean
+    progress: :boolean,
+    nodes_top: :integer
   ]
 
   @common_aliases [w: :workers, t: :timeout]
@@ -27,7 +27,7 @@ defmodule CodeQA.CLI.Options do
   @spec common_aliases() :: keyword()
   def common_aliases, do: @common_aliases
 
-  @spec parse(list(String.t()), keyword()) :: {keyword(), list(String.t()), list()}
+  @spec parse(list(String.t()), keyword(), keyword()) :: {keyword(), list(String.t()), list()}
   def parse(args, extra_strict \\ [], extra_aliases \\ []) do
     OptionParser.parse(args,
       strict: Keyword.merge(@common_strict, extra_strict),
@@ -54,22 +54,6 @@ defmodule CodeQA.CLI.Options do
     |> Enum.map(&String.trim/1)
   end
 
-  @spec load_config_ignore_paths(String.t()) :: [String.t()]
-  def load_config_ignore_paths(path) do
-    config_file = Path.join(path, ".codeqa.yml")
-
-    case File.read(config_file) do
-      {:ok, contents} ->
-        case YamlElixir.read_from_string(contents) do
-          {:ok, %{"ignore_paths" => patterns}} when is_list(patterns) -> patterns
-          _ -> []
-        end
-
-      {:error, _} ->
-        []
-    end
-  end
-
   @spec build_analyze_opts(keyword()) :: keyword()
   def build_analyze_opts(opts) do
     start_time_progress = System.monotonic_time(:millisecond)
@@ -79,17 +63,14 @@ defmodule CodeQA.CLI.Options do
       :show_ncd,
       :ncd_top,
       :combinations,
-      :telemetry,
-      :experimental_stopwords,
-      :stopwords_threshold
+      :nodes_top
     ]
 
     base =
       [{:timeout, opts[:timeout] || 5000}]
       |> maybe_add(
         opts[:progress],
-        {:on_progress,
-         fn c, t, p, _tt -> CodeQA.CLI.Progress.callback(c, t, p, start_time_progress) end}
+        {:on_progress, fn c, t, p, _tt -> Progress.callback(c, t, p, start_time_progress) end}
       )
       |> maybe_add(opts[:cache], {:cache_dir, opts[:cache_dir] || ".codeqa_cache"})
       |> maybe_add(

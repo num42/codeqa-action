@@ -4,6 +4,7 @@ defmodule CodeQA.CLI.Correlate do
   @behaviour CodeQA.CLI.Command
 
   alias CodeQA.CLI.Options
+  alias CodeQA.CLI.UI
 
   @impl CodeQA.CLI.Command
   def usage do
@@ -25,7 +26,7 @@ defmodule CodeQA.CLI.Correlate do
 
   @impl CodeQA.CLI.Command
   def run(args) when args in [["--help"], ["-h"]] do
-    IO.puts(usage())
+    usage()
   end
 
   def run(args) do
@@ -82,7 +83,7 @@ defmodule CodeQA.CLI.Correlate do
     sorted = Enum.sort_by(correlations, &abs(&1["correlation"]), :desc)
     top = Enum.take(sorted, top_n)
 
-    IO.puts(Jason.encode!(top, pretty: true))
+    Jason.encode!(top, pretty: true)
   end
 
   defp extract_metric_series(path, files) do
@@ -204,7 +205,16 @@ defmodule CodeQA.CLI.Correlate do
 
     pairs_stream
     |> Task.async_stream(
-      &correlate_pair(&1, counter, total_pairs, update_interval, total_start, series, category_map, opts),
+      &correlate_pair(
+        &1,
+        counter,
+        total_pairs,
+        update_interval,
+        total_start,
+        series,
+        category_map,
+        opts
+      ),
       max_concurrency: System.schedulers_online(),
       timeout: :infinity
     )
@@ -257,9 +267,7 @@ defmodule CodeQA.CLI.Correlate do
       eta_ms = round((total_pairs - current) * avg_time)
 
       output =
-        CodeQA.CLI.UI.progress_bar(current, total_pairs,
-          eta: CodeQA.CLI.UI.format_eta(eta_ms)
-        )
+        UI.progress_bar(current, total_pairs, eta: UI.format_eta(eta_ms))
 
       IO.write(:stderr, "\r" <> output)
       if current == total_pairs, do: IO.puts(:stderr, "")
