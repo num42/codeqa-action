@@ -192,7 +192,12 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksTest do
       # one identifier differs
       block_b = "def bar\n  x = 1\nend\n"
       result = NDB.analyze([{"a.ex", block_a <> "\n\n" <> block_b}], [])
-      near_dup_total = Enum.sum(for d <- 0..8, do: result["near_dup_block_d#{d}"])
+
+      near_dup_total =
+        0..8
+        |> Enum.map(fn d -> result["near_dup_block_d#{d}"] end)
+        |> Enum.sum()
+
       assert near_dup_total >= 1
     end
 

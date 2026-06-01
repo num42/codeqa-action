@@ -34,11 +34,12 @@ defmodule CodeQA.AST.Parsing.SignalStream do
       group = Signal.group(signal)
 
       {_final_state, emissions} =
-        Enum.reduce_while(triples, {init_state, []}, fn triple, {state, acc} ->
+        triples
+        |> Enum.reduce_while({init_state, []}, fn triple, {state, acc} ->
           emit_step(signal, triple, state, acc, source, group)
         end)
 
-      Enum.reverse(emissions)
+      emissions |> Enum.reverse()
     end)
   end
 

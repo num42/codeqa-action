@@ -353,7 +353,7 @@ defmodule CodeQA.HealthReport.Grader do
 
   defp node_impact_score(%{"refactoring_potentials" => potentials})
        when is_list(potentials) and potentials != [] do
-    Enum.map(potentials, & &1["cosine_delta"]) |> Enum.sum()
+    potentials |> Enum.map(& &1["cosine_delta"]) |> Enum.sum()
   end
 
   defp node_impact_score(_), do: 0.0

@@ -30,7 +30,8 @@ defmodule CodeQA.Engine.AnalyzerTest do
       # At least one group should have mean_ keys
       agg
       |> Enum.each(fn {_group, keys} ->
-        Enum.each(keys, fn {key, val} ->
+        keys
+        |> Enum.each(fn {key, val} ->
           assert String.starts_with?(key, "mean_") or String.starts_with?(key, "std_") or
                    String.starts_with?(key, "min_") or String.starts_with?(key, "max_")
 

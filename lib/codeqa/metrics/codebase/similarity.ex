@@ -182,7 +182,7 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
 
     candidates
     |> Enum.map(fn {{i, j}, jaccard} ->
-      {Enum.at(names, i), i, Enum.at(names, j), j, jaccard}
+      {names |> Enum.at(i), i, names |> Enum.at(j), j, jaccard}
     end)
   end
 

@@ -84,7 +84,7 @@ defmodule CodeQA.Diagnostics do
         files_json =
           file_diagnoses
           |> Enum.map(fn {file_path, diagnoses} ->
-            %{file: file_path, behaviors: Enum.map(diagnoses, &diagnosis_to_map/1)}
+            %{file: file_path, behaviors: diagnoses |> Enum.map(&diagnosis_to_map/1)}
           end)
 
         Jason.encode!(%{files: files_json}, pretty: true)
@@ -140,15 +140,14 @@ defmodule CodeQA.Diagnostics do
     categories
     |> Enum.map_join("\n", fn %{name: name, behaviors: behaviors} ->
       rows =
-        Enum.map(behaviors, fn %{behavior: beh, score: score} ->
+        behaviors
+        |> Enum.map(fn %{behavior: beh, score: score} ->
           score_str = :erlang.float_to_binary(score / 1.0, decimals: 2)
           "| #{beh} | #{score_str} |"
         end)
 
-      Enum.join(
-        ["### #{name}", "| Behavior | Score |", "|----------|-------|"] ++ rows ++ [""],
-        "\n"
-      )
+      (["### #{name}", "| Behavior | Score |", "|----------|-------|"] ++ rows ++ [""])
+      |> Enum.join("\n")
     end)
   end
 

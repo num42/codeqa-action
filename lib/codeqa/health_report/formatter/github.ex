@@ -92,7 +92,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
         threshold
 
       _ ->
-        total_impact = Enum.map(cosine, & &1.impact) |> Enum.sum()
+        total_impact = cosine |> Enum.map(& &1.impact) |> Enum.sum()
 
         combined_score =
           round(Enum.sum(cosine |> Enum.map(&(&1.score * &1.impact))) / max(total_impact, 1))

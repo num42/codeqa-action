@@ -55,7 +55,7 @@ defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
       code_block =
         blocks
         |> Enum.find(fn b ->
-          Enum.any?(b.tokens, &(&1.kind == "<ID>" and &1.content == "def"))
+          b.tokens |> Enum.any?(&(&1.kind == "<ID>" and &1.content == "def"))
         end)
 
       assert is_struct(code_block, FunctionNode)

@@ -19,7 +19,8 @@ defmodule CodeQA.Analysis.BehaviorConfigServerTest do
       assert is_list(list)
       assert list != []
 
-      Enum.each(list, fn {behavior, data} ->
+      list
+      |> Enum.each(fn {behavior, data} ->
         assert is_binary(behavior)
         assert is_map(data)
       end)

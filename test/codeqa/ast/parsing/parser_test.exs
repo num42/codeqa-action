@@ -71,7 +71,7 @@ defmodule CodeQA.AST.Parsing.ParserTest do
       args =
         block.children
         |> Enum.find(fn b ->
-          Enum.any?(b.tokens, &(&1.content == "bar"))
+          b.tokens |> Enum.any?(&(&1.content == "bar"))
         end)
 
       assert args != nil, "expected an arg-list sub-block containing 'bar'"
@@ -80,7 +80,7 @@ defmodule CodeQA.AST.Parsing.ParserTest do
       inner =
         args.children
         |> Enum.find(fn b ->
-          Enum.any?(b.tokens, &(&1.content == "x"))
+          b.tokens |> Enum.any?(&(&1.content == "x"))
         end)
 
       assert inner != nil, "expected a sub-block for the inner call (x, y)"
@@ -97,7 +97,7 @@ defmodule CodeQA.AST.Parsing.ParserTest do
       d1 =
         block.children
         |> Enum.find(fn b ->
-          Enum.any?(b.tokens, &(&1.content == "inner"))
+          b.tokens |> Enum.any?(&(&1.content == "inner"))
         end)
 
       assert d1 != nil
@@ -106,7 +106,7 @@ defmodule CodeQA.AST.Parsing.ParserTest do
       d2 =
         d1.children
         |> Enum.find(fn b ->
-          Enum.any?(b.tokens, &(&1.content == "deep"))
+          b.tokens |> Enum.any?(&(&1.content == "deep"))
         end)
 
       assert d2 != nil
@@ -115,7 +115,7 @@ defmodule CodeQA.AST.Parsing.ParserTest do
       d3 =
         d2.children
         |> Enum.find(fn b ->
-          Enum.any?(b.tokens, &(&1.content == "value"))
+          b.tokens |> Enum.any?(&(&1.content == "value"))
         end)
 
       assert d3 != nil
@@ -144,7 +144,7 @@ defmodule CodeQA.AST.Parsing.ParserTest do
       heredoc_block =
         blocks
         |> Enum.find(fn b ->
-          Enum.any?(b.tokens, &(&1.kind == "<DOC>"))
+          b.tokens |> Enum.any?(&(&1.kind == "<DOC>"))
         end)
 
       assert heredoc_block != nil

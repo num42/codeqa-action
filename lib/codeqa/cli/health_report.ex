@@ -460,10 +460,10 @@ defmodule CodeQA.CLI.HealthReport do
         if n == 0 do
           "  #{label}  (none)"
         else
-          avg_bytes = div(Enum.map(bucket, & &1.bytes) |> Enum.sum(), n)
-          avg_tokens = div(Enum.map(bucket, & &1.tokens) |> Enum.sum(), n)
-          avg_nodes = div(Enum.map(bucket, & &1.nodes) |> Enum.sum(), n)
-          avg_node_us = div(Enum.map(bucket, & &1.total_node_us) |> Enum.sum(), n)
+          avg_bytes = div(bucket |> Enum.map(& &1.bytes) |> Enum.sum(), n)
+          avg_tokens = div(bucket |> Enum.map(& &1.tokens) |> Enum.sum(), n)
+          avg_nodes = div(bucket |> Enum.map(& &1.nodes) |> Enum.sum(), n)
+          avg_node_us = div(bucket |> Enum.map(& &1.total_node_us) |> Enum.sum(), n)
           per_node_us = if avg_nodes > 0, do: div(avg_node_us, avg_nodes), else: 0
 
           "  #{label}  files=#{n}  avg bytes=#{avg_bytes} tokens=#{avg_tokens} nodes=#{avg_nodes}  total_node=#{us(avg_node_us)}  per_node=#{us(per_node_us)}"
@@ -540,7 +540,7 @@ defmodule CodeQA.CLI.HealthReport do
   defp avg_us([], _key), do: "n/a"
 
   defp avg_us(measurements, key) do
-    total = Enum.map(measurements, &Map.get(&1, key, 0)) |> Enum.sum()
+    total = measurements |> Enum.map(&Map.get(&1, key, 0)) |> Enum.sum()
     us(div(total, length(measurements)))
   end
 

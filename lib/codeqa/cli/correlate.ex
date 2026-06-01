@@ -150,7 +150,7 @@ defmodule CodeQA.CLI.Correlate do
   defp flatten_aggregate_metrics(aggregate) do
     aggregate
     |> Enum.flat_map(fn {category, metrics} ->
-      Enum.map(metrics, fn {name, val} -> {"#{category}.#{name}", val} end)
+      metrics |> Enum.map(fn {name, val} -> {"#{category}.#{name}", val} end)
     end)
   end
 
@@ -188,7 +188,7 @@ defmodule CodeQA.CLI.Correlate do
 
     normal
     |> Stream.flat_map(fn k1 ->
-      Stream.map(combined, fn k2 -> {k1, k2} end)
+      combined |> Stream.map(fn k2 -> {k1, k2} end)
     end)
   end
 
