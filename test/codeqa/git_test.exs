@@ -143,7 +143,8 @@ defmodule CodeQA.GitTest do
 
         # Change line 2 and line 15
         new_lines =
-          Enum.map_join(1..20, "\n", fn
+          1..20
+          |> Enum.map_join("\n", fn
             2 -> "changed2"
             15 -> "changed15"
             n -> "line#{n}"
@@ -258,7 +259,8 @@ defmodule CodeQA.GitTest do
 
         # Change lines 2, 10, and 18
         new_lines =
-          Enum.map_join(1..20, "\n", fn
+          1..20
+          |> Enum.map_join("\n", fn
             2 -> "changed2"
             10 -> "changed10"
             18 -> "changed18"
