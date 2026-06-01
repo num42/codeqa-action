@@ -108,14 +108,7 @@ defmodule CodeQA.Git do
   end
 
   defp parse_change_line(line) do
-    case String.split(line, "\t", parts: 2) do
-      [status_code, path] when byte_size(status_code) > 0 ->
-        status = Map.get(@status_map, String.first(status_code), "modified")
-        if source_file?(path), do: [%ChangedFile{path: path, status: status}], else: []
-
-      _ ->
-        []
-    end
+    String.split(line, "\t", parts: 2) |> handle_parse_change_line_split()
   end
 
   defp list_source_files_at_ref(repo_path, ref) do
@@ -166,5 +159,16 @@ defmodule CodeQA.Git do
 
   defp handle_parse_diff_line_run(nil, acc, current_file) do
     {current_file, acc}
+  end
+
+  # FIXME: extracted automatically by ExtractCaseToHelper — review
+  # the parameter list and consider a better name.
+  defp handle_parse_change_line_split([status_code, path]) when byte_size(status_code) > 0 do
+    status = Map.get(@status_map, String.first(status_code), "modified")
+    if source_file?(path), do: [%ChangedFile{path: path, status: status}], else: []
+  end
+
+  defp handle_parse_change_line_split(_) do
+    []
   end
 end
