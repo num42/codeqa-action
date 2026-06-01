@@ -122,9 +122,8 @@ defmodule CodeQA.HealthReport.TopBlocks do
        do: blocks
 
   # When diff_line_ranges provided, filter blocks by overlap
-  defp filter_by_diff_overlap(blocks, path_ranges, _diff_line_ranges) do
-    blocks |> Enum.filter(&block_overlaps_diff?(&1, path_ranges))
-  end
+  defp filter_by_diff_overlap(blocks, path_ranges, _diff_line_ranges),
+    do: blocks |> Enum.filter(&block_overlaps_diff?(&1, path_ranges))
 
   @spec block_overlaps_diff?(map(), [{pos_integer(), pos_integer()}]) :: boolean()
   defp block_overlaps_diff?(_node, []), do: false
@@ -140,9 +139,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
   end
 
   @spec ranges_overlap?(pos_integer(), pos_integer(), pos_integer(), pos_integer()) :: boolean()
-  defp ranges_overlap?(start1, end1, start2, end2) do
-    start1 <= end2 and start2 <= end1
-  end
+  defp ranges_overlap?(start1, end1, start2, end2), do: start1 <= end2 and start2 <= end1
 
   defp collect_nodes(node) do
     children = node |> Map.get("children", []) |> Enum.flat_map(&collect_nodes/1)
@@ -221,11 +218,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
 
   # FIXME: extracted automatically by ExtractCaseToHelper — review
   # the parameter list and consider a better name.
-  defp handle_hints_for_behavior_get(nil, _behavior, _category) do
-    []
-  end
+  defp handle_hints_for_behavior_get(nil, _behavior, _category), do: []
 
-  defp handle_hints_for_behavior_get(hint, behavior, category) do
-    [{{category, behavior}, hint}]
-  end
+  defp handle_hints_for_behavior_get(hint, behavior, category), do: [{{category, behavior}, hint}]
 end

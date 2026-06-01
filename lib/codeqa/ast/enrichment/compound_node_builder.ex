@@ -88,9 +88,7 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilder do
     }
   end
 
-  defp start_compound(new_block) do
-    add_block(empty_compound(), new_block)
-  end
+  defp start_compound(new_block), do: empty_compound() |> add_block(new_block)
 
   # Separates children by type — :doc/:typespec go up to the compound level.
   defp promote_sub_blocks(children) do
@@ -128,9 +126,8 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilder do
   # A blank-line boundary exists when the trailing whitespace contains 3+ <NL> tokens
   # (i.e. 2+ blank lines). A single blank line (2 NLs: end-of-line + blank line) is
   # common within a compound (e.g. between function clauses) and does not split.
-  defp blank_line_boundary?(trailing_ws) do
-    Enum.count(trailing_ws, &(&1.kind == NewlineToken.kind())) >= 3
-  end
+  defp blank_line_boundary?(trailing_ws),
+    do: Enum.count(trailing_ws, &(&1.kind == NewlineToken.kind())) >= 3
 
   # Computes boundaries from all constituent nodes in source order:
   # docs → typespecs → code. Reads col directly from Token structs.

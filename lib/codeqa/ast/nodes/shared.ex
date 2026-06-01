@@ -13,14 +13,15 @@ defmodule CodeQA.AST.Nodes.Shared do
   alias CodeQA.AST.Enrichment.Node
 
   @spec cast_shared(module(), Node.t()) :: struct()
-  def cast_shared(target_struct, %Node{} = node) do
-    struct(target_struct,
-      tokens: node.tokens,
-      line_count: node.line_count,
-      children: node.children,
-      start_line: node.start_line,
-      end_line: node.end_line,
-      label: node.label
-    )
-  end
+  def cast_shared(target_struct, %Node{} = node),
+    do:
+      target_struct
+      |> struct(
+        tokens: node.tokens,
+        line_count: node.line_count,
+        children: node.children,
+        start_line: node.start_line,
+        end_line: node.end_line,
+        label: node.label
+      )
 end

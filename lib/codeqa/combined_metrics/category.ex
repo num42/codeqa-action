@@ -32,9 +32,8 @@ defmodule CodeQA.CombinedMetrics.Category do
       Delegates to `CodeQA.CombinedMetrics.Scorer.compute_score/3`.
       """
       @spec compute_score(String.t(), map()) :: float()
-      def compute_score(metric_name, metrics) do
-        Scorer.compute_score(unquote(yaml_path), metric_name, metrics)
-      end
+      def compute_score(metric_name, metrics),
+        do: unquote(yaml_path) |> Scorer.compute_score(metric_name, metrics)
     end
   end
 end

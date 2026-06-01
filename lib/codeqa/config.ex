@@ -52,9 +52,7 @@ defmodule CodeQA.Config do
   @spec near_duplicate_blocks_opts() :: keyword()
   def near_duplicate_blocks_opts, do: fetch().near_duplicate_blocks
 
-  defp fetch do
-    :persistent_term.get(@key, %__MODULE__{})
-  end
+  defp fetch, do: @key |> :persistent_term.get(%__MODULE__{})
 
   defp parse(path) do
     config_file = Path.join(path, ".codeqa.yml")
@@ -62,15 +60,14 @@ defmodule CodeQA.Config do
     File.read(config_file) |> handle_parse_read()
   end
 
-  defp from_yaml(yaml) do
-    %__MODULE__{
+  defp from_yaml(yaml),
+    do: %__MODULE__{
       ignore_paths: parse_ignore_paths(yaml),
       impact_map: parse_impact(yaml),
       combined_top: Map.get(yaml, "combined_top", 2),
       cosine_significance_threshold: Map.get(yaml, "cosine_significance_threshold", 0.15),
       near_duplicate_blocks: parse_near_duplicate_blocks(yaml)
     }
-  end
 
   defp parse_ignore_paths(%{"ignore_paths" => patterns}) when is_list(patterns), do: patterns
   defp parse_ignore_paths(_), do: []
@@ -95,21 +92,14 @@ defmodule CodeQA.Config do
 
   # FIXME: extracted automatically by ExtractCaseToHelper — review
   # the parameter list and consider a better name.
-  defp handle_parse_read({:ok, contents}) do
-    YamlElixir.read_from_string(contents) |> handle_read_from_string()
-  end
+  defp handle_parse_read({:ok, contents}),
+    do: YamlElixir.read_from_string(contents) |> handle_read_from_string()
 
-  defp handle_parse_read({:error, _}) do
-    %__MODULE__{}
-  end
+  defp handle_parse_read({:error, _}), do: %__MODULE__{}
 
   # FIXME: extracted automatically by ExtractCaseToHelper — review
   # the parameter list and consider a better name.
-  defp handle_read_from_string({:ok, yaml}) do
-    from_yaml(yaml)
-  end
+  defp handle_read_from_string({:ok, yaml}), do: yaml |> from_yaml()
 
-  defp handle_read_from_string(_) do
-    %__MODULE__{}
-  end
+  defp handle_read_from_string(_), do: %__MODULE__{}
 end

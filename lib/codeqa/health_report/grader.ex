@@ -12,13 +12,11 @@ defmodule CodeQA.HealthReport.Grader do
   For `good: :high`, higher values are better (above A threshold = 100).
   """
   @spec score_metric(map(), number()) :: integer()
-  def score_metric(%{good: :high, thresholds: t}, value) do
-    score_by_direction(:high, value, t) |> clamp(0, 100)
-  end
+  def score_metric(%{good: :high, thresholds: t}, value),
+    do: score_by_direction(:high, value, t) |> clamp(0, 100)
 
-  def score_metric(%{good: _, thresholds: t}, value) do
-    score_by_direction(:low, value, t) |> clamp(0, 100)
-  end
+  def score_metric(%{good: _, thresholds: t}, value),
+    do: score_by_direction(:low, value, t) |> clamp(0, 100)
 
   @doc """
   Maps cosine similarity [-1, +1] to a score [0, 100] with linear interpolation
@@ -33,12 +31,12 @@ defmodule CodeQA.HealthReport.Grader do
   | [-1.0, -0.3)  | [0, 30)     |
   """
   @spec score_cosine(float()) :: integer()
-  def score_cosine(cosine) do
-    cosine
-    |> cosine_to_score()
-    |> clamp(0, 100)
-    |> round()
-  end
+  def score_cosine(cosine),
+    do:
+      cosine
+      |> cosine_to_score()
+      |> clamp(0, 100)
+      |> round()
 
   defp cosine_to_score(c) when c >= 0.5, do: interpolate_between(c, 0.5, 90, 1.0, 100)
   defp cosine_to_score(c) when c >= 0.2, do: interpolate_between(c, 0.2, 70, 0.5, 90)
@@ -90,9 +88,7 @@ defmodule CodeQA.HealthReport.Grader do
     round(Kernel.max(0, score_at_d - deviation * score_at_d))
   end
 
-  defp clamp(val, min_val, max_val) do
-    val |> Kernel.max(min_val) |> Kernel.min(max_val)
-  end
+  defp clamp(val, min_val, max_val), do: val |> Kernel.max(min_val) |> Kernel.min(max_val)
 
   @doc "Convert a numeric score (0-100) to a letter grade using the given scale."
   @spec grade_letter(number(), [{number(), String.t()}]) :: String.t()
@@ -166,9 +162,8 @@ defmodule CodeQA.HealthReport.Grader do
         categories,
         file_metrics,
         scale \\ Categories.default_grade_scale()
-      ) do
-    categories |> Enum.map(&grade_category(&1, file_metrics, scale))
-  end
+      ),
+      do: categories |> Enum.map(&grade_category(&1, file_metrics, scale))
 
   @doc """
   Grade codebase aggregate metrics. Uses mean_ values from aggregate.
@@ -261,11 +256,11 @@ defmodule CodeQA.HealthReport.Grader do
     end)
   end
 
-  defp score_behavior_entries(behaviors, threshold, worst_files, scale, category) do
-    behaviors
-    |> Enum.reject(&(abs(&1.cosine) < threshold))
-    |> Enum.map(&score_behavior_entry(&1, worst_files, scale, category))
-  end
+  defp score_behavior_entries(behaviors, threshold, worst_files, scale, category),
+    do:
+      behaviors
+      |> Enum.reject(&(abs(&1.cosine) < threshold))
+      |> Enum.map(&score_behavior_entry(&1, worst_files, scale, category))
 
   defp score_behavior_entry(b, worst_files, scale, category) do
     cosine_score = score_cosine(b.cosine)
@@ -281,12 +276,11 @@ defmodule CodeQA.HealthReport.Grader do
 
   defp average_behavior_score([]), do: 50
 
-  defp average_behavior_score(entries) do
-    round(Enum.sum(entries |> Enum.map(& &1.score)) / length(entries))
-  end
+  defp average_behavior_score(entries),
+    do: (Enum.sum(entries |> Enum.map(& &1.score)) / length(entries)) |> round()
 
-  defp build_cosine_category(category, category_score, behavior_entries, scale) do
-    %{
+  defp build_cosine_category(category, category_score, behavior_entries, scale),
+    do: %{
       type: :cosine,
       key: category,
       name: humanize_category(category),
@@ -294,7 +288,6 @@ defmodule CodeQA.HealthReport.Grader do
       grade: grade_letter(category_score, scale),
       behaviors: behavior_entries
     }
-  end
 
   defp humanize_category(slug), do: humanize_category_shared(slug)
 

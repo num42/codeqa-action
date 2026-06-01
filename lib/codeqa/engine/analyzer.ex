@@ -87,10 +87,10 @@ defmodule CodeQA.Engine.Analyzer do
     result |> Map.new()
   end
 
-  defp registered_module_for(name) do
-    Enum.find(@registry.file_metrics, &(&1.name() == name)) ||
-      raise "no registered file metric module for name #{inspect(name)}"
-  end
+  defp registered_module_for(name),
+    do:
+      Enum.find(@registry.file_metrics, &(&1.name() == name)) ||
+        raise("no registered file metric module for name #{inspect(name)}")
 
   @spec analyze_codebase_aggregate(map(), keyword()) :: map()
   def analyze_codebase_aggregate(files_map, opts \\ []) do
@@ -100,9 +100,8 @@ defmodule CodeQA.Engine.Analyzer do
     end)
   end
 
-  def analyze_codebase(files, opts \\ []) do
-    with_run_context(opts, &do_analyze_codebase(files, &1))
-  end
+  def analyze_codebase(files, opts \\ []),
+    do: opts |> with_run_context(&do_analyze_codebase(files, &1))
 
   defp with_run_context(opts, fun) do
     {:ok, sup} = RunSupervisor.start_link()

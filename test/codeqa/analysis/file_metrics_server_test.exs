@@ -4,9 +4,7 @@ defmodule CodeQA.Analysis.FileMetricsServerTest do
   alias CodeQA.Analysis.FileMetricsServer
   alias CodeQA.Engine.Analyzer
 
-  defp build_registry do
-    Analyzer.build_registry()
-  end
+  defp build_registry, do: Analyzer.build_registry()
 
   setup do
     {:ok, pid} = FileMetricsServer.start_link()

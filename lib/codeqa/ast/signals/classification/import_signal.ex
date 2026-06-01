@@ -24,15 +24,14 @@ defmodule CodeQA.AST.Signals.Classification.ImportSignal do
     def source(_), do: CodeQA.AST.Signals.Classification.ImportSignal
     def group(_), do: :classification
 
-    def init(_, lang_mod) do
-      %{
+    def init(_, lang_mod),
+      do: %{
         at_line_start: true,
         indent: 0,
         is_first: true,
         voted: false,
         keywords: Language.import_keywords(lang_mod)
       }
-    end
 
     def emit(_, _, %{voted: true} = state), do: {MapSet.new(), state}
 

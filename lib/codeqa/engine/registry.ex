@@ -5,13 +5,11 @@ defmodule CodeQA.Engine.Registry do
 
   def new, do: %__MODULE__{}
 
-  def register_file_metric(%__MODULE__{} = reg, metric_module) do
-    %{reg | file_metrics: reg.file_metrics ++ [metric_module]}
-  end
+  def register_file_metric(%__MODULE__{} = reg, metric_module),
+    do: %{reg | file_metrics: reg.file_metrics ++ [metric_module]}
 
-  def register_codebase_metric(%__MODULE__{} = reg, metric_module) do
-    %{reg | codebase_metrics: reg.codebase_metrics ++ [metric_module]}
-  end
+  def register_codebase_metric(%__MODULE__{} = reg, metric_module),
+    do: %{reg | codebase_metrics: reg.codebase_metrics ++ [metric_module]}
 
   def run_file_metrics(%__MODULE__{} = reg, ctx, opts \\ []) do
     base_metrics =

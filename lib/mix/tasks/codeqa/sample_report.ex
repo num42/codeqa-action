@@ -203,9 +203,8 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
     IO.puts("")
   end
 
-  defp print_scalar_stats(%{category: cat, updated: u, deadzoned: d, skipped: s}) do
-    IO.puts("  #{pad(cat, 30)}  #{u} written  #{d} deadzoned  #{s} skipped (no samples)")
-  end
+  defp print_scalar_stats(%{category: cat, updated: u, deadzoned: d, skipped: s}),
+    do: "  #{pad(cat, 30)}  #{u} written  #{d} deadzoned  #{s} skipped (no samples)" |> IO.puts()
 
   defp fmt(f), do: :erlang.float_to_binary(f / 1, decimals: 4)
   defp pad(s, n), do: String.pad_trailing(to_string(s), n)

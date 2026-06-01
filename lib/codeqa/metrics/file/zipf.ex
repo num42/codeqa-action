@@ -21,9 +21,8 @@ defmodule CodeQA.Metrics.File.Zipf do
 
   @spec analyze(map()) :: map()
   @impl true
-  def analyze(%{tokens: [], token_counts: _token_counts}) do
-    %{"exponent" => 0.0, "r_squared" => 0.0, "vocab_size" => 0, "total_tokens" => 0}
-  end
+  def analyze(%{tokens: [], token_counts: _token_counts}),
+    do: %{"exponent" => 0.0, "r_squared" => 0.0, "vocab_size" => 0, "total_tokens" => 0}
 
   def analyze(%{tokens: tokens, token_counts: token_counts}) do
     frequencies = token_counts |> Map.values() |> Enum.sort(:desc)

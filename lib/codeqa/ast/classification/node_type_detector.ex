@@ -14,7 +14,6 @@ defmodule CodeQA.AST.Classification.NodeTypeDetector do
   Classify each node in the list into the most specific typed struct.
   """
   @spec detect_types([Node.t()], module()) :: [term()]
-  def detect_types(blocks, lang_mod) do
-    blocks |> Enum.map(&NodeClassifier.classify(&1, lang_mod))
-  end
+  def detect_types(blocks, lang_mod),
+    do: blocks |> Enum.map(&NodeClassifier.classify(&1, lang_mod))
 end

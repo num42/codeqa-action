@@ -249,9 +249,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   Returns a list of `%{category: String.t(), behaviors_with_languages: non_neg_integer()}`.
   """
   @spec apply_languages(keyword()) :: [map()]
-  def apply_languages(opts \\ []) do
-    ScalarApplier.apply_languages(opts)
-  end
+  def apply_languages(opts \\ []), do: opts |> ScalarApplier.apply_languages()
 
   # ---------------------------------------------------------------------------
   # Sample discovery
@@ -267,21 +265,20 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     end)
   end
 
-  defp has_both_dirs?(category, behavior) do
-    File.dir?(sample_path(category, behavior, "bad")) and
-      File.dir?(sample_path(category, behavior, "good"))
-  end
+  defp has_both_dirs?(category, behavior),
+    do:
+      File.dir?(sample_path(category, behavior, "bad")) and
+        File.dir?(sample_path(category, behavior, "good"))
 
-  defp sample_path(category, behavior, kind) do
-    Path.join([@samples_root, category, behavior, kind])
-  end
+  defp sample_path(category, behavior, kind),
+    do: [@samples_root, category, behavior, kind] |> Path.join()
 
-  defp analyze(dir) do
-    dir
-    |> Collector.collect_files()
-    |> Analyzer.analyze_codebase()
-    |> get_in(["codebase", "aggregate"])
-  end
+  defp analyze(dir),
+    do:
+      dir
+      |> Collector.collect_files()
+      |> Analyzer.analyze_codebase()
+      |> get_in(["codebase", "aggregate"])
 
   # ---------------------------------------------------------------------------
   # Sample scoring
@@ -466,9 +463,8 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     end
   end
 
-  defp track_behavior_us(behavior, us) do
-    Process.get(:codeqa_cosine_breakdown) |> handle_track_behavior_us_get(behavior, us)
-  end
+  defp track_behavior_us(behavior, us),
+    do: Process.get(:codeqa_cosine_breakdown) |> handle_track_behavior_us_get(behavior, us)
 
   # ---------------------------------------------------------------------------
   # Language filtering
@@ -502,9 +498,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
 
   # FIXME: extracted automatically by ExtractCaseToHelper — review
   # the parameter list and consider a better name.
-  defp handle_track_behavior_us_get(nil, _behavior, _us) do
-    :ok
-  end
+  defp handle_track_behavior_us_get(nil, _behavior, _us), do: :ok
 
   defp handle_track_behavior_us_get(breakdown, behavior, us) do
     cur = Map.get(breakdown, behavior, 0)

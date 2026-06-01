@@ -22,15 +22,14 @@ defmodule CodeQA.AST.Signals.Structural.ColonIndentSignal do
     def source(_), do: CodeQA.AST.Signals.Structural.ColonIndentSignal
     def group(_), do: :enclosure
 
-    def init(_, lang_mod) do
-      %{
+    def init(_, lang_mod),
+      do: %{
         enabled: lang_mod.uses_colon_indent?(),
         idx: 0,
         ci: 0,
         last_colon_indent: nil,
         stack: []
       }
-    end
 
     def emit(_, _, %{enabled: false} = state),
       do: {MapSet.new(), %{state | idx: state.idx + 1}}

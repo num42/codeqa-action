@@ -12,8 +12,8 @@ defmodule CodeQA.HealthReport.Config do
           block_min_lines: pos_integer(),
           block_max_lines: pos_integer()
         }
-  def load(nil) do
-    %{
+  def load(nil),
+    do: %{
       categories: Categories.defaults(),
       grade_scale: Categories.default_grade_scale(),
       impact_map: Config.impact_map(),
@@ -21,7 +21,6 @@ defmodule CodeQA.HealthReport.Config do
       block_min_lines: 3,
       block_max_lines: 20
     }
-  end
 
   def load(path) do
     yaml = YamlElixir.read_from_file!(path)
@@ -83,15 +82,15 @@ defmodule CodeQA.HealthReport.Config do
     |> Enum.sort_by(&elem(&1, 0), :desc)
   end
 
-  defp merge_category(key, nil, override) do
-    # New category from YAML only
-    %{
-      key: String.to_atom(key),
-      name: Map.get(override, "name", key),
-      metrics: Map.get(override, "metrics", []) |> Enum.map(&parse_metric/1)
-    }
-    |> maybe_put_top(override)
-  end
+  # New category from YAML only
+  defp merge_category(key, nil, override),
+    do:
+      %{
+        key: String.to_atom(key),
+        name: Map.get(override, "name", key),
+        metrics: Map.get(override, "metrics", []) |> Enum.map(&parse_metric/1)
+      }
+      |> maybe_put_top(override)
 
   defp merge_category(_key, default, nil), do: default
 
@@ -150,15 +149,14 @@ defmodule CodeQA.HealthReport.Config do
     }
   end
 
-  defp parse_metric(m) do
-    %{
+  defp parse_metric(m),
+    do: %{
       name: m["name"],
       source: m["source"],
       weight: m["weight"],
       good: parse_good(m["good"]),
       thresholds: atomize_thresholds(Map.get(m, "thresholds", %{}))
     }
-  end
 
   defp parse_good(nil), do: :low
   defp parse_good("high"), do: :high

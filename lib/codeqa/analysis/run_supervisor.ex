@@ -16,9 +16,7 @@ defmodule CodeQA.Analysis.RunSupervisor do
   alias CodeQA.Analysis.RunContext
 
   @spec start_link(keyword()) :: Supervisor.on_start()
-  def start_link(opts \\ []) do
-    Supervisor.start_link(__MODULE__, opts)
-  end
+  def start_link(opts \\ []), do: __MODULE__ |> Supervisor.start_link(opts)
 
   @doc """
   Queries child PIDs from `sup` and returns a `RunContext` struct.

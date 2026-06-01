@@ -223,8 +223,8 @@ defmodule CodeQA.CombinedMetrics.FileScorerTest do
   # Build a realistic files_map using a real project file so diagnose_aggregate
   # has real metric values to work with. We use a small fixed map rather than
   # running the full analyzer to keep tests fast.
-  defp build_files_map do
-    %{
+  defp build_files_map,
+    do: %{
       "lib/example_a.ex" => %{
         "metrics" => %{
           "halstead" => %{
@@ -296,5 +296,4 @@ defmodule CodeQA.CombinedMetrics.FileScorerTest do
         "bytes" => 8192
       }
     }
-  end
 end

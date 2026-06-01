@@ -25,8 +25,8 @@ defmodule CodeQA.AST.Nodes.AttributeNode do
 
   @doc "Build an AttributeNode from a raw %Node{}, detecting :typespec kind from tokens."
   @spec cast(Node.t()) :: t()
-  def cast(%Node{} = node) do
-    %__MODULE__{
+  def cast(%Node{} = node),
+    do: %__MODULE__{
       tokens: node.tokens,
       line_count: node.line_count,
       children: node.children,
@@ -35,7 +35,6 @@ defmodule CodeQA.AST.Nodes.AttributeNode do
       label: node.label,
       kind: detect_kind(node.tokens)
     }
-  end
 
   defp detect_kind(tokens) do
     tokens

@@ -95,9 +95,7 @@ defmodule CodeQA.Metrics.File.FunctionMetrics do
     end
   end
 
-  defp count_params(line) do
-    Regex.run(~r/\(([^)]*)\)/, line) |> handle_count_params_run()
-  end
+  defp count_params(line), do: Regex.run(~r/\(([^)]*)\)/, line) |> handle_count_params_run()
 
   defp count_top_level_commas(args) do
     args
@@ -120,7 +118,5 @@ defmodule CodeQA.Metrics.File.FunctionMetrics do
     if args == "", do: 0, else: count_top_level_commas(args) + 1
   end
 
-  defp handle_count_params_run(_) do
-    0
-  end
+  defp handle_count_params_run(_), do: 0
 end

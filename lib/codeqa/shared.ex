@@ -12,18 +12,18 @@ defmodule CodeQA.Shared do
   alias CodeQA.Language
 
   @spec project_languages_shared(map()) :: [String.t()]
-  def project_languages_shared(path_keyed_map) do
-    path_keyed_map
-    |> Map.keys()
-    |> Enum.map(&Language.detect(&1).name())
-    |> Enum.reject(&(&1 == "unknown"))
-    |> Enum.uniq()
-  end
+  def project_languages_shared(path_keyed_map),
+    do:
+      path_keyed_map
+      |> Map.keys()
+      |> Enum.map(&Language.detect(&1).name())
+      |> Enum.reject(&(&1 == "unknown"))
+      |> Enum.uniq()
 
   @spec humanize_category_shared(String.t()) :: String.t()
-  def humanize_category_shared(slug) do
-    slug
-    |> String.split("_")
-    |> Enum.map_join(" ", &String.capitalize/1)
-  end
+  def humanize_category_shared(slug),
+    do:
+      slug
+      |> String.split("_")
+      |> Enum.map_join(" ", &String.capitalize/1)
 end

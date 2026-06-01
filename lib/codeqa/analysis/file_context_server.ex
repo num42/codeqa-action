@@ -24,9 +24,7 @@ defmodule CodeQA.Analysis.FileContextServer do
   # --- Public API ---
 
   @spec start_link(keyword()) :: GenServer.on_start()
-  def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, opts)
-  end
+  def start_link(opts \\ []), do: __MODULE__ |> GenServer.start_link(opts)
 
   @doc "Returns the ETS table id. Callers may read directly from it."
   @spec get_tid(pid()) :: :ets.tid()
@@ -64,9 +62,7 @@ defmodule CodeQA.Analysis.FileContextServer do
   end
 
   @impl true
-  def handle_call(:get_tid, _from, state) do
-    {:reply, state.tid, state}
-  end
+  def handle_call(:get_tid, _from, state), do: {:reply, state.tid, state}
 
   # --- Private helpers ---
 

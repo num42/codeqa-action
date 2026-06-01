@@ -21,9 +21,8 @@ defmodule CodeQA.Metrics.File.IdentifierLengthVariance do
 
   @spec analyze(map()) :: map()
   @impl true
-  def analyze(%{identifiers: []}) do
-    %{"mean" => 0.0, "variance" => 0.0, "std_dev" => 0.0, "max" => 0}
-  end
+  def analyze(%{identifiers: []}),
+    do: %{"mean" => 0.0, "variance" => 0.0, "std_dev" => 0.0, "max" => 0}
 
   def analyze(%{identifiers: identifiers}) do
     lengths = identifiers |> Enum.map(&String.length/1)

@@ -23,9 +23,7 @@ defmodule CodeQA.Metrics.File.Heaps do
 
   @spec analyze(map()) :: map()
   @impl true
-  def analyze(%{tokens: []}) do
-    %{"k" => 0.0, "beta" => 0.0, "r_squared" => 0.0}
-  end
+  def analyze(%{tokens: []}), do: %{"k" => 0.0, "beta" => 0.0, "r_squared" => 0.0}
 
   def analyze(%{tokens: tokens}) do
     total = length(tokens)

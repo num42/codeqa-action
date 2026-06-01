@@ -37,13 +37,12 @@ defmodule CodeQA.AST.NodeClassifierTest do
     NodeClassifier.classify(block, lang_mod)
   end
 
-  defp node_with_tokens(tokens) do
-    %Node{
+  defp node_with_tokens(tokens),
+    do: %Node{
       tokens: tokens,
       line_count: 1,
       children: []
     }
-  end
 
   describe "classify/1 — function detection" do
     test "def → FunctionNode" do

@@ -138,12 +138,11 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     ]
   end
 
-  defp cosine_legend do
-    [
+  defp cosine_legend,
+    do: [
       "> *Combined metric scores use cosine similarity: +1 = metric profile perfectly matches healthy pattern for this behavior, 0 = no signal, −1 = anti-pattern detected. Mapped to 0–100 using breakpoints (approx: ≥0.5→A, ≥0.2→B, ≥0.0→C, ≥−0.3→D, <−0.3→F); actual letter grades use the full 15-step scale.*",
       ""
     ]
-  end
 
   defp mermaid_chart(categories) do
     names = categories |> Enum.map_join(", ", fn c -> ~s("#{c.name}") end)
@@ -192,9 +191,8 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
   defp category_sections(_categories, :summary, _worst_blocks), do: []
 
-  defp category_sections(categories, detail, worst_blocks) do
-    categories |> Enum.flat_map(&render_category(&1, detail, worst_blocks))
-  end
+  defp category_sections(categories, detail, worst_blocks),
+    do: categories |> Enum.flat_map(&render_category(&1, detail, worst_blocks))
 
   defp render_category(%{type: :cosine_group} = group, detail, worst_blocks) do
     emoji = grade_emoji(group.grade)
@@ -392,10 +390,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     ]
   end
 
-  defp footer do
-    # Legacy footer for single-part render/3 (used by --output file mode)
-    ["<!-- Sticky Pull Request Commentcodeqa-health-report -->", ""]
-  end
+  defp footer, do: ["<!-- Sticky Pull Request Commentcodeqa-health-report -->", ""]
 
   @doc false
   def grade_emoji(grade) do
@@ -461,9 +456,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     end
   end
 
-  defp blocks_section([]) do
-    ["> 🟢 **No block-level issues detected**", ""]
-  end
+  defp blocks_section([]), do: ["> 🟢 **No block-level issues detected**", ""]
 
   defp blocks_section(top_blocks) do
     severity_counts = count_severities(top_blocks)

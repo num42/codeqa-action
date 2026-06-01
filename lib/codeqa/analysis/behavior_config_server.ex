@@ -18,9 +18,7 @@ defmodule CodeQA.Analysis.BehaviorConfigServer do
   # --- Public API ---
 
   @spec start_link(keyword()) :: GenServer.on_start()
-  def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, opts)
-  end
+  def start_link(opts \\ []), do: __MODULE__ |> GenServer.start_link(opts)
 
   @doc "Returns the ETS table id. Callers may read directly from it."
   @spec get_tid(pid()) :: :ets.tid()
@@ -74,15 +72,11 @@ defmodule CodeQA.Analysis.BehaviorConfigServer do
   end
 
   @impl true
-  def handle_call(:get_tid, _from, state) do
-    {:reply, state.tid, state}
-  end
+  def handle_call(:get_tid, _from, state), do: {:reply, state.tid, state}
 
   # --- Private helpers ---
 
-  defp load_configs(tid) do
-    File.ls(@yaml_dir) |> handle_load_configs_ls(tid)
-  end
+  defp load_configs(tid), do: File.ls(@yaml_dir) |> handle_load_configs_ls(tid)
 
   defp load_yml_file(yml_file, tid) do
     category = String.trim_trailing(yml_file, ".yml")
@@ -111,13 +105,11 @@ defmodule CodeQA.Analysis.BehaviorConfigServer do
 
   # FIXME: extracted automatically by ExtractCaseToHelper — review
   # the parameter list and consider a better name.
-  defp handle_load_configs_ls({:ok, files}, tid) do
-    files
-    |> Enum.filter(&String.ends_with?(&1, ".yml"))
-    |> Enum.each(&load_yml_file(&1, tid))
-  end
+  defp handle_load_configs_ls({:ok, files}, tid),
+    do:
+      files
+      |> Enum.filter(&String.ends_with?(&1, ".yml"))
+      |> Enum.each(&load_yml_file(&1, tid))
 
-  defp handle_load_configs_ls({:error, _}, _tid) do
-    :ok
-  end
+  defp handle_load_configs_ls({:error, _}, _tid), do: :ok
 end

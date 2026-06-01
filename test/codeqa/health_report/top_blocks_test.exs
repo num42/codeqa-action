@@ -5,8 +5,8 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
   alias CodeQA.HealthReport.TopBlocks
 
   # A node with cosine_delta 0.60 — will be :critical when codebase_cosine = 0.0 (gap=1.0, ratio=0.60)
-  defp make_node(cosine_delta, token_count \\ 20) do
-    %{
+  defp make_node(cosine_delta, token_count \\ 20),
+    do: %{
       "start_line" => 1,
       "end_line" => 10,
       "type" => "code",
@@ -20,15 +20,12 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
       ],
       "children" => []
     }
-  end
 
-  defp make_results(nodes) do
-    %{"files" => %{"lib/foo.ex" => %{"nodes" => nodes}}, "metadata" => %{"path" => "/tmp"}}
-  end
+  defp make_results(nodes),
+    do: %{"files" => %{"lib/foo.ex" => %{"nodes" => nodes}}, "metadata" => %{"path" => "/tmp"}}
 
-  defp lookup(cosine \\ 0.0) do
-    %{{"function_design", "cyclomatic_complexity_under_10"} => cosine}
-  end
+  defp lookup(cosine \\ 0.0),
+    do: %{{"function_design", "cyclomatic_complexity_under_10"} => cosine}
 
   describe "severity classification" do
     test ":critical when severity_ratio > 0.50" do

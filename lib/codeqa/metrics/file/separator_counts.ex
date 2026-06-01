@@ -17,28 +17,26 @@ defmodule CodeQA.Metrics.File.SeparatorCounts do
 
   @spec analyze(map()) :: map()
   @impl true
-  def analyze(%{content: content}) do
-    %{
+  def analyze(%{content: content}),
+    do: %{
       "underscore_count" => count(content, "_"),
       "hyphen_count" => count(content, "-"),
       "slash_count" => count(content, "/"),
       "dot_count" => count(content, ".")
     }
-  end
 
   @impl true
-  def analyze_loo(baseline, block_content) do
-    %{
+  def analyze_loo(baseline, block_content),
+    do: %{
       "underscore_count" => baseline["underscore_count"] - count(block_content, "_"),
       "hyphen_count" => baseline["hyphen_count"] - count(block_content, "-"),
       "slash_count" => baseline["slash_count"] - count(block_content, "/"),
       "dot_count" => baseline["dot_count"] - count(block_content, ".")
     }
-  end
 
-  defp count(content, char) do
-    content
-    |> String.graphemes()
-    |> Enum.count(&(&1 == char))
-  end
+  defp count(content, char),
+    do:
+      content
+      |> String.graphemes()
+      |> Enum.count(&(&1 == char))
 end

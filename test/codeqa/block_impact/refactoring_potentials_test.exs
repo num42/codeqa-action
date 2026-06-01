@@ -6,11 +6,11 @@ defmodule CodeQA.BlockImpact.RefactoringPotentialsTest do
   alias CodeQA.CombinedMetrics.SampleRunner
   alias CodeQA.Engine.Analyzer
 
-  defp file_cosines(fm) do
-    fm
-    |> FileScorer.file_to_aggregate()
-    |> SampleRunner.diagnose_aggregate(top: 99_999)
-  end
+  defp file_cosines(fm),
+    do:
+      fm
+      |> FileScorer.file_to_aggregate()
+      |> SampleRunner.diagnose_aggregate(top: 99_999)
 
   describe "compute/5" do
     test "returns a list of maps with category, behavior, cosine_delta" do

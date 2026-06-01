@@ -21,12 +21,8 @@ defmodule CodeQA.AST.Enrichment.NodeAnalyzer do
   Function parameters are NOT extracted here (see `param_variables/1`).
   """
   @spec bound_variables([Token.t()]) :: MapSet.t(String.t())
-  def bound_variables(tokens) do
-    MapSet.union(
-      assignment_bindings(tokens),
-      arrow_bindings(tokens)
-    )
-  end
+  def bound_variables(tokens),
+    do: assignment_bindings(tokens) |> MapSet.union(arrow_bindings(tokens))
 
   # Collect `<ID>` immediately before `=`
   defp assignment_bindings(tokens) do

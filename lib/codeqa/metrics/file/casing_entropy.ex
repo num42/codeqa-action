@@ -40,9 +40,7 @@ defmodule CodeQA.Metrics.File.CasingEntropy do
 
   @spec analyze(map()) :: map()
   @impl true
-  def analyze(%{identifiers: []}) do
-    %{"entropy" => 0.0, "screaming_snake_density" => 0.0}
-  end
+  def analyze(%{identifiers: []}), do: %{"entropy" => 0.0, "screaming_snake_density" => 0.0}
 
   def analyze(%{identifiers: identifiers}) do
     counts =

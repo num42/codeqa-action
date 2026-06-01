@@ -53,15 +53,14 @@ defmodule CodeQA.Metrics.PostProcessing.Menzerath do
 
   # --- file-level scoring ---
 
-  defp score_file("") do
-    %{
+  defp score_file(""),
+    do: %{
       "blocks" => [],
       "mean_ratio" => 0.0,
       "max_ratio" => 0.0,
       "violation_count" => 0,
       "insight" => "Empty file."
     }
-  end
 
   defp score_file(content) do
     file_lines = content |> String.split("\n") |> length()

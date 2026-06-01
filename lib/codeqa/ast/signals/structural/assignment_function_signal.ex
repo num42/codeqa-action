@@ -18,8 +18,8 @@ defmodule CodeQA.AST.Signals.Structural.AssignmentFunctionSignal do
     def source(_), do: CodeQA.AST.Signals.Structural.AssignmentFunctionSignal
     def group(_), do: :split
 
-    def init(_, _lang_mod) do
-      %{
+    def init(_, _lang_mod),
+      do: %{
         idx: 0,
         indent: 0,
         bracket_depth: 0,
@@ -27,7 +27,6 @@ defmodule CodeQA.AST.Signals.Structural.AssignmentFunctionSignal do
         seen_content: false,
         phase: :idle
       }
-    end
 
     def emit(_, {_, %NewlineToken{}, _}, %{idx: idx} = state),
       do: {MapSet.new(), %{state | idx: idx + 1, indent: 0, at_line_start: true, phase: :idle}}

@@ -12,12 +12,12 @@ defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
   alias CodeQA.Languages.Code.Vm.Elixir, as: ElixirLang
   alias CodeQA.Languages.Unknown
 
-  defp detect_types(code, lang_mod \\ ElixirLang) do
-    code
-    |> TokenNormalizer.normalize_structural()
-    |> Parser.detect_blocks(lang_mod)
-    |> NodeTypeDetector.detect_types(lang_mod)
-  end
+  defp detect_types(code, lang_mod \\ ElixirLang),
+    do:
+      code
+      |> TokenNormalizer.normalize_structural()
+      |> Parser.detect_blocks(lang_mod)
+      |> NodeTypeDetector.detect_types(lang_mod)
 
   describe "detect_types/1" do
     test "block with <TRIP_QUOTES> gets type :doc" do

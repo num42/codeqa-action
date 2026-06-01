@@ -68,10 +68,10 @@ defmodule CodeQA.HealthReport.BehaviorLabels do
     end) || "Review this code block"
   end
 
-  defp humanize(behavior) do
-    behavior
-    |> String.replace("_", " ")
-    |> String.split()
-    |> Enum.map_join(" ", &String.capitalize/1)
-  end
+  defp humanize(behavior),
+    do:
+      behavior
+      |> String.replace("_", " ")
+      |> String.split()
+      |> Enum.map_join(" ", &String.capitalize/1)
 end

@@ -119,9 +119,8 @@ defmodule CodeQA.BlockImpact.RefactoringPotentials do
 
   defp excluded?(_category, _behavior, nil, _behavior_map), do: false
 
-  defp excluded?(category, behavior, block_type, behavior_map) do
-    Atom.to_string(block_type) in excludes_for(category, behavior, behavior_map)
-  end
+  defp excluded?(category, behavior, block_type, behavior_map),
+    do: Atom.to_string(block_type) in excludes_for(category, behavior, behavior_map)
 
   defp excludes_for(category, behavior, behavior_map) when is_map(behavior_map) do
     with [_ | _] = behaviors <- Map.get(behavior_map, category, []),

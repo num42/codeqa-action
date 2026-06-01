@@ -71,11 +71,11 @@ defmodule CodeQA.Language do
   end
 
   @spec all_keywords() :: [String.t()]
-  def all_keywords do
-    all()
-    |> Enum.flat_map(& &1.keywords())
-    |> Enum.uniq()
-  end
+  def all_keywords,
+    do:
+      all()
+      |> Enum.flat_map(& &1.keywords())
+      |> Enum.uniq()
 
   @spec keywords(atom() | String.t()) :: MapSet.t()
   def keywords(language) do
@@ -148,11 +148,11 @@ defmodule CodeQA.Language do
   end
 
   @spec strip_comments(String.t(), module()) :: String.t()
-  def strip_comments(content, language_mod) do
-    content
-    |> strip_block_comments(language_mod.block_comments())
-    |> strip_line_comments(language_mod.comment_prefixes())
-  end
+  def strip_comments(content, language_mod),
+    do:
+      content
+      |> strip_block_comments(language_mod.block_comments())
+      |> strip_line_comments(language_mod.comment_prefixes())
 
   defp strip_block_comments(content, []), do: content
 

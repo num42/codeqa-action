@@ -26,9 +26,8 @@ defmodule CodeQA.BlockImpact.FileImpact do
   end
 
   @spec reconstruct_without([CodeQA.AST.Lexing.Token.t()], Node.t()) :: String.t()
-  def reconstruct_without(root_tokens, %Node{tokens: []}) do
-    root_tokens |> Enum.map_join("", & &1.content)
-  end
+  def reconstruct_without(root_tokens, %Node{tokens: []}),
+    do: root_tokens |> Enum.map_join("", & &1.content)
 
   def reconstruct_without(root_tokens, node) do
     first = List.first(node.tokens)

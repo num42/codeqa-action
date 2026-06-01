@@ -7,23 +7,23 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     only: [count_severities_shared: 1, pr_summary_section: 1, worst_severity_shared: 1]
 
   @spec render(map(), atom()) :: String.t()
-  def render(report, detail) do
-    [
-      pr_summary_section(Map.get(report, :pr_summary)),
-      header(report),
-      cosine_legend(),
-      delta_section(Map.get(report, :codebase_delta)),
-      overall_table(report),
-      top_issues_section(Map.get(report, :top_issues, []), detail),
-      blocks_section(Map.get(report, :top_blocks, [])),
-      category_sections(report.categories, detail)
-    ]
-    |> List.flatten()
-    |> Enum.join("\n")
-  end
+  def render(report, detail),
+    do:
+      [
+        pr_summary_section(Map.get(report, :pr_summary)),
+        header(report),
+        cosine_legend(),
+        delta_section(Map.get(report, :codebase_delta)),
+        overall_table(report),
+        top_issues_section(Map.get(report, :top_issues, []), detail),
+        blocks_section(Map.get(report, :top_blocks, [])),
+        category_sections(report.categories, detail)
+      ]
+      |> List.flatten()
+      |> Enum.join("\n")
 
-  defp header(report) do
-    [
+  defp header(report),
+    do: [
       "# Code Health Report",
       "",
       "> #{report.metadata.path} — #{format_date(report.metadata.timestamp)} — #{report.metadata.total_files} files analyzed",
@@ -31,14 +31,12 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
       "## Overall: #{report.overall_grade}",
       ""
     ]
-  end
 
-  defp cosine_legend do
-    [
+  defp cosine_legend,
+    do: [
       "> *Combined metric scores use cosine similarity: +1 = metric profile perfectly matches healthy pattern for this behavior, 0 = no signal, −1 = anti-pattern detected. Mapped to 0–100 using breakpoints (approx: ≥0.5→A, ≥0.2→B, ≥0.0→C, ≥−0.3→D, <−0.3→F); actual letter grades use the full 15-step scale.*",
       ""
     ]
-  end
 
   defp overall_table(report) do
     rows =
@@ -58,23 +56,20 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
 
   defp category_sections(_categories, :summary), do: []
 
-  defp category_sections(categories, detail) do
-    categories
-    |> Enum.flat_map(
-      &render_category(
-        &1,
-        detail
+  defp category_sections(categories, detail),
+    do:
+      categories
+      |> Enum.flat_map(
+        &render_category(
+          &1,
+          detail
+        )
       )
-    )
-  end
 
-  defp render_category(%{type: :cosine} = cat, _detail) do
-    cosine_section_header(cat) ++ cosine_behaviors_table(cat)
-  end
+  defp render_category(%{type: :cosine} = cat, _detail),
+    do: cosine_section_header(cat) ++ cosine_behaviors_table(cat)
 
-  defp render_category(cat, _detail) do
-    section_header(cat) ++ metric_detail(cat)
-  end
+  defp render_category(cat, _detail), do: section_header(cat) ++ metric_detail(cat)
 
   defp cosine_section_header(cat) do
     n = length(cat.behaviors)

@@ -31,9 +31,7 @@ defmodule CodeQA.Metrics.File.Entropy do
 
   @spec analyze(map()) :: map()
   @impl true
-  def analyze(ctx) do
-    Map.merge(char_entropy(ctx.content), token_entropy(ctx))
-  end
+  def analyze(ctx), do: char_entropy(ctx.content) |> Map.merge(token_entropy(ctx))
 
   defp char_entropy(""), do: zero_entropy_map("char")
 
@@ -43,9 +41,8 @@ defmodule CodeQA.Metrics.File.Entropy do
     compute_entropy(counts, total, "char")
   end
 
-  defp token_entropy(%{tokens: [], token_counts: _token_counts}) do
-    Map.merge(zero_entropy_map("token"), %{"vocab_size" => 0, "total_tokens" => 0})
-  end
+  defp token_entropy(%{tokens: [], token_counts: _token_counts}),
+    do: zero_entropy_map("token") |> Map.merge(%{"vocab_size" => 0, "total_tokens" => 0})
 
   defp token_entropy(%{tokens: tokens, token_counts: token_counts}) do
     total = length(tokens)
@@ -55,13 +52,12 @@ defmodule CodeQA.Metrics.File.Entropy do
     Map.merge(entropy_map, %{"vocab_size" => vocab_size, "total_tokens" => total})
   end
 
-  defp zero_entropy_map(prefix) do
-    %{
+  defp zero_entropy_map(prefix),
+    do: %{
       "#{prefix}_entropy" => 0.0,
       "#{prefix}_max_entropy" => 0.0,
       "#{prefix}_normalized" => 0.0
     }
-  end
 
   defp compute_entropy(counts, total, prefix) do
     alphabet_size = map_size(counts)

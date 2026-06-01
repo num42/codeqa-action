@@ -102,12 +102,12 @@ defmodule CodeQA.AST.Classification.NodeClassifier do
   defp prepend_context(tokens, []), do: tokens
   defp prepend_context(tokens, ctx) when is_list(ctx), do: ctx ++ tokens
 
-  defp vote(tokens, lang_mod) do
-    tokens
-    |> run_signals(lang_mod)
-    |> tally()
-    |> winner()
-  end
+  defp vote(tokens, lang_mod),
+    do:
+      tokens
+      |> run_signals(lang_mod)
+      |> tally()
+      |> winner()
 
   defp run_signals(tokens, lang_mod) do
     SignalStream.run(tokens, @classification_signals, lang_mod)

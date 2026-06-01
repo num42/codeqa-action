@@ -105,12 +105,11 @@ defmodule CodeQA.Metrics.File.Halstead do
     end
   end
 
-  defp scan_frequencies(regex, content) do
-    regex |> Regex.scan(content) |> List.flatten() |> Enum.frequencies()
-  end
+  defp scan_frequencies(regex, content),
+    do: regex |> Regex.scan(content) |> List.flatten() |> Enum.frequencies()
 
-  defp zero_result do
-    %{
+  defp zero_result,
+    do: %{
       "n1_unique_operators" => 0,
       "n2_unique_operands" => 0,
       "N1_total_operators" => 0,
@@ -123,10 +122,9 @@ defmodule CodeQA.Metrics.File.Halstead do
       "estimated_bugs" => 0.0,
       "time_to_implement_seconds" => 0.0
     }
-  end
 
-  defp base_result(n1, n2, big_n1, big_n2, vocabulary, length) do
-    %{
+  defp base_result(n1, n2, big_n1, big_n2, vocabulary, length),
+    do: %{
       "n1_unique_operators" => n1,
       "n2_unique_operands" => n2,
       "N1_total_operators" => big_n1,
@@ -138,5 +136,4 @@ defmodule CodeQA.Metrics.File.Halstead do
       "effort" => 0.0,
       "estimated_bugs" => 0.0
     }
-  end
 end

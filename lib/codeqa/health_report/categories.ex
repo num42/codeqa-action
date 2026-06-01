@@ -3,8 +3,8 @@ defmodule CodeQA.HealthReport.Categories do
 
   @doc "Returns the default grade scale as `[{min_score, letter}, ...]` sorted descending."
   @spec default_grade_scale() :: [{number(), String.t()}]
-  def default_grade_scale do
-    [
+  def default_grade_scale,
+    do: [
       {93, "A"},
       {85, "A-"},
       {78, "B+"},
@@ -21,12 +21,11 @@ defmodule CodeQA.HealthReport.Categories do
       {6, "E-"},
       {0, "F"}
     ]
-  end
 
   @doc "Returns the built-in category definitions."
   @spec defaults() :: [map()]
-  def defaults do
-    [
+  def defaults,
+    do: [
       %{
         key: :readability,
         name: "Readability",
@@ -273,5 +272,4 @@ defmodule CodeQA.HealthReport.Categories do
         ]
       }
     ]
-  end
 end

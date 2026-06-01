@@ -279,9 +279,8 @@ defmodule CodeQA.CLI.HealthReport do
          measurements,
          _metadata,
          pid
-       ) do
-    Agent.update(pid, &Map.put(&1, :codebase_cosines_us, measurements.duration))
-  end
+       ),
+       do: pid |> Agent.update(&Map.put(&1, :codebase_cosines_us, measurements.duration))
 
   defp handle_event([:codeqa, :block_impact, :file], measurements, metadata, pid) do
     Agent.update(pid, fn state ->

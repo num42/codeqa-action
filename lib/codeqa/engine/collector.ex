@@ -13,12 +13,12 @@ defmodule CodeQA.Engine.Collector do
   @default_ignore_patterns ~w[**/*.md **/*.mdx]
 
   @spec source_extensions() :: MapSet.t()
-  def source_extensions do
-    Language.all()
-    |> Enum.flat_map(& &1.extensions())
-    |> Enum.map(&".#{&1}")
-    |> MapSet.new()
-  end
+  def source_extensions,
+    do:
+      Language.all()
+      |> Enum.flat_map(& &1.extensions())
+      |> Enum.map(&".#{&1}")
+      |> MapSet.new()
 
   @spec collect_files(String.t(), [String.t()]) :: %{String.t() => String.t()}
   def collect_files(root, extra_ignore_patterns \\ []) do
@@ -45,15 +45,14 @@ defmodule CodeQA.Engine.Collector do
   end
 
   @doc false
-  def ignored?(path, patterns) do
-    patterns
-    |> Enum.any?(&match_pattern?(path, &1))
-  end
+  def ignored?(path, patterns),
+    do:
+      patterns
+      |> Enum.any?(&match_pattern?(path, &1))
 
   @doc false
-  def reject_ignored_map(files_map, extra_patterns \\ []) do
-    do_reject_ignored_map(files_map, all_ignore_patterns(extra_patterns))
-  end
+  def reject_ignored_map(files_map, extra_patterns \\ []),
+    do: files_map |> do_reject_ignored_map(all_ignore_patterns(extra_patterns))
 
   @doc false
   def reject_ignored(list, key_fn, extra_patterns \\ []) do

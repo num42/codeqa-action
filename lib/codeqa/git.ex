@@ -51,15 +51,15 @@ defmodule CodeQA.Git do
   """
   @spec diff_line_ranges(String.t(), String.t(), String.t()) ::
           {:ok, %{String.t() => [{pos_integer(), pos_integer()}]}} | {:error, term()}
-  def diff_line_ranges(repo_path, base_ref, head_ref) do
-    System.cmd(
-      "git",
-      ["diff", "-U0", "#{base_ref}..#{head_ref}"],
-      cd: repo_path,
-      stderr_to_stdout: false
-    )
-    |> handle_diff_line_ranges_cmd()
-  end
+  def diff_line_ranges(repo_path, base_ref, head_ref),
+    do:
+      System.cmd(
+        "git",
+        ["diff", "-U0", "#{base_ref}..#{head_ref}"],
+        cd: repo_path,
+        stderr_to_stdout: false
+      )
+      |> handle_diff_line_ranges_cmd()
 
   @typep parse_state :: {String.t() | nil, %{String.t() => [{pos_integer(), pos_integer()}]}}
 
@@ -107,9 +107,8 @@ defmodule CodeQA.Git do
     end)
   end
 
-  defp parse_change_line(line) do
-    String.split(line, "\t", parts: 2) |> handle_parse_change_line_split()
-  end
+  defp parse_change_line(line),
+    do: String.split(line, "\t", parts: 2) |> handle_parse_change_line_split()
 
   defp list_source_files_at_ref(repo_path, ref) do
     {output, 0} = System.cmd("git", ["ls-tree", "-r", "--name-only", ref], cd: repo_path)
@@ -127,13 +126,10 @@ defmodule CodeQA.Git do
 
   # FIXME: extracted automatically by ExtractCaseToHelper — review
   # the parameter list and consider a better name.
-  defp handle_diff_line_ranges_cmd({output, 0}) do
-    {:ok, parse_diff_hunks(output)}
-  end
+  defp handle_diff_line_ranges_cmd({output, 0}), do: {:ok, parse_diff_hunks(output)}
 
-  defp handle_diff_line_ranges_cmd({_output, code}) do
-    {:error, "git diff exited with code #{code}"}
-  end
+  defp handle_diff_line_ranges_cmd({_output, code}),
+    do: {:error, "git diff exited with code #{code}"}
 
   # FIXME: extracted automatically by ExtractCaseToHelper — review
   # the parameter list and consider a better name.
@@ -157,9 +153,7 @@ defmodule CodeQA.Git do
     end
   end
 
-  defp handle_parse_diff_line_run(nil, acc, current_file) do
-    {current_file, acc}
-  end
+  defp handle_parse_diff_line_run(nil, acc, current_file), do: {current_file, acc}
 
   # FIXME: extracted automatically by ExtractCaseToHelper — review
   # the parameter list and consider a better name.
@@ -168,7 +162,5 @@ defmodule CodeQA.Git do
     if source_file?(path), do: [%ChangedFile{path: path, status: status}], else: []
   end
 
-  defp handle_parse_change_line_split(_) do
-    []
-  end
+  defp handle_parse_change_line_split(_), do: []
 end

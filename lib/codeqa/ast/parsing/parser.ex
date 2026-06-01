@@ -205,9 +205,8 @@ defmodule CodeQA.AST.Parsing.Parser do
     |> Enum.map(fn [start, stop] -> tokens |> Enum.slice(start..(stop - 1)//1) end)
   end
 
-  defp whitespace_only?(tokens) do
-    tokens |> Enum.all?(&(&1.kind in [WhitespaceToken.kind(), NewlineToken.kind()]))
-  end
+  defp whitespace_only?(tokens),
+    do: tokens |> Enum.all?(&(&1.kind in [WhitespaceToken.kind(), NewlineToken.kind()]))
 
   defp block_start_line([%{line: line} | _]), do: line
   defp block_start_line([]), do: nil
@@ -226,9 +225,7 @@ defmodule CodeQA.AST.Parsing.Parser do
 
   # FIXME: extracted automatically by ExtractCaseToHelper — review
   # the parameter list and consider a better name.
-  defp handle_find_sub_candidates([], block, _lang_mod) do
-    block
-  end
+  defp handle_find_sub_candidates([], block, _lang_mod), do: block
 
   defp handle_find_sub_candidates(candidates, block, lang_mod) do
     children = candidates |> Enum.map(&parse_block(&1, lang_mod))

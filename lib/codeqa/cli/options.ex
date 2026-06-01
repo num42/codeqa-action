@@ -28,12 +28,13 @@ defmodule CodeQA.CLI.Options do
   def common_aliases, do: @common_aliases
 
   @spec parse(list(String.t()), keyword(), keyword()) :: {keyword(), list(String.t()), list()}
-  def parse(args, extra_strict \\ [], extra_aliases \\ []) do
-    OptionParser.parse(args,
-      strict: Keyword.merge(@common_strict, extra_strict),
-      aliases: Keyword.merge(@common_aliases, extra_aliases)
-    )
-  end
+  def parse(args, extra_strict \\ [], extra_aliases \\ []),
+    do:
+      args
+      |> OptionParser.parse(
+        strict: Keyword.merge(@common_strict, extra_strict),
+        aliases: Keyword.merge(@common_aliases, extra_aliases)
+      )
 
   @spec validate_dir!(String.t()) :: :ok
   def validate_dir!(path) do
@@ -48,11 +49,11 @@ defmodule CodeQA.CLI.Options do
   @spec parse_ignore_paths(String.t() | nil) :: list(String.t())
   def parse_ignore_paths(nil), do: []
 
-  def parse_ignore_paths(paths_string) do
-    paths_string
-    |> String.split(",", trim: true)
-    |> Enum.map(&String.trim/1)
-  end
+  def parse_ignore_paths(paths_string),
+    do:
+      paths_string
+      |> String.split(",", trim: true)
+      |> Enum.map(&String.trim/1)
 
   @spec build_analyze_opts(keyword()) :: keyword()
   def build_analyze_opts(opts) do

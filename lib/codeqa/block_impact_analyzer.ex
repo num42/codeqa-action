@@ -159,7 +159,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
          _baseline_codebase_cosines,
          _nodes_top,
          _cached_behaviors
-       ), do: {[], %{duration: 0, tokenize_us: 0, parse_us: 0, file_cosines_us: 0, node_count: 0}}
+       ),
+       do: {[], %{duration: 0, tokenize_us: 0, parse_us: 0, file_cosines_us: 0, node_count: 0}}
 
   defp compute_nodes_timed(
          path,
@@ -302,9 +303,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
   # leading whitespace stripped so the classification signals see the keyword at
   # indent 0. Lets NodeClassifier see the keyword that drove the bracket-split
   # (`alias`, `@name`, etc.) when classifying a sub-block.
-  defp parent_context_for(parent_tokens, child) do
-    List.first(child.tokens) |> handle_parent_context_for_first(parent_tokens)
-  end
+  defp parent_context_for(parent_tokens, child),
+    do: List.first(child.tokens) |> handle_parent_context_for_first(parent_tokens)
 
   defp compute_potentials_timed(
          %Node{} = node,
@@ -486,9 +486,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
 
   # FIXME: extracted automatically by ExtractCaseToHelper — review
   # the parameter list and consider a better name.
-  defp handle_parent_context_for_first(nil, _parent_tokens) do
-    []
-  end
+  defp handle_parent_context_for_first(nil, _parent_tokens), do: []
 
   defp handle_parent_context_for_first(child_first, parent_tokens) do
     nl_kind = NewlineToken.kind()

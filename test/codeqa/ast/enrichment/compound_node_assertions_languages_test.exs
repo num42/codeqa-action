@@ -108,22 +108,20 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeAssertionsLanguagesTest do
     end
   end
 
-  defp compound_nodes(code) do
-    code
-    |> TokenNormalizer.normalize_structural()
-    |> Parser.detect_blocks(Unknown)
-    |> NodeTypeDetector.detect_types(Unknown)
-    |> CompoundNodeBuilder.build()
-  end
+  defp compound_nodes(code),
+    do:
+      code
+      |> TokenNormalizer.normalize_structural()
+      |> Parser.detect_blocks(Unknown)
+      |> NodeTypeDetector.detect_types(Unknown)
+      |> CompoundNodeBuilder.build()
 
-  defp all_tokens(%CompoundNode{docs: docs, typespecs: typespecs, code: code}) do
-    (docs ++ typespecs ++ code)
-    |> Enum.flat_map(&node_tokens/1)
-  end
+  defp all_tokens(%CompoundNode{docs: docs, typespecs: typespecs, code: code}),
+    do:
+      (docs ++ typespecs ++ code)
+      |> Enum.flat_map(&node_tokens/1)
 
-  defp node_tokens(node) do
-    NodeProtocol.tokens(node)
-  end
+  defp node_tokens(node), do: node |> NodeProtocol.tokens()
 
   defp matches?({:exact, field, value}, token), do: Map.get(token, field) == value
 

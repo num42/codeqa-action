@@ -336,13 +336,13 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
     end
   end
 
-  defp compute_fingerprints(content, _opts) do
-    content
-    |> TokenNormalizer.normalize_structural()
-    |> Enum.map(& &1.kind)
-    |> Winnowing.kgrams(5)
-    |> MapSet.new()
-  end
+  defp compute_fingerprints(content, _opts),
+    do:
+      content
+      |> TokenNormalizer.normalize_structural()
+      |> Enum.map(& &1.kind)
+      |> Winnowing.kgrams(5)
+      |> MapSet.new()
 
   defp cross_file_density(contents) do
     individual_sum =

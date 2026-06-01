@@ -101,13 +101,12 @@ defmodule CodeQA.Diagnostics do
     end
   end
 
-  defp diagnosis_to_map(d) do
-    %{
+  defp diagnosis_to_map(d),
+    do: %{
       behavior: "#{d.category}.#{d.behavior}",
       cosine: d.cosine,
       score: Grader.score_cosine(d.cosine)
     }
-  end
 
   defp diagnoses_to_rows(file_path, diagnoses) do
     diagnoses

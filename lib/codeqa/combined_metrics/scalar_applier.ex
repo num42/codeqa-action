@@ -170,9 +170,7 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   # Language detection helpers
   # ---------------------------------------------------------------------------
 
-  defp dir_languages(dir) do
-    File.ls(dir) |> handle_dir_languages_ls()
-  end
+  defp dir_languages(dir), do: File.ls(dir) |> handle_dir_languages_ls()
 
   defp languages_for_behavior(category, behavior) do
     bad_langs = dir_languages(sample_path(category, behavior, "bad"))
@@ -188,9 +186,8 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   defp maybe_put_languages(groups, []), do: groups
   defp maybe_put_languages(groups, langs), do: Map.put(groups, "_languages", langs)
 
-  defp sample_path(category, behavior, kind) do
-    Path.join([@samples_root, category, behavior, kind])
-  end
+  defp sample_path(category, behavior, kind),
+    do: [@samples_root, category, behavior, kind] |> Path.join()
 
   # FIXME: extracted automatically by ExtractCaseToHelper — review
   # the parameter list and consider a better name.
@@ -201,20 +198,16 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
     end
   end
 
-  defp handle_read_behavior_doc_read(_) do
-    nil
-  end
+  defp handle_read_behavior_doc_read(_), do: nil
 
   # FIXME: extracted automatically by ExtractCaseToHelper — review
   # the parameter list and consider a better name.
-  defp handle_dir_languages_ls({:ok, files}) do
-    files
-    |> Enum.map(&Language.detect/1)
-    |> Enum.map(& &1.name())
-    |> MapSet.new()
-  end
+  defp handle_dir_languages_ls({:ok, files}),
+    do:
+      files
+      |> Enum.map(&Language.detect/1)
+      |> Enum.map(& &1.name())
+      |> MapSet.new()
 
-  defp handle_dir_languages_ls(_) do
-    MapSet.new()
-  end
+  defp handle_dir_languages_ls(_), do: MapSet.new()
 end

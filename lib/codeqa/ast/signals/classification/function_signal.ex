@@ -24,8 +24,8 @@ defmodule CodeQA.AST.Signals.Classification.FunctionSignal do
     def source(_), do: CodeQA.AST.Signals.Classification.FunctionSignal
     def group(_), do: :classification
 
-    def init(_, lang_mod) do
-      %{
+    def init(_, lang_mod),
+      do: %{
         at_line_start: true,
         indent: 0,
         bracket_depth: 0,
@@ -33,7 +33,6 @@ defmodule CodeQA.AST.Signals.Classification.FunctionSignal do
         voted: false,
         keywords: Language.function_keywords(lang_mod)
       }
-    end
 
     def emit(_, _, %{voted: true} = state), do: {MapSet.new(), state}
 

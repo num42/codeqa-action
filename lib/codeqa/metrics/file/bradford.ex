@@ -32,9 +32,7 @@ defmodule CodeQA.Metrics.File.Bradford do
 
   @spec analyze(map()) :: map()
   @impl true
-  def analyze(%{tokens: []}) do
-    %{"k1" => 0.0, "k2" => 0.0, "k_ratio" => 0.0}
-  end
+  def analyze(%{tokens: []}), do: %{"k1" => 0.0, "k2" => 0.0, "k_ratio" => 0.0}
 
   def analyze(%{tokens: tokens}) do
     # Count tokens per line using the .line field, then rank densest-first —

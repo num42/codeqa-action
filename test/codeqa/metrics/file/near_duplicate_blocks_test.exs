@@ -18,14 +18,13 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksTest do
   end
 
   describe "find_pairs/2 idf_max_freq option" do
-    defp make_block(tokens, label) do
-      %CodeQA.AST.Enrichment.Node{
+    defp make_block(tokens, label),
+      do: %CodeQA.AST.Enrichment.Node{
         label: label,
         tokens: tokens |> Enum.map(&%{kind: &1}),
         line_count: length(tokens),
         children: []
       }
-    end
 
     test "exact duplicates are still detected when all bigrams are high-frequency" do
       # 30 blocks all sharing bigram [end, nil] → pruned by IDF

@@ -20,15 +20,14 @@ defmodule CodeQA.Metrics.File.Compression do
 
   @spec analyze(map()) :: map()
   @impl true
-  def analyze(%{content: "", byte_count: 0}) do
-    %{
+  def analyze(%{content: "", byte_count: 0}),
+    do: %{
       "raw_bytes" => 0,
       "zlib_bytes" => 0,
       "zlib_ratio" => 0.0,
       "redundancy" => 0.0,
       "unique_line_ratio" => 0.0
     }
-  end
 
   def analyze(ctx) do
     raw_size = ctx.byte_count

@@ -118,18 +118,18 @@ defmodule CodeQA.AST.Parsing.ParserLanguagesTest do
                                 code
                               end, block_assertions}
 
-  defp blocks(code, lang_mod \\ Unknown) do
-    code
-    |> TokenNormalizer.normalize_structural()
-    |> Parser.detect_blocks(lang_mod)
-  end
+  defp blocks(code, lang_mod \\ Unknown),
+    do:
+      code
+      |> TokenNormalizer.normalize_structural()
+      |> Parser.detect_blocks(lang_mod)
 
-  defp children(code, lang_mod \\ Unknown) do
-    code
-    |> TokenNormalizer.normalize_structural()
-    |> Parser.detect_blocks(lang_mod)
-    |> Enum.flat_map(& &1.children)
-  end
+  defp children(code, lang_mod \\ Unknown),
+    do:
+      code
+      |> TokenNormalizer.normalize_structural()
+      |> Parser.detect_blocks(lang_mod)
+      |> Enum.flat_map(& &1.children)
 
   describe "blocks/2" do
     for {language, code, _block_assertions} <- @normalized_fixtures do

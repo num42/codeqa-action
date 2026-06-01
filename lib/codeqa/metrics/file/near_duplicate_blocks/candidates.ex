@@ -89,9 +89,8 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Candidates do
 
   @doc "Remove bigrams whose hash is in the pruned set from a decorated tuple."
   @spec prune_bigrams(tuple(), MapSet.t()) :: tuple()
-  def prune_bigrams({i, b, v, h, l, c, n, bigrams}, pruned) do
-    {i, b, v, h, l, c, n, bigrams |> Enum.reject(&MapSet.member?(pruned, :erlang.phash2(&1)))}
-  end
+  def prune_bigrams({i, b, v, h, l, c, n, bigrams}, pruned),
+    do: {i, b, v, h, l, c, n, bigrams |> Enum.reject(&MapSet.member?(pruned, :erlang.phash2(&1)))}
 
   @doc """
   Find all near-duplicate pairs for a single block against the full decorated array.

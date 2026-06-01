@@ -17,8 +17,8 @@ defmodule CodeQA.AST.Signals.Structural.DedentToZeroSignal do
     def source(_), do: CodeQA.AST.Signals.Structural.DedentToZeroSignal
     def group(_), do: :split
 
-    def init(_, _lang_mod) do
-      %{
+    def init(_, _lang_mod),
+      do: %{
         idx: 0,
         at_line_start: true,
         seen_content: false,
@@ -26,7 +26,6 @@ defmodule CodeQA.AST.Signals.Structural.DedentToZeroSignal do
         current_line_has_content: false,
         prev_line_had_indent: false
       }
-    end
 
     def emit(
           _,

@@ -31,7 +31,5 @@ defmodule CodeQA.Metrics.File.Winnowing do
   # Hash the token list directly to preserve token boundaries.
   # Joining to a string first would allow hash collisions across different
   # token sequences that produce the same concatenated string.
-  defp hash_sequence(sequence) do
-    :erlang.phash2(sequence)
-  end
+  defp hash_sequence(sequence), do: sequence |> :erlang.phash2()
 end
