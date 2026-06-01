@@ -20,7 +20,7 @@ defmodule CodeQA.HealthReport.Formatter.Shared do
   @spec count_severities_shared([map()]) :: %{atom() => non_neg_integer()}
   def count_severities_shared(blocks) do
     blocks
-    |> Enum.map(fn b -> (List.first(b.potentials) || %{severity: :medium}).severity end)
+    |> Enum.map(&(List.first(&1.potentials) || %{severity: :medium}).severity)
     |> Enum.frequencies()
   end
 end
