@@ -57,7 +57,12 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
 
   defp category_sections(categories, detail) do
     categories
-    |> Enum.flat_map(fn cat -> render_category(cat, detail) end)
+    |> Enum.flat_map(
+      &render_category(
+        &1,
+        detail
+      )
+    )
   end
 
   defp render_category(%{type: :cosine} = cat, _detail) do

@@ -195,9 +195,9 @@ defmodule CodeQA.BlockImpactAnalyzer do
 
       nodes =
         top_level_nodes
-        |> Enum.map(fn node ->
-          serialize_node(
-            node,
+        |> Enum.map(
+          &serialize_node(
+            &1,
             path,
             root_tokens,
             baseline_file_cosines,
@@ -206,7 +206,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
             language,
             node_ctx
           )
-        end)
+        )
         |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
 
       measurements = %{
