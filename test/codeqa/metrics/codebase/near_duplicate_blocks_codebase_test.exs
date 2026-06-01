@@ -3,7 +3,7 @@ defmodule CodeQA.Metrics.Codebase.NearDuplicateBlocksCodebaseTest do
   alias CodeQA.Analysis.FileContextServer
   alias CodeQA.Metrics.Codebase.NearDuplicateBlocksCodebase
 
-  defp files(pairs), do: Map.new(pairs)
+  defp files(pairs), do: pairs |> Map.new()
 
   defp with_pid(fun) do
     {:ok, pid} = FileContextServer.start_link()

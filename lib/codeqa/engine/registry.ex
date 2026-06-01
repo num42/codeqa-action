@@ -31,7 +31,7 @@ defmodule CodeQA.Engine.Registry do
 
     if Keyword.get(opts, :combinations, false) do
       combinations = generate_combinations(flat_numeric_metrics(base_metrics), [])
-      Map.merge(base_metrics, Map.new(combinations))
+      Map.merge(base_metrics, combinations |> Map.new())
     else
       base_metrics
     end

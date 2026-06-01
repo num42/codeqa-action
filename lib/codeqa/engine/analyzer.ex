@@ -84,7 +84,7 @@ defmodule CodeQA.Engine.Analyzer do
       end)
 
     :telemetry.execute([:codeqa, :loo_breakdown], breakdown, %{})
-    Map.new(result)
+    result |> Map.new()
   end
 
   defp registered_module_for(name) do
