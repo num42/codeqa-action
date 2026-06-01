@@ -1,0 +1,1 @@
+doc: "Inner-scope names that shadow outer-scope names cause confusion about which value is in play."

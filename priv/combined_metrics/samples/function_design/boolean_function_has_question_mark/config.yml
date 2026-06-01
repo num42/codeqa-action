@@ -1,0 +1,1 @@
+doc: "Functions returning a boolean should end with `?` (Elixir/Ruby) or start with `is_`/`has_` (JS/Python)."

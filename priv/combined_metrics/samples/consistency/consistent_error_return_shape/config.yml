@@ -1,0 +1,1 @@
+doc: "All functions in a module should return errors in the same shape — mixed `nil`, `false`, and `{:error, _}` returns are confusing."

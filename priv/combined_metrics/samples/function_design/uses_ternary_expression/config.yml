@@ -1,0 +1,1 @@
+doc: "Simple conditional assignments should use inline expressions rather than full if-blocks."
