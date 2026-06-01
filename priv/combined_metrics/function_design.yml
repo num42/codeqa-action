@@ -1,6 +1,6 @@
 boolean_function_has_question_mark:
   _doc: "Functions returning a boolean should end with `?` (Elixir/Ruby) or start with `is_`/`has_` (JS/Python)."
-  _log_baseline: -6.4663
+  _log_baseline: -6.8487
   brevity:
     mean_sample_size: 0.0127
   casing_entropy:
@@ -57,6 +57,8 @@ boolean_function_has_question_mark:
     mean_avg_tokens_per_line: 0.0248
     mean_flesch_adapted: 0.0078
     mean_fog_adapted: 0.0564
+  separator_counts:
+    mean_underscore_count: -0.2039
   symbol_density:
     mean_density: 0.0691
     mean_distinct_symbol_types: 0.0138
@@ -75,7 +77,7 @@ boolean_function_has_question_mark:
 
 cyclomatic_complexity_under_10:
   _doc: "Functions should have a cyclomatic complexity under 10."
-  _log_baseline: -1.4896
+  _log_baseline: -2.0665
   branching:
     mean_branch_count: -0.2373
     mean_branching_density: -0.1952
@@ -162,6 +164,10 @@ cyclomatic_complexity_under_10:
     mean_flesch_adapted: -0.0140
     mean_fog_adapted: 0.1035
     mean_total_lines: -0.0421
+  separator_counts:
+    mean_dot_count: -0.3005
+    mean_hyphen_count: -0.1769
+    mean_underscore_count: 0.1482
   symbol_density:
     mean_density: 0.0552
     mean_distinct_symbol_types: -0.0172
@@ -180,7 +186,7 @@ cyclomatic_complexity_under_10:
 
 has_verb_in_name:
   _doc: "Function names should contain a verb describing the action performed."
-  _log_baseline: 14.8350
+  _log_baseline: 18.0187
   compression:
     mean_raw_bytes: 0.0816
     mean_redundancy: -0.0390
@@ -198,6 +204,8 @@ has_verb_in_name:
     mean_avg_sub_words_per_id: 0.1330
     mean_flesch_adapted: -0.1324
     mean_fog_adapted: 1.3261
+  separator_counts:
+    mean_underscore_count: 0.9417
   symbol_density:
     mean_density: -0.0828
   vowel_density:
@@ -205,7 +213,7 @@ has_verb_in_name:
 
 is_less_than_20_lines:
   _doc: "Functions should be 20 lines or fewer."
-  _log_baseline: 23.9658
+  _log_baseline: 24.3841
   branching:
     mean_branch_count: -0.0820
     mean_branching_density: -0.1010
@@ -299,6 +307,11 @@ is_less_than_20_lines:
     mean_flesch_adapted: -0.0039
     mean_fog_adapted: 0.0868
     mean_total_lines: 0.0188
+  separator_counts:
+    mean_dot_count: 0.0717
+    mean_hyphen_count: -0.2249
+    mean_slash_count: 0.1457
+    mean_underscore_count: 0.1129
   symbol_density:
     mean_density: -0.0084
     mean_distinct_symbol_types: 0.0127
@@ -318,7 +331,7 @@ is_less_than_20_lines:
 
 nesting_depth_under_4:
   _doc: "Code should not nest deeper than 4 levels."
-  _log_baseline: 1.0611
+  _log_baseline: 1.2381
   branching:
     mean_branch_count: -0.3267
     mean_branching_density: -0.2061
@@ -411,6 +424,10 @@ nesting_depth_under_4:
     mean_flesch_adapted: -0.0374
     mean_fog_adapted: 0.2252
     mean_total_lines: -0.1206
+  separator_counts:
+    mean_dot_count: -0.2520
+    mean_hyphen_count: -0.1841
+    mean_underscore_count: 0.3891
   symbol_density:
     mean_density: 0.1426
     mean_symbol_count: 0.1355
@@ -429,7 +446,7 @@ nesting_depth_under_4:
 
 no_boolean_parameter:
   _doc: "Functions should not take boolean parameters — a flag usually means the function does two things."
-  _log_baseline: 13.6290
+  _log_baseline: 14.7569
   branching:
     mean_branch_count: -2.0000
     mean_branching_density: 1.0271
@@ -526,6 +543,9 @@ no_boolean_parameter:
     mean_flesch_adapted: -0.0254
     mean_fog_adapted: 0.2928
     mean_total_lines: -0.0383
+  separator_counts:
+    mean_dot_count: 0.1538
+    mean_underscore_count: 0.2112
   symbol_density:
     mean_density: 0.0479
     mean_symbol_count: 0.0916
@@ -543,7 +563,7 @@ no_boolean_parameter:
 
 no_magic_numbers:
   _doc: "Numeric literals should be named constants, not inline magic numbers."
-  _log_baseline: 45.8808
+  _log_baseline: 49.2101
   branching:
     mean_branch_count: -0.2708
     mean_branching_density: -0.1682
@@ -630,6 +650,9 @@ no_magic_numbers:
     mean_flesch_adapted: -0.3819
     mean_fog_adapted: 1.0656
     mean_total_lines: -0.1029
+  separator_counts:
+    mean_hyphen_count: -0.5119
+    mean_underscore_count: 1.2283
   symbol_density:
     mean_density: -0.0314
     mean_distinct_symbol_types: 0.0644
@@ -649,7 +672,7 @@ no_magic_numbers:
 
 parameter_count_under_4:
   _doc: "Functions should take fewer than 4 parameters."
-  _log_baseline: 1.9637
+  _log_baseline: 3.4096
   branching:
     mean_non_blank_count: 0.0967
   brevity:
@@ -739,6 +762,9 @@ parameter_count_under_4:
     mean_flesch_adapted: 0.0271
     mean_fog_adapted: -0.1290
     mean_total_lines: 0.0967
+  separator_counts:
+    mean_dot_count: 0.9099
+    mean_underscore_count: 0.0550
   symbol_density:
     mean_density: 0.0124
     mean_distinct_symbol_types: 0.1042
@@ -757,7 +783,7 @@ parameter_count_under_4:
 
 uses_ternary_expression:
   _doc: "Simple conditional assignments should use inline expressions rather than full if-blocks."
-  _log_baseline: -4.5289
+  _log_baseline: -5.0838
   branching:
     mean_branch_count: -0.4160
     mean_branching_density: 0.1134
@@ -843,6 +869,9 @@ uses_ternary_expression:
     mean_flesch_adapted: -0.0682
     mean_fog_adapted: 0.5360
     mean_total_lines: -0.5296
+  separator_counts:
+    mean_dot_count: -1.1679
+    mean_underscore_count: 0.2249
   symbol_density:
     mean_density: 0.3167
     mean_distinct_symbol_types: 0.0364

@@ -1,7 +1,6 @@
 reasonable_test_to_code_ratio:
   _doc: "There should be an adequate number of test cases relative to the code being tested."
-  _languages: [elixir]
-  _log_baseline: 11.2157
+  _log_baseline: 12.6188
   branching:
     mean_branch_count: 0.1869
     mean_branching_density: 0.0352
@@ -98,6 +97,10 @@ reasonable_test_to_code_ratio:
     mean_flesch_adapted: 0.0106
     mean_fog_adapted: -0.0829
     mean_total_lines: 0.1973
+  separator_counts:
+    mean_dot_count: 0.2776
+    mean_hyphen_count: 0.2470
+    mean_underscore_count: 0.0907
   symbol_density:
     mean_density: -0.0353
     mean_distinct_symbol_types: -0.0284
@@ -117,8 +120,7 @@ reasonable_test_to_code_ratio:
 
 test_has_assertion:
   _doc: "Every test body must contain at least one assertion — a test without assertions proves nothing."
-  _languages: [elixir]
-  _log_baseline: -10.8081
+  _log_baseline: -10.1975
   branching:
     mean_branch_count: 0.0918
     mean_branching_density: 0.1642
@@ -208,6 +210,11 @@ test_has_assertion:
     mean_flesch_adapted: -0.0065
     mean_fog_adapted: 0.0284
     mean_total_lines: -0.0284
+  separator_counts:
+    mean_dot_count: 0.0108
+    mean_hyphen_count: -0.1294
+    mean_slash_count: 0.5719
+    mean_underscore_count: 0.0918
   symbol_density:
     mean_density: 0.0263
     mean_distinct_symbol_types: -0.0194
@@ -226,8 +233,7 @@ test_has_assertion:
 
 test_name_describes_behavior:
   _doc: "Test names should describe the expected behaviour, not just the method under test."
-  _languages: [elixir]
-  _log_baseline: 57.2080
+  _log_baseline: 59.1394
   branching:
     mean_branch_count: 2.0000
     mean_branching_density: -1.5965
@@ -306,6 +312,10 @@ test_name_describes_behavior:
     mean_avg_line_length: 0.1184
     mean_avg_tokens_per_line: 0.0316
     mean_total_lines: 0.2388
+  separator_counts:
+    mean_dot_count: 0.0701
+    mean_slash_count: 1.2619
+    mean_underscore_count: 0.2442
   symbol_density:
     mean_density: -0.1391
     mean_distinct_symbol_types: 0.0729
@@ -324,8 +334,7 @@ test_name_describes_behavior:
 
 test_single_concept:
   _doc: "Each test should verify a single concept — tests covering multiple things are harder to diagnose when they fail."
-  _languages: [elixir]
-  _log_baseline: 37.2588
+  _log_baseline: 39.5531
   branching:
     mean_branch_count: 0.3696
     mean_branching_density: -2.0000
@@ -423,6 +432,10 @@ test_single_concept:
     mean_flesch_adapted: 0.0098
     mean_fog_adapted: -0.1758
     mean_total_lines: 0.3391
+  separator_counts:
+    mean_dot_count: 0.0317
+    mean_slash_count: 0.9554
+    mean_underscore_count: 0.4518
   symbol_density:
     mean_density: -0.0634
     mean_symbol_count: 0.1338
