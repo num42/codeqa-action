@@ -1,7 +1,6 @@
 import_count_under_10:
   _doc: "Files should import fewer than 10 modules; high import counts signal excessive coupling."
-  _languages: [elixir]
-  _log_baseline: 7.1916
+  _log_baseline: 7.2301
   branching:
     mean_branch_count: 0.2110
     mean_branching_density: -1.0683
@@ -96,6 +95,9 @@ import_count_under_10:
     mean_flesch_adapted: -0.0204
     mean_fog_adapted: 0.2028
     mean_total_lines: -0.0265
+  separator_counts:
+    mean_dot_count: -0.1234
+    mean_underscore_count: 0.1368
   symbol_density:
     mean_density: 0.0223
     mean_distinct_symbol_types: 0.0643
@@ -114,8 +116,7 @@ import_count_under_10:
 
 low_coupling:
   _doc: "Modules should depend on few external symbols — a low unique-operand count relative to total is a proxy for tight coupling."
-  _languages: [elixir]
-  _log_baseline: -38.2335
+  _log_baseline: -39.3584
   branching:
     mean_branch_count: 0.0745
     mean_branching_density: 0.2097
@@ -210,6 +211,9 @@ low_coupling:
     mean_avg_tokens_per_line: -0.0248
     mean_fog_adapted: 0.0082
     mean_total_lines: -0.1353
+  separator_counts:
+    mean_dot_count: -0.2609
+    mean_underscore_count: -0.0495
   symbol_density:
     mean_density: -0.0137
     mean_distinct_symbol_types: -0.0960
@@ -229,8 +233,7 @@ low_coupling:
 
 no_wildcard_imports:
   _doc: "Wildcard imports (`import *`, `using Module`) pollute the local namespace and hide dependencies."
-  _languages: [elixir]
-  _log_baseline: -8.9685
+  _log_baseline: -8.9040
   branching:
     mean_branching_density: 0.0249
     mean_non_blank_count: -0.0268
@@ -309,6 +312,9 @@ no_wildcard_imports:
     mean_flesch_adapted: -0.0142
     mean_fog_adapted: 0.0290
     mean_total_lines: -0.0268
+  separator_counts:
+    mean_dot_count: -0.0137
+    mean_underscore_count: 0.0302
   symbol_density:
     mean_density: -0.0266
     mean_distinct_symbol_types: -0.0817

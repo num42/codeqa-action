@@ -1,6 +1,5 @@
 consistent_string_quote_style:
   _doc: "Files should use a single, consistent string quoting style throughout."
-  _languages: [elixir]
   _log_baseline: -18.9887
   branching:
     mean_branching_density: 0.0243
@@ -105,7 +104,6 @@ consistent_string_quote_style:
 
 no_dead_code_after_return:
   _doc: "There should be no unreachable statements after a return or early exit."
-  _languages: [elixir]
   _log_baseline: -62.7495
   branching:
     mean_branch_count: -2.0000
@@ -220,7 +218,6 @@ no_dead_code_after_return:
 
 no_debug_print_statements:
   _doc: "Debug output (`console.log`, `IO.inspect`, `fmt.Println`) must not be left in committed code."
-  _languages: [elixir, go, javascript, python, ruby]
   _log_baseline: -88.2885
   branching:
     mean_branch_count: 0.2378
@@ -344,7 +341,6 @@ no_debug_print_statements:
 
 no_fixme_comments:
   _doc: "FIXME, XXX, and HACK comments indicate known problems that should be resolved before merging."
-  _languages: [elixir, go, javascript, python, ruby]
   _log_baseline: 11.3113
   branching:
     mean_branch_count: 0.1713
@@ -472,7 +468,6 @@ no_fixme_comments:
 
 no_nested_ternary:
   _doc: "Nested conditional expressions (ternary-within-ternary) are harder to read than a plain if-else."
-  _languages: [elixir]
   _log_baseline: 8.0040
   branching:
     mean_branch_count: -0.5662
