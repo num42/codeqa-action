@@ -326,7 +326,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       [
         "> **Worst offender** (`#{location}`):",
         "> ```#{lang}",
-        block.source |> String.split("\n") |> Enum.map(&"> #{&1}") |> Enum.join("\n"),
+        block.source |> String.split("\n") |> Enum.map_join("\n", &"> #{&1}"),
         "> ```",
         ""
       ]
@@ -627,8 +627,9 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     numbered_lines =
       lines
       |> Enum.with_index(start_line)
-      |> Enum.map(fn {line, num} -> "#{String.pad_leading(to_string(num), 4)} │ #{line}" end)
-      |> Enum.join("\n")
+      |> Enum.map_join("\n", fn {line, num} ->
+        "#{String.pad_leading(to_string(num), 4)} │ #{line}"
+      end)
 
     "```#{lang_hint}\n#{numbered_lines}\n```"
   end

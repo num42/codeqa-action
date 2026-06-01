@@ -143,13 +143,11 @@ defmodule CodeQA.GitTest do
 
         # Change line 2 and line 15
         new_lines =
-          1..20
-          |> Enum.map(fn
+          Enum.map_join(1..20, "\n", fn
             2 -> "changed2"
             15 -> "changed15"
             n -> "line#{n}"
           end)
-          |> Enum.join("\n")
 
         File.write!(Path.join(repo, "foo.ex"), new_lines <> "\n")
         {_, 0} = System.cmd("git", ["add", "."], cd: repo)
@@ -260,14 +258,12 @@ defmodule CodeQA.GitTest do
 
         # Change lines 2, 10, and 18
         new_lines =
-          1..20
-          |> Enum.map(fn
+          Enum.map_join(1..20, "\n", fn
             2 -> "changed2"
             10 -> "changed10"
             18 -> "changed18"
             n -> "line#{n}"
           end)
-          |> Enum.join("\n")
 
         File.write!(Path.join(repo, "foo.ex"), new_lines <> "\n")
         {_, 0} = System.cmd("git", ["add", "."], cd: repo)
