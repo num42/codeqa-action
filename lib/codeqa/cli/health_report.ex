@@ -414,10 +414,10 @@ defmodule CodeQA.CLI.HealthReport do
     |> Enum.sort_by(fn {_, v} -> -v end)
     |> Enum.take(25)
     |> Enum.map_join("\n", fn {key, total_us} ->
-      avg = div(total_us, calls)
+      avg_us = div(total_us, calls)
       pct = total_us * 100 / Enum.sum(Map.values(breakdown))
 
-      "  #{String.pad_trailing(to_string(key), 32)} total #{us(total_us)}  avg/call #{us(avg)}  (#{Float.round(pct, 1)}%)"
+      "  #{String.pad_trailing(to_string(key), 32)} total #{us(total_us)}  avg/call #{us(avg_us)}  (#{Float.round(pct, 1)}%)"
     end)
   end
 
@@ -460,9 +460,9 @@ defmodule CodeQA.CLI.HealthReport do
           avg_tokens = div(Enum.sum(Enum.map(bucket, & &1.tokens)), n)
           avg_nodes = div(Enum.sum(Enum.map(bucket, & &1.nodes)), n)
           avg_node_us = div(Enum.sum(Enum.map(bucket, & &1.total_node_us)), n)
-          tokens_per_node_us = if avg_nodes > 0, do: div(avg_node_us, avg_nodes), else: 0
+          per_node_us = if avg_nodes > 0, do: div(avg_node_us, avg_nodes), else: 0
 
-          "  #{label}  files=#{n}  avg bytes=#{avg_bytes} tokens=#{avg_tokens} nodes=#{avg_nodes}  total_node=#{us(avg_node_us)}  per_node=#{us(tokens_per_node_us)}"
+          "  #{label}  files=#{n}  avg bytes=#{avg_bytes} tokens=#{avg_tokens} nodes=#{avg_nodes}  total_node=#{us(avg_node_us)}  per_node=#{us(per_node_us)}"
         end
       end)
 
@@ -506,12 +506,12 @@ defmodule CodeQA.CLI.HealthReport do
 
     m
     |> Enum.map(fn {name, {n, sum}} ->
-      avg = if n > 0, do: div(sum, n), else: 0
-      {name, sum, avg, n}
+      avg_us = if n > 0, do: div(sum, n), else: 0
+      {name, sum, avg_us, n}
     end)
     |> Enum.sort_by(fn {_, sum, _, _} -> -sum end)
-    |> Enum.map_join("\n", fn {name, sum, avg, n} ->
-      "  #{String.pad_trailing(to_string(name), 32)} total #{us(sum)}  avg/file #{us(div(sum, fc))}  (#{n} calls, avg/call #{us(avg)})"
+    |> Enum.map_join("\n", fn {name, sum, avg_us, n} ->
+      "  #{String.pad_trailing(to_string(name), 32)} total #{us(sum)}  avg/file #{us(div(sum, fc))}  (#{n} calls, avg/call #{us(avg_us)})"
     end)
   end
 

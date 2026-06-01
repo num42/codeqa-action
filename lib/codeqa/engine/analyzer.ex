@@ -39,14 +39,14 @@ defmodule CodeQA.Engine.Analyzer do
 
   @spec analyze_file(String.t(), String.t()) :: map()
   def analyze_file(_path, content) do
-    ctx = Pipeline.build_file_context(content)
-    Registry.run_file_metrics(@registry, ctx, [])
+    context = Pipeline.build_file_context(content)
+    Registry.run_file_metrics(@registry, context, [])
   end
 
   @spec analyze_file_for_loo(String.t(), String.t()) :: map()
   def analyze_file_for_loo(_path, content) do
-    ctx = Pipeline.build_file_context(content, skip_structural: true)
-    Registry.run_file_metrics(@registry, ctx, [])
+    context = Pipeline.build_file_context(content, skip_structural: true)
+    Registry.run_file_metrics(@registry, context, [])
   end
 
   @doc """

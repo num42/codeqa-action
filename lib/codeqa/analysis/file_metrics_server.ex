@@ -81,8 +81,8 @@ defmodule CodeQA.Analysis.FileMetricsServer do
         metrics
 
       [] ->
-        ctx = Pipeline.build_file_context(content, opts)
-        metrics = Registry.run_file_metrics(registry, ctx)
+        context = Pipeline.build_file_context(content, opts)
+        metrics = Registry.run_file_metrics(registry, context)
         :ets.insert(tid, {{:hash, hash}, metrics})
         metrics
     end

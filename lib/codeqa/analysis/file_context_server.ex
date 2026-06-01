@@ -44,13 +44,13 @@ defmodule CodeQA.Analysis.FileContextServer do
     key = {md5(content), language_name}
 
     case :ets.lookup(tid, key) do
-      [{_, ctx}] ->
-        ctx
+      [{_, context}] ->
+        context
 
       [] ->
-        ctx = Pipeline.build_file_context(content, opts)
-        :ets.insert(tid, {key, ctx})
-        ctx
+        context = Pipeline.build_file_context(content, opts)
+        :ets.insert(tid, {key, context})
+        context
     end
   end
 

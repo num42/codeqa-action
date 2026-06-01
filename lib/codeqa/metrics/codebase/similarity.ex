@@ -83,15 +83,15 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
       |> Enum.with_index()
       |> Task.async_stream(
         fn {content, i} ->
-          fp = compute_fingerprints(content, opts)
-          {i, fp}
+          fingerprint = compute_fingerprints(content, opts)
+          {i, fingerprint}
         end,
         max_concurrency: workers,
         timeout: :infinity
       )
-      |> Enum.map(fn {:ok, {i, fp}} ->
+      |> Enum.map(fn {:ok, {i, fingerprint}} ->
         maybe_print_fingerprint_progress(has_progress, i, length(contents))
-        {i, fp}
+        {i, fingerprint}
       end)
       |> Map.new()
 
@@ -125,8 +125,8 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
   end
 
   defp index_fingerprint_set(set, doc_id, acc) do
-    Enum.reduce(set, acc, fn fp, idx_acc ->
-      Map.update(idx_acc, fp, [doc_id], &[doc_id | &1])
+    Enum.reduce(set, acc, fn fingerprint, idx_acc ->
+      Map.update(idx_acc, fingerprint, [doc_id], &[doc_id | &1])
     end)
   end
 

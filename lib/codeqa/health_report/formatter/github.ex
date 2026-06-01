@@ -8,7 +8,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   @spec render(map(), atom(), keyword()) :: String.t()
   def render(report, detail, opts \\ []) do
     chart? = Keyword.get(opts, :chart, true)
-    display_categories = merge_cosine_categories(report.categories)
+    categories = merge_cosine_categories(report.categories)
     worst_blocks = Map.get(report, :worst_blocks_by_category, %{})
 
     [
@@ -16,11 +16,11 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       header(report),
       cosine_legend(),
       delta_section(Map.get(report, :codebase_delta)),
-      if(chart?, do: mermaid_chart(display_categories), else: []),
-      progress_bars(display_categories),
+      if(chart?, do: mermaid_chart(categories), else: []),
+      progress_bars(categories),
       top_issues_section(Map.get(report, :top_issues, []), detail),
       blocks_section(Map.get(report, :top_blocks, [])),
-      category_sections(display_categories, detail, worst_blocks),
+      category_sections(categories, detail, worst_blocks),
       footer()
     ]
     |> List.flatten()
@@ -34,15 +34,15 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   @spec render_part_1(map(), keyword()) :: String.t()
   def render_part_1(report, opts \\ []) do
     chart? = Keyword.get(opts, :chart, true)
-    display_categories = merge_cosine_categories(report.categories)
+    categories = merge_cosine_categories(report.categories)
 
     [
       pr_summary_section(Map.get(report, :pr_summary)),
       header(report),
       cosine_legend(),
       delta_section(Map.get(report, :codebase_delta)),
-      if(chart?, do: mermaid_chart(display_categories), else: []),
-      progress_bars(display_categories),
+      if(chart?, do: mermaid_chart(categories), else: []),
+      progress_bars(categories),
       sentinel(1)
     ]
     |> List.flatten()
@@ -457,13 +457,13 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   end
 
   defp format_metric_row({label, group, key}, base_agg, head_agg) do
-    base_val = get_in(base_agg, [group, key])
-    head_val = get_in(head_agg, [group, key])
+    base_value = get_in(base_agg, [group, key])
+    head_value = get_in(head_agg, [group, key])
 
-    if is_number(base_val) and is_number(head_val) do
-      diff = Float.round(head_val - base_val, 2)
+    if is_number(base_value) and is_number(head_value) do
+      diff = Float.round(head_value - base_value, 2)
       diff_str = if diff >= 0, do: "+#{format_num(diff)}", else: "#{format_num(diff)}"
-      ["| #{label} | #{format_num(base_val)} | #{format_num(head_val)} | #{diff_str} |"]
+      ["| #{label} | #{format_num(base_value)} | #{format_num(head_value)} | #{diff_str} |"]
     else
       []
     end

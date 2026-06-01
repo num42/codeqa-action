@@ -102,10 +102,10 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Distance do
   def percent_bucket(0, _min_count), do: 0
 
   def percent_bucket(ed, min_count) do
-    pct = ed / min_count
+    percent = ed / min_count
 
     @bucket_thresholds
-    |> Enum.find(fn {bucket, threshold} -> bucket > 0 and pct <= threshold end)
+    |> Enum.find(fn {bucket, threshold} -> bucket > 0 and percent <= threshold end)
     |> case do
       {bucket, _} -> bucket
       nil -> nil

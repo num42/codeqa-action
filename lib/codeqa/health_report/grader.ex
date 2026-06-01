@@ -219,8 +219,8 @@ defmodule CodeQA.HealthReport.Grader do
           {ws + g.score * impact, ti + impact}
         end)
 
-      avg = round(weighted_sum / total_impact)
-      {avg, grade_letter(avg, scale)}
+      score = round(weighted_sum / total_impact)
+      {score, grade_letter(score, scale)}
     end
   end
 

@@ -53,13 +53,13 @@ defmodule CodeQA.Metrics.File.Bradford do
     else
       # Each zone should contain one third of all tokens.
       # We find zone boundaries by walking the ranked list until each third is filled.
-      third = total / 3
+      target = total / 3
 
       # n1: lines in zone 1 (the dense core — fewest lines, highest token density)
       # n2: lines in zone 2 (middle tier)
       # n3: all remaining lines (the sparse tail)
-      {n1, rest} = count_until(counts, third)
-      {n2, _} = count_until(rest, third)
+      {n1, rest} = count_until(counts, target)
+      {n2, _} = count_until(rest, target)
       n3 = length(counts) - n1 - n2
 
       # k1 > 1 always: the middle zone always needs more lines than the core.

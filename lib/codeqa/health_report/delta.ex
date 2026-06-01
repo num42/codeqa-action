@@ -20,9 +20,9 @@ defmodule CodeQA.HealthReport.Delta do
   defp compute_aggregate_delta(base_agg, head_agg) do
     MapSet.new(Map.keys(base_agg) ++ Map.keys(head_agg))
     |> Enum.reduce(%{}, fn metric_name, acc ->
-      base_m = Map.get(base_agg, metric_name, %{})
-      head_m = Map.get(head_agg, metric_name, %{})
-      delta = compute_numeric_delta(base_m, head_m)
+      base = Map.get(base_agg, metric_name, %{})
+      head = Map.get(head_agg, metric_name, %{})
+      delta = compute_numeric_delta(base, head)
       if delta == %{}, do: acc, else: Map.put(acc, metric_name, delta)
     end)
   end

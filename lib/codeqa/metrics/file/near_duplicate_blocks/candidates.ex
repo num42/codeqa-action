@@ -212,9 +212,9 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Candidates do
 
     if structure_compatible?(children_a, newlines_a, children_b, newlines_b) and
          abs(len_a - len_b) <= max_allowed do
-      ed = Distance.token_edit_distance_bounded(values_a, values_b, max_allowed)
+      edit_distance = Distance.token_edit_distance_bounded(values_a, values_b, max_allowed)
 
-      case Distance.percent_bucket(ed, min_count) do
+      case Distance.percent_bucket(edit_distance, min_count) do
         nil -> []
         bucket when bucket > 0 -> [{bucket, {block_a.label, block_b.label}}]
         # ed=0 handled by exact_pairs above

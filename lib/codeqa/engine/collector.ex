@@ -88,15 +88,15 @@ defmodule CodeQA.Engine.Collector do
   defp walk_directory(dir, extensions) do
     dir
     |> File.ls!()
-    |> Enum.flat_map(fn entry ->
-      full_path = Path.join(dir, entry)
+    |> Enum.flat_map(fn name ->
+      full_path = Path.join(dir, name)
 
       cond do
-        File.dir?(full_path) and not skip_dir?(entry) ->
+        File.dir?(full_path) and not skip_dir?(name) ->
           walk_directory(full_path, extensions)
 
-        File.regular?(full_path) and source_file?(entry, extensions) and
-            not String.starts_with?(entry, ".") ->
+        File.regular?(full_path) and source_file?(name, extensions) and
+            not String.starts_with?(name, ".") ->
           [full_path]
 
         true ->
