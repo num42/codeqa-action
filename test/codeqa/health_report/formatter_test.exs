@@ -562,9 +562,9 @@ defmodule CodeQA.HealthReport.FormatterTest do
     test "returns single part with blocks (top 10 limit means no slicing needed)" do
       blocks =
         1..10
-        |> Enum.map(fn i ->
-          %{
-            path: "lib/file_#{i}.ex",
+        |> Enum.map(
+          &%{
+            path: "lib/file_#{&1}.ex",
             status: "modified",
             start_line: 10,
             end_line: 30,
@@ -582,7 +582,7 @@ defmodule CodeQA.HealthReport.FormatterTest do
               }
             ]
           }
-        end)
+        )
 
       report = Map.put(@sample_report, :top_blocks, blocks)
       parts = Github.render_parts_3(report)

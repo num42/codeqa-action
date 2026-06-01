@@ -188,7 +188,7 @@ defmodule CodeQA.CLI.Correlate do
 
     normal
     |> Stream.flat_map(fn k1 ->
-      combined |> Stream.map(fn k2 -> {k1, k2} end)
+      combined |> Stream.map(&{k1, &1})
     end)
   end
 
@@ -199,7 +199,7 @@ defmodule CodeQA.CLI.Correlate do
       [_h | t] = list -> {list, t}
     end)
     |> Stream.flat_map(fn
-      [k1 | rest] -> rest |> Stream.map(fn k2 -> {k1, k2} end)
+      [k1 | rest] -> rest |> Stream.map(&{k1, &1})
       [] -> []
     end)
   end

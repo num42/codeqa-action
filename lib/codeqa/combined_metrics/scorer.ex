@@ -49,7 +49,7 @@ defmodule CodeQA.CombinedMetrics.Scorer do
   def default_scalars do
     Analyzer.build_registry().file_metrics
     |> Enum.flat_map(fn mod ->
-      mod.keys() |> Enum.map(fn key -> {{mod.name(), "mean_" <> key}, 0.0} end)
+      mod.keys() |> Enum.map(&{{mod.name(), "mean_" <> &1}, 0.0})
     end)
     |> Map.new()
   end

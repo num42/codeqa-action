@@ -74,9 +74,11 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
       IO.puts("\nApplied language coverage to YAML configs:")
 
       stats
-      |> Enum.each(fn %{category: cat, behaviors_with_languages: n} ->
-        IO.puts("  #{cat}: #{n} behaviors with language coverage")
-      end)
+      |> Enum.each(
+        &IO.puts(
+          "  #{&1.category}: #{&1.behaviors_with_languages} behaviors with language coverage"
+        )
+      )
     end
 
     if path = opts[:file] do
@@ -182,9 +184,7 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
     IO.puts("  " <> pad("#{cat}.#{b}", 38) <> pad(fmt(cos), 9) <> fmt(s))
 
     metrics
-    |> Enum.each(fn %{metric: m, contribution: c} ->
-      IO.puts("      " <> pad(m, 44) <> fmt(c))
-    end)
+    |> Enum.each(&IO.puts("      " <> pad(&1.metric, 44) <> fmt(&1.contribution)))
   end
 
   defp print_combined_category(%{name: name, behaviors: behaviors}) do

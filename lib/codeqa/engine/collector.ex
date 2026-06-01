@@ -47,9 +47,7 @@ defmodule CodeQA.Engine.Collector do
   @doc false
   def ignored?(path, patterns) do
     patterns
-    |> Enum.any?(fn pattern ->
-      match_pattern?(path, pattern)
-    end)
+    |> Enum.any?(&match_pattern?(path, &1))
   end
 
   @doc false
@@ -60,7 +58,7 @@ defmodule CodeQA.Engine.Collector do
   @doc false
   def reject_ignored(list, key_fn, extra_patterns \\ []) do
     patterns = all_ignore_patterns(extra_patterns)
-    list |> Enum.reject(fn item -> ignored?(key_fn.(item), patterns) end)
+    list |> Enum.reject(&ignored?(key_fn.(&1), patterns))
   end
 
   defp all_ignore_patterns(extra),

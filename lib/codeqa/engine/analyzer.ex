@@ -88,7 +88,7 @@ defmodule CodeQA.Engine.Analyzer do
   end
 
   defp registered_module_for(name) do
-    Enum.find(@registry.file_metrics, fn mod -> mod.name() == name end) ||
+    Enum.find(@registry.file_metrics, &(&1.name() == name)) ||
       raise "no registered file metric module for name #{inspect(name)}"
   end
 

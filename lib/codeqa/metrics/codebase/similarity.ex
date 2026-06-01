@@ -348,7 +348,7 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
   defp cross_file_density(contents) do
     individual_sum =
       contents
-      |> Enum.map(fn c -> byte_size(:zlib.compress(c)) end)
+      |> Enum.map(&byte_size(:zlib.compress(&1)))
       |> Enum.sum()
 
     joined = contents |> Enum.intersperse("\n")

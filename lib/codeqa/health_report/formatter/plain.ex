@@ -57,9 +57,7 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
 
   defp category_sections(categories, detail) do
     categories
-    |> Enum.flat_map(fn cat ->
-      render_category(cat, detail)
-    end)
+    |> Enum.flat_map(fn cat -> render_category(cat, detail) end)
   end
 
   defp render_category(%{type: :cosine} = cat, _detail) do
@@ -84,9 +82,7 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
   defp cosine_behaviors_table(cat) do
     rows =
       cat.behaviors
-      |> Enum.map(fn b ->
-        "| #{b.behavior} | #{format_num(b.cosine)} | #{b.score} | #{b.grade} |"
-      end)
+      |> Enum.map(&"| #{&1.behavior} | #{format_num(&1.cosine)} | #{&1.score} | #{&1.grade} |")
 
     [
       "| Behavior | Cosine | Score | Grade |",
@@ -110,9 +106,7 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
   defp metric_detail(cat) do
     rows =
       cat.metric_scores
-      |> Enum.map(fn m ->
-        "| #{m.source}.#{m.name} | #{format_num(m.value)} | #{m.score} |"
-      end)
+      |> Enum.map(&"| #{&1.source}.#{&1.name} | #{format_num(&1.value)} | #{&1.score} |")
 
     if rows == [] do
       []
@@ -141,9 +135,9 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
   defp top_issues_section(issues, _detail) do
     rows =
       issues
-      |> Enum.map(fn i ->
-        "| #{i.category}.#{i.behavior} | #{format_num(i.cosine)} | #{format_num(i.score)} |"
-      end)
+      |> Enum.map(
+        &"| #{&1.category}.#{&1.behavior} | #{format_num(&1.cosine)} | #{format_num(&1.score)} |"
+      )
 
     [
       "## Top Likely Issues",
@@ -257,7 +251,7 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
 
   defp count_severities(blocks) do
     blocks
-    |> Enum.map(fn b -> (List.first(b.potentials) || %{severity: :medium}).severity end)
+    |> Enum.map(&(List.first(&1.potentials) || %{severity: :medium}).severity)
     |> Enum.frequencies()
   end
 

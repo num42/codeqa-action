@@ -302,9 +302,9 @@ defmodule CodeQA.AST.NodeClassifierTest do
     sub_first = List.first(sub_block.tokens)
 
     parent.tokens
-    |> Enum.take_while(fn t -> t != sub_first end)
+    |> Enum.take_while(&(&1 != sub_first))
     |> Enum.reverse()
-    |> Enum.take_while(fn t -> t.kind != :"<NL>" end)
+    |> Enum.take_while(&(&1.kind != :"<NL>"))
     |> Enum.reverse()
   end
 end

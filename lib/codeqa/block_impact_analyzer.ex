@@ -305,11 +305,11 @@ defmodule CodeQA.BlockImpactAnalyzer do
         ws_kind = WhitespaceToken.kind()
 
         parent_tokens
-        |> Enum.take_while(fn t -> t != child_first end)
+        |> Enum.take_while(&(&1 != child_first))
         |> Enum.reverse()
-        |> Enum.take_while(fn t -> t.kind != nl_kind end)
+        |> Enum.take_while(&(&1.kind != nl_kind))
         |> Enum.reverse()
-        |> Enum.drop_while(fn t -> t.kind == ws_kind end)
+        |> Enum.drop_while(&(&1.kind == ws_kind))
     end
   end
 

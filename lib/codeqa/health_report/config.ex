@@ -123,7 +123,7 @@ defmodule CodeQA.HealthReport.Config do
     # Append new metrics from YAML that aren't in defaults
     new_metrics =
       overrides
-      |> Enum.reject(fn o -> MapSet.member?(default_names, o["name"]) end)
+      |> Enum.reject(&MapSet.member?(default_names, &1["name"]))
       |> Enum.map(&parse_metric/1)
 
     merged_defaults ++ new_metrics

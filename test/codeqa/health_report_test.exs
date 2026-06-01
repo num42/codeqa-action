@@ -54,9 +54,7 @@ defmodule CodeQA.HealthReportTest do
       report = HealthReport.generate(results)
 
       report.categories
-      |> Enum.each(fn cat ->
-        assert Map.get(cat, :worst_offenders, []) == []
-      end)
+      |> Enum.each(&assert Map.get(&1, :worst_offenders, []) == [])
     end
   end
 

@@ -297,9 +297,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
     behaviors_rows =
       cat.behaviors
-      |> Enum.map(fn b ->
-        "| #{b.behavior} | #{format_num(b.cosine)} | #{b.score} | #{b.grade} |"
-      end)
+      |> Enum.map(&"| #{&1.behavior} | #{format_num(&1.cosine)} | #{&1.score} | #{&1.grade} |")
 
     behaviors_table = [
       "> Cosine similarity scores for #{n} behaviors.",
@@ -348,9 +346,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       if cat.metric_scores != [] do
         rows =
           cat.metric_scores
-          |> Enum.map(fn m ->
-            "| #{m.source}.#{m.name} | #{format_num(m.value)} | #{m.score} |"
-          end)
+          |> Enum.map(&"| #{&1.source}.#{&1.name} | #{format_num(&1.value)} | #{&1.score} |")
 
         [
           "| Metric | Value | Score |",
@@ -548,7 +544,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
   defp count_severities(blocks) do
     blocks
-    |> Enum.map(fn b -> (List.first(b.potentials) || %{severity: :medium}).severity end)
+    |> Enum.map(&(List.first(&1.potentials) || %{severity: :medium}).severity)
     |> Enum.frequencies()
   end
 

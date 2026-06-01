@@ -30,7 +30,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksTest do
     test "exact duplicates are still detected when all bigrams are high-frequency" do
       # 30 blocks all sharing bigram [end, nil] → pruned by IDF
       # Two additional identical blocks → should still match via exact hash index (d0)
-      common = 1..30 |> Enum.map(fn i -> make_block(~w[end nil common_#{i}], "file:#{i}") end)
+      common = 1..30 |> Enum.map(&make_block(~w[end nil common_#{&1}], "file:#{&1}"))
       dup = make_block(~w[end nil special unique_token], "dup:1")
       dup2 = make_block(~w[end nil special unique_token], "dup:2")
 
@@ -42,7 +42,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksTest do
     test "near-duplicates are detected via non-pruned unique bigrams" do
       # 50 blocks all sharing [end, nil] → pruned
       # Two near-duplicates sharing unique bigrams [nil, special], [special, alpha] → not pruned
-      common = 1..50 |> Enum.map(fn i -> make_block(~w[end nil common_#{i}], "common:#{i}") end)
+      common = 1..50 |> Enum.map(&make_block(~w[end nil common_#{&1}], "common:#{&1}"))
       near_a = make_block(~w[end nil special alpha beta gamma], "near:1")
       near_b = make_block(~w[end nil special alpha beta delta], "near:2")
 
@@ -195,7 +195,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksTest do
 
       near_dup_total =
         0..8
-        |> Enum.map(fn d -> result["near_dup_block_d#{d}"] end)
+        |> Enum.map(&result["near_dup_block_d#{&1}"])
         |> Enum.sum()
 
       assert near_dup_total >= 1

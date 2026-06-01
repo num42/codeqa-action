@@ -82,9 +82,7 @@ defmodule CodeQA.BlockImpactAnalyzerTest do
       nodes = result["files"]["lib/my_module.ex"]["nodes"]
 
       nodes
-      |> Enum.each(fn node ->
-        assert length(node["refactoring_potentials"]) <= 1
-      end)
+      |> Enum.each(&assert length(&1["refactoring_potentials"]) <= 1)
     end
 
     test "node['type'] reflects classified block kind, not the always-:code default" do

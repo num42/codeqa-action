@@ -54,7 +54,7 @@ defmodule CodeQA.GitTest do
       in_tmp_git_repo(fn repo ->
         File.write!(Path.join(repo, ".gitignore"), "ignored.ex\n")
 
-        paths = Enum.map(1..1200, fn i -> "file_#{i}.ex" end) ++ ["ignored.ex"]
+        paths = Enum.map(1..1200, &"file_#{&1}.ex") ++ ["ignored.ex"]
 
         ignored = Git.gitignored_files(repo, paths)
 

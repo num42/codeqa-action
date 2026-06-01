@@ -262,7 +262,7 @@ defmodule CodeQA.HealthReport.Grader do
 
   defp score_behavior_entries(behaviors, threshold, worst_files, scale, category) do
     behaviors
-    |> Enum.reject(fn b -> abs(b.cosine) < threshold end)
+    |> Enum.reject(&(abs(&1.cosine) < threshold))
     |> Enum.map(&score_behavior_entry(&1, worst_files, scale, category))
   end
 
@@ -330,7 +330,7 @@ defmodule CodeQA.HealthReport.Grader do
         top_nodes: top_3_nodes(Map.get(file_data, "nodes"))
       }
     end)
-    |> Enum.filter(fn f -> f.metric_scores != [] end)
+    |> Enum.filter(&(&1.metric_scores != []))
     |> Enum.sort_by(& &1.score, :asc)
     |> Enum.take(top_n)
   end

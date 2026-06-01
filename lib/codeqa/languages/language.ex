@@ -134,7 +134,7 @@ defmodule CodeQA.Language do
   @spec find(atom() | String.t()) :: module()
   def find(language) do
     name = to_string(language)
-    Enum.find(all(), fn mod -> mod.name() == name end) || CodeQA.Languages.Unknown
+    Enum.find(all(), &(&1.name() == name)) || CodeQA.Languages.Unknown
   end
 
   @spec detect(String.t()) :: module()

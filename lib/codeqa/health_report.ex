@@ -55,9 +55,7 @@ defmodule CodeQA.HealthReport do
 
     all_categories =
       (threshold_grades ++ cosine_grades)
-      |> Enum.map(fn cat ->
-        Map.put(cat, :impact, Map.get(impact_map, to_string(cat.key), 1))
-      end)
+      |> Enum.map(&Map.put(&1, :impact, Map.get(impact_map, to_string(&1.key), 1)))
 
     {overall_score, overall_grade} = Grader.overall_score(all_categories, grade_scale, impact_map)
 
@@ -174,9 +172,7 @@ defmodule CodeQA.HealthReport do
 
     base_all_categories =
       (base_threshold_grades ++ base_cosine_grades)
-      |> Enum.map(fn cat ->
-        Map.put(cat, :impact, Map.get(impact_map, to_string(cat.key), 1))
-      end)
+      |> Enum.map(&Map.put(&1, :impact, Map.get(impact_map, to_string(&1.key), 1)))
 
     {base_score, base_grade} = Grader.overall_score(base_all_categories, grade_scale, impact_map)
 
@@ -222,7 +218,7 @@ defmodule CodeQA.HealthReport do
   defp build_category_summary(graded) do
     low_scorers =
       graded.metric_scores
-      |> Enum.filter(fn m -> m.score < 60 end)
+      |> Enum.filter(&(&1.score < 60))
       |> length()
 
     cond do
