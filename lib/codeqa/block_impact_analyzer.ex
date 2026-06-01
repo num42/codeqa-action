@@ -3,6 +3,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
   alias CodeQA.AST.Lexing.WhitespaceToken
   alias CodeQA.Language
 
+  import CodeQA.Shared, only: [project_languages_shared: 1]
+
   @moduledoc """
   Orchestrates block impact analysis across all files in a pipeline result.
 
@@ -481,13 +483,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
     end)
   end
 
-  defp project_languages(path_keyed_map) do
-    path_keyed_map
-    |> Map.keys()
-    |> Enum.map(&Language.detect(&1).name())
-    |> Enum.reject(&(&1 == "unknown"))
-    |> Enum.uniq()
-  end
+  defp project_languages(path_keyed_map), do: project_languages_shared(path_keyed_map)
 
   defp timed(fun) do
     t = now()

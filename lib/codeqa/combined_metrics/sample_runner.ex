@@ -1,4 +1,6 @@
 defmodule CodeQA.CombinedMetrics.SampleRunner do
+  import CodeQA.Shared, only: [humanize_category_shared: 1]
+
   @moduledoc """
   Discovers sample directories, analyzes them, and scores each behavior formula.
 
@@ -504,9 +506,5 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   # Misc
   # ---------------------------------------------------------------------------
 
-  defp humanize(slug) do
-    slug
-    |> String.split("_")
-    |> Enum.map_join(" ", &String.capitalize/1)
-  end
+  defp humanize(slug), do: humanize_category_shared(slug)
 end

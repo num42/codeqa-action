@@ -1,6 +1,9 @@
 defmodule CodeQA.HealthReport.Formatter.Plain do
   @moduledoc "Renders health report as plain markdown."
 
+  import CodeQA.HealthReport.Formatter.Shared,
+    only: [count_severities_shared: 1, worst_severity_shared: 1]
+
   alias CodeQA.HealthReport.BehaviorLabels
 
   @spec render(map(), atom()) :: String.t()
@@ -254,20 +257,9 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
     header ++ action_table ++ block_details
   end
 
-  defp count_severities(blocks) do
-    blocks
-    |> Enum.map(&(List.first(&1.potentials) || %{severity: :medium}).severity)
-    |> Enum.frequencies()
-  end
+  defp count_severities(blocks), do: count_severities_shared(blocks)
 
-  defp worst_severity(counts) do
-    cond do
-      Map.get(counts, :critical, 0) > 0 -> :critical
-      Map.get(counts, :high, 0) > 0 -> :high
-      Map.get(counts, :medium, 0) > 0 -> :medium
-      true -> :none
-    end
-  end
+  defp worst_severity(counts), do: worst_severity_shared(counts)
 
   defp verdict_text(:critical, counts) do
     n = Map.get(counts, :critical, 0)

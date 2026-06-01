@@ -1,6 +1,9 @@
 defmodule CodeQA.HealthReport.Formatter.Github do
   @moduledoc "Renders health report as rich GitHub-flavored markdown."
 
+  import CodeQA.HealthReport.Formatter.Shared,
+    only: [count_severities_shared: 1, worst_severity_shared: 1]
+
   alias CodeQA.HealthReport.BehaviorLabels
 
   @bar_width 20
@@ -542,20 +545,9 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     verdict_box ++ action_table ++ actionable_details ++ medium_section
   end
 
-  defp count_severities(blocks) do
-    blocks
-    |> Enum.map(&(List.first(&1.potentials) || %{severity: :medium}).severity)
-    |> Enum.frequencies()
-  end
+  defp count_severities(blocks), do: count_severities_shared(blocks)
 
-  defp worst_severity(counts) do
-    cond do
-      Map.get(counts, :critical, 0) > 0 -> :critical
-      Map.get(counts, :high, 0) > 0 -> :high
-      Map.get(counts, :medium, 0) > 0 -> :medium
-      true -> :none
-    end
-  end
+  defp worst_severity(counts), do: worst_severity_shared(counts)
 
   defp verdict_text(:critical, counts) do
     n = Map.get(counts, :critical, 0)

@@ -1,6 +1,7 @@
 defmodule CodeQA.HealthReport do
-  alias CodeQA.Language
   @moduledoc "Orchestrates health report generation from analysis results."
+
+  import CodeQA.Shared, only: [project_languages_shared: 1]
 
   alias CodeQA.CombinedMetrics.FileScorer
   alias CodeQA.CombinedMetrics.SampleRunner
@@ -205,13 +206,7 @@ defmodule CodeQA.HealthReport do
     }
   end
 
-  defp project_languages(files_map) do
-    files_map
-    |> Map.keys()
-    |> Enum.map(&Language.detect(&1).name())
-    |> Enum.reject(&(&1 == "unknown"))
-    |> Enum.uniq()
-  end
+  defp project_languages(files_map), do: project_languages_shared(files_map)
 
   defp build_category_summary(%{type: :cosine}), do: ""
 

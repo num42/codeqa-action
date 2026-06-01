@@ -1,6 +1,8 @@
 defmodule CodeQA.AST.Nodes.ImportNode do
   @moduledoc "AST node for import, require, use, alias, or include statements."
 
+  import CodeQA.AST.Nodes.Shared, only: [cast_shared: 2]
+
   alias CodeQA.AST.Enrichment.Node
 
   defstruct [:tokens, :line_count, :children, :start_line, :end_line, :label, :target]
@@ -17,16 +19,7 @@ defmodule CodeQA.AST.Nodes.ImportNode do
 
   @doc "Build an ImportNode from a raw %Node{}, copying all base fields. Type-specific fields default to nil."
   @spec cast(Node.t()) :: t()
-  def cast(%Node{} = node) do
-    %__MODULE__{
-      tokens: node.tokens,
-      line_count: node.line_count,
-      children: node.children,
-      start_line: node.start_line,
-      end_line: node.end_line,
-      label: node.label
-    }
-  end
+  def cast(%Node{} = node), do: cast_shared(__MODULE__, node)
 
   defimpl CodeQA.AST.Classification.NodeProtocol do
     alias CodeQA.AST.Classification.NodeProtocol

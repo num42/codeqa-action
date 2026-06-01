@@ -1,6 +1,8 @@
 defmodule CodeQA.HealthReport.Grader do
   @moduledoc "Scores metrics and assigns letter grades."
 
+  import CodeQA.Shared, only: [humanize_category_shared: 1]
+
   alias CodeQA.Config
   alias CodeQA.HealthReport.Categories
 
@@ -295,11 +297,7 @@ defmodule CodeQA.HealthReport.Grader do
     }
   end
 
-  defp humanize_category(slug) do
-    slug
-    |> String.split("_")
-    |> Enum.map_join(" ", &String.capitalize/1)
-  end
+  defp humanize_category(slug), do: humanize_category_shared(slug)
 
   @doc """
   Find worst offender files for a category. Returns top N files sorted by worst score.

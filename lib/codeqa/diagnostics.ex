@@ -1,6 +1,8 @@
 defmodule CodeQA.Diagnostics do
   alias CodeQA.Language
 
+  import CodeQA.Shared, only: [project_languages_shared: 1]
+
   @moduledoc """
   Diagnoses a codebase by identifying likely code quality issues using
   cosine similarity against combined metric behavior profiles.
@@ -115,13 +117,7 @@ defmodule CodeQA.Diagnostics do
     end)
   end
 
-  defp project_languages(files_map) do
-    files_map
-    |> Map.keys()
-    |> Enum.map(&Language.detect(&1).name())
-    |> Enum.reject(&(&1 == "unknown"))
-    |> Enum.uniq()
-  end
+  defp project_languages(files_map), do: project_languages_shared(files_map)
 
   defp issues_table(issues) do
     rows =
