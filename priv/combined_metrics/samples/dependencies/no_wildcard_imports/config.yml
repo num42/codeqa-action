@@ -1,0 +1,1 @@
+doc: "Wildcard imports (`import *`, `using Module`) pollute the local namespace and hide dependencies."

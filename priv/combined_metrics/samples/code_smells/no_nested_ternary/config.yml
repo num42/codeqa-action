@@ -1,0 +1,1 @@
+doc: "Nested conditional expressions (ternary-within-ternary) are harder to read than a plain if-else."

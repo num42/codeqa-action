@@ -1,0 +1,1 @@
+doc: "Boolean variables should be prefixed with `is_`, `has_`, or `can_`."

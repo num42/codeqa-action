@@ -1,0 +1,1 @@
+doc: "Files should import fewer than 10 modules; high import counts signal excessive coupling."

@@ -1,0 +1,1 @@
+doc: "A module should not mix one-liner and multi-clause function definitions for the same concern."

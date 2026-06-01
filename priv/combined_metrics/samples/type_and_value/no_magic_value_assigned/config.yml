@@ -1,0 +1,1 @@
+doc: "Literal strings and numbers assigned to variables should be named constants, not inline values."
