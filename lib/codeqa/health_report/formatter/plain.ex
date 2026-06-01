@@ -1,6 +1,8 @@
 defmodule CodeQA.HealthReport.Formatter.Plain do
   @moduledoc "Renders health report as plain markdown."
 
+  alias CodeQA.HealthReport.BehaviorLabels
+
   @spec render(map(), atom()) :: String.t()
   def render(report, detail) do
     [
@@ -209,8 +211,6 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
   defp blocks_section([]), do: ["## Code Blocks: 🟢 No block-level issues detected", ""]
 
   defp blocks_section(top_blocks) do
-    alias CodeQA.HealthReport.BehaviorLabels
-
     severity_counts = count_severities(top_blocks)
     worst = worst_severity(severity_counts)
     {icon, verdict} = verdict_text(worst, severity_counts)

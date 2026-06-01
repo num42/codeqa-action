@@ -1,6 +1,8 @@
 defmodule CodeQA.HealthReport.Formatter.Github do
   @moduledoc "Renders health report as rich GitHub-flavored markdown."
 
+  alias CodeQA.HealthReport.BehaviorLabels
+
   @bar_width 20
   @filled "█"
   @empty "░"
@@ -474,8 +476,6 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   end
 
   defp blocks_section(top_blocks) do
-    alias CodeQA.HealthReport.BehaviorLabels
-
     severity_counts = count_severities(top_blocks)
     worst = worst_severity(severity_counts)
     {icon, verdict} = verdict_text(worst, severity_counts)
@@ -580,8 +580,6 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   end
 
   defp format_block_card(block) do
-    alias CodeQA.HealthReport.BehaviorLabels
-
     end_line = block.end_line || block.start_line
     top_potential = List.first(block.potentials)
     icon = severity_icon(top_potential.severity)
