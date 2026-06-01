@@ -2,7 +2,7 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
   @moduledoc "Renders health report as plain markdown."
 
   import CodeQA.HealthReport.Formatter.Shared,
-    only: [count_severities_shared: 1, worst_severity_shared: 1]
+    only: [count_severities_shared: 1, pr_summary_section: 1, worst_severity_shared: 1]
 
   alias CodeQA.HealthReport.BehaviorLabels
 
@@ -156,22 +156,6 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
       "|----------|--------|-------|"
       | rows
     ] ++ [""]
-  end
-
-  defp pr_summary_section(nil), do: []
-
-  defp pr_summary_section(summary) do
-    delta_str =
-      if summary.score_delta >= 0,
-        do: "+#{summary.score_delta}",
-        else: "#{summary.score_delta}"
-
-    status_str = "#{summary.files_modified} modified, #{summary.files_added} added"
-
-    [
-      "> **Score:** #{summary.base_grade} → #{summary.head_grade}  |  **Δ** #{delta_str} pts  |  **#{summary.blocks_flagged}** blocks flagged across #{summary.files_changed} files  |  #{status_str}",
-      ""
-    ]
   end
 
   defp delta_section(nil), do: []
