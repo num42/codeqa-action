@@ -2,7 +2,8 @@ defmodule CodeQA.AST.Nodes.CodeNodeTest do
   use ExUnit.Case, async: true
 
   alias CodeQA.AST.Classification.NodeProtocol
-  alias CodeQA.AST.Nodes.{CodeNode, DocNode}
+  alias CodeQA.AST.Nodes.CodeNode
+  alias CodeQA.AST.Nodes.DocNode
 
   @tokens [:a, :b, :c]
 

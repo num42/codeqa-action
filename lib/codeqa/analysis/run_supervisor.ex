@@ -11,7 +11,9 @@ defmodule CodeQA.Analysis.RunSupervisor do
 
   use Supervisor
 
-  alias CodeQA.Analysis.{BehaviorConfigServer, FileContextServer, RunContext}
+  alias CodeQA.Analysis.BehaviorConfigServer
+  alias CodeQA.Analysis.FileContextServer
+  alias CodeQA.Analysis.RunContext
 
   @spec start_link(keyword()) :: Supervisor.on_start()
   def start_link(opts \\ []) do

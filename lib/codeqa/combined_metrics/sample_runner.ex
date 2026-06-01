@@ -6,8 +6,11 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   manual scalar tuning of combined metric formulas.
   """
 
-  alias CodeQA.CombinedMetrics.{CosineVector, ScalarApplier, Scorer}
-  alias CodeQA.Engine.{Analyzer, Collector}
+  alias CodeQA.CombinedMetrics.CosineVector
+  alias CodeQA.CombinedMetrics.ScalarApplier
+  alias CodeQA.CombinedMetrics.Scorer
+  alias CodeQA.Engine.Analyzer
+  alias CodeQA.Engine.Collector
 
   @samples_root "priv/combined_metrics/samples"
 

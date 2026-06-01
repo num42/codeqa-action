@@ -5,7 +5,9 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilderTest do
   alias CodeQA.AST.Enrichment.CompoundNode
   alias CodeQA.AST.Enrichment.CompoundNodeBuilder
   alias CodeQA.AST.Lexing.TokenNormalizer
-  alias CodeQA.AST.Nodes.{AttributeNode, CodeNode, DocNode}
+  alias CodeQA.AST.Nodes.AttributeNode
+  alias CodeQA.AST.Nodes.CodeNode
+  alias CodeQA.AST.Nodes.DocNode
   alias CodeQA.AST.Parsing.Parser
 
   defp build(code) do

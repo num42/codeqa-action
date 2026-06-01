@@ -2,8 +2,13 @@ defmodule CodeQA.HealthReport do
   alias CodeQA.Language
   @moduledoc "Orchestrates health report generation from analysis results."
 
-  alias CodeQA.CombinedMetrics.{FileScorer, SampleRunner}
-  alias CodeQA.HealthReport.{Config, Delta, Formatter, Grader, TopBlocks}
+  alias CodeQA.CombinedMetrics.FileScorer
+  alias CodeQA.CombinedMetrics.SampleRunner
+  alias CodeQA.HealthReport.Config
+  alias CodeQA.HealthReport.Delta
+  alias CodeQA.HealthReport.Formatter
+  alias CodeQA.HealthReport.Grader
+  alias CodeQA.HealthReport.TopBlocks
 
   @spec generate(map(), keyword()) :: map()
   def generate(analysis_results, opts \\ []) do

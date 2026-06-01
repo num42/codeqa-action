@@ -3,15 +3,13 @@ defmodule CodeQA.AST.Classification.TypedNodeKindTest do
 
   alias CodeQA.AST.Classification.TypedNodeKind
 
-  alias CodeQA.AST.Nodes.{
-    AttributeNode,
-    CodeNode,
-    DocNode,
-    FunctionNode,
-    ImportNode,
-    ModuleNode,
-    TestNode
-  }
+  alias CodeQA.AST.Nodes.AttributeNode
+  alias CodeQA.AST.Nodes.CodeNode
+  alias CodeQA.AST.Nodes.DocNode
+  alias CodeQA.AST.Nodes.FunctionNode
+  alias CodeQA.AST.Nodes.ImportNode
+  alias CodeQA.AST.Nodes.ModuleNode
+  alias CodeQA.AST.Nodes.TestNode
 
   test "maps each typed node struct to its kind atom" do
     assert TypedNodeKind.of(%DocNode{}) == :doc

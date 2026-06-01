@@ -2,7 +2,8 @@ defmodule CodeQA.Analysis.FileContextServerTest do
   use ExUnit.Case, async: true
 
   alias CodeQA.Analysis.FileContextServer
-  alias CodeQA.Engine.{FileContext, Pipeline}
+  alias CodeQA.Engine.FileContext
+  alias CodeQA.Engine.Pipeline
 
   setup do
     {:ok, pid} = FileContextServer.start_link()

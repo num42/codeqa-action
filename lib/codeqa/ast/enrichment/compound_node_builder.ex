@@ -16,8 +16,10 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilder do
   alias CodeQA.AST.Classification.NodeProtocol
   alias CodeQA.AST.Enrichment.CompoundNode
   alias CodeQA.AST.Enrichment.Node
-  alias CodeQA.AST.Lexing.{NewlineToken, WhitespaceToken}
-  alias CodeQA.AST.Nodes.{AttributeNode, DocNode}
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
+  alias CodeQA.AST.Nodes.AttributeNode
+  alias CodeQA.AST.Nodes.DocNode
 
   @doc """
   Groups a list of typed nodes into CompoundNode structs.

@@ -19,17 +19,15 @@ defmodule Mix.Tasks.Codeqa.SignalDebug do
   alias CodeQA.AST.Parsing.SignalStream
   alias CodeQA.Language
 
-  alias CodeQA.AST.Signals.Structural.{
-    AccessModifierSignal,
-    BlankLineSignal,
-    BracketSignal,
-    BranchSplitSignal,
-    ColonIndentSignal,
-    CommentDividerSignal,
-    KeywordSignal,
-    SQLBlockSignal,
-    TripleQuoteSignal
-  }
+  alias CodeQA.AST.Signals.Structural.AccessModifierSignal
+  alias CodeQA.AST.Signals.Structural.BlankLineSignal
+  alias CodeQA.AST.Signals.Structural.BracketSignal
+  alias CodeQA.AST.Signals.Structural.BranchSplitSignal
+  alias CodeQA.AST.Signals.Structural.ColonIndentSignal
+  alias CodeQA.AST.Signals.Structural.CommentDividerSignal
+  alias CodeQA.AST.Signals.Structural.KeywordSignal
+  alias CodeQA.AST.Signals.Structural.SQLBlockSignal
+  alias CodeQA.AST.Signals.Structural.TripleQuoteSignal
 
   @switches [signal: :string, show_tokens: :boolean]
 

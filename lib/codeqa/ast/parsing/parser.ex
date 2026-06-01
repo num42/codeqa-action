@@ -34,16 +34,15 @@ defmodule CodeQA.AST.Parsing.Parser do
   """
 
   alias CodeQA.AST.Enrichment.Node
-  alias CodeQA.AST.Lexing.{NewlineToken, WhitespaceToken}
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
   alias CodeQA.AST.Parsing.SignalStream
 
-  alias CodeQA.AST.Signals.Structural.{
-    BlankLineSignal,
-    BracketSignal,
-    ColonIndentSignal,
-    KeywordSignal,
-    TripleQuoteSignal
-  }
+  alias CodeQA.AST.Signals.Structural.BlankLineSignal
+  alias CodeQA.AST.Signals.Structural.BracketSignal
+  alias CodeQA.AST.Signals.Structural.ColonIndentSignal
+  alias CodeQA.AST.Signals.Structural.KeywordSignal
+  alias CodeQA.AST.Signals.Structural.TripleQuoteSignal
 
   alias CodeQA.Language
 

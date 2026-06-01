@@ -16,7 +16,8 @@ defmodule CodeQA.Analysis.FileContextServer do
 
   use GenServer
 
-  alias CodeQA.Engine.{FileContext, Pipeline}
+  alias CodeQA.Engine.FileContext
+  alias CodeQA.Engine.Pipeline
   alias CodeQA.Language
   alias CodeQA.Languages.Unknown
 

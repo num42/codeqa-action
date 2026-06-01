@@ -5,7 +5,8 @@ defmodule CodeQA.AST.Nodes.AttributeNode do
   """
 
   alias CodeQA.AST.Enrichment.Node
-  alias CodeQA.AST.Lexing.{NewlineToken, WhitespaceToken}
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
 
   defstruct [:tokens, :line_count, :children, :start_line, :end_line, :label, :name, :kind]
 

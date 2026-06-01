@@ -2,7 +2,8 @@ defmodule CodeQA.AST.Signals.Structural.BranchSplitSignalTest do
   use ExUnit.Case, async: true
 
   alias CodeQA.AST.Lexing.TokenNormalizer
-  alias CodeQA.AST.Parsing.{Signal, SignalStream}
+  alias CodeQA.AST.Parsing.Signal
+  alias CodeQA.AST.Parsing.SignalStream
   alias CodeQA.AST.Signals.Structural.BranchSplitSignal
   alias CodeQA.Languages.Code.Scripting.PHP
   alias CodeQA.Languages.Code.Scripting.Python

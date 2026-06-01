@@ -11,7 +11,8 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Candidates do
   """
 
   alias CodeQA.AST.Classification.NodeProtocol
-  alias CodeQA.AST.Lexing.{NewlineToken, WhitespaceToken}
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
   alias CodeQA.Metrics.File.NearDuplicateBlocks.Distance
 
   # Pre-compute token kind strings to avoid repeated function calls in the hot path.

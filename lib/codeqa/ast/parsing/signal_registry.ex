@@ -7,34 +7,30 @@ defmodule CodeQA.AST.Parsing.SignalRegistry do
   language-specific or analysis-specific configurations.
   """
 
-  alias CodeQA.AST.Signals.Structural.{
-    AccessModifierSignal,
-    AssignmentFunctionSignal,
-    BlankLineSignal,
-    BracketSignal,
-    BranchSplitSignal,
-    ColonIndentSignal,
-    CommentDividerSignal,
-    DecoratorSignal,
-    DedentToZeroSignal,
-    DocCommentLeadSignal,
-    KeywordSignal,
-    SQLBlockSignal,
-    TripleQuoteSignal
-  }
+  alias CodeQA.AST.Signals.Structural.AccessModifierSignal
+  alias CodeQA.AST.Signals.Structural.AssignmentFunctionSignal
+  alias CodeQA.AST.Signals.Structural.BlankLineSignal
+  alias CodeQA.AST.Signals.Structural.BracketSignal
+  alias CodeQA.AST.Signals.Structural.BranchSplitSignal
+  alias CodeQA.AST.Signals.Structural.ColonIndentSignal
+  alias CodeQA.AST.Signals.Structural.CommentDividerSignal
+  alias CodeQA.AST.Signals.Structural.DecoratorSignal
+  alias CodeQA.AST.Signals.Structural.DedentToZeroSignal
+  alias CodeQA.AST.Signals.Structural.DocCommentLeadSignal
+  alias CodeQA.AST.Signals.Structural.KeywordSignal
+  alias CodeQA.AST.Signals.Structural.SQLBlockSignal
+  alias CodeQA.AST.Signals.Structural.TripleQuoteSignal
 
-  alias CodeQA.AST.Signals.Classification.{
-    AttributeSignal,
-    CommentDensitySignal,
-    ConfigSignal,
-    DataSignal,
-    DocSignal,
-    FunctionSignal,
-    ImportSignal,
-    ModuleSignal,
-    TestSignal,
-    TypeSignal
-  }
+  alias CodeQA.AST.Signals.Classification.AttributeSignal
+  alias CodeQA.AST.Signals.Classification.CommentDensitySignal
+  alias CodeQA.AST.Signals.Classification.ConfigSignal
+  alias CodeQA.AST.Signals.Classification.DataSignal
+  alias CodeQA.AST.Signals.Classification.DocSignal
+  alias CodeQA.AST.Signals.Classification.FunctionSignal
+  alias CodeQA.AST.Signals.Classification.ImportSignal
+  alias CodeQA.AST.Signals.Classification.ModuleSignal
+  alias CodeQA.AST.Signals.Classification.TestSignal
+  alias CodeQA.AST.Signals.Classification.TypeSignal
 
   defstruct structural: [], classification: []
 

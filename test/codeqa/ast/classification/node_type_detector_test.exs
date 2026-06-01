@@ -4,7 +4,10 @@ defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
   alias CodeQA.AST.Enrichment.Node
   alias CodeQA.AST.Lexing.Token
   alias CodeQA.AST.Lexing.TokenNormalizer
-  alias CodeQA.AST.Nodes.{AttributeNode, CodeNode, DocNode, FunctionNode}
+  alias CodeQA.AST.Nodes.AttributeNode
+  alias CodeQA.AST.Nodes.CodeNode
+  alias CodeQA.AST.Nodes.DocNode
+  alias CodeQA.AST.Nodes.FunctionNode
   alias CodeQA.AST.Parsing.Parser
   alias CodeQA.Languages.Code.Vm.Elixir, as: ElixirLang
   alias CodeQA.Languages.Unknown

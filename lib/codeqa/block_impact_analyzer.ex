@@ -35,12 +35,15 @@ defmodule CodeQA.BlockImpactAnalyzer do
   """
 
   alias CodeQA.Analysis.BehaviorConfigServer
-  alias CodeQA.AST.Classification.{NodeClassifier, TypedNodeKind}
+  alias CodeQA.AST.Classification.NodeClassifier
+  alias CodeQA.AST.Classification.TypedNodeKind
   alias CodeQA.AST.Enrichment.Node
   alias CodeQA.AST.Lexing.TokenNormalizer
   alias CodeQA.AST.Parsing.Parser
-  alias CodeQA.BlockImpact.{FileImpact, RefactoringPotentials}
-  alias CodeQA.CombinedMetrics.{FileScorer, SampleRunner}
+  alias CodeQA.BlockImpact.FileImpact
+  alias CodeQA.BlockImpact.RefactoringPotentials
+  alias CodeQA.CombinedMetrics.FileScorer
+  alias CodeQA.CombinedMetrics.SampleRunner
   alias CodeQA.Engine.Analyzer
   alias CodeQA.Languages.Unknown
 
