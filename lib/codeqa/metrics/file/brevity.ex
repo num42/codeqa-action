@@ -1,4 +1,6 @@
 defmodule CodeQA.Metrics.File.Brevity do
+  alias CodeQA.Math
+
   @moduledoc """
   Measures how well Brevity law holds in the token distribution.
 
@@ -30,7 +32,7 @@ defmodule CodeQA.Metrics.File.Brevity do
     freqs = Enum.map(pairs, &elem(&1, 1))
 
     %{
-      "correlation" => CodeQA.Math.pearson_correlation_list(lengths, freqs),
+      "correlation" => Math.pearson_correlation_list(lengths, freqs),
       "slope" => log_log_slope(lengths, freqs),
       "sample_size" => map_size(token_counts)
     }
@@ -40,7 +42,7 @@ defmodule CodeQA.Metrics.File.Brevity do
     log_lengths = lengths |> Enum.map(&:math.log(max(&1, 1))) |> Nx.tensor(type: :f64)
     log_freqs = freqs |> Enum.map(&:math.log(max(&1, 1))) |> Nx.tensor(type: :f64)
 
-    {slope, _intercept, _r_squared} = CodeQA.Math.linear_regression(log_lengths, log_freqs)
+    {slope, _intercept, _r_squared} = Math.linear_regression(log_lengths, log_freqs)
 
     case Nx.to_number(slope) do
       val when is_float(val) -> Float.round(val, 4)

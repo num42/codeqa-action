@@ -1,6 +1,7 @@
 defmodule CodeQA.AST.Signals.Structural.BranchSplitSignal do
   alias CodeQA.AST.Lexing.NewlineToken
   alias CodeQA.AST.Lexing.WhitespaceToken
+  alias CodeQA.Language
 
   @moduledoc """
   Emits `:branch_split` when a branch keyword appears at bracket depth 0
@@ -21,7 +22,7 @@ defmodule CodeQA.AST.Signals.Structural.BranchSplitSignal do
     def group(_), do: :branch_split
 
     def init(_, lang_mod) do
-      keywords = CodeQA.Language.branch_keywords(lang_mod)
+      keywords = Language.branch_keywords(lang_mod)
       %{idx: 0, bracket_depth: 0, seen_content: false, keywords: keywords}
     end
 

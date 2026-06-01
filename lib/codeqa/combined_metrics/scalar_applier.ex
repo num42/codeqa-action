@@ -1,4 +1,6 @@
 defmodule CodeQA.CombinedMetrics.ScalarApplier do
+  alias CodeQA.Language
+
   @moduledoc """
   Writes suggested scalars and language metadata back to the combined-metrics YAML
   config files under `priv/combined_metrics/`.
@@ -180,7 +182,7 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
     case File.ls(dir) do
       {:ok, files} ->
         files
-        |> Enum.map(&CodeQA.Language.detect/1)
+        |> Enum.map(&Language.detect/1)
         |> Enum.map(& &1.name())
         |> MapSet.new()
 

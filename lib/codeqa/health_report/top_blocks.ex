@@ -1,4 +1,5 @@
 defmodule CodeQA.HealthReport.TopBlocks do
+  alias CodeQA.Language
   @moduledoc "Assembles the top_blocks report section from analysis node data."
 
   alias CodeQA.CombinedMetrics.Scorer
@@ -216,7 +217,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
           nil
       end
 
-    lang = CodeQA.Language.detect(block.path).name()
+    lang = Language.detect(block.path).name()
     Map.merge(block, %{source: source, language: lang})
   end
 end

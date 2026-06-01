@@ -1,6 +1,7 @@
 defmodule CodeQA.AST.Signals.Structural.AccessModifierSignal do
   alias CodeQA.AST.Lexing.NewlineToken
   alias CodeQA.AST.Lexing.WhitespaceToken
+  alias CodeQA.Language
 
   @moduledoc """
   Emits `:access_modifier_split` when an access modifier keyword appears at line
@@ -21,7 +22,7 @@ defmodule CodeQA.AST.Signals.Structural.AccessModifierSignal do
     def group(_), do: :split
 
     def init(_, lang_mod) do
-      modifiers = CodeQA.Language.access_modifiers(lang_mod)
+      modifiers = Language.access_modifiers(lang_mod)
       %{idx: 0, bracket_depth: 0, at_line_start: true, seen_content: false, modifiers: modifiers}
     end
 

@@ -1,4 +1,7 @@
 defmodule CodeQA.AST.Signals.Classification.TypeSignal do
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
+
   @moduledoc """
   Classification signal — votes `:type` when an Elixir type definition
   attribute (`@type`, `@typep`, `@opaque`) appears at indent 0.
@@ -10,8 +13,8 @@ defmodule CodeQA.AST.Signals.Classification.TypeSignal do
   defstruct []
 
   defimpl CodeQA.AST.Parsing.Signal do
-    @nl CodeQA.AST.Lexing.NewlineToken.kind()
-    @ws CodeQA.AST.Lexing.WhitespaceToken.kind()
+    @nl NewlineToken.kind()
+    @ws WhitespaceToken.kind()
     @type_attrs MapSet.new(["type", "typep", "opaque"])
     def source(_), do: CodeQA.AST.Signals.Classification.TypeSignal
     def group(_), do: :classification

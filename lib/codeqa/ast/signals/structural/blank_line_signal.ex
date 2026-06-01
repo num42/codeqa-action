@@ -1,6 +1,7 @@
 defmodule CodeQA.AST.Signals.Structural.BlankLineSignal do
   alias CodeQA.AST.Lexing.NewlineToken
   alias CodeQA.AST.Lexing.WhitespaceToken
+  alias CodeQA.Language
 
   @moduledoc """
   Emits `:blank_split` at the first substantive token after 2+ consecutive
@@ -17,7 +18,7 @@ defmodule CodeQA.AST.Signals.Structural.BlankLineSignal do
     def group(_), do: :split
 
     def init(_, lang_mod) do
-      tokens = CodeQA.Language.block_end_tokens(lang_mod)
+      tokens = Language.block_end_tokens(lang_mod)
       %{idx: 0, nl_run: 0, seen_content: false, last_content: nil, block_end_tokens: tokens}
     end
 

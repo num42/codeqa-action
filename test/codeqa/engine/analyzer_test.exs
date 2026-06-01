@@ -2,6 +2,7 @@ defmodule CodeQA.Engine.AnalyzerTest do
   use ExUnit.Case, async: true
 
   alias CodeQA.Engine.Analyzer
+  alias CodeQA.CombinedMetrics.Scorer
 
   describe "analyze_file/2" do
     test "returns a metrics map with group keys" do
@@ -58,7 +59,7 @@ defmodule CodeQA.Engine.AnalyzerTest do
     test "result matches analyze_file_for_loo/2 for referenced metrics" do
       baseline = Analyzer.analyze_file_for_loo("lib/foo.ex", @sample)
       partial = Analyzer.analyze_file_for_loo_partial("lib/foo.ex", @sample, baseline)
-      referenced = CodeQA.CombinedMetrics.Scorer.referenced_file_metric_names()
+      referenced = Scorer.referenced_file_metric_names()
 
       for name <- referenced, Map.has_key?(baseline, name) do
         assert Map.get(partial, name) == Map.get(baseline, name),
@@ -72,7 +73,7 @@ defmodule CodeQA.Engine.AnalyzerTest do
 
       tampered_baseline =
         Enum.reduce(baseline, %{}, fn {name, _val}, acc ->
-          if name in CodeQA.CombinedMetrics.Scorer.referenced_file_metric_names() do
+          if name in Scorer.referenced_file_metric_names() do
             Map.put(acc, name, baseline[name])
           else
             Map.put(acc, name, sentinel)
@@ -83,7 +84,7 @@ defmodule CodeQA.Engine.AnalyzerTest do
         Analyzer.analyze_file_for_loo_partial("lib/foo.ex", @sample, tampered_baseline)
 
       for {name, value} <- partial,
-          name not in CodeQA.CombinedMetrics.Scorer.referenced_file_metric_names() do
+          name not in Scorer.referenced_file_metric_names() do
         assert value == sentinel,
                "non-referenced metric #{name} was recomputed instead of inherited"
       end

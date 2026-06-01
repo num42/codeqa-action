@@ -1,4 +1,6 @@
 defmodule CodeQA.AST.Signals.Structural.TripleQuoteSignal do
+  alias CodeQA.AST.Lexing.StringToken
+
   @moduledoc """
   Emits `:triple_split` at each `<DOC>` token boundary.
 
@@ -13,7 +15,7 @@ defmodule CodeQA.AST.Signals.Structural.TripleQuoteSignal do
   defstruct []
 
   defimpl CodeQA.AST.Parsing.Signal do
-    @doc_kind CodeQA.AST.Lexing.StringToken.doc_kind()
+    @doc_kind StringToken.doc_kind()
     def source(_), do: CodeQA.AST.Signals.Structural.TripleQuoteSignal
     def group(_), do: :split
 

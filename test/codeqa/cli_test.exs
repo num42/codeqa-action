@@ -1,14 +1,16 @@
 defmodule CodeQA.CLITest do
   use ExUnit.Case, async: false
+  alias CodeQA.CLI
+  alias CodeQA.Config
 
   setup do
-    CodeQA.Config.reset()
+    Config.reset()
     tmp_dir = Path.join(System.tmp_dir!(), "codeqa_test_#{System.unique_integer([:positive])}")
     File.mkdir_p!(Path.join(tmp_dir, "lib"))
     File.write!(Path.join(tmp_dir, "lib/app.ex"), "defmodule App do\nend\n")
 
     on_exit(fn ->
-      CodeQA.Config.reset()
+      Config.reset()
       File.rm_rf!(tmp_dir)
     end)
 
@@ -25,7 +27,7 @@ defmodule CodeQA.CLITest do
         - ignored/**
       """)
 
-      json = CodeQA.CLI.main(["analyze", dir, "--show-files"])
+      json = CLI.main(["analyze", dir, "--show-files"])
       report = Jason.decode!(json)
 
       # total_files == 1 proves the ignored file was excluded (setup has exactly 2 files)
@@ -35,7 +37,7 @@ defmodule CodeQA.CLITest do
     end
 
     test "works normally when .codeqa.yml is absent", %{dir: dir} do
-      json = CodeQA.CLI.main(["analyze", dir])
+      json = CLI.main(["analyze", dir])
       report = Jason.decode!(json)
 
       assert report["metadata"]["total_files"] == 1
@@ -52,7 +54,7 @@ defmodule CodeQA.CLITest do
         - ignored_by_config/**
       """)
 
-      json = CodeQA.CLI.main(["analyze", dir, "--ignore-paths", "ignored_by_flag/**"])
+      json = CLI.main(["analyze", dir, "--ignore-paths", "ignored_by_flag/**"])
       report = Jason.decode!(json)
 
       # Only lib/app.ex should be analyzed — both ignore sources must apply

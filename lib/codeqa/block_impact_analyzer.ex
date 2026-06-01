@@ -1,4 +1,8 @@
 defmodule CodeQA.BlockImpactAnalyzer do
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
+  alias CodeQA.Language
+
   @moduledoc """
   Orchestrates block impact analysis across all files in a pipeline result.
 
@@ -161,7 +165,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
       {top_level_nodes, parse_us} = timed(fn -> Parser.detect_blocks(root_tokens, Unknown) end)
 
       baseline_file_agg = FileScorer.file_to_aggregate(baseline_file_metrics)
-      lang_mod = CodeQA.Language.detect(path)
+      lang_mod = Language.detect(path)
       language = lang_mod.name()
 
       {baseline_file_cosines, file_cosines_us} =
@@ -294,8 +298,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
         []
 
       child_first ->
-        nl_kind = CodeQA.AST.Lexing.NewlineToken.kind()
-        ws_kind = CodeQA.AST.Lexing.WhitespaceToken.kind()
+        nl_kind = NewlineToken.kind()
+        ws_kind = WhitespaceToken.kind()
 
         parent_tokens
         |> Enum.take_while(fn t -> t != child_first end)
@@ -464,7 +468,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
   defp project_languages(path_keyed_map) do
     path_keyed_map
     |> Map.keys()
-    |> Enum.map(&CodeQA.Language.detect(&1).name())
+    |> Enum.map(&Language.detect(&1).name())
     |> Enum.reject(&(&1 == "unknown"))
     |> Enum.uniq()
   end

@@ -1,4 +1,5 @@
 defmodule CodeQA.HealthReport.Config do
+  alias CodeQA.Config
   @moduledoc "Loads and merges health report configuration from YAML."
 
   alias CodeQA.HealthReport.Categories
@@ -15,8 +16,8 @@ defmodule CodeQA.HealthReport.Config do
     %{
       categories: Categories.defaults(),
       grade_scale: Categories.default_grade_scale(),
-      impact_map: CodeQA.Config.impact_map(),
-      combined_top: CodeQA.Config.combined_top(),
+      impact_map: Config.impact_map(),
+      combined_top: Config.combined_top(),
       block_min_lines: 3,
       block_max_lines: 20
     }
@@ -60,11 +61,11 @@ defmodule CodeQA.HealthReport.Config do
     }
   end
 
-  defp parse_impact(nil), do: CodeQA.Config.impact_map()
+  defp parse_impact(nil), do: Config.impact_map()
 
   defp parse_impact(overrides) when is_map(overrides) do
     string_overrides = Map.new(overrides, fn {k, v} -> {to_string(k), v} end)
-    Map.merge(CodeQA.Config.impact_map(), string_overrides)
+    Map.merge(Config.impact_map(), string_overrides)
   end
 
   defp parse_grade_scale(nil), do: Categories.default_grade_scale()

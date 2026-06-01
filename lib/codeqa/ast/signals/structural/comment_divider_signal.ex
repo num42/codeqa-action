@@ -1,6 +1,7 @@
 defmodule CodeQA.AST.Signals.Structural.CommentDividerSignal do
   alias CodeQA.AST.Lexing.NewlineToken
   alias CodeQA.AST.Lexing.WhitespaceToken
+  alias CodeQA.Language
 
   @moduledoc """
   Emits `:comment_divider_split` when a line is a "visual divider" comment —
@@ -22,7 +23,7 @@ defmodule CodeQA.AST.Signals.Structural.CommentDividerSignal do
 
     def init(_, lang_mod) do
       comment_prefixes = MapSet.new(lang_mod.comment_prefixes())
-      divider_indicators = CodeQA.Language.divider_indicators(lang_mod)
+      divider_indicators = Language.divider_indicators(lang_mod)
 
       %{
         idx: 0,

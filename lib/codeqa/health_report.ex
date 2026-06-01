@@ -1,4 +1,5 @@
 defmodule CodeQA.HealthReport do
+  alias CodeQA.Language
   @moduledoc "Orchestrates health report generation from analysis results."
 
   alias CodeQA.CombinedMetrics.{FileScorer, SampleRunner}
@@ -203,7 +204,7 @@ defmodule CodeQA.HealthReport do
   defp project_languages(files_map) do
     files_map
     |> Map.keys()
-    |> Enum.map(&CodeQA.Language.detect(&1).name())
+    |> Enum.map(&Language.detect(&1).name())
     |> Enum.reject(&(&1 == "unknown"))
     |> Enum.uniq()
   end

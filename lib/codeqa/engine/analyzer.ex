@@ -1,4 +1,5 @@
 defmodule CodeQA.Engine.Analyzer do
+  alias CodeQA.CombinedMetrics.Scorer
   @moduledoc "Orchestrates metric computation across files."
 
   alias CodeQA.Analysis.RunSupervisor
@@ -58,7 +59,7 @@ defmodule CodeQA.Engine.Analyzer do
   """
   @spec analyze_file_for_loo_partial(String.t(), String.t(), map(), String.t()) :: map()
   def analyze_file_for_loo_partial(_path, content, baseline_metrics, block_content \\ "") do
-    referenced = CodeQA.CombinedMetrics.Scorer.referenced_file_metric_names()
+    referenced = Scorer.referenced_file_metric_names()
 
     {ctx_us, ctx} =
       :timer.tc(fn -> Pipeline.build_file_context(content, skip_structural: true) end)

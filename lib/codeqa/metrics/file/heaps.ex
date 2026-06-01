@@ -1,4 +1,6 @@
 defmodule CodeQA.Metrics.File.Heaps do
+  alias CodeQA.Math
+
   @moduledoc """
   Fits Heaps' law to vocabulary growth in a file.
 
@@ -62,7 +64,7 @@ defmodule CodeQA.Metrics.File.Heaps do
     log_ns = Nx.tensor(ns, type: :f64) |> Nx.log()
     log_vs = Nx.tensor(vs, type: :f64) |> Nx.log()
 
-    {slope, intercept, r_squared} = CodeQA.Math.linear_regression(log_ns, log_vs)
+    {slope, intercept, r_squared} = Math.linear_regression(log_ns, log_vs)
 
     k = :math.exp(Nx.to_number(intercept))
     beta = Nx.to_number(slope)

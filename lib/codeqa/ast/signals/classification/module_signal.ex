@@ -1,4 +1,8 @@
 defmodule CodeQA.AST.Signals.Classification.ModuleSignal do
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
+  alias CodeQA.Language
+
   @moduledoc """
   Classification signal — votes `:module` when a module/class/namespace definition
   keyword appears at indent 0 and bracket depth 0.
@@ -14,8 +18,8 @@ defmodule CodeQA.AST.Signals.Classification.ModuleSignal do
   defstruct []
 
   defimpl CodeQA.AST.Parsing.Signal do
-    @nl CodeQA.AST.Lexing.NewlineToken.kind()
-    @ws CodeQA.AST.Lexing.WhitespaceToken.kind()
+    @nl NewlineToken.kind()
+    @ws WhitespaceToken.kind()
     def source(_), do: CodeQA.AST.Signals.Classification.ModuleSignal
     def group(_), do: :classification
 
@@ -26,7 +30,7 @@ defmodule CodeQA.AST.Signals.Classification.ModuleSignal do
         bracket_depth: 0,
         is_first: true,
         voted: false,
-        keywords: CodeQA.Language.module_keywords(lang_mod)
+        keywords: Language.module_keywords(lang_mod)
       }
     end
 

@@ -1,4 +1,7 @@
 defmodule CodeQA.AST.Signals.Classification.CommentDensitySignal do
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
+
   @moduledoc """
   Classification signal — votes `:comment` when more than 60% of non-blank
   lines begin with a comment prefix.
@@ -12,8 +15,8 @@ defmodule CodeQA.AST.Signals.Classification.CommentDensitySignal do
   defstruct []
 
   defimpl CodeQA.AST.Parsing.Signal do
-    @nl CodeQA.AST.Lexing.NewlineToken.kind()
-    @ws CodeQA.AST.Lexing.WhitespaceToken.kind()
+    @nl NewlineToken.kind()
+    @ws WhitespaceToken.kind()
     def source(_), do: CodeQA.AST.Signals.Classification.CommentDensitySignal
     def group(_), do: :classification
 

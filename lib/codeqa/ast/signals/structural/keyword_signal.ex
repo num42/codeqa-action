@@ -1,6 +1,7 @@
 defmodule CodeQA.AST.Signals.Structural.KeywordSignal do
   alias CodeQA.AST.Lexing.NewlineToken
   alias CodeQA.AST.Lexing.WhitespaceToken
+  alias CodeQA.Language
 
   @moduledoc """
   Emits `:keyword_split` when a declaration keyword appears at bracket depth 0
@@ -17,7 +18,7 @@ defmodule CodeQA.AST.Signals.Structural.KeywordSignal do
     def group(_), do: :split
 
     def init(_, lang_mod) do
-      keywords = CodeQA.Language.declaration_keywords(lang_mod)
+      keywords = Language.declaration_keywords(lang_mod)
 
       %{
         idx: 0,

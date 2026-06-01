@@ -1,6 +1,7 @@
 defmodule CodeQA.AST.Signals.Structural.SQLBlockSignal do
   alias CodeQA.AST.Lexing.NewlineToken
   alias CodeQA.AST.Lexing.WhitespaceToken
+  alias CodeQA.Language
 
   @moduledoc """
   Emits `:sql_block_split` when a SQL DDL or DML statement keyword appears
@@ -22,7 +23,7 @@ defmodule CodeQA.AST.Signals.Structural.SQLBlockSignal do
     def group(_), do: :split
 
     def init(_, lang_mod) do
-      keywords = CodeQA.Language.statement_keywords(lang_mod)
+      keywords = Language.statement_keywords(lang_mod)
       %{idx: 0, at_line_start: true, seen_content: false, keywords: keywords}
     end
 

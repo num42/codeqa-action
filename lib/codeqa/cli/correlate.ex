@@ -1,4 +1,5 @@
 defmodule CodeQA.CLI.Correlate do
+  alias CodeQA.Math
   @moduledoc false
 
   @behaviour CodeQA.CLI.Command
@@ -241,7 +242,7 @@ defmodule CodeQA.CLI.Correlate do
         MapSet.disjoint?(Map.fetch!(category_map, k1), Map.fetch!(category_map, k2))
 
     if cross_valid do
-      corr = CodeQA.Math.pearson_correlation_list(Map.fetch!(series, k1), Map.fetch!(series, k2))
+      corr = Math.pearson_correlation_list(Map.fetch!(series, k1), Map.fetch!(series, k2))
       maybe_correlation_result(k1, k2, corr, opts)
     end
   end

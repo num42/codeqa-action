@@ -1,4 +1,7 @@
 defmodule CodeQA.Engine.Collector do
+  alias CodeQA.Config
+  alias CodeQA.Git
+  alias CodeQA.Language
   @moduledoc false
 
   @skip_dirs MapSet.new(~w[
@@ -11,7 +14,7 @@ defmodule CodeQA.Engine.Collector do
 
   @spec source_extensions() :: MapSet.t()
   def source_extensions do
-    CodeQA.Language.all()
+    Language.all()
     |> Enum.flat_map(& &1.extensions())
     |> Enum.map(&".#{&1}")
     |> MapSet.new()
@@ -20,7 +23,7 @@ defmodule CodeQA.Engine.Collector do
   @spec collect_files(String.t(), [String.t()]) :: %{String.t() => String.t()}
   def collect_files(root, extra_ignore_patterns \\ []) do
     root_path = Path.expand(root)
-    CodeQA.Config.load(root_path)
+    Config.load(root_path)
     patterns = all_ignore_patterns(extra_ignore_patterns)
     extensions = source_extensions()
 
@@ -37,7 +40,7 @@ defmodule CodeQA.Engine.Collector do
       end)
       |> do_reject_ignored_map(patterns)
 
-    gitignored = CodeQA.Git.gitignored_files(root_path, Map.keys(files_map))
+    gitignored = Git.gitignored_files(root_path, Map.keys(files_map))
     Map.reject(files_map, fn {path, _} -> MapSet.member?(gitignored, path) end)
   end
 
@@ -60,7 +63,7 @@ defmodule CodeQA.Engine.Collector do
   end
 
   defp all_ignore_patterns(extra),
-    do: extra ++ @default_ignore_patterns ++ CodeQA.Config.ignore_paths()
+    do: extra ++ @default_ignore_patterns ++ Config.ignore_paths()
 
   defp do_reject_ignored_map(files_map, patterns) do
     Map.reject(files_map, fn {path, _} -> ignored?(path, patterns) end)

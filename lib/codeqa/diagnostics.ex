@@ -1,4 +1,6 @@
 defmodule CodeQA.Diagnostics do
+  alias CodeQA.Language
+
   @moduledoc """
   Diagnoses a codebase by identifying likely code quality issues using
   cosine similarity against combined metric behavior profiles.
@@ -72,7 +74,7 @@ defmodule CodeQA.Diagnostics do
       Map.new(files, fn {file_path, file_data} ->
         metrics = Map.get(file_data, "metrics", %{})
         file_agg = FileScorer.file_to_aggregate(metrics)
-        language = CodeQA.Language.detect(file_path).name()
+        language = Language.detect(file_path).name()
         diagnoses = SampleRunner.diagnose_aggregate(file_agg, top: top, language: language)
         {file_path, diagnoses}
       end)
@@ -113,7 +115,7 @@ defmodule CodeQA.Diagnostics do
   defp project_languages(files_map) do
     files_map
     |> Map.keys()
-    |> Enum.map(&CodeQA.Language.detect(&1).name())
+    |> Enum.map(&Language.detect(&1).name())
     |> Enum.reject(&(&1 == "unknown"))
     |> Enum.uniq()
   end
