@@ -39,7 +39,7 @@ defmodule CodeQA.Engine.Parallel do
 
       {path, result}
     end)
-    |> Enum.into(%{})
+    |> Map.new()
   end
 
   defp maybe_cached_analyze(path, content, nil, opts),

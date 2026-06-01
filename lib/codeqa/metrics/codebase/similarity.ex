@@ -315,13 +315,12 @@ defmodule CodeQA.Metrics.Codebase.Similarity do
       end)
 
     target_paths
-    |> Enum.map(fn path ->
+    |> Map.new(fn path ->
       similarities = Map.get(results, path, [])
       sorted = similarities |> Enum.sort_by(& &1["score"])
       sorted = if top_n, do: sorted |> Enum.take(top_n), else: sorted
       {path, sorted}
     end)
-    |> Enum.into(%{})
   end
 
   defp maybe_add_similarity(acc, path, other_path, ncd, target_set) do
