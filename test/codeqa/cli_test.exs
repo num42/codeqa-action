@@ -1,11 +1,17 @@
 defmodule CodeQA.CLITest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
-  @moduletag :tmp_dir
-
-  setup %{tmp_dir: tmp_dir} do
+  setup do
+    CodeQA.Config.reset()
+    tmp_dir = Path.join(System.tmp_dir!(), "codeqa_test_#{System.unique_integer([:positive])}")
     File.mkdir_p!(Path.join(tmp_dir, "lib"))
     File.write!(Path.join(tmp_dir, "lib/app.ex"), "defmodule App do\nend\n")
+
+    on_exit(fn ->
+      CodeQA.Config.reset()
+      File.rm_rf!(tmp_dir)
+    end)
+
     %{dir: tmp_dir}
   end
 
@@ -19,23 +25,20 @@ defmodule CodeQA.CLITest do
         - ignored/**
       """)
 
-      output =
-        ExUnit.CaptureIO.capture_io(:stderr, fn ->
-          CodeQA.CLI.main(["analyze", dir])
-        end)
+      json = CodeQA.CLI.main(["analyze", dir, "--show-files"])
+      report = Jason.decode!(json)
 
-      # The ignored file should not be counted
-      refute output =~ "secret.ex"
-      assert output =~ "Analyzing 1 files"
+      # total_files == 1 proves the ignored file was excluded (setup has exactly 2 files)
+      assert report["metadata"]["total_files"] == 1
+      # file paths confirm secret.ex is absent
+      refute Map.has_key?(report["files"], Path.join(dir, "ignored/secret.ex"))
     end
 
     test "works normally when .codeqa.yml is absent", %{dir: dir} do
-      output =
-        ExUnit.CaptureIO.capture_io(:stderr, fn ->
-          CodeQA.CLI.main(["analyze", dir])
-        end)
+      json = CodeQA.CLI.main(["analyze", dir])
+      report = Jason.decode!(json)
 
-      assert output =~ "Analyzing 1 files"
+      assert report["metadata"]["total_files"] == 1
     end
 
     test "config file and --ignore-paths are merged additively", %{dir: dir} do
@@ -49,13 +52,11 @@ defmodule CodeQA.CLITest do
         - ignored_by_config/**
       """)
 
-      output =
-        ExUnit.CaptureIO.capture_io(:stderr, fn ->
-          CodeQA.CLI.main(["analyze", dir, "--ignore-paths", "ignored_by_flag/**"])
-        end)
+      json = CodeQA.CLI.main(["analyze", dir, "--ignore-paths", "ignored_by_flag/**"])
+      report = Jason.decode!(json)
 
-      # Only lib/app.ex should be analyzed
-      assert output =~ "Analyzing 1 files"
+      # Only lib/app.ex should be analyzed — both ignore sources must apply
+      assert report["metadata"]["total_files"] == 1
     end
   end
 end
