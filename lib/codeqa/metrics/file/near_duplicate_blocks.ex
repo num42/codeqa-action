@@ -87,18 +87,16 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
     result =
       result |> Map.merge(%{"block_count" => block_count, "sub_block_count" => sub_block_count})
 
-    case include_pairs do
-      true ->
-        pairs_result =
-          for d <- 0..@max_bucket, into: %{} do
-            {"near_dup_block_d#{d}_pairs",
-             Map.get(buckets, d, %{pairs: []}).pairs |> format_pairs()}
-          end
+    if include_pairs do
+      pairs_result =
+        for d <- 0..@max_bucket, into: %{} do
+          {"near_dup_block_d#{d}_pairs",
+           Map.get(buckets, d, %{pairs: []}).pairs |> format_pairs()}
+        end
 
-        Map.merge(result, pairs_result)
-
-      false ->
-        result
+      Map.merge(result, pairs_result)
+    else
+      result
     end
   end
 
