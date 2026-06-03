@@ -160,7 +160,7 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   defp read_behavior_doc(category, behavior) do
     config_path = Path.join([@samples_root, category, behavior, "config.yml"])
 
-    File.read(config_path) |> handle_read_behavior_doc_read()
+    File.read(config_path) |> parse_behavior_doc()
   end
 
   defp maybe_put_doc(groups, nil), do: groups
@@ -170,7 +170,7 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   # Language detection helpers
   # ---------------------------------------------------------------------------
 
-  defp dir_languages(dir), do: File.ls(dir) |> handle_dir_languages_ls()
+  defp dir_languages(dir), do: File.ls(dir) |> languages_from_files()
 
   defp languages_for_behavior(category, behavior) do
     bad_langs = dir_languages(sample_path(category, behavior, "bad"))
@@ -189,25 +189,21 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   defp sample_path(category, behavior, kind),
     do: [@samples_root, category, behavior, kind] |> Path.join()
 
-  # FIXME: extracted automatically by ExtractCaseToHelper — review
-  # the parameter list and consider a better name.
-  defp handle_read_behavior_doc_read({:ok, content}) do
+  defp parse_behavior_doc({:ok, content}) do
     case YamlElixir.read_from_string(content) do
       {:ok, %{"doc" => doc}} when is_binary(doc) -> doc
       _ -> nil
     end
   end
 
-  defp handle_read_behavior_doc_read(_), do: nil
+  defp parse_behavior_doc(_), do: nil
 
-  # FIXME: extracted automatically by ExtractCaseToHelper — review
-  # the parameter list and consider a better name.
-  defp handle_dir_languages_ls({:ok, files}),
+  defp languages_from_files({:ok, files}),
     do:
       files
       |> Enum.map(&Language.detect/1)
       |> Enum.map(& &1.name())
       |> MapSet.new()
 
-  defp handle_dir_languages_ls(_), do: MapSet.new()
+  defp languages_from_files(_), do: MapSet.new()
 end

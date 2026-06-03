@@ -57,7 +57,7 @@ defmodule CodeQA.Config do
   defp parse(path) do
     config_file = Path.join(path, ".codeqa.yml")
 
-    File.read(config_file) |> handle_parse_read()
+    File.read(config_file) |> parse_contents()
   end
 
   defp from_yaml(yaml),
@@ -90,16 +90,12 @@ defmodule CodeQA.Config do
 
   defp parse_near_duplicate_blocks(_), do: []
 
-  # FIXME: extracted automatically by ExtractCaseToHelper — review
-  # the parameter list and consider a better name.
-  defp handle_parse_read({:ok, contents}),
-    do: YamlElixir.read_from_string(contents) |> handle_read_from_string()
+  defp parse_contents({:ok, contents}),
+    do: YamlElixir.read_from_string(contents) |> parse_yaml_result()
 
-  defp handle_parse_read({:error, _}), do: %__MODULE__{}
+  defp parse_contents({:error, _}), do: %__MODULE__{}
 
-  # FIXME: extracted automatically by ExtractCaseToHelper — review
-  # the parameter list and consider a better name.
-  defp handle_read_from_string({:ok, yaml}), do: yaml |> from_yaml()
+  defp parse_yaml_result({:ok, yaml}), do: yaml |> from_yaml()
 
-  defp handle_read_from_string(_), do: %__MODULE__{}
+  defp parse_yaml_result(_), do: %__MODULE__{}
 end

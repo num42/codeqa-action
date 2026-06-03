@@ -304,7 +304,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
   # indent 0. Lets NodeClassifier see the keyword that drove the bracket-split
   # (`alias`, `@name`, etc.) when classifying a sub-block.
   defp parent_context_for(parent_tokens, child),
-    do: List.first(child.tokens) |> handle_parent_context_for_first(parent_tokens)
+    do: List.first(child.tokens) |> tokens_before_child(parent_tokens)
 
   defp compute_potentials_timed(
          %Node{} = node,
@@ -484,11 +484,9 @@ defmodule CodeQA.BlockImpactAnalyzer do
 
   defp now, do: System.monotonic_time(:microsecond)
 
-  # FIXME: extracted automatically by ExtractCaseToHelper — review
-  # the parameter list and consider a better name.
-  defp handle_parent_context_for_first(nil, _parent_tokens), do: []
+  defp tokens_before_child(nil, _parent_tokens), do: []
 
-  defp handle_parent_context_for_first(child_first, parent_tokens) do
+  defp tokens_before_child(child_first, parent_tokens) do
     nl_kind = NewlineToken.kind()
     ws_kind = WhitespaceToken.kind()
 

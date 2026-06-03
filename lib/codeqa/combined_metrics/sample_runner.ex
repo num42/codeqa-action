@@ -464,7 +464,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   end
 
   defp track_behavior_us(behavior, us),
-    do: Process.get(:codeqa_cosine_breakdown) |> handle_track_behavior_us_get(behavior, us)
+    do: Process.get(:codeqa_cosine_breakdown) |> accumulate_behavior_us(behavior, us)
 
   # ---------------------------------------------------------------------------
   # Language filtering
@@ -496,11 +496,9 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
 
   defp humanize(slug), do: humanize_category_shared(slug)
 
-  # FIXME: extracted automatically by ExtractCaseToHelper — review
-  # the parameter list and consider a better name.
-  defp handle_track_behavior_us_get(nil, _behavior, _us), do: :ok
+  defp accumulate_behavior_us(nil, _behavior, _us), do: :ok
 
-  defp handle_track_behavior_us_get(breakdown, behavior, us) do
+  defp accumulate_behavior_us(breakdown, behavior, us) do
     cur = Map.get(breakdown, behavior, 0)
     Process.put(:codeqa_cosine_breakdown, Map.put(breakdown, behavior, cur + us))
   end

@@ -23,7 +23,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
   end
 
   defp hints_for_behavior(category, {behavior, behavior_data}) when is_map(behavior_data) do
-    Map.get(behavior_data, "_fix_hint") |> handle_hints_for_behavior_get(behavior, category)
+    Map.get(behavior_data, "_fix_hint") |> wrap_fix_hint(behavior, category)
   end
 
   defp hints_for_behavior(_category, _entry), do: []
@@ -216,9 +216,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
     Map.merge(block, %{language: lang, source: source})
   end
 
-  # FIXME: extracted automatically by ExtractCaseToHelper — review
-  # the parameter list and consider a better name.
-  defp handle_hints_for_behavior_get(nil, _behavior, _category), do: []
+  defp wrap_fix_hint(nil, _behavior, _category), do: []
 
-  defp handle_hints_for_behavior_get(hint, behavior, category), do: [{{category, behavior}, hint}]
+  defp wrap_fix_hint(hint, behavior, category), do: [{{category, behavior}, hint}]
 end

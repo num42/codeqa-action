@@ -49,7 +49,7 @@ defmodule CodeQA.Engine.Parallel do
     hash = :crypto.hash(:sha256, content) |> Base.encode16(case: :lower)
     cache_file = Path.join(cache_dir, hash <> ".json")
 
-    File.read(cache_file) |> handle_maybe_cached_analyze_read(cache_file, content, opts, path)
+    File.read(cache_file) |> analyze_or_use_cache(cache_file, content, opts, path)
   end
 
   defp analyze_single_file(path, content, opts) do
@@ -67,25 +67,21 @@ defmodule CodeQA.Engine.Parallel do
     }
   end
 
-  # FIXME: extracted automatically by ExtractCaseToHelper — review
-  # the parameter list and consider a better name.
-  defp handle_maybe_cached_analyze_read({:ok, cached}, cache_file, content, opts, path),
+  defp analyze_or_use_cache({:ok, cached}, cache_file, content, opts, path),
     do:
       Jason.decode(cached)
-      |> handle_maybe_cached_analyze_read_decode(cache_file, content, opts, path)
+      |> decode_cache_or_reanalyze(cache_file, content, opts, path)
 
-  defp handle_maybe_cached_analyze_read(_, cache_file, content, opts, path) do
-    data = analyze_single_file(path, content, opts)
-    File.write!(cache_file, Jason.encode!(data))
-    data
-  end
+  defp analyze_or_use_cache(_, cache_file, content, opts, path),
+    do: analyze_and_cache(cache_file, content, opts, path)
 
-  # FIXME: extracted automatically by ExtractCaseToHelper — review
-  # the parameter list and consider a better name.
-  defp handle_maybe_cached_analyze_read_decode({:ok, data}, _cache_file, _content, _opts, _path),
+  defp decode_cache_or_reanalyze({:ok, data}, _cache_file, _content, _opts, _path),
     do: data
 
-  defp handle_maybe_cached_analyze_read_decode(_, cache_file, content, opts, path) do
+  defp decode_cache_or_reanalyze(_, cache_file, content, opts, path),
+    do: analyze_and_cache(cache_file, content, opts, path)
+
+  defp analyze_and_cache(cache_file, content, opts, path) do
     data = analyze_single_file(path, content, opts)
     File.write!(cache_file, Jason.encode!(data))
     data
