@@ -9,6 +9,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
   @severity_high 0.25
   @severity_medium 0.10
   @gap_floor 0.01
+  @baseline_min_blocks 3
   @top_n 10
   @default_min_lines 3
   @default_max_lines 20
@@ -95,18 +96,56 @@ defmodule CodeQA.HealthReport.TopBlocks do
     |> Enum.flat_map(fn {path, status, file_data} ->
       path_diff_ranges = Map.get(diff_line_ranges, path, [])
 
-      file_data
-      |> Map.get("nodes", [])
-      |> Enum.flat_map(&collect_nodes/1)
-      |> Enum.filter(
-        &(&1["token_count"] >= @min_tokens and block_in_line_range?(&1, min_lines, max_lines))
-      )
-      |> filter_by_diff_overlap(path_diff_ranges, diff_line_ranges)
-      |> Enum.map(&enrich_block(&1, codebase_cosine_lookup, fix_hints))
+      candidate_nodes =
+        file_data
+        |> Map.get("nodes", [])
+        |> Enum.flat_map(&collect_nodes/1)
+        |> dedupe_overlapping()
+        |> Enum.filter(
+          &(&1["token_count"] >= @min_tokens and block_in_line_range?(&1, min_lines, max_lines))
+        )
+        |> filter_by_diff_overlap(path_diff_ranges, diff_line_ranges)
+
+      # A behavior's cosine_delta is largely file-level: removing one small block
+      # barely moves a large file's metric vector, so nearly every block inherits
+      # the same per-behavior delta. Subtract that file baseline (the minimum block
+      # delta per behavior — the unavoidable file-level floor) so only blocks that
+      # genuinely stand out survive.
+      baselines = file_delta_baselines(candidate_nodes)
+
+      candidate_nodes
+      |> Enum.map(&enrich_block(&1, codebase_cosine_lookup, fix_hints, baselines))
       |> Enum.reject(&(&1.potentials == []))
       |> Enum.map(&Map.merge(&1, %{path: path, status: status}))
     end)
   end
+
+  # Collapses blocks that cover the exact same line range (the analyzer can emit
+  # two overlapping nodes for one span, e.g. a call and its argument list). Keeps
+  # the first seen per range. Genuine parent/child nesting is preserved — only
+  # identical {start, end} pairs are deduplicated.
+  defp dedupe_overlapping(nodes) do
+    nodes
+    |> Enum.uniq_by(fn n -> {n["start_line"], n["end_line"]} end)
+  end
+
+  # Per-behavior file-level floor: the minimum block delta across the file.
+  # Only computed when there are enough blocks to distinguish a floor from a
+  # genuine signal — with few blocks every delta is kept as-is (a single block
+  # cannot be a file-wide phantom).
+  defp file_delta_baselines(nodes) do
+    nodes
+    |> Enum.flat_map(fn n ->
+      n
+      |> Map.get("refactoring_potentials", [])
+      |> Enum.map(&{&1["behavior"], &1["cosine_delta"]})
+    end)
+    |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+    |> Map.new(fn {behavior, deltas} -> {behavior, floor_for(deltas)} end)
+  end
+
+  defp floor_for(deltas) when length(deltas) < @baseline_min_blocks, do: 0.0
+  defp floor_for(deltas), do: Enum.min(deltas)
 
   @spec block_in_line_range?(map(), pos_integer(), pos_integer()) :: boolean()
   defp block_in_line_range?(node, min_lines, max_lines) do
@@ -147,11 +186,11 @@ defmodule CodeQA.HealthReport.TopBlocks do
     [node | children]
   end
 
-  defp enrich_block(node, cosine_lookup, fix_hints) do
+  defp enrich_block(node, cosine_lookup, fix_hints, baselines) do
     potentials =
       node
       |> Map.get("refactoring_potentials", [])
-      |> Enum.map(&enrich_potential(&1, cosine_lookup, fix_hints))
+      |> Enum.map(&enrich_potential(&1, cosine_lookup, fix_hints, baselines))
       |> Enum.reject(&is_nil/1)
       |> Enum.sort_by(& &1.cosine_delta, :desc)
 
@@ -164,10 +203,13 @@ defmodule CodeQA.HealthReport.TopBlocks do
     }
   end
 
-  defp enrich_potential(p, cosine_lookup, fix_hints) do
+  defp enrich_potential(p, cosine_lookup, fix_hints, baselines) do
     category = p["category"]
     behavior = p["behavior"]
-    cosine_delta = p["cosine_delta"]
+    # Block-relative delta: how far this block stands above the file baseline for
+    # this behavior. A block at the file baseline contributes nothing distinctive.
+    baseline = Map.get(baselines, behavior, 0.0)
+    cosine_delta = max(p["cosine_delta"] - baseline, 0.0)
 
     codebase_cosine = Map.get(cosine_lookup, {category, behavior}, 0.0)
     gap = max(@gap_floor, 1.0 - codebase_cosine)

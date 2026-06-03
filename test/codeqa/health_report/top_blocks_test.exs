@@ -200,10 +200,11 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
 
   describe "top N limiting" do
     test "returns at most 10 blocks" do
-      # Create 15 nodes, each 10 lines (within default 3-20 range)
+      # Create 15 nodes with a wide delta spread so they clear the file-level
+      # floor (min delta is subtracted per behavior). Each spans 10 lines.
       nodes =
         for i <- 1..15 do
-          make_node(0.60 + i * 0.01)
+          make_node(0.20 + i * 0.05)
           |> put_in(["start_line"], i * 20)
           |> put_in(["end_line"], i * 20 + 9)
         end
