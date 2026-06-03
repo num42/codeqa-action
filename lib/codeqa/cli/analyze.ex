@@ -92,12 +92,14 @@ defmodule CodeQA.CLI.Analyze do
     end
   end
 
-  defp print_progress(%{progress: progress} = opts, files) when progress not in [nil, false] do
-    step_prefix = if opts[:show_ncd], do: "1/5 ", else: "1/1 "
-    IO.puts(:stderr, "  #{step_prefix}Analyzing #{map_size(files)} files...")
+  defp print_progress(opts, files) do
+    if opts[:progress] do
+      step_prefix = if opts[:show_ncd], do: "1/5 ", else: "1/1 "
+      IO.puts(:stderr, "  #{step_prefix}Analyzing #{map_size(files)} files...")
+    else
+      IO.puts(:stderr, "Analyzing #{map_size(files)} files...")
+    end
   end
-
-  defp print_progress(_opts, files), do: IO.puts(:stderr, "Analyzing #{map_size(files)} files...")
 
   defp filter_files_for_output(results, opts, _format) do
     cond do
