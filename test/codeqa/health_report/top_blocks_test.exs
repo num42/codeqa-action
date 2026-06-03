@@ -21,8 +21,43 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
       "children" => []
     }
 
-  defp make_results(nodes),
-    do: %{"files" => %{"lib/foo.ex" => %{"nodes" => nodes}}, "metadata" => %{"path" => "/tmp"}}
+  # A companion block carrying every behavior present in `nodes` at delta 0, so
+  # each behavior has >= 2 blocks in the file (single-block findings are
+  # suppressed as non-attributable) and the per-behavior floor stays 0 — leaving
+  # each real block's delta unchanged. The anchor itself nets to 0 after the
+  # floor subtraction and is filtered out, so assertions about the blocks under
+  # test are unaffected.
+  defp floor_anchor(nodes) do
+    potentials =
+      nodes
+      |> Enum.flat_map(&all_potentials/1)
+      |> Enum.map(fn p ->
+        %{"category" => p["category"], "behavior" => p["behavior"], "cosine_delta" => 0.0}
+      end)
+      |> Enum.uniq()
+
+    %{
+      "start_line" => 900,
+      "end_line" => 905,
+      "type" => "code",
+      "token_count" => 20,
+      "refactoring_potentials" => potentials,
+      "children" => []
+    }
+  end
+
+  defp all_potentials(node) do
+    Map.get(node, "refactoring_potentials", []) ++
+      (node |> Map.get("children", []) |> Enum.flat_map(&all_potentials/1))
+  end
+
+  defp make_results(nodes), do: make_results(nodes, "/tmp")
+
+  defp make_results(nodes, path),
+    do: %{
+      "files" => %{"lib/foo.ex" => %{"nodes" => nodes ++ [floor_anchor(nodes)]}},
+      "metadata" => %{"path" => path}
+    }
 
   defp lookup(cosine \\ 0.0),
     do: %{{"function_design", "cyclomatic_complexity_under_10"} => cosine}
@@ -175,8 +210,10 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
       file_path = Path.join(test_dir, "test.ex")
       File.write!(file_path, "line 1\nline 2\nline 3\nline 4\nline 5")
 
+      node = make_node(0.60) |> Map.put("end_line", 3)
+
       results = %{
-        "files" => %{"test.ex" => %{"nodes" => [make_node(0.60) |> Map.put("end_line", 3)]}},
+        "files" => %{"test.ex" => %{"nodes" => [node, floor_anchor([node])]}},
         "metadata" => %{"path" => test_dir}
       }
 
@@ -188,8 +225,10 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
     end
 
     test "source is nil when file does not exist" do
+      node = make_node(0.60)
+
       results = %{
-        "files" => %{"nonexistent.ex" => %{"nodes" => [make_node(0.60)]}},
+        "files" => %{"nonexistent.ex" => %{"nodes" => [node, floor_anchor([node])]}},
         "metadata" => %{"path" => "/nonexistent/path"}
       }
 
@@ -249,12 +288,7 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
         |> put_in(["start_line"], 1)
         |> put_in(["end_line"], 10)
 
-      results = %{
-        "files" => %{"lib/foo.ex" => %{"nodes" => [node]}},
-        "metadata" => %{"path" => "/tmp"}
-      }
-
-      blocks = TopBlocks.build(results, [], lookup())
+      blocks = TopBlocks.build(make_results([node]), [], lookup())
       assert length(blocks) == 1
     end
 
@@ -265,15 +299,22 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
         |> put_in(["start_line"], 1)
         |> put_in(["end_line"], 2)
 
+      # 2-line floor anchor that fits the custom 1-5 range alongside small_node,
+      # so the behavior has >= 2 blocks and is not suppressed as single-block.
+      anchor =
+        floor_anchor([small_node])
+        |> put_in(["start_line"], 4)
+        |> put_in(["end_line"], 5)
+
       results = %{
-        "files" => %{"lib/foo.ex" => %{"nodes" => [small_node]}},
+        "files" => %{"lib/foo.ex" => %{"nodes" => [small_node, anchor]}},
         "metadata" => %{"path" => "/tmp"}
       }
 
-      # Default range (3-20) excludes it
+      # Default range (3-20) excludes the 2-line blocks
       assert TopBlocks.build(results, [], lookup()) == []
 
-      # Custom range (1-5) includes it
+      # Custom range (1-5) includes them
       blocks = TopBlocks.build(results, [], lookup(), block_min_lines: 1, block_max_lines: 5)
       assert length(blocks) == 1
     end
