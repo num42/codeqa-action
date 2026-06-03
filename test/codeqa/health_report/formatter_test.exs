@@ -132,7 +132,7 @@ defmodule CodeQA.HealthReport.FormatterTest do
     type: :threshold,
     worst_offenders: [
       %{
-        bytes: 15872,
+        bytes: 15_872,
         grade: "F",
         lines: 491,
         metric_scores: [

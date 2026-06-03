@@ -1,0 +1,118 @@
+name: Dialyzer Diff
+
+on:
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: dialyzer-diff-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      elixir: ${{ steps.filter.outputs.elixir }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            elixir:
+              - 'lib/**'
+              - 'test/**'
+              - 'mix.exs'
+              - 'mix.lock'
+              - '.credo.exs'
+              - '.dialyzer_ignore.exs'
+              - 'devenv.nix'
+              - 'devenv.lock'
+              - 'devenv.yaml'
+              - '.github/actions/setup-elixir/**'
+
+  dialyzer-diff:
+    name: Dialyzer (no new warnings)
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.elixir == 'true'
+
+    env:
+      MIX_ENV: dev
+
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Elixir with shared cache
+        uses: ./.github/actions/setup-elixir
+        with:
+          mix-env: dev
+          cache-plt: "true"
+
+      - name: Determine merge base
+        id: merge-base
+        run: |
+          BASE_SHA=$(git merge-base origin/${{ github.base_ref }} HEAD)
+          echo "sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+          echo "Merge base: $BASE_SHA"
+
+      # --- HEAD run ---
+
+      - name: Compile (HEAD)
+        run: mix compile
+
+      - name: Dialyzer (HEAD)
+        run: |
+          mix dialyzer --format short --quiet 2>&1 | grep '^lib/' > /tmp/dialyzer_head.txt || true
+          echo "HEAD warnings: $(wc -l < /tmp/dialyzer_head.txt)"
+
+      # --- BASE run ---
+
+      - name: Checkout merge base
+        run: git checkout ${{ steps.merge-base.outputs.sha }}
+
+      - name: Deps & compile (BASE)
+        run: |
+          mix deps.get
+          mix compile
+
+      - name: Dialyzer (BASE)
+        run: |
+          mix dialyzer --format short --quiet 2>&1 | grep '^lib/' > /tmp/dialyzer_base.txt || true
+          echo "BASE warnings: $(wc -l < /tmp/dialyzer_base.txt)"
+
+      # --- Diff ---
+
+      - name: Checkout PR head (for diff script)
+        run: git checkout ${{ github.event.pull_request.head.sha }}
+
+      - name: Compare warnings
+        run: elixir .github/scripts/dialyzer_diff.exs /tmp/dialyzer_base.txt /tmp/dialyzer_head.txt /tmp/dialyzer_summary.md
+
+      - name: Upsert PR comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          MARKER="<!-- dialyzer-diff-comment -->"
+
+          COMMENT_ID=$(gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
+            --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id" | head -1)
+
+          BODY=$(cat /tmp/dialyzer_summary.md)
+
+          if [ -n "$COMMENT_ID" ]; then
+            gh api "repos/${{ github.repository }}/issues/comments/${COMMENT_ID}" \
+              --method PATCH \
+              -f body="$BODY"
+          else
+            gh pr comment "$PR_NUMBER" --body-file /tmp/dialyzer_summary.md
+          fi

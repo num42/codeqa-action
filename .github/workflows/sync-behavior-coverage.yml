@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.head.repo.full_name == github.repository
 
+    env:
+      MIX_ENV: dev
+
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v6
@@ -19,23 +22,10 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Elixir
-        uses: erlef/setup-beam@v1
+      - name: Set up Elixir with shared cache
+        uses: ./.github/actions/setup-elixir
         with:
-          otp-version: "27.3"
-          elixir-version: "1.19"
-
-      - name: Cache deps
-        uses: actions/cache@v4
-        with:
-          path: |
-            deps
-            _build
-          key: ${{ runner.os }}-mix-dev-otp27.3-elixir1.19-${{ hashFiles('mix.lock', 'mix.exs') }}
-          restore-keys: ${{ runner.os }}-mix-dev-otp27.3-elixir1.19-
-
-      - name: Install dependencies
-        run: mix deps.get
+          mix-env: dev
 
       - name: Compile
         run: mix compile --warnings-as-errors
