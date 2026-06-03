@@ -62,4 +62,4 @@ jobs:
         run: mix format --check-formatted
 
       - name: Credo
-        run: mix credo --min-priority=high
+        run: mix credo --strict

@@ -67,24 +67,30 @@ defmodule CodeQA.Engine.Analyzer do
     {result, breakdown} =
       baseline_metrics
       |> Enum.reduce({[], %{ctx: ctx_us}}, fn {name, baseline_value}, {acc, breakdown} ->
-        if MapSet.member?(referenced, name) do
-          mod = registered_module_for(name)
-
-          {us, value} =
-            if function_exported?(mod, :analyze_loo, 2) do
-              :timer.tc(fn -> mod.analyze_loo(baseline_value, block_content) end)
-            else
-              :timer.tc(fn -> mod.analyze(ctx) end)
-            end
-
-          {[{name, value} | acc], Map.put(breakdown, name, us)}
-        else
-          {[{name, baseline_value} | acc], breakdown}
-        end
+        reduce_loo_metric(name, baseline_value, referenced, ctx, block_content, acc, breakdown)
       end)
 
     :telemetry.execute([:codeqa, :loo_breakdown], breakdown, %{})
     result |> Map.new()
+  end
+
+  defp reduce_loo_metric(name, baseline_value, referenced, ctx, block_content, acc, breakdown) do
+    if MapSet.member?(referenced, name) do
+      {us, value} = time_loo_metric(name, baseline_value, ctx, block_content)
+      {[{name, value} | acc], Map.put(breakdown, name, us)}
+    else
+      {[{name, baseline_value} | acc], breakdown}
+    end
+  end
+
+  defp time_loo_metric(name, baseline_value, ctx, block_content) do
+    mod = registered_module_for(name)
+
+    if function_exported?(mod, :analyze_loo, 2) do
+      :timer.tc(fn -> mod.analyze_loo(baseline_value, block_content) end)
+    else
+      :timer.tc(fn -> mod.analyze(ctx) end)
+    end
   end
 
   defp registered_module_for(name),

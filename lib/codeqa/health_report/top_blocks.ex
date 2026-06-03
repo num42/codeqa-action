@@ -98,8 +98,9 @@ defmodule CodeQA.HealthReport.TopBlocks do
       file_data
       |> Map.get("nodes", [])
       |> Enum.flat_map(&collect_nodes/1)
-      |> Enum.filter(&(&1["token_count"] >= @min_tokens))
-      |> Enum.filter(&block_in_line_range?(&1, min_lines, max_lines))
+      |> Enum.filter(
+        &(&1["token_count"] >= @min_tokens and block_in_line_range?(&1, min_lines, max_lines))
+      )
       |> filter_by_diff_overlap(path_diff_ranges, diff_line_ranges)
       |> Enum.map(&enrich_block(&1, codebase_cosine_lookup, fix_hints))
       |> Enum.reject(&(&1.potentials == []))

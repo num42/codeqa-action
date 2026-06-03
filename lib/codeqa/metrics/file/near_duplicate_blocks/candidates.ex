@@ -138,20 +138,9 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Candidates do
     touched =
       bigrams_a
       |> Enum.reduce([], fn bigram, touched_acc ->
-        h = :erlang.phash2(bigram)
-
         shingle_index
-        |> Map.get(h, [])
-        |> Enum.reduce(touched_acc, fn
-          j, acc when j > i ->
-            idx = j + 1
-            old = :counters.get(counter, idx)
-            :counters.add(counter, idx, 1)
-            if old == 0, do: [j | acc], else: acc
-
-          _j, acc ->
-            acc
-        end)
+        |> Map.get(:erlang.phash2(bigram), [])
+        |> Enum.reduce(touched_acc, &touch_candidate(&1, &2, i, counter))
       end)
 
     in_exact? = fn j ->
@@ -184,6 +173,15 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Candidates do
   # ---------------------------------------------------------------------------
   # Private helpers
   # ---------------------------------------------------------------------------
+
+  # Bump the shared-shingle counter for candidate j; record j on its first hit.
+  defp touch_candidate(j, acc, i, counter) when j > i do
+    old = :counters.get(counter, j + 1)
+    :counters.add(counter, j + 1, 1)
+    if old == 0, do: [j | acc], else: acc
+  end
+
+  defp touch_candidate(_j, acc, _i, _counter), do: acc
 
   # Strip leading/trailing <NL> and <WS> tokens and extract kind values as strings.
   # Optimised to 3 passes: one reduce (skip leading NL/WS + collect reversed kinds),

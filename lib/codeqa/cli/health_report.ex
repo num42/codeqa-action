@@ -102,29 +102,7 @@ defmodule CodeQA.CLI.HealthReport do
       })
 
     {base_results, changed_files, diff_line_ranges} =
-      if base_ref do
-        IO.puts(:stderr, "Collecting base snapshot at #{base_ref}...")
-        base_files = Git.collect_files_at_ref(path, base_ref)
-        changed = Git.changed_files(path, base_ref, head_ref)
-
-        diff_ranges =
-          case Git.diff_line_ranges(path, base_ref, head_ref) do
-            {:ok, ranges} ->
-              ranges
-
-            {:error, reason} ->
-              IO.puts(:stderr, "Warning: failed to parse diff line ranges: #{inspect(reason)}")
-              IO.puts(:stderr, "Block scoping disabled - showing all blocks in changed files")
-              %{}
-          end
-
-        IO.puts(:stderr, "Analyzing base snapshot (#{map_size(base_files)} files)...")
-        base_res = Analyzer.analyze_codebase(base_files, analyze_opts)
-
-        {base_res, changed, diff_ranges}
-      else
-        {nil, [], %{}}
-      end
+      collect_base_snapshot(path, base_ref, head_ref, analyze_opts)
 
     detail = parse_detail(opts[:detail])
     format = parse_format(opts[:format])
@@ -149,29 +127,62 @@ defmodule CodeQA.CLI.HealthReport do
       record_phase(telemetry_pid, :report_gen, report_gen_us)
     end
 
-    output =
-      if opts[:comment] do
-        write_comment_parts(report, detail)
-      else
-        render_t0 = System.monotonic_time(:microsecond)
-        markdown = HealthReport.to_markdown(report, detail, format)
-        render_us = System.monotonic_time(:microsecond) - render_t0
-        if telemetry_pid, do: record_phase(telemetry_pid, :render, render_us)
-
-        case opts[:output] do
-          nil ->
-            markdown
-
-          file ->
-            File.write!(file, markdown)
-            IO.puts(:stderr, "Health report written to #{file}")
-            ""
-        end
-      end
+    output = build_output(report, opts, detail, format, telemetry_pid)
 
     if telemetry_pid, do: print_telemetry(telemetry_pid)
 
     output
+  end
+
+  defp collect_base_snapshot(_path, nil, _head_ref, _analyze_opts), do: {nil, [], %{}}
+
+  defp collect_base_snapshot(path, base_ref, head_ref, analyze_opts) do
+    IO.puts(:stderr, "Collecting base snapshot at #{base_ref}...")
+    base_files = Git.collect_files_at_ref(path, base_ref)
+    changed = Git.changed_files(path, base_ref, head_ref)
+    diff_ranges = collect_diff_ranges(path, base_ref, head_ref)
+
+    IO.puts(:stderr, "Analyzing base snapshot (#{map_size(base_files)} files)...")
+    base_res = Analyzer.analyze_codebase(base_files, analyze_opts)
+
+    {base_res, changed, diff_ranges}
+  end
+
+  defp collect_diff_ranges(path, base_ref, head_ref) do
+    case Git.diff_line_ranges(path, base_ref, head_ref) do
+      {:ok, ranges} ->
+        ranges
+
+      {:error, reason} ->
+        IO.puts(:stderr, "Warning: failed to parse diff line ranges: #{inspect(reason)}")
+        IO.puts(:stderr, "Block scoping disabled - showing all blocks in changed files")
+        %{}
+    end
+  end
+
+  defp build_output(report, opts, detail, format, telemetry_pid) do
+    if opts[:comment] do
+      write_comment_parts(report, detail)
+    else
+      render_markdown(report, opts, detail, format, telemetry_pid)
+    end
+  end
+
+  defp render_markdown(report, opts, detail, format, telemetry_pid) do
+    render_t0 = System.monotonic_time(:microsecond)
+    markdown = HealthReport.to_markdown(report, detail, format)
+    render_us = System.monotonic_time(:microsecond) - render_t0
+    if telemetry_pid, do: record_phase(telemetry_pid, :render, render_us)
+
+    write_markdown(markdown, opts[:output])
+  end
+
+  defp write_markdown(markdown, nil), do: markdown
+
+  defp write_markdown(markdown, file) do
+    File.write!(file, markdown)
+    IO.puts(:stderr, "Health report written to #{file}")
+    ""
   end
 
   defp write_comment_parts(report, detail) do
@@ -295,21 +306,11 @@ defmodule CodeQA.CLI.HealthReport do
   end
 
   defp handle_event([:codeqa, :stage], measurements, metadata, pid) do
-    Agent.update(pid, fn state ->
-      Map.update!(state, :stages, fn stages ->
-        Map.put(stages, metadata.stage, measurements.duration)
-      end)
-    end)
+    Agent.update(pid, &put_in(&1, [:stages, metadata.stage], measurements.duration))
   end
 
   defp handle_event([:codeqa, :file_metric], measurements, metadata, pid) do
-    Agent.update(pid, fn state ->
-      Map.update!(state, :file_metrics, fn fm ->
-        Map.update(fm, metadata.metric, {1, measurements.duration}, fn {n, sum} ->
-          {n + 1, sum + measurements.duration}
-        end)
-      end)
-    end)
+    Agent.update(pid, &accumulate_file_metric(&1, metadata.metric, measurements.duration))
   end
 
   defp handle_event([:codeqa, :codebase_metric], measurements, metadata, pid) do
@@ -343,6 +344,12 @@ defmodule CodeQA.CLI.HealthReport do
       state
       |> Map.put(:cosine_breakdown, merged)
       |> Map.update!(:cosine_breakdown_calls, &(&1 + 1))
+    end)
+  end
+
+  defp accumulate_file_metric(state, metric, duration) do
+    update_in(state, [:file_metrics, Access.key(metric, {0, 0})], fn {n, sum} ->
+      {n + 1, sum + duration}
     end)
   end
 
@@ -450,26 +457,21 @@ defmodule CodeQA.CLI.HealthReport do
       {">32KB", fn r -> r.bytes >= 32_000 end}
     ]
 
-    bin_rows =
-      bins
-      |> Enum.map(fn {label, pred} ->
-        bucket = rows |> Enum.filter(pred)
-        n = length(bucket)
+    bins
+    |> Enum.map_join("\n", fn {label, pred} -> format_bin(label, Enum.filter(rows, pred)) end)
+  end
 
-        if n == 0 do
-          "  #{label}  (none)"
-        else
-          avg_bytes = div(bucket |> Enum.map(& &1.bytes) |> Enum.sum(), n)
-          avg_tokens = div(bucket |> Enum.map(& &1.tokens) |> Enum.sum(), n)
-          avg_nodes = div(bucket |> Enum.map(& &1.nodes) |> Enum.sum(), n)
-          avg_node_us = div(bucket |> Enum.map(& &1.total_node_us) |> Enum.sum(), n)
-          per_node_us = if avg_nodes > 0, do: div(avg_node_us, avg_nodes), else: 0
+  defp format_bin(label, []), do: "  #{label}  (none)"
 
-          "  #{label}  files=#{n}  avg bytes=#{avg_bytes} tokens=#{avg_tokens} nodes=#{avg_nodes}  total_node=#{us(avg_node_us)}  per_node=#{us(per_node_us)}"
-        end
-      end)
+  defp format_bin(label, bucket) do
+    n = length(bucket)
+    avg_bytes = div(bucket |> Enum.map(& &1.bytes) |> Enum.sum(), n)
+    avg_tokens = div(bucket |> Enum.map(& &1.tokens) |> Enum.sum(), n)
+    avg_nodes = div(bucket |> Enum.map(& &1.nodes) |> Enum.sum(), n)
+    avg_node_us = div(bucket |> Enum.map(& &1.total_node_us) |> Enum.sum(), n)
+    per_node_us = if avg_nodes > 0, do: div(avg_node_us, avg_nodes), else: 0
 
-    bin_rows |> Enum.join("\n")
+    "  #{label}  files=#{n}  avg bytes=#{avg_bytes} tokens=#{avg_tokens} nodes=#{avg_nodes}  total_node=#{us(avg_node_us)}  per_node=#{us(per_node_us)}"
   end
 
   defp format_phases(phases) when map_size(phases) == 0, do: "  (no phases recorded)"

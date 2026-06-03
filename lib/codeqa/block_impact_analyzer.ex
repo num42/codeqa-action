@@ -194,28 +194,23 @@ defmodule CodeQA.BlockImpactAnalyzer do
     project_langs = project_languages(file_results)
 
     node_ctx = %{
+      baseline_codebase_cosines: baseline_codebase_cosines,
+      baseline_file_cosines: baseline_file_cosines,
       baseline_file_metrics: baseline_file_metrics,
       cached_behaviors: cached_behaviors,
       inc_agg: inc_agg,
       lang_mod: lang_mod,
+      language: language,
+      nodes_top: nodes_top,
       old_file_triples: old_file_triples,
-      project_langs: project_langs
+      path: path,
+      project_langs: project_langs,
+      root_tokens: root_tokens
     }
 
     nodes =
       top_level_nodes
-      |> Enum.map(
-        &serialize_node(
-          &1,
-          path,
-          root_tokens,
-          baseline_file_cosines,
-          baseline_codebase_cosines,
-          nodes_top,
-          language,
-          node_ctx
-        )
-      )
+      |> Enum.map(&serialize_node(&1, node_ctx))
       |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
 
     measurements = %{
@@ -231,17 +226,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
     {nodes, measurements}
   end
 
-  defp serialize_node(
-         node,
-         path,
-         root_tokens,
-         baseline_file_cosines,
-         baseline_codebase_cosines,
-         nodes_top,
-         language,
-         node_ctx,
-         parent_context \\ nil
-       ) do
+  defp serialize_node(node, node_ctx, parent_context \\ nil) do
     block_type =
       node
       |> NodeClassifier.classify(node_ctx.lang_mod, parent_context)
@@ -251,35 +236,13 @@ defmodule CodeQA.BlockImpactAnalyzer do
       if length(node.tokens) < @min_tokens do
         []
       else
-        compute_potentials_timed(
-          node,
-          path,
-          root_tokens,
-          baseline_file_cosines,
-          baseline_codebase_cosines,
-          nodes_top,
-          language,
-          node_ctx,
-          block_type
-        )
+        compute_potentials_timed(node, node_ctx, block_type)
       end
 
     children =
       node.children
       |> Enum.map(fn child ->
-        child_context = parent_context_for(node.tokens, child)
-
-        serialize_node(
-          child,
-          path,
-          root_tokens,
-          baseline_file_cosines,
-          baseline_codebase_cosines,
-          nodes_top,
-          language,
-          node_ctx,
-          child_context
-        )
+        serialize_node(child, node_ctx, parent_context_for(node.tokens, child))
       end)
       |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
 
@@ -306,28 +269,18 @@ defmodule CodeQA.BlockImpactAnalyzer do
   defp parent_context_for(parent_tokens, child),
     do: List.first(child.tokens) |> tokens_before_child(parent_tokens)
 
-  defp compute_potentials_timed(
-         %Node{} = node,
-         path,
-         root_tokens,
-         baseline_file_cosines,
-         baseline_codebase_cosines,
-         nodes_top,
-         language,
-         node_ctx,
-         block_type
-       ) do
+  defp compute_potentials_timed(%Node{} = node, node_ctx, block_type) do
     t0 = now()
 
     {reconstructed, reconstruct_us} =
-      timed(fn -> FileImpact.reconstruct_without(root_tokens, node) end)
+      timed(fn -> FileImpact.reconstruct_without(node_ctx.root_tokens, node) end)
 
     block_content = node.tokens |> Enum.map_join("", & &1.content)
 
     {without_file_metrics, analyze_file_us} =
       timed(fn ->
         Analyzer.analyze_file_for_loo_partial(
-          path,
+          node_ctx.path,
           reconstructed,
           node_ctx.baseline_file_metrics,
           block_content
@@ -346,12 +299,12 @@ defmodule CodeQA.BlockImpactAnalyzer do
     {potentials, refactoring_us} =
       timed(fn ->
         RefactoringPotentials.compute(
-          baseline_file_cosines,
+          node_ctx.baseline_file_cosines,
           without_file_metrics,
-          baseline_codebase_cosines,
+          node_ctx.baseline_codebase_cosines,
           without_codebase_agg,
-          top: nodes_top,
-          language: language,
+          top: node_ctx.nodes_top,
+          language: node_ctx.language,
           languages: node_ctx.project_langs,
           behavior_map: node_ctx.cached_behaviors,
           block_type: block_type
@@ -367,7 +320,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
         reconstruct_us: reconstruct_us,
         refactoring_us: refactoring_us
       },
-      %{path: path, token_count: length(node.tokens)}
+      %{path: node_ctx.path, token_count: length(node.tokens)}
     )
 
     potentials
