@@ -9,7 +9,6 @@ defmodule CodeQA.HealthReport.TopBlocks do
   @severity_high 0.25
   @severity_medium 0.10
   @gap_floor 0.01
-  @baseline_min_blocks 3
   @top_n 10
   @default_min_lines 3
   @default_max_lines 20
@@ -96,7 +95,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
     |> Enum.flat_map(fn {path, status, file_data} ->
       path_diff_ranges = Map.get(diff_line_ranges, path, [])
 
-      candidate_nodes =
+      file_blocks =
         file_data
         |> Map.get("nodes", [])
         |> Enum.flat_map(&collect_nodes/1)
@@ -104,16 +103,18 @@ defmodule CodeQA.HealthReport.TopBlocks do
         |> Enum.filter(
           &(&1["token_count"] >= @min_tokens and block_in_line_range?(&1, min_lines, max_lines))
         )
-        |> filter_by_diff_overlap(path_diff_ranges, diff_line_ranges)
 
       # A behavior's cosine_delta is largely file-level: removing one small block
       # barely moves a large file's metric vector, so nearly every block inherits
       # the same per-behavior delta. Subtract that file baseline (the minimum block
       # delta per behavior — the unavoidable file-level floor) so only blocks that
-      # genuinely stand out survive.
-      baselines = file_delta_baselines(candidate_nodes)
+      # genuinely stand out survive. Computed over ALL file blocks, before any diff
+      # scoping, so the floor reflects the whole file rather than just the changed
+      # region.
+      baselines = file_delta_baselines(file_blocks)
 
-      candidate_nodes
+      file_blocks
+      |> filter_by_diff_overlap(path_diff_ranges, diff_line_ranges)
       |> Enum.map(&enrich_block(&1, codebase_cosine_lookup, fix_hints, baselines))
       |> Enum.reject(&(&1.potentials == []))
       |> Enum.map(&Map.merge(&1, %{path: path, status: status}))
@@ -131,8 +132,12 @@ defmodule CodeQA.HealthReport.TopBlocks do
 
   # Per-behavior file-level floor: the minimum block delta across the file.
   # Only computed when there are enough blocks to distinguish a floor from a
-  # genuine signal — with few blocks every delta is kept as-is (a single block
-  # cannot be a file-wide phantom).
+  # genuine signal.
+  #
+  # A single block carries NO block-specific signal: its delta is purely the
+  # file-level cosine (leave-one-out on the only block ≈ removing the whole
+  # file's contribution), so it is the worst phantom source. We treat its own
+  # delta as the floor → relative delta 0 → filtered.
   defp file_delta_baselines(nodes) do
     nodes
     |> Enum.flat_map(fn n ->
@@ -144,7 +149,9 @@ defmodule CodeQA.HealthReport.TopBlocks do
     |> Map.new(fn {behavior, deltas} -> {behavior, floor_for(deltas)} end)
   end
 
-  defp floor_for(deltas) when length(deltas) < @baseline_min_blocks, do: 0.0
+  # n == 1: no comparison possible → floor is the value itself (suppressed).
+  # n >= 2: the file-level floor is the minimum block delta.
+  defp floor_for([only]), do: only
   defp floor_for(deltas), do: Enum.min(deltas)
 
   @spec block_in_line_range?(map(), pos_integer(), pos_integer()) :: boolean()
