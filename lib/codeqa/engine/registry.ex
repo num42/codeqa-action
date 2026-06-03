@@ -1,17 +1,15 @@
 defmodule CodeQA.Engine.Registry do
   @moduledoc "Metric registration and execution."
 
-  defstruct file_metrics: [], codebase_metrics: []
+  defstruct codebase_metrics: [], file_metrics: []
 
   def new, do: %__MODULE__{}
 
-  def register_file_metric(%__MODULE__{} = reg, metric_module) do
-    %{reg | file_metrics: reg.file_metrics ++ [metric_module]}
-  end
+  def register_file_metric(%__MODULE__{} = reg, metric_module),
+    do: %{reg | file_metrics: reg.file_metrics ++ [metric_module]}
 
-  def register_codebase_metric(%__MODULE__{} = reg, metric_module) do
-    %{reg | codebase_metrics: reg.codebase_metrics ++ [metric_module]}
-  end
+  def register_codebase_metric(%__MODULE__{} = reg, metric_module),
+    do: %{reg | codebase_metrics: reg.codebase_metrics ++ [metric_module]}
 
   def run_file_metrics(%__MODULE__{} = reg, ctx, opts \\ []) do
     base_metrics =
@@ -31,7 +29,7 @@ defmodule CodeQA.Engine.Registry do
 
     if Keyword.get(opts, :combinations, false) do
       combinations = generate_combinations(flat_numeric_metrics(base_metrics), [])
-      Map.merge(base_metrics, Map.new(combinations))
+      Map.merge(base_metrics, combinations |> Map.new())
     else
       base_metrics
     end
@@ -49,7 +47,8 @@ defmodule CodeQA.Engine.Registry do
   defp generate_combinations([{k1, v1} | rest], acc) do
     # Generate all pairs for the head with the rest of the list
     new_acc =
-      Enum.reduce(rest, acc, fn {k2, v2}, current_acc ->
+      rest
+      |> Enum.reduce(acc, fn {k2, v2}, current_acc ->
         combined = %{
           "keys" => [k1, k2],
           "add" => v1 + v2,

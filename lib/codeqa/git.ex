@@ -51,20 +51,15 @@ defmodule CodeQA.Git do
   """
   @spec diff_line_ranges(String.t(), String.t(), String.t()) ::
           {:ok, %{String.t() => [{pos_integer(), pos_integer()}]}} | {:error, term()}
-  def diff_line_ranges(repo_path, base_ref, head_ref) do
-    case System.cmd(
-           "git",
-           ["diff", "-U0", "#{base_ref}..#{head_ref}"],
-           cd: repo_path,
-           stderr_to_stdout: false
-         ) do
-      {output, 0} ->
-        {:ok, parse_diff_hunks(output)}
-
-      {_output, code} ->
-        {:error, "git diff exited with code #{code}"}
-    end
-  end
+  def diff_line_ranges(repo_path, base_ref, head_ref),
+    do:
+      System.cmd(
+        "git",
+        ["diff", "-U0", "#{base_ref}..#{head_ref}"],
+        cd: repo_path,
+        stderr_to_stdout: false
+      )
+      |> diff_result_to_ranges()
 
   @typep parse_state :: {String.t() | nil, %{String.t() => [{pos_integer(), pos_integer()}]}}
 
@@ -74,7 +69,7 @@ defmodule CodeQA.Git do
     |> String.split("\n")
     |> Enum.reduce({nil, %{}}, &parse_diff_line/2)
     |> elem(1)
-    |> Map.new(fn {path, ranges} -> {path, Enum.reverse(ranges)} end)
+    |> Map.new(fn {path, ranges} -> {path, ranges |> Enum.reverse()} end)
   end
 
   @spec parse_diff_line(String.t(), parse_state()) :: parse_state()
@@ -88,29 +83,7 @@ defmodule CodeQA.Git do
 
   defp parse_diff_line("@@ " <> rest, {current_file, acc}) when is_binary(current_file) do
     # Parse hunk header: @@ -old_start,old_count +new_start,new_count @@
-    case Regex.run(~r/\+(\d+)(?:,(\d+))?/, rest) do
-      [_, start_str] ->
-        # Single line change (no count means 1 line)
-        start = String.to_integer(start_str)
-        updated = Map.update(acc, current_file, [{start, start}], &[{start, start} | &1])
-        {current_file, updated}
-
-      [_, start_str, count_str] ->
-        start = String.to_integer(start_str)
-        count = String.to_integer(count_str)
-
-        if count == 0 do
-          # Deletion only, no new lines
-          {current_file, acc}
-        else
-          end_line = start + count - 1
-          updated = Map.update(acc, current_file, [{start, end_line}], &[{start, end_line} | &1])
-          {current_file, updated}
-        end
-
-      nil ->
-        {current_file, acc}
-    end
+    Regex.run(~r/\+(\d+)(?:,(\d+))?/, rest) |> record_hunk_range(acc, current_file)
   end
 
   defp parse_diff_line(_line, state), do: state
@@ -134,16 +107,8 @@ defmodule CodeQA.Git do
     end)
   end
 
-  defp parse_change_line(line) do
-    case String.split(line, "\t", parts: 2) do
-      [status_code, path] when byte_size(status_code) > 0 ->
-        status = Map.get(@status_map, String.first(status_code), "modified")
-        if source_file?(path), do: [%ChangedFile{path: path, status: status}], else: []
-
-      _ ->
-        []
-    end
-  end
+  defp parse_change_line(line),
+    do: String.split(line, "\t", parts: 2) |> change_file_from_parts()
 
   defp list_source_files_at_ref(repo_path, ref) do
     {output, 0} = System.cmd("git", ["ls-tree", "-r", "--name-only", ref], cd: repo_path)
@@ -158,4 +123,38 @@ defmodule CodeQA.Git do
     ext = path |> Path.extname() |> String.downcase()
     MapSet.member?(Collector.source_extensions(), ext)
   end
+
+  defp diff_result_to_ranges({output, 0}), do: {:ok, parse_diff_hunks(output)}
+
+  defp diff_result_to_ranges({_output, code}),
+    do: {:error, "git diff exited with code #{code}"}
+
+  defp record_hunk_range([_, start_str], acc, current_file) do
+    start = String.to_integer(start_str)
+    updated = Map.update(acc, current_file, [{start, start}], &[{start, start} | &1])
+    {current_file, updated}
+  end
+
+  defp record_hunk_range([_, start_str, count_str], acc, current_file) do
+    start = String.to_integer(start_str)
+    count = String.to_integer(count_str)
+
+    if count == 0 do
+      # Deletion only, no new lines
+      {current_file, acc}
+    else
+      end_line = start + count - 1
+      updated = Map.update(acc, current_file, [{start, end_line}], &[{start, end_line} | &1])
+      {current_file, updated}
+    end
+  end
+
+  defp record_hunk_range(nil, acc, current_file), do: {current_file, acc}
+
+  defp change_file_from_parts([status_code, path]) when byte_size(status_code) > 0 do
+    status = Map.get(@status_map, String.first(status_code), "modified")
+    if source_file?(path), do: [%ChangedFile{path: path, status: status}], else: []
+  end
+
+  defp change_file_from_parts(_), do: []
 end

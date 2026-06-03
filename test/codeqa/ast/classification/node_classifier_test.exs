@@ -7,15 +7,13 @@ defmodule CodeQA.AST.NodeClassifierTest do
   alias CodeQA.AST.Lexing.TokenNormalizer
   alias CodeQA.AST.Parsing.Parser
 
-  alias CodeQA.AST.Nodes.{
-    AttributeNode,
-    CodeNode,
-    DocNode,
-    FunctionNode,
-    ImportNode,
-    ModuleNode,
-    TestNode
-  }
+  alias CodeQA.AST.Nodes.AttributeNode
+  alias CodeQA.AST.Nodes.CodeNode
+  alias CodeQA.AST.Nodes.DocNode
+  alias CodeQA.AST.Nodes.FunctionNode
+  alias CodeQA.AST.Nodes.ImportNode
+  alias CodeQA.AST.Nodes.ModuleNode
+  alias CodeQA.AST.Nodes.TestNode
 
   alias CodeQA.Languages.Code.Native.Go
   alias CodeQA.Languages.Code.Native.Rust
@@ -39,13 +37,12 @@ defmodule CodeQA.AST.NodeClassifierTest do
     NodeClassifier.classify(block, lang_mod)
   end
 
-  defp node_with_tokens(tokens) do
-    %Node{
-      tokens: tokens,
+  defp node_with_tokens(tokens),
+    do: %Node{
+      children: [],
       line_count: 1,
-      children: []
+      tokens: tokens
     }
-  end
 
   describe "classify/1 — function detection" do
     test "def → FunctionNode" do
@@ -153,8 +150,8 @@ defmodule CodeQA.AST.NodeClassifierTest do
     end
 
     test "direct <DOC> token in node → DocNode" do
-      doc_token = %Token{kind: "<DOC>", content: ~s("""), line: 1, col: 0}
-      nl = %Token{kind: "<NL>", content: "\n", line: 2, col: 0}
+      doc_token = %Token{col: 0, content: ~s("""), kind: "<DOC>", line: 1}
+      nl = %Token{col: 0, content: "\n", kind: "<NL>", line: 2}
       node = node_with_tokens([doc_token, nl])
       assert %DocNode{} = NodeClassifier.classify(node, Unknown)
     end
@@ -204,7 +201,7 @@ defmodule CodeQA.AST.NodeClassifierTest do
     end
 
     test "empty-like node with only whitespace tokens → CodeNode" do
-      nl = %Token{kind: "<NL>", content: "\n", line: 1, col: 0}
+      nl = %Token{col: 0, content: "\n", kind: "<NL>", line: 1}
       node = node_with_tokens([nl])
 
       assert %CodeNode{} =
@@ -304,9 +301,9 @@ defmodule CodeQA.AST.NodeClassifierTest do
     sub_first = List.first(sub_block.tokens)
 
     parent.tokens
-    |> Enum.take_while(fn t -> t != sub_first end)
+    |> Enum.take_while(&(&1 != sub_first))
     |> Enum.reverse()
-    |> Enum.take_while(fn t -> t.kind != :"<NL>" end)
+    |> Enum.take_while(&(&1.kind != :"<NL>"))
     |> Enum.reverse()
   end
 end

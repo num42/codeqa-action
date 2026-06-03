@@ -5,7 +5,7 @@ defmodule CodeQA.MixProject do
     [
       app: :codeqa,
       version: "0.1.0",
-      elixir: "~> 1.16",
+      elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       escript: [main_module: CodeQA.CLI],
@@ -54,7 +54,8 @@ defmodule CodeQA.MixProject do
       {:yaml_elixir, "~> 2.11"},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:credo, "~> 1.7", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.4", only: :dev, runtime: false}
+      {:dialyxir, "~> 1.4", only: :dev, runtime: false},
+      {:number42_refactors, github: "num42/num42_refactors", only: [:dev], runtime: false}
     ]
   end
 end

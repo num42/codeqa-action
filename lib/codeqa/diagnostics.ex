@@ -1,4 +1,6 @@
 defmodule CodeQA.Diagnostics do
+  alias CodeQA.Language
+
   @moduledoc """
   Diagnoses a codebase by identifying likely code quality issues using
   cosine similarity against combined metric behavior profiles.
@@ -9,6 +11,7 @@ defmodule CodeQA.Diagnostics do
   alias CodeQA.Engine.Analyzer
   alias CodeQA.Engine.Collector
   alias CodeQA.HealthReport.Grader
+  import CodeQA.Shared, only: [project_languages_shared: 1]
 
   @doc """
   Runs diagnostics on the given path and returns results as a string.
@@ -55,7 +58,7 @@ defmodule CodeQA.Diagnostics do
 
     case format do
       :json ->
-        Jason.encode!(%{issues: issues, categories: categories}, pretty: true)
+        Jason.encode!(%{categories: categories, issues: issues}, pretty: true)
 
       _ ->
         "## Diagnose: aggregate\n\n" <>
@@ -72,7 +75,7 @@ defmodule CodeQA.Diagnostics do
       Map.new(files, fn {file_path, file_data} ->
         metrics = Map.get(file_data, "metrics", %{})
         file_agg = FileScorer.file_to_aggregate(metrics)
-        language = CodeQA.Language.detect(file_path).name()
+        language = Language.detect(file_path).name()
         diagnoses = SampleRunner.diagnose_aggregate(file_agg, top: top, language: language)
         {file_path, diagnoses}
       end)
@@ -80,15 +83,17 @@ defmodule CodeQA.Diagnostics do
     case format do
       :json ->
         files_json =
-          Enum.map(file_diagnoses, fn {file_path, diagnoses} ->
-            %{file: file_path, behaviors: Enum.map(diagnoses, &diagnosis_to_map/1)}
+          file_diagnoses
+          |> Enum.map(fn {file_path, diagnoses} ->
+            %{behaviors: diagnoses |> Enum.map(&diagnosis_to_map/1), file: file_path}
           end)
 
         Jason.encode!(%{files: files_json}, pretty: true)
 
       _ ->
         file_rows =
-          Enum.flat_map(file_diagnoses, fn {file_path, diagnoses} ->
+          file_diagnoses
+          |> Enum.flat_map(fn {file_path, diagnoses} ->
             diagnoses_to_rows(file_path, diagnoses)
           end)
 
@@ -96,54 +101,47 @@ defmodule CodeQA.Diagnostics do
     end
   end
 
-  defp diagnosis_to_map(d) do
-    %{
+  defp diagnosis_to_map(d),
+    do: %{
       behavior: "#{d.category}.#{d.behavior}",
       cosine: d.cosine,
       score: Grader.score_cosine(d.cosine)
     }
-  end
 
   defp diagnoses_to_rows(file_path, diagnoses) do
-    Enum.map(diagnoses, fn %{category: cat, behavior: beh, cosine: cosine, score: score} ->
+    diagnoses
+    |> Enum.map(fn %{behavior: beh, category: cat, cosine: cosine, score: score} ->
       {file_path, "#{cat}.#{beh}", cosine, score}
     end)
   end
 
-  defp project_languages(files_map) do
-    files_map
-    |> Map.keys()
-    |> Enum.map(&CodeQA.Language.detect(&1).name())
-    |> Enum.reject(&(&1 == "unknown"))
-    |> Enum.uniq()
-  end
+  defp project_languages(files_map), do: project_languages_shared(files_map)
 
   defp issues_table(issues) do
     rows =
-      Enum.map(issues, fn %{category: cat, behavior: beh, cosine: cosine, score: score} ->
+      issues
+      |> Enum.map(fn %{behavior: beh, category: cat, cosine: cosine, score: score} ->
         cosine_str = :erlang.float_to_binary(cosine / 1.0, decimals: 2)
         score_str = :erlang.float_to_binary(score / 1.0, decimals: 2)
         "| #{cat}.#{beh} | #{cosine_str} | #{score_str} |"
       end)
 
-    Enum.join(
-      ["| Behavior | Cosine | Score |", "|----------|--------|-------|"] ++ rows ++ [""],
-      "\n"
-    )
+    (["| Behavior | Cosine | Score |", "|----------|--------|-------|"] ++ rows ++ [""])
+    |> Enum.join("\n")
   end
 
   defp categories_text(categories) do
-    Enum.map_join(categories, "\n", fn %{name: name, behaviors: behaviors} ->
+    categories
+    |> Enum.map_join("\n", fn %{behaviors: behaviors, name: name} ->
       rows =
-        Enum.map(behaviors, fn %{behavior: beh, score: score} ->
+        behaviors
+        |> Enum.map(fn %{behavior: beh, score: score} ->
           score_str = :erlang.float_to_binary(score / 1.0, decimals: 2)
           "| #{beh} | #{score_str} |"
         end)
 
-      Enum.join(
-        ["### #{name}", "| Behavior | Score |", "|----------|-------|"] ++ rows ++ [""],
-        "\n"
-      )
+      (["### #{name}", "| Behavior | Score |", "|----------|-------|"] ++ rows ++ [""])
+      |> Enum.join("\n")
     end)
   end
 
@@ -162,10 +160,8 @@ defmodule CodeQA.Diagnostics do
         "| #{file_path} | #{behavior_key} | #{cosine_str} | #{cosine_score} |"
       end)
 
-    Enum.join(
-      ["| File | Behavior | Cosine | Score |", "|------|----------|--------|-------|"] ++
-        data_rows,
-      "\n"
-    )
+    (["| File | Behavior | Cosine | Score |", "|------|----------|--------|-------|"] ++
+       data_rows)
+    |> Enum.join("\n")
   end
 end

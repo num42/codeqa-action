@@ -21,21 +21,21 @@ defmodule CodeQA.AST.Enrichment.CompoundNode do
   alias CodeQA.AST.Enrichment.Node
   alias CodeQA.AST.Nodes.AttributeNode
 
-  defstruct docs: [],
-            typespecs: [],
-            code: [],
-            start_line: nil,
-            start_col: nil,
+  defstruct code: [],
+            docs: [],
+            end_col: nil,
             end_line: nil,
-            end_col: nil
+            start_col: nil,
+            start_line: nil,
+            typespecs: []
 
   @type t :: %__MODULE__{
-          docs: [Node.t()],
-          typespecs: [AttributeNode.t()],
           code: [Node.t()],
-          start_line: non_neg_integer() | nil,
-          start_col: non_neg_integer() | nil,
+          docs: [Node.t()],
+          end_col: non_neg_integer() | nil,
           end_line: non_neg_integer() | nil,
-          end_col: non_neg_integer() | nil
+          start_col: non_neg_integer() | nil,
+          start_line: non_neg_integer() | nil,
+          typespecs: [AttributeNode.t()]
         }
 end

@@ -16,16 +16,15 @@ defmodule CodeQA.Analysis.FileContextServer do
 
   use GenServer
 
-  alias CodeQA.Engine.{FileContext, Pipeline}
+  alias CodeQA.Engine.FileContext
+  alias CodeQA.Engine.Pipeline
   alias CodeQA.Language
   alias CodeQA.Languages.Unknown
 
   # --- Public API ---
 
   @spec start_link(keyword()) :: GenServer.on_start()
-  def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, opts)
-  end
+  def start_link(opts \\ []), do: __MODULE__ |> GenServer.start_link(opts)
 
   @doc "Returns the ETS table id. Callers may read directly from it."
   @spec get_tid(pid()) :: :ets.tid()
@@ -44,13 +43,13 @@ defmodule CodeQA.Analysis.FileContextServer do
     key = {md5(content), language_name}
 
     case :ets.lookup(tid, key) do
-      [{_, ctx}] ->
-        ctx
+      [{_, context}] ->
+        context
 
       [] ->
-        ctx = Pipeline.build_file_context(content, opts)
-        :ets.insert(tid, {key, ctx})
-        ctx
+        context = Pipeline.build_file_context(content, opts)
+        :ets.insert(tid, {key, context})
+        context
     end
   end
 
@@ -63,9 +62,7 @@ defmodule CodeQA.Analysis.FileContextServer do
   end
 
   @impl true
-  def handle_call(:get_tid, _from, state) do
-    {:reply, state.tid, state}
-  end
+  def handle_call(:get_tid, _from, state), do: {:reply, state.tid, state}
 
   # --- Private helpers ---
 

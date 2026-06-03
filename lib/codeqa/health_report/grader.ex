@@ -3,6 +3,7 @@ defmodule CodeQA.HealthReport.Grader do
 
   alias CodeQA.Config
   alias CodeQA.HealthReport.Categories
+  import CodeQA.Shared, only: [humanize_category_shared: 1]
 
   @doc """
   Score a single metric value (0-100) based on thresholds and direction.
@@ -11,13 +12,11 @@ defmodule CodeQA.HealthReport.Grader do
   For `good: :high`, higher values are better (above A threshold = 100).
   """
   @spec score_metric(map(), number()) :: integer()
-  def score_metric(%{good: :high, thresholds: t}, value) do
-    score_by_direction(:high, value, t) |> clamp(0, 100)
-  end
+  def score_metric(%{good: :high, thresholds: t}, value),
+    do: score_by_direction(:high, value, t) |> clamp(0, 100)
 
-  def score_metric(%{good: _, thresholds: t}, value) do
-    score_by_direction(:low, value, t) |> clamp(0, 100)
-  end
+  def score_metric(%{good: _, thresholds: t}, value),
+    do: score_by_direction(:low, value, t) |> clamp(0, 100)
 
   @doc """
   Maps cosine similarity [-1, +1] to a score [0, 100] with linear interpolation
@@ -32,12 +31,12 @@ defmodule CodeQA.HealthReport.Grader do
   | [-1.0, -0.3)  | [0, 30)     |
   """
   @spec score_cosine(float()) :: integer()
-  def score_cosine(cosine) do
-    cosine
-    |> cosine_to_score()
-    |> clamp(0, 100)
-    |> round()
-  end
+  def score_cosine(cosine),
+    do:
+      cosine
+      |> cosine_to_score()
+      |> clamp(0, 100)
+      |> round()
 
   defp cosine_to_score(c) when c >= 0.5, do: interpolate_between(c, 0.5, 90, 1.0, 100)
   defp cosine_to_score(c) when c >= 0.2, do: interpolate_between(c, 0.2, 70, 0.5, 90)
@@ -89,14 +88,13 @@ defmodule CodeQA.HealthReport.Grader do
     round(Kernel.max(0, score_at_d - deviation * score_at_d))
   end
 
-  defp clamp(val, min_val, max_val) do
-    val |> Kernel.max(min_val) |> Kernel.min(max_val)
-  end
+  defp clamp(val, min_val, max_val), do: val |> Kernel.max(min_val) |> Kernel.min(max_val)
 
   @doc "Convert a numeric score (0-100) to a letter grade using the given scale."
   @spec grade_letter(number(), [{number(), String.t()}]) :: String.t()
   def grade_letter(score, scale \\ Categories.default_grade_scale()) do
-    Enum.find_value(scale, "F", fn {min, letter} ->
+    scale
+    |> Enum.find_value("F", fn {min, letter} ->
       if score >= min, do: letter
     end)
   end
@@ -119,11 +117,11 @@ defmodule CodeQA.HealthReport.Grader do
     score = weighted_category_score(scored)
 
     %{
-      key: category.key,
-      name: category.name,
-      score: score,
       grade: grade_letter(score, scale),
-      metric_scores: scored
+      key: category.key,
+      metric_scores: scored,
+      name: category.name,
+      score: score
     }
   end
 
@@ -132,12 +130,12 @@ defmodule CodeQA.HealthReport.Grader do
 
     if value do
       %{
-        name: metric_def.name,
-        source: metric_def.source,
-        weight: metric_def.weight,
         good: metric_def.good,
+        name: metric_def.name,
+        score: score_metric(metric_def, value),
+        source: metric_def.source,
         value: value,
-        score: score_metric(metric_def, value)
+        weight: metric_def.weight
       }
     end
   end
@@ -145,10 +143,10 @@ defmodule CodeQA.HealthReport.Grader do
   defp weighted_category_score([]), do: 0
 
   defp weighted_category_score(scored) do
-    total_weight = Enum.reduce(scored, 0.0, fn s, acc -> acc + s.weight end)
+    total_weight = scored |> Enum.reduce(0.0, fn s, acc -> acc + s.weight end)
 
     if total_weight > 0 do
-      weighted = Enum.reduce(scored, 0.0, fn s, acc -> acc + s.score * s.weight end)
+      weighted = scored |> Enum.reduce(0.0, fn s, acc -> acc + s.score * s.weight end)
       round(weighted / total_weight)
     else
       0
@@ -164,9 +162,8 @@ defmodule CodeQA.HealthReport.Grader do
         categories,
         file_metrics,
         scale \\ Categories.default_grade_scale()
-      ) do
-    Enum.map(categories, &grade_category(&1, file_metrics, scale))
-  end
+      ),
+      do: categories |> Enum.map(&grade_category(&1, file_metrics, scale))
 
   @doc """
   Grade codebase aggregate metrics. Uses mean_ values from aggregate.
@@ -188,7 +185,7 @@ defmodule CodeQA.HealthReport.Grader do
         {source, values}
       end)
 
-    Enum.map(categories, &grade_category(&1, file_like, scale))
+    categories |> Enum.map(&grade_category(&1, file_like, scale))
   end
 
   @doc """
@@ -209,19 +206,20 @@ defmodule CodeQA.HealthReport.Grader do
         category_grades,
         scale \\ Categories.default_grade_scale(),
         impact_map \\ %{}
-      ) do
-    if category_grades == [] do
-      {0, "F"}
-    else
-      {weighted_sum, total_impact} =
-        Enum.reduce(category_grades, {0, 0}, fn g, {ws, ti} ->
-          impact = Map.get(impact_map, to_string(g.key), 1)
-          {ws + g.score * impact, ti + impact}
-        end)
+      )
 
-      avg = round(weighted_sum / total_impact)
-      {avg, grade_letter(avg, scale)}
-    end
+  def overall_score([], _scale, _impact_map), do: {0, "F"}
+
+  def overall_score(category_grades, scale, impact_map) do
+    {weighted_sum, total_impact} =
+      category_grades
+      |> Enum.reduce({0, 0}, fn g, {ws, ti} ->
+        impact = Map.get(impact_map, to_string(g.key), 1)
+        {ws + g.score * impact, ti + impact}
+      end)
+
+    score = round(weighted_sum / total_impact)
+    {score, grade_letter(score, scale)}
   end
 
   @doc """
@@ -258,11 +256,11 @@ defmodule CodeQA.HealthReport.Grader do
     end)
   end
 
-  defp score_behavior_entries(behaviors, threshold, worst_files, scale, category) do
-    behaviors
-    |> Enum.reject(fn b -> abs(b.cosine) < threshold end)
-    |> Enum.map(&score_behavior_entry(&1, worst_files, scale, category))
-  end
+  defp score_behavior_entries(behaviors, threshold, worst_files, scale, category),
+    do:
+      behaviors
+      |> Enum.reject(&(abs(&1.cosine) < threshold))
+      |> Enum.map(&score_behavior_entry(&1, worst_files, scale, category))
 
   defp score_behavior_entry(b, worst_files, scale, category) do
     cosine_score = score_cosine(b.cosine)
@@ -270,34 +268,28 @@ defmodule CodeQA.HealthReport.Grader do
     %{
       behavior: b.behavior,
       cosine: b.cosine,
-      score: cosine_score,
       grade: grade_letter(cosine_score, scale),
+      score: cosine_score,
       worst_offenders: Map.get(worst_files, "#{category}.#{b.behavior}", [])
     }
   end
 
   defp average_behavior_score([]), do: 50
 
-  defp average_behavior_score(entries) do
-    round(Enum.sum(Enum.map(entries, & &1.score)) / length(entries))
-  end
+  defp average_behavior_score(entries),
+    do: (Enum.sum(entries |> Enum.map(& &1.score)) / length(entries)) |> round()
 
-  defp build_cosine_category(category, category_score, behavior_entries, scale) do
-    %{
-      type: :cosine,
+  defp build_cosine_category(category, category_score, behavior_entries, scale),
+    do: %{
+      behaviors: behavior_entries,
+      grade: grade_letter(category_score, scale),
       key: category,
       name: humanize_category(category),
       score: category_score,
-      grade: grade_letter(category_score, scale),
-      behaviors: behavior_entries
+      type: :cosine
     }
-  end
 
-  defp humanize_category(slug) do
-    slug
-    |> String.split("_")
-    |> Enum.map_join(" ", &String.capitalize/1)
-  end
+  defp humanize_category(slug), do: humanize_category_shared(slug)
 
   @doc """
   Find worst offender files for a category. Returns top N files sorted by worst score.
@@ -319,16 +311,16 @@ defmodule CodeQA.HealthReport.Grader do
       graded = grade_category(category, metrics, scale)
 
       %{
+        bytes: file_data["bytes"],
+        grade: graded.grade,
+        lines: file_data["lines"],
+        metric_scores: graded.metric_scores,
         path: path,
         score: graded.score,
-        grade: graded.grade,
-        metric_scores: graded.metric_scores,
-        lines: file_data["lines"],
-        bytes: file_data["bytes"],
         top_nodes: top_3_nodes(Map.get(file_data, "nodes"))
       }
     end)
-    |> Enum.filter(fn f -> f.metric_scores != [] end)
+    |> Enum.filter(&(&1.metric_scores != []))
     |> Enum.sort_by(& &1.score, :asc)
     |> Enum.take(top_n)
   end
@@ -351,7 +343,7 @@ defmodule CodeQA.HealthReport.Grader do
 
   defp node_impact_score(%{"refactoring_potentials" => potentials})
        when is_list(potentials) and potentials != [] do
-    Enum.sum(Enum.map(potentials, & &1["cosine_delta"]))
+    potentials |> Enum.map(& &1["cosine_delta"]) |> Enum.sum()
   end
 
   defp node_impact_score(_), do: 0.0

@@ -13,8 +13,8 @@ defmodule CodeQA.Metrics.File.PunctuationDensity do
   def name, do: "punctuation_density"
 
   @impl true
-  def keys do
-    [
+  def keys,
+    do: [
       "question_mark_density",
       "exclamation_density",
       "dot_count",
@@ -25,7 +25,6 @@ defmodule CodeQA.Metrics.File.PunctuationDensity do
       "arrow_density",
       "colon_suffix_density"
     ]
-  end
 
   # identifier-like token (starts with letter/underscore) ending with non-alphanumeric non-whitespace
   @id_nonalpha_suffix ~r/[a-zA-Z_]\w*[^\w\s]/
@@ -86,11 +85,7 @@ defmodule CodeQA.Metrics.File.PunctuationDensity do
     end
   end
 
-  defp count_char(content, char) do
-    content |> String.graphemes() |> Enum.count(&(&1 == char))
-  end
+  defp count_char(content, char), do: content |> String.graphemes() |> Enum.count(&(&1 == char))
 
-  defp count_matches(content, regex) do
-    regex |> Regex.scan(content) |> length()
-  end
+  defp count_matches(content, regex), do: regex |> Regex.scan(content) |> length()
 end

@@ -21,7 +21,7 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
   """
   @spec normalize_structural(String.t()) :: [Token.t()]
   def normalize_structural(code) do
-    code = String.replace(code, ~r/[^\x00-\x7F]/, " ")
+    code = code |> String.replace(~r/[^\x00-\x7F]/, " ")
     lines = String.split(code, "\n")
     last_idx = length(lines) - 1
 
@@ -44,7 +44,7 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
           t -> t.col + String.length(t.content)
         end
 
-      tokens ++ [%NewlineToken{content: "\n", line: line_num, col: nl_col}]
+      tokens ++ [%NewlineToken{col: nl_col, content: "\n", line: line_num}]
     else
       tokens
     end
@@ -71,7 +71,7 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
 
     ws_tokens =
       for i <- 1..indent_units//1 do
-        %WhitespaceToken{content: "  ", line: line_num, col: (i - 1) * 2}
+        %WhitespaceToken{col: (i - 1) * 2, content: "  ", line: line_num}
       end
 
     content = String.slice(line, indent_col_width..-1//1)
@@ -139,17 +139,13 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
   # so callers get O(1) access to the final token without List.last/1.
   defp scan_content(text, line_num, col_offset) do
     {reversed, last} = do_scan(text, line_num, col_offset, [], nil)
-    {Enum.reverse(reversed), last}
+    {reversed |> Enum.reverse(), last}
   end
 
   defp do_scan("", _line, _col, acc, last), do: {acc, last}
 
-  defp do_scan(<<first, _::binary>> = text, line, col, acc, last) do
-    case next_token(first, text, line, col) do
-      {:skip, rest, advance} -> do_scan(rest, line, col + advance, acc, last)
-      {token, rest, advance} -> do_scan(rest, line, col + advance, [token | acc], token)
-    end
-  end
+  defp do_scan(<<first, _::binary>> = text, line, col, acc, last),
+    do: next_token(first, text, line, col) |> scan_next(acc, col, last, line)
 
   # next_token/4: dispatches on the first byte to select only candidate rules,
   # avoiding regex attempts for rules whose first-char pattern can't possibly match.
@@ -157,7 +153,8 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
     rules = dispatch_rules(first)
 
     result =
-      Enum.find_value(rules, fn {type, regex} ->
+      rules
+      |> Enum.find_value(fn {type, regex} ->
         case Regex.run(regex, text) do
           [m | _] -> {type, m}
           nil -> nil
@@ -171,17 +168,17 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
 
       {:literal, m} ->
         len = String.length(m)
-        {%Token{kind: m, content: m, line: line, col: col}, String.slice(text, len..-1//1), len}
+        {%Token{col: col, content: m, kind: m, line: line}, String.slice(text, len..-1//1), len}
 
       {value, m} ->
         len = String.length(m)
-        token = postprocess(value, %Token{kind: value, content: m, line: line, col: col})
+        token = postprocess(value, %Token{col: col, content: m, kind: value, line: line})
         {token, String.slice(text, len..-1//1), len}
 
       nil ->
         # No rule matched — emit the first character as a literal single-char token.
         char = String.first(text)
-        {%Token{kind: char, content: char, line: line, col: col}, String.slice(text, 1..-1//1), 1}
+        {%Token{col: col, content: char, kind: char, line: line}, String.slice(text, 1..-1//1), 1}
     end
   end
 
@@ -204,30 +201,30 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
 
   defp postprocess("<TRIP_QUOTES>", %Token{content: ~s(""")} = token),
     do: %StringToken{
-      kind: StringToken.doc_kind(),
-      content: token.content,
-      line: token.line,
       col: token.col,
+      content: token.content,
+      kind: StringToken.doc_kind(),
+      line: token.line,
       multiline: true,
       quotes: :double
     }
 
   defp postprocess("<TRIP_QUOTES>", token),
     do: %StringToken{
-      kind: StringToken.doc_kind(),
-      content: token.content,
-      line: token.line,
       col: token.col,
+      content: token.content,
+      kind: StringToken.doc_kind(),
+      line: token.line,
       multiline: true,
       quotes: :single
     }
 
   defp postprocess("<BACKTICK_STR>", token),
     do: %StringToken{
-      kind: StringToken.kind(),
-      content: token.content,
-      line: token.line,
       col: token.col,
+      content: token.content,
+      kind: StringToken.kind(),
+      line: token.line,
       quotes: :backtick
     }
 
@@ -235,10 +232,10 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
     quotes = if String.starts_with?(token.content, "\""), do: :double, else: :single
 
     %StringToken{
-      kind: StringToken.kind(),
-      content: token.content,
-      line: token.line,
       col: token.col,
+      content: token.content,
+      kind: StringToken.kind(),
+      line: token.line,
       quotes: quotes
     }
   end
@@ -253,11 +250,17 @@ defmodule CodeQA.AST.Lexing.TokenNormalizer do
       |> Enum.map(fn [expr] -> String.trim(expr) end)
 
     %StringToken{
-      content: String.replace(token.content, strip_regex, ""),
-      line: token.line,
       col: token.col,
+      content: String.replace(token.content, strip_regex, ""),
       interpolations: interpolations,
+      line: token.line,
       quotes: quotes
     }
   end
+
+  defp scan_next({:skip, rest, advance}, acc, col, last, line),
+    do: rest |> do_scan(line, col + advance, acc, last)
+
+  defp scan_next({token, rest, advance}, acc, col, _last, line),
+    do: rest |> do_scan(line, col + advance, [token | acc], token)
 end

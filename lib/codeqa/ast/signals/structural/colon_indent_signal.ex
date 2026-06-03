@@ -22,15 +22,14 @@ defmodule CodeQA.AST.Signals.Structural.ColonIndentSignal do
     def source(_), do: CodeQA.AST.Signals.Structural.ColonIndentSignal
     def group(_), do: :enclosure
 
-    def init(_, lang_mod) do
-      %{
+    def init(_, lang_mod),
+      do: %{
+        ci: 0,
         enabled: lang_mod.uses_colon_indent?(),
         idx: 0,
-        ci: 0,
         last_colon_indent: nil,
         stack: []
       }
-    end
 
     def emit(_, _, %{enabled: false} = state),
       do: {MapSet.new(), %{state | idx: state.idx + 1}}
@@ -40,13 +39,13 @@ defmodule CodeQA.AST.Signals.Structural.ColonIndentSignal do
       {emissions, %{state | idx: idx + 1, ci: 0, stack: []}}
     end
 
-    def emit(_, {_, %WhitespaceToken{}, _}, %{idx: idx, ci: ci} = state),
+    def emit(_, {_, %WhitespaceToken{}, _}, %{ci: ci, idx: idx} = state),
       do: {MapSet.new(), %{state | idx: idx + 1, ci: ci + 1}}
 
-    def emit(_, {_, %{kind: ":"}, _}, %{idx: idx, ci: ci} = state),
+    def emit(_, {_, %{kind: ":"}, _}, %{ci: ci, idx: idx} = state),
       do: {MapSet.new(), %{state | idx: idx + 1, last_colon_indent: ci}}
 
-    def emit(_, {_, _, _}, %{idx: idx, ci: ci} = state) do
+    def emit(_, {_, _, _}, %{ci: ci, idx: idx} = state) do
       {dedent_emissions, remaining} = close_dedented(state.stack, ci)
       new_stack = maybe_open_block(remaining, state.last_colon_indent, ci, idx)
 
@@ -55,7 +54,7 @@ defmodule CodeQA.AST.Signals.Structural.ColonIndentSignal do
     end
 
     defp close_dedented(stack, ci) do
-      {to_close, keep} = Enum.split_while(stack, fn e -> ci <= e.colon_indent end)
+      {to_close, keep} = stack |> Enum.split_while(fn e -> ci <= e.colon_indent end)
       {build_emissions(to_close), keep}
     end
 
@@ -63,13 +62,14 @@ defmodule CodeQA.AST.Signals.Structural.ColonIndentSignal do
 
     defp maybe_open_block(stack, colon_indent, ci, idx)
          when colon_indent != nil and ci > colon_indent,
-         do: [%{colon_indent: colon_indent, sub_start: idx, last_content_idx: idx} | stack]
+         do: [%{colon_indent: colon_indent, last_content_idx: idx, sub_start: idx} | stack]
 
     defp maybe_open_block(stack, _, _, _), do: stack
 
     defp build_emissions(entries) do
-      Enum.reduce(entries, MapSet.new(), fn
-        %{sub_start: s, last_content_idx: e}, acc when e != nil ->
+      entries
+      |> Enum.reduce(MapSet.new(), fn
+        %{last_content_idx: e, sub_start: s}, acc when e != nil ->
           MapSet.put(acc, {:colon_indent_enclosure, {s, e}})
 
         _entry, acc ->

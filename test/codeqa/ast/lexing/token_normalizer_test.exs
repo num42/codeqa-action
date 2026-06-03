@@ -4,7 +4,7 @@ defmodule CodeQA.AST.TokenNormalizerTest do
   alias CodeQA.AST.Lexing.Token
   alias CodeQA.AST.Lexing.TokenNormalizer
 
-  defp kinds(tokens), do: Enum.map(tokens, & &1.kind)
+  defp kinds(tokens), do: tokens |> Enum.map(& &1.kind)
 
   describe "normalize_structural/1" do
     test "emits <NL> between lines" do
@@ -21,7 +21,7 @@ defmodule CodeQA.AST.TokenNormalizerTest do
         |> Enum.filter(fn [h | _] -> h.kind == "<NL>" end)
         |> Enum.map(&length/1)
 
-      assert Enum.any?(nl_runs, &(&1 >= 2))
+      assert nl_runs |> Enum.any?(&(&1 >= 2))
     end
 
     test "emits one <WS> token per 2 leading spaces" do
@@ -62,7 +62,7 @@ defmodule CodeQA.AST.TokenNormalizerTest do
 
     test "tokens carry line numbers" do
       result = TokenNormalizer.normalize_structural("foo\nbar")
-      lines = Enum.map(result, & &1.line)
+      lines = result |> Enum.map(& &1.line)
       assert 1 in lines
       assert 2 in lines
     end
@@ -82,13 +82,13 @@ defmodule CodeQA.AST.TokenNormalizerTest do
 
     test "keyword content is preserved (not normalized away)" do
       result = TokenNormalizer.normalize_structural("def foo")
-      contents = Enum.map(result, & &1.content)
+      contents = result |> Enum.map(& &1.content)
       assert "def" in contents
     end
 
     test "string token content is the original literal" do
       result = TokenNormalizer.normalize_structural(~s("hello"))
-      tok = Enum.find(result, &(&1.kind == "<STR>"))
+      tok = result |> Enum.find(&(&1.kind == "<STR>"))
       assert tok.content == ~s("hello")
     end
 
@@ -193,7 +193,7 @@ defmodule CodeQA.AST.TokenNormalizerTest do
 
     test "multi-char operator value equals content (no normalization)" do
       result = TokenNormalizer.normalize_structural("x >= y")
-      tok = Enum.find(result, &(&1.kind == ">="))
+      tok = result |> Enum.find(&(&1.kind == ">="))
       assert tok.content == ">="
     end
   end
@@ -300,28 +300,28 @@ defmodule CodeQA.AST.TokenNormalizerTest do
     test "triple double-quotes emits a StringToken with kind <DOC>" do
       tokens = TokenNormalizer.normalize_structural(~s("""))
 
-      assert [%StringToken{kind: "<DOC>", content: ~s("""), multiline: true, quotes: :double}] =
+      assert [%StringToken{content: ~s("""), kind: "<DOC>", multiline: true, quotes: :double}] =
                tokens
     end
 
     test "triple single-quotes emits a StringToken with kind <DOC>" do
       tokens = TokenNormalizer.normalize_structural("'''")
 
-      assert [%StringToken{kind: "<DOC>", content: "'''", multiline: true, quotes: :single}] =
+      assert [%StringToken{content: "'''", kind: "<DOC>", multiline: true, quotes: :single}] =
                tokens
     end
 
     test "triple-quote is not consumed as empty string + bare quote" do
       tokens = TokenNormalizer.normalize_structural(~s("""))
-      refute Enum.any?(tokens, &(&1.kind == "<STR>"))
+      refute tokens |> Enum.any?(&(&1.kind == "<STR>"))
     end
 
     test "content between triple-quotes is tokenized normally" do
       code = ~s("""\nhello world\n""")
       tokens = TokenNormalizer.normalize_structural(code)
-      trip_count = Enum.count(tokens, &(&1.kind == "<DOC>"))
+      trip_count = tokens |> Enum.count(&(&1.kind == "<DOC>"))
       assert trip_count == 2
-      assert Enum.any?(tokens, &(&1.kind == "<ID>" and &1.content == "hello"))
+      assert tokens |> Enum.any?(&(&1.kind == "<ID>" and &1.content == "hello"))
     end
 
     test "regular double-quoted string still works" do

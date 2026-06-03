@@ -1,26 +1,26 @@
 defmodule CodeQA.HealthReport.Config do
+  alias CodeQA.Config
   @moduledoc "Loads and merges health report configuration from YAML."
 
   alias CodeQA.HealthReport.Categories
 
   @spec load(String.t() | nil) :: %{
-          categories: [map()],
-          grade_scale: [{number(), String.t()}],
-          impact_map: %{String.t() => pos_integer()},
-          combined_top: pos_integer(),
+          block_max_lines: pos_integer(),
           block_min_lines: pos_integer(),
-          block_max_lines: pos_integer()
+          categories: [map()],
+          combined_top: pos_integer(),
+          grade_scale: [{number(), String.t()}],
+          impact_map: %{String.t() => pos_integer()}
         }
-  def load(nil) do
-    %{
-      categories: Categories.defaults(),
-      grade_scale: Categories.default_grade_scale(),
-      impact_map: CodeQA.Config.impact_map(),
-      combined_top: CodeQA.Config.combined_top(),
+  def load(nil),
+    do: %{
+      block_max_lines: 20,
       block_min_lines: 3,
-      block_max_lines: 20
+      categories: Categories.defaults(),
+      combined_top: Config.combined_top(),
+      grade_scale: Categories.default_grade_scale(),
+      impact_map: Config.impact_map()
     }
-  end
 
   def load(path) do
     yaml = YamlElixir.read_from_file!(path)
@@ -51,20 +51,25 @@ defmodule CodeQA.HealthReport.Config do
     block_max_lines = Map.get(yaml, "block_max_lines", 20)
 
     %{
-      categories: categories,
-      grade_scale: grade_scale,
-      impact_map: impact_map,
-      combined_top: combined_top,
+      block_max_lines: block_max_lines,
       block_min_lines: block_min_lines,
-      block_max_lines: block_max_lines
+      categories: categories,
+      combined_top: combined_top,
+      grade_scale: grade_scale,
+      impact_map: impact_map
     }
   end
 
-  defp parse_impact(nil), do: CodeQA.Config.impact_map()
+  defp parse_impact(nil), do: Config.impact_map()
 
   defp parse_impact(overrides) when is_map(overrides) do
-    string_overrides = Map.new(overrides, fn {k, v} -> {to_string(k), v} end)
-    Map.merge(CodeQA.Config.impact_map(), string_overrides)
+    string_overrides =
+      for {k, v} <- overrides do
+        {to_string(k), v}
+      end
+      |> Map.new()
+
+    Map.merge(Config.impact_map(), string_overrides)
   end
 
   defp parse_grade_scale(nil), do: Categories.default_grade_scale()
@@ -77,15 +82,15 @@ defmodule CodeQA.HealthReport.Config do
     |> Enum.sort_by(&elem(&1, 0), :desc)
   end
 
-  defp merge_category(key, nil, override) do
-    # New category from YAML only
-    %{
-      key: String.to_atom(key),
-      name: Map.get(override, "name", key),
-      metrics: Enum.map(Map.get(override, "metrics", []), &parse_metric/1)
-    }
-    |> maybe_put_top(override)
-  end
+  # New category from YAML only
+  defp merge_category(key, nil, override),
+    do:
+      %{
+        key: String.to_atom(key),
+        metrics: Map.get(override, "metrics", []) |> Enum.map(&parse_metric/1),
+        name: Map.get(override, "name", key)
+      }
+      |> maybe_put_top(override)
 
   defp merge_category(_key, default, nil), do: default
 
@@ -106,7 +111,8 @@ defmodule CodeQA.HealthReport.Config do
     default_names = MapSet.new(defaults, & &1.name)
 
     merged_defaults =
-      Enum.map(defaults, fn default_metric ->
+      defaults
+      |> Enum.map(fn default_metric ->
         case Map.get(overrides_by_name, default_metric.name) do
           nil -> default_metric
           override -> merge_metric(default_metric, override)
@@ -116,7 +122,7 @@ defmodule CodeQA.HealthReport.Config do
     # Append new metrics from YAML that aren't in defaults
     new_metrics =
       overrides
-      |> Enum.reject(fn o -> MapSet.member?(default_names, o["name"]) end)
+      |> Enum.reject(&MapSet.member?(default_names, &1["name"]))
       |> Enum.map(&parse_metric/1)
 
     merged_defaults ++ new_metrics
@@ -135,23 +141,22 @@ defmodule CodeQA.HealthReport.Config do
         else: default.good
 
     %{
+      good: good,
       name: default.name,
       source: Map.get(override, "source", default.source),
-      weight: Map.get(override, "weight", default.weight),
-      good: good,
-      thresholds: thresholds
+      thresholds: thresholds,
+      weight: Map.get(override, "weight", default.weight)
     }
   end
 
-  defp parse_metric(m) do
-    %{
+  defp parse_metric(m),
+    do: %{
+      good: parse_good(m["good"]),
       name: m["name"],
       source: m["source"],
-      weight: m["weight"],
-      good: parse_good(m["good"]),
-      thresholds: atomize_thresholds(Map.get(m, "thresholds", %{}))
+      thresholds: atomize_thresholds(Map.get(m, "thresholds", %{})),
+      weight: m["weight"]
     }
-  end
 
   defp parse_good(nil), do: :low
   defp parse_good("high"), do: :high

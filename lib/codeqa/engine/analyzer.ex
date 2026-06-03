@@ -1,4 +1,5 @@
 defmodule CodeQA.Engine.Analyzer do
+  alias CodeQA.CombinedMetrics.Scorer
   @moduledoc "Orchestrates metric computation across files."
 
   alias CodeQA.Analysis.RunSupervisor
@@ -39,14 +40,14 @@ defmodule CodeQA.Engine.Analyzer do
 
   @spec analyze_file(String.t(), String.t()) :: map()
   def analyze_file(_path, content) do
-    ctx = Pipeline.build_file_context(content)
-    Registry.run_file_metrics(@registry, ctx, [])
+    context = Pipeline.build_file_context(content)
+    Registry.run_file_metrics(@registry, context, [])
   end
 
   @spec analyze_file_for_loo(String.t(), String.t()) :: map()
   def analyze_file_for_loo(_path, content) do
-    ctx = Pipeline.build_file_context(content, skip_structural: true)
-    Registry.run_file_metrics(@registry, ctx, [])
+    context = Pipeline.build_file_context(content, skip_structural: true)
+    Registry.run_file_metrics(@registry, context, [])
   end
 
   @doc """
@@ -58,38 +59,44 @@ defmodule CodeQA.Engine.Analyzer do
   """
   @spec analyze_file_for_loo_partial(String.t(), String.t(), map(), String.t()) :: map()
   def analyze_file_for_loo_partial(_path, content, baseline_metrics, block_content \\ "") do
-    referenced = CodeQA.CombinedMetrics.Scorer.referenced_file_metric_names()
+    referenced = Scorer.referenced_file_metric_names()
 
     {ctx_us, ctx} =
       :timer.tc(fn -> Pipeline.build_file_context(content, skip_structural: true) end)
 
     {result, breakdown} =
-      Enum.reduce(baseline_metrics, {[], %{ctx: ctx_us}}, fn {name, baseline_value},
-                                                             {acc, breakdown} ->
-        if MapSet.member?(referenced, name) do
-          mod = registered_module_for(name)
-
-          {us, value} =
-            if function_exported?(mod, :analyze_loo, 2) do
-              :timer.tc(fn -> mod.analyze_loo(baseline_value, block_content) end)
-            else
-              :timer.tc(fn -> mod.analyze(ctx) end)
-            end
-
-          {[{name, value} | acc], Map.put(breakdown, name, us)}
-        else
-          {[{name, baseline_value} | acc], breakdown}
-        end
+      baseline_metrics
+      |> Enum.reduce({[], %{ctx: ctx_us}}, fn {name, baseline_value}, {acc, breakdown} ->
+        reduce_loo_metric(name, baseline_value, referenced, ctx, block_content, acc, breakdown)
       end)
 
     :telemetry.execute([:codeqa, :loo_breakdown], breakdown, %{})
-    Map.new(result)
+    result |> Map.new()
   end
 
-  defp registered_module_for(name) do
-    Enum.find(@registry.file_metrics, fn mod -> mod.name() == name end) ||
-      raise "no registered file metric module for name #{inspect(name)}"
+  defp reduce_loo_metric(name, baseline_value, referenced, ctx, block_content, acc, breakdown) do
+    if MapSet.member?(referenced, name) do
+      {us, value} = time_loo_metric(name, baseline_value, ctx, block_content)
+      {[{name, value} | acc], Map.put(breakdown, name, us)}
+    else
+      {[{name, baseline_value} | acc], breakdown}
+    end
   end
+
+  defp time_loo_metric(name, baseline_value, ctx, block_content) do
+    mod = registered_module_for(name)
+
+    if function_exported?(mod, :analyze_loo, 2) do
+      :timer.tc(fn -> mod.analyze_loo(baseline_value, block_content) end)
+    else
+      :timer.tc(fn -> mod.analyze(ctx) end)
+    end
+  end
+
+  defp registered_module_for(name),
+    do:
+      Enum.find(@registry.file_metrics, &(&1.name() == name)) ||
+        raise("no registered file metric module for name #{inspect(name)}")
 
   @spec analyze_codebase_aggregate(map(), keyword()) :: map()
   def analyze_codebase_aggregate(files_map, opts \\ []) do
@@ -99,15 +106,14 @@ defmodule CodeQA.Engine.Analyzer do
     end)
   end
 
-  def analyze_codebase(files, opts \\ []) do
-    with_run_context(opts, &do_analyze_codebase(files, &1))
-  end
+  def analyze_codebase(files, opts \\ []),
+    do: opts |> with_run_context(&do_analyze_codebase(files, &1))
 
   defp with_run_context(opts, fun) do
     {:ok, sup} = RunSupervisor.start_link()
     run_ctx = RunSupervisor.run_context(sup)
-    opts = Keyword.put(opts, :file_context_pid, run_ctx.file_context_pid)
-    opts = Keyword.put(opts, :behavior_config_pid, run_ctx.behavior_config_pid)
+    opts = opts |> Keyword.put(:file_context_pid, run_ctx.file_context_pid)
+    opts = opts |> Keyword.put(:behavior_config_pid, run_ctx.behavior_config_pid)
 
     try do
       fun.(opts)
@@ -202,20 +208,20 @@ defmodule CodeQA.Engine.Analyzer do
     end)
   end
 
-  defp compute_stats([]), do: %{mean: 0.0, std: 0.0, min: 0.0, max: 0.0}
+  defp compute_stats([]), do: %{max: 0.0, mean: 0.0, min: 0.0, std: 0.0}
 
   defp compute_stats(values) do
     n = length(values)
     mean = Enum.sum(values) / n
-    sum_squares = Enum.reduce(values, 0.0, fn v, acc -> acc + (v - mean) ** 2 end)
+    sum_squares = values |> Enum.reduce(0.0, fn v, acc -> acc + (v - mean) ** 2 end)
     variance = sum_squares / n
     std = :math.sqrt(variance)
 
     %{
+      max: Float.round(Enum.max(values) * 1.0, 4),
       mean: Float.round(mean * 1.0, 4),
-      std: Float.round(std * 1.0, 4),
       min: Float.round(Enum.min(values) * 1.0, 4),
-      max: Float.round(Enum.max(values) * 1.0, 4)
+      std: Float.round(std * 1.0, 4)
     }
   end
 end

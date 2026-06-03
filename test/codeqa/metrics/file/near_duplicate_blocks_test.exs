@@ -18,19 +18,18 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksTest do
   end
 
   describe "find_pairs/2 idf_max_freq option" do
-    defp make_block(tokens, label) do
-      %CodeQA.AST.Enrichment.Node{
+    defp make_block(tokens, label),
+      do: %CodeQA.AST.Enrichment.Node{
+        children: [],
         label: label,
-        tokens: Enum.map(tokens, &%{kind: &1}),
         line_count: length(tokens),
-        children: []
+        tokens: tokens |> Enum.map(&%{kind: &1})
       }
-    end
 
     test "exact duplicates are still detected when all bigrams are high-frequency" do
       # 30 blocks all sharing bigram [end, nil] → pruned by IDF
       # Two additional identical blocks → should still match via exact hash index (d0)
-      common = Enum.map(1..30, fn i -> make_block(~w[end nil common_#{i}], "file:#{i}") end)
+      common = 1..30 |> Enum.map(&make_block(~w[end nil common_#{&1}], "file:#{&1}"))
       dup = make_block(~w[end nil special unique_token], "dup:1")
       dup2 = make_block(~w[end nil special unique_token], "dup:2")
 
@@ -42,7 +41,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksTest do
     test "near-duplicates are detected via non-pruned unique bigrams" do
       # 50 blocks all sharing [end, nil] → pruned
       # Two near-duplicates sharing unique bigrams [nil, special], [special, alpha] → not pruned
-      common = Enum.map(1..50, fn i -> make_block(~w[end nil common_#{i}], "common:#{i}") end)
+      common = 1..50 |> Enum.map(&make_block(~w[end nil common_#{&1}], "common:#{&1}"))
       near_a = make_block(~w[end nil special alpha beta gamma], "near:1")
       near_b = make_block(~w[end nil special alpha beta delta], "near:2")
 
@@ -58,10 +57,10 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksTest do
       child = make_block(["x"], "child:1")
 
       parent = %CodeQA.AST.Enrichment.Node{
+        children: [child, child],
         label: "a:1",
-        tokens: Enum.map(["def", "<ID>", "end"], &%{kind: &1}),
         line_count: 3,
-        children: [child, child]
+        tokens: ["def", "<ID>", "end"] |> Enum.map(&%{kind: &1})
       }
 
       solo = make_block(["y", "z", "w", "v", "u"], "b:1")
@@ -192,7 +191,12 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksTest do
       # one identifier differs
       block_b = "def bar\n  x = 1\nend\n"
       result = NDB.analyze([{"a.ex", block_a <> "\n\n" <> block_b}], [])
-      near_dup_total = Enum.sum(for d <- 0..8, do: result["near_dup_block_d#{d}"])
+
+      near_dup_total =
+        0..8
+        |> Enum.map(&result["near_dup_block_d#{&1}"])
+        |> Enum.sum()
+
       assert near_dup_total >= 1
     end
 
@@ -204,7 +208,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksTest do
 
     test "returns only count keys (no pairs keys)" do
       result = NDB.analyze([{"a.ex", "x = 1\n"}], [])
-      refute Enum.any?(Map.keys(result), &String.ends_with?(&1, "_pairs"))
+      refute Map.keys(result) |> Enum.any?(&String.ends_with?(&1, "_pairs"))
     end
 
     test "find_pairs/2 with include_pairs option returns pair data" do

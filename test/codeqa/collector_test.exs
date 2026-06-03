@@ -1,11 +1,12 @@
 defmodule CodeQA.CollectorTest do
   use ExUnit.Case, async: false
 
+  alias CodeQA.Config
   alias CodeQA.Engine.Collector
 
   setup do
-    CodeQA.Config.reset()
-    on_exit(&CodeQA.Config.reset/0)
+    Config.reset()
+    on_exit(&Config.reset/0)
   end
 
   describe "ignored?/2" do
@@ -165,7 +166,7 @@ defmodule CodeQA.CollectorTest do
       File.write!(Path.join(tmp_dir, "generated/schema.ex"), "defmodule Schema do\nend")
       File.write!(Path.join(tmp_dir, ".codeqa.yml"), "ignore_paths:\n  - generated/**\n")
 
-      CodeQA.Config.load(tmp_dir)
+      Config.load(tmp_dir)
       files = Collector.collect_files(tmp_dir)
 
       assert Map.has_key?(files, "lib/app.ex")

@@ -93,7 +93,8 @@ defmodule CodeQA.CLI.HealthReport do
     total_bytes = results["files"] |> Map.values() |> Enum.map(& &1["bytes"]) |> Enum.sum()
 
     results =
-      Map.put(results, "metadata", %{
+      results
+      |> Map.put("metadata", %{
         "path" => Path.expand(path),
         "timestamp" => DateTime.utc_now() |> DateTime.to_iso8601(),
         "total_files" => map_size(files),
@@ -101,29 +102,7 @@ defmodule CodeQA.CLI.HealthReport do
       })
 
     {base_results, changed_files, diff_line_ranges} =
-      if base_ref do
-        IO.puts(:stderr, "Collecting base snapshot at #{base_ref}...")
-        base_files = Git.collect_files_at_ref(path, base_ref)
-        changed = Git.changed_files(path, base_ref, head_ref)
-
-        diff_ranges =
-          case Git.diff_line_ranges(path, base_ref, head_ref) do
-            {:ok, ranges} ->
-              ranges
-
-            {:error, reason} ->
-              IO.puts(:stderr, "Warning: failed to parse diff line ranges: #{inspect(reason)}")
-              IO.puts(:stderr, "Block scoping disabled - showing all blocks in changed files")
-              %{}
-          end
-
-        IO.puts(:stderr, "Analyzing base snapshot (#{map_size(base_files)} files)...")
-        base_res = Analyzer.analyze_codebase(base_files, analyze_opts)
-
-        {base_res, changed, diff_ranges}
-      else
-        {nil, [], %{}}
-      end
+      collect_base_snapshot(path, base_ref, head_ref, analyze_opts)
 
     detail = parse_detail(opts[:detail])
     format = parse_format(opts[:format])
@@ -148,29 +127,62 @@ defmodule CodeQA.CLI.HealthReport do
       record_phase(telemetry_pid, :report_gen, report_gen_us)
     end
 
-    output =
-      if opts[:comment] do
-        write_comment_parts(report, detail)
-      else
-        render_t0 = System.monotonic_time(:microsecond)
-        markdown = HealthReport.to_markdown(report, detail, format)
-        render_us = System.monotonic_time(:microsecond) - render_t0
-        if telemetry_pid, do: record_phase(telemetry_pid, :render, render_us)
-
-        case opts[:output] do
-          nil ->
-            markdown
-
-          file ->
-            File.write!(file, markdown)
-            IO.puts(:stderr, "Health report written to #{file}")
-            ""
-        end
-      end
+    output = build_output(report, opts, detail, format, telemetry_pid)
 
     if telemetry_pid, do: print_telemetry(telemetry_pid)
 
     output
+  end
+
+  defp collect_base_snapshot(_path, nil, _head_ref, _analyze_opts), do: {nil, [], %{}}
+
+  defp collect_base_snapshot(path, base_ref, head_ref, analyze_opts) do
+    IO.puts(:stderr, "Collecting base snapshot at #{base_ref}...")
+    base_files = Git.collect_files_at_ref(path, base_ref)
+    changed = Git.changed_files(path, base_ref, head_ref)
+    diff_ranges = collect_diff_ranges(path, base_ref, head_ref)
+
+    IO.puts(:stderr, "Analyzing base snapshot (#{map_size(base_files)} files)...")
+    base_res = Analyzer.analyze_codebase(base_files, analyze_opts)
+
+    {base_res, changed, diff_ranges}
+  end
+
+  defp collect_diff_ranges(path, base_ref, head_ref) do
+    case Git.diff_line_ranges(path, base_ref, head_ref) do
+      {:ok, ranges} ->
+        ranges
+
+      {:error, reason} ->
+        IO.puts(:stderr, "Warning: failed to parse diff line ranges: #{inspect(reason)}")
+        IO.puts(:stderr, "Block scoping disabled - showing all blocks in changed files")
+        %{}
+    end
+  end
+
+  defp build_output(report, opts, detail, format, telemetry_pid) do
+    if opts[:comment] do
+      write_comment_parts(report, detail)
+    else
+      render_markdown(report, opts, detail, format, telemetry_pid)
+    end
+  end
+
+  defp render_markdown(report, opts, detail, format, telemetry_pid) do
+    render_t0 = System.monotonic_time(:microsecond)
+    markdown = HealthReport.to_markdown(report, detail, format)
+    render_us = System.monotonic_time(:microsecond) - render_t0
+    if telemetry_pid, do: record_phase(telemetry_pid, :render, render_us)
+
+    write_markdown(markdown, opts[:output])
+  end
+
+  defp write_markdown(markdown, nil), do: markdown
+
+  defp write_markdown(markdown, file) do
+    File.write!(file, markdown)
+    IO.puts(:stderr, "Health report written to #{file}")
+    ""
   end
 
   defp write_comment_parts(report, detail) do
@@ -178,7 +190,8 @@ defmodule CodeQA.CLI.HealthReport do
     parts = HealthReport.Formatter.render_parts(report, detail: detail)
 
     # Write each part to a numbered file
-    Enum.with_index(parts, 1)
+    parts
+    |> Enum.with_index(1)
     |> Enum.each(fn {content, n} ->
       path = Path.join(tmpdir, "codeqa-part-#{n}.md")
       File.write!(path, content)
@@ -233,17 +246,17 @@ defmodule CodeQA.CLI.HealthReport do
     {:ok, pid} =
       Agent.start_link(fn ->
         %{
-          nodes: [],
-          files: [],
           codebase_cosines_us: 0,
-          stages: %{},
-          file_metrics: %{},
           codebase_metrics: %{},
-          phases: %{},
+          cosine_breakdown: %{},
+          cosine_breakdown_calls: 0,
+          file_metrics: %{},
+          files: [],
           loo_breakdown: %{},
           loo_breakdown_calls: 0,
-          cosine_breakdown: %{},
-          cosine_breakdown_calls: 0
+          nodes: [],
+          phases: %{},
+          stages: %{}
         }
       end)
 
@@ -277,9 +290,8 @@ defmodule CodeQA.CLI.HealthReport do
          measurements,
          _metadata,
          pid
-       ) do
-    Agent.update(pid, &Map.put(&1, :codebase_cosines_us, measurements.duration))
-  end
+       ),
+       do: pid |> Agent.update(&Map.put(&1, :codebase_cosines_us, measurements.duration))
 
   defp handle_event([:codeqa, :block_impact, :file], measurements, metadata, pid) do
     Agent.update(pid, fn state ->
@@ -294,21 +306,11 @@ defmodule CodeQA.CLI.HealthReport do
   end
 
   defp handle_event([:codeqa, :stage], measurements, metadata, pid) do
-    Agent.update(pid, fn state ->
-      Map.update!(state, :stages, fn stages ->
-        Map.put(stages, metadata.stage, measurements.duration)
-      end)
-    end)
+    Agent.update(pid, &put_in(&1, [:stages, metadata.stage], measurements.duration))
   end
 
   defp handle_event([:codeqa, :file_metric], measurements, metadata, pid) do
-    Agent.update(pid, fn state ->
-      Map.update!(state, :file_metrics, fn fm ->
-        Map.update(fm, metadata.metric, {1, measurements.duration}, fn {n, sum} ->
-          {n + 1, sum + measurements.duration}
-        end)
-      end)
-    end)
+    Agent.update(pid, &accumulate_file_metric(&1, metadata.metric, measurements.duration))
   end
 
   defp handle_event([:codeqa, :codebase_metric], measurements, metadata, pid) do
@@ -320,7 +322,8 @@ defmodule CodeQA.CLI.HealthReport do
   defp handle_event([:codeqa, :loo_breakdown], measurements, _metadata, pid) do
     Agent.update(pid, fn state ->
       merged =
-        Enum.reduce(measurements, state.loo_breakdown, fn {k, v}, acc ->
+        measurements
+        |> Enum.reduce(state.loo_breakdown, fn {k, v}, acc ->
           Map.update(acc, k, v, &(&1 + v))
         end)
 
@@ -333,13 +336,20 @@ defmodule CodeQA.CLI.HealthReport do
   defp handle_event([:codeqa, :cosine_breakdown], measurements, _metadata, pid) do
     Agent.update(pid, fn state ->
       merged =
-        Enum.reduce(measurements, state.cosine_breakdown, fn {k, v}, acc ->
+        measurements
+        |> Enum.reduce(state.cosine_breakdown, fn {k, v}, acc ->
           Map.update(acc, k, v, &(&1 + v))
         end)
 
       state
       |> Map.put(:cosine_breakdown, merged)
       |> Map.update!(:cosine_breakdown_calls, &(&1 + 1))
+    end)
+  end
+
+  defp accumulate_file_metric(state, metric, duration) do
+    update_in(state, [:file_metrics, Access.key(metric, {0, 0})], fn {n, sum} ->
+      {n + 1, sum + duration}
     end)
   end
 
@@ -354,8 +364,8 @@ defmodule CodeQA.CLI.HealthReport do
     total_nodes = length(nodes)
     total_files = length(files)
 
-    node_totals = Enum.map(nodes, fn {_, m} -> m end)
-    file_totals = Enum.map(files, fn {_, m} -> m end)
+    node_totals = nodes |> Enum.map(fn {_, m} -> m end)
+    file_totals = files |> Enum.map(fn {_, m} -> m end)
 
     IO.puts(:stderr, """
 
@@ -414,28 +424,28 @@ defmodule CodeQA.CLI.HealthReport do
     |> Enum.sort_by(fn {_, v} -> -v end)
     |> Enum.take(25)
     |> Enum.map_join("\n", fn {key, total_us} ->
-      avg = div(total_us, calls)
+      avg_us = div(total_us, calls)
       pct = total_us * 100 / Enum.sum(Map.values(breakdown))
 
-      "  #{String.pad_trailing(to_string(key), 32)} total #{us(total_us)}  avg/call #{us(avg)}  (#{Float.round(pct, 1)}%)"
+      "  #{String.pad_trailing(to_string(key), 32)} total #{us(total_us)}  avg/call #{us(avg_us)}  (#{Float.round(pct, 1)}%)"
     end)
   end
 
   defp format_scaling(files, nodes) do
-    nodes_by_path = Enum.group_by(nodes, fn {p, _} -> p end, fn {_, m} -> m end)
+    nodes_by_path = nodes |> Enum.group_by(fn {p, _} -> p end, fn {_, m} -> m end)
 
     rows =
       files
       |> Enum.map(fn {path, fm} ->
         node_durations = nodes_by_path |> Map.get(path, []) |> Enum.map(& &1.duration)
-        total_node_us = Enum.sum(node_durations)
+        total_node_us = node_durations |> Enum.sum()
 
         %{
-          path: path,
           bytes: Map.get(fm, :bytes, 0),
-          tokens: Map.get(fm, :token_count, 0),
-          nodes: Map.get(fm, :node_count, 0),
           file_us: fm.duration,
+          nodes: Map.get(fm, :node_count, 0),
+          path: path,
+          tokens: Map.get(fm, :token_count, 0),
           total_node_us: total_node_us
         }
       end)
@@ -447,26 +457,21 @@ defmodule CodeQA.CLI.HealthReport do
       {">32KB", fn r -> r.bytes >= 32_000 end}
     ]
 
-    bin_rows =
-      bins
-      |> Enum.map(fn {label, pred} ->
-        bucket = Enum.filter(rows, pred)
-        n = length(bucket)
+    bins
+    |> Enum.map_join("\n", fn {label, pred} -> format_bin(label, Enum.filter(rows, pred)) end)
+  end
 
-        if n == 0 do
-          "  #{label}  (none)"
-        else
-          avg_bytes = div(Enum.sum(Enum.map(bucket, & &1.bytes)), n)
-          avg_tokens = div(Enum.sum(Enum.map(bucket, & &1.tokens)), n)
-          avg_nodes = div(Enum.sum(Enum.map(bucket, & &1.nodes)), n)
-          avg_node_us = div(Enum.sum(Enum.map(bucket, & &1.total_node_us)), n)
-          tokens_per_node_us = if avg_nodes > 0, do: div(avg_node_us, avg_nodes), else: 0
+  defp format_bin(label, []), do: "  #{label}  (none)"
 
-          "  #{label}  files=#{n}  avg bytes=#{avg_bytes} tokens=#{avg_tokens} nodes=#{avg_nodes}  total_node=#{us(avg_node_us)}  per_node=#{us(tokens_per_node_us)}"
-        end
-      end)
+  defp format_bin(label, bucket) do
+    n = length(bucket)
+    avg_bytes = div(bucket |> Enum.map(& &1.bytes) |> Enum.sum(), n)
+    avg_tokens = div(bucket |> Enum.map(& &1.tokens) |> Enum.sum(), n)
+    avg_nodes = div(bucket |> Enum.map(& &1.nodes) |> Enum.sum(), n)
+    avg_node_us = div(bucket |> Enum.map(& &1.total_node_us) |> Enum.sum(), n)
+    per_node_us = if avg_nodes > 0, do: div(avg_node_us, avg_nodes), else: 0
 
-    Enum.join(bin_rows, "\n")
+    "  #{label}  files=#{n}  avg bytes=#{avg_bytes} tokens=#{avg_tokens} nodes=#{avg_nodes}  total_node=#{us(avg_node_us)}  per_node=#{us(per_node_us)}"
   end
 
   defp format_phases(phases) when map_size(phases) == 0, do: "  (no phases recorded)"
@@ -506,12 +511,12 @@ defmodule CodeQA.CLI.HealthReport do
 
     m
     |> Enum.map(fn {name, {n, sum}} ->
-      avg = if n > 0, do: div(sum, n), else: 0
-      {name, sum, avg, n}
+      avg_us = if n > 0, do: div(sum, n), else: 0
+      {name, sum, avg_us, n}
     end)
     |> Enum.sort_by(fn {_, sum, _, _} -> -sum end)
-    |> Enum.map_join("\n", fn {name, sum, avg, n} ->
-      "  #{String.pad_trailing(to_string(name), 32)} total #{us(sum)}  avg/file #{us(div(sum, fc))}  (#{n} calls, avg/call #{us(avg)})"
+    |> Enum.map_join("\n", fn {name, sum, avg_us, n} ->
+      "  #{String.pad_trailing(to_string(name), 32)} total #{us(sum)}  avg/file #{us(div(sum, fc))}  (#{n} calls, avg/call #{us(avg_us)})"
     end)
   end
 
@@ -519,7 +524,7 @@ defmodule CodeQA.CLI.HealthReport do
     node_time_by_file =
       nodes
       |> Enum.group_by(fn {path, _} -> path end, fn {_, m} -> m.duration end)
-      |> Map.new(fn {path, durations} -> {path, Enum.sum(durations)} end)
+      |> Map.new(fn {path, durations} -> {path, durations |> Enum.sum()} end)
 
     files
     |> Enum.map(fn {path, fm} ->
@@ -536,7 +541,7 @@ defmodule CodeQA.CLI.HealthReport do
   defp avg_us([], _key), do: "n/a"
 
   defp avg_us(measurements, key) do
-    total = Enum.sum(Enum.map(measurements, &Map.get(&1, key, 0)))
+    total = measurements |> Enum.map(&Map.get(&1, key, 0)) |> Enum.sum()
     us(div(total, length(measurements)))
   end
 

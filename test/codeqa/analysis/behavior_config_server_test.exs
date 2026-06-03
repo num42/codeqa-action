@@ -13,12 +13,14 @@ defmodule CodeQA.Analysis.BehaviorConfigServerTest do
     assert is_map(behaviors)
     assert map_size(behaviors) > 0
 
-    Enum.each(behaviors, fn {category, list} ->
+    behaviors
+    |> Enum.each(fn {category, list} ->
       assert is_binary(category)
       assert is_list(list)
       assert list != []
 
-      Enum.each(list, fn {behavior, data} ->
+      list
+      |> Enum.each(fn {behavior, data} ->
         assert is_binary(behavior)
         assert is_map(data)
       end)
@@ -31,7 +33,9 @@ defmodule CodeQA.Analysis.BehaviorConfigServerTest do
 
     {:ok, files} = File.ls(yaml_dir)
 
-    Enum.each(files |> Enum.filter(&String.ends_with?(&1, ".yml")), fn yml_file ->
+    files
+    |> Enum.filter(&String.ends_with?(&1, ".yml"))
+    |> Enum.each(fn yml_file ->
       category = String.trim_trailing(yml_file, ".yml")
       {:ok, data} = YamlElixir.read_from_file(Path.join(yaml_dir, yml_file))
 
@@ -45,12 +49,13 @@ defmodule CodeQA.Analysis.BehaviorConfigServerTest do
 
   test "get_scalars/3 returns a map of {group, key} => scalar", %{pid: pid} do
     behaviors = BehaviorConfigServer.get_all_behaviors(pid)
-    {category, [{behavior, _data} | _]} = Enum.at(behaviors, 0)
+    {category, [{behavior, _data} | _]} = behaviors |> Enum.at(0)
 
     scalars = BehaviorConfigServer.get_scalars(pid, category, behavior)
     assert is_map(scalars)
 
-    Enum.each(scalars, fn {{group, key}, scalar} ->
+    scalars
+    |> Enum.each(fn {{group, key}, scalar} ->
       assert is_binary(group)
       assert is_binary(key)
       assert is_float(scalar)
@@ -63,7 +68,7 @@ defmodule CodeQA.Analysis.BehaviorConfigServerTest do
 
   test "get_log_baseline/3 returns a float", %{pid: pid} do
     behaviors = BehaviorConfigServer.get_all_behaviors(pid)
-    {category, [{behavior, _data} | _]} = Enum.at(behaviors, 0)
+    {category, [{behavior, _data} | _]} = behaviors |> Enum.at(0)
 
     baseline = BehaviorConfigServer.get_log_baseline(pid, category, behavior)
     assert is_float(baseline)

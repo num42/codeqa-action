@@ -1,4 +1,7 @@
 defmodule CodeQA.AST.Signals.Classification.AttributeSignal do
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
+
   @moduledoc """
   Classification signal — votes `:attribute` when an `@identifier` pattern
   appears at indent 0.
@@ -14,8 +17,8 @@ defmodule CodeQA.AST.Signals.Classification.AttributeSignal do
   defstruct []
 
   defimpl CodeQA.AST.Parsing.Signal do
-    @nl CodeQA.AST.Lexing.NewlineToken.kind()
-    @ws CodeQA.AST.Lexing.WhitespaceToken.kind()
+    @nl NewlineToken.kind()
+    @ws WhitespaceToken.kind()
     @typespec_attrs MapSet.new(~w[spec type typep opaque callback macrocallback])
     @skip_attrs MapSet.new(~w[doc moduledoc])
 

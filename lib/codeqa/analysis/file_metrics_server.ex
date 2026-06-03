@@ -18,9 +18,7 @@ defmodule CodeQA.Analysis.FileMetricsServer do
   # --- Public API ---
 
   @spec start_link(keyword()) :: GenServer.on_start()
-  def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, opts)
-  end
+  def start_link(opts \\ []), do: __MODULE__ |> GenServer.start_link(opts)
 
   @doc "Returns the ETS table id. Callers may read directly from it."
   @spec get_tid(pid()) :: :ets.tid()
@@ -37,12 +35,14 @@ defmodule CodeQA.Analysis.FileMetricsServer do
     tid = get_tid(pid)
     files_data = Map.get(pipeline_result, "files", %{})
 
-    Enum.each(files_data, fn {path, file_data} ->
+    files_data
+    |> Enum.each(fn {path, file_data} ->
       metrics = Map.get(file_data, "metrics", %{})
       :ets.insert(tid, {{:path, path}, metrics})
     end)
 
-    Enum.each(files_map, fn {path, content} ->
+    files_map
+    |> Enum.each(fn {path, content} ->
       hash = md5(content)
 
       case :ets.lookup(tid, {:path, path}) do
@@ -81,8 +81,8 @@ defmodule CodeQA.Analysis.FileMetricsServer do
         metrics
 
       [] ->
-        ctx = Pipeline.build_file_context(content, opts)
-        metrics = Registry.run_file_metrics(registry, ctx)
+        context = Pipeline.build_file_context(content, opts)
+        metrics = Registry.run_file_metrics(registry, context)
         :ets.insert(tid, {{:hash, hash}, metrics})
         metrics
     end
@@ -97,9 +97,7 @@ defmodule CodeQA.Analysis.FileMetricsServer do
   end
 
   @impl true
-  def handle_call(:get_tid, _from, state) do
-    {:reply, state.tid, state}
-  end
+  def handle_call(:get_tid, _from, state), do: {:reply, state.tid, state}
 
   # --- Private helpers ---
 

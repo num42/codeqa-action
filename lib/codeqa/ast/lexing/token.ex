@@ -34,12 +34,12 @@ defmodule CodeQA.AST.Lexing.Token do
     line/col. Consumers that need location data should guard for nil.
   """
 
-  defstruct [:kind, :content, :line, :col]
+  defstruct [:col, :content, :kind, :line]
 
   @type t :: %__MODULE__{
-          kind: String.t(),
+          col: non_neg_integer() | nil,
           content: String.t(),
-          line: non_neg_integer() | nil,
-          col: non_neg_integer() | nil
+          kind: String.t(),
+          line: non_neg_integer() | nil
         }
 end

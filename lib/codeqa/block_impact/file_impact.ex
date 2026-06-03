@@ -26,21 +26,21 @@ defmodule CodeQA.BlockImpact.FileImpact do
   end
 
   @spec reconstruct_without([CodeQA.AST.Lexing.Token.t()], Node.t()) :: String.t()
-  def reconstruct_without(root_tokens, %Node{tokens: []}) do
-    Enum.map_join(root_tokens, "", & &1.content)
-  end
+  def reconstruct_without(root_tokens, %Node{tokens: []}),
+    do: root_tokens |> Enum.map_join("", & &1.content)
 
   def reconstruct_without(root_tokens, node) do
     first = List.first(node.tokens)
 
-    case Enum.find_index(root_tokens, fn t -> t.line == first.line and t.col == first.col end) do
+    case root_tokens
+         |> Enum.find_index(fn t -> t.line == first.line and t.col == first.col end) do
       nil ->
-        Enum.map_join(root_tokens, "", & &1.content)
+        root_tokens |> Enum.map_join("", & &1.content)
 
       start_idx ->
         end_idx = start_idx + length(node.tokens)
         remaining = Enum.take(root_tokens, start_idx) ++ Enum.drop(root_tokens, end_idx)
-        Enum.map_join(remaining, "", & &1.content)
+        remaining |> Enum.map_join("", & &1.content)
     end
   end
 end

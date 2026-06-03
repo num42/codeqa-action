@@ -3,7 +3,7 @@ defmodule CodeQA.Metrics.Codebase.NearDuplicateBlocksCodebaseTest do
   alias CodeQA.Analysis.FileContextServer
   alias CodeQA.Metrics.Codebase.NearDuplicateBlocksCodebase
 
-  defp files(pairs), do: Map.new(pairs)
+  defp files(pairs), do: pairs |> Map.new()
 
   defp with_pid(fun) do
     {:ok, pid} = FileContextServer.start_link()
@@ -91,7 +91,7 @@ defmodule CodeQA.Metrics.Codebase.NearDuplicateBlocksCodebaseTest do
           )
 
         pairs_lists = result |> Map.values() |> Enum.filter(&is_list/1)
-        assert Enum.all?(pairs_lists, &(length(&1) <= 2))
+        assert pairs_lists |> Enum.all?(&(length(&1) <= 2))
       end)
     end
   end

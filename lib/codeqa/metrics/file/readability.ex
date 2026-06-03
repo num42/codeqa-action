@@ -60,7 +60,7 @@ defmodule CodeQA.Metrics.File.Readability do
 
     {avg_sub_words, complex_fraction} =
       if words != [] do
-        sub_counts = Enum.map(words, &length(split_identifier(&1)))
+        sub_counts = words |> Enum.map(&length(split_identifier(&1)))
         avg = Enum.sum(sub_counts) / length(sub_counts)
         complex = Enum.count(sub_counts, &(&1 > 2)) / length(sub_counts)
         {avg, complex}
@@ -96,7 +96,10 @@ defmodule CodeQA.Metrics.File.Readability do
   end
 
   defp split_camel_case([], []), do: []
-  defp split_camel_case([], [current | rest]), do: Enum.reverse([Enum.reverse(current) | rest])
+
+  defp split_camel_case([], [current | rest]),
+    do: [Enum.reverse(current) | rest] |> Enum.reverse()
+
   defp split_camel_case([char | rest], []), do: split_camel_case(rest, [[char]])
 
   defp split_camel_case([char | rest], [current | acc_rest]) do

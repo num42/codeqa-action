@@ -3,62 +3,55 @@ name: Dialyzer
 on:
   pull_request:
     branches: ["main"]
-    paths:
-      - "**/*.ex"
-      - "**/*.exs"
-      - "mix.exs"
-      - "mix.lock"
+
+permissions:
+  contents: read
 
 concurrency:
-  group: dialyzer-${{ github.head_ref }}
+  group: dialyzer-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      elixir: ${{ steps.filter.outputs.elixir }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            elixir:
+              - 'lib/**'
+              - 'test/**'
+              - 'mix.exs'
+              - 'mix.lock'
+              - '.dialyzer_ignore.exs'
+              - 'devenv.nix'
+              - 'devenv.lock'
+              - 'devenv.yaml'
+              - '.github/actions/setup-elixir/**'
+
   dialyzer:
     name: Dialyzer (zero warnings)
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.elixir == 'true'
 
     env:
       MIX_ENV: dev
-      ELIXIR_VERSION: "1.19"
-      OTP_VERSION: "27.3"
 
     steps:
-      - name: Checkout PR
+      - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up Elixir
-        uses: erlef/setup-beam@v1
+      - name: Set up Elixir with shared cache
+        uses: ./.github/actions/setup-elixir
         with:
-          elixir-version: ${{ env.ELIXIR_VERSION }}
-          otp-version: ${{ env.OTP_VERSION }}
-
-      - name: Cache deps
-        uses: actions/cache@v4
-        with:
-          path: deps
-          key: deps-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ hashFiles('mix.lock') }}
-          restore-keys: |
-            deps-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-
-
-      - name: Cache build
-        uses: actions/cache@v4
-        with:
-          path: _build
-          key: build-${{ env.MIX_ENV }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ hashFiles('mix.lock') }}
-          restore-keys: |
-            build-${{ env.MIX_ENV }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-
-
-      - name: Cache PLT
-        uses: actions/cache@v4
-        with:
-          path: priv/plts
-          key: plt-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ hashFiles('mix.lock') }}
-          restore-keys: |
-            plt-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-
-
-      - name: Install deps
-        run: mix deps.get
+          mix-env: dev
+          cache-plt: "true"
 
       - name: Compile
         run: mix compile

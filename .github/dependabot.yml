@@ -1,0 +1,40 @@
+version: 2
+
+updates:
+  # GitHub Actions: keeps the actions across .github/workflows/ and
+  # .github/actions/ up-to-date, grouped into a single weekly PR.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 5
+    groups:
+      all-actions:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+      - github-actions
+
+  # Hex packages: minor + patch updates are grouped into a single weekly PR
+  # so CI doesn't burn minutes on individual bumps. Major updates stay
+  # separate so breaking changes get their own review.
+  - package-ecosystem: mix
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 10
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    labels:
+      - dependencies
+      - elixir

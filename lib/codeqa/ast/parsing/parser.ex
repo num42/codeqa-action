@@ -34,16 +34,15 @@ defmodule CodeQA.AST.Parsing.Parser do
   """
 
   alias CodeQA.AST.Enrichment.Node
-  alias CodeQA.AST.Lexing.{NewlineToken, WhitespaceToken}
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
   alias CodeQA.AST.Parsing.SignalStream
 
-  alias CodeQA.AST.Signals.Structural.{
-    BlankLineSignal,
-    BracketSignal,
-    ColonIndentSignal,
-    KeywordSignal,
-    TripleQuoteSignal
-  }
+  alias CodeQA.AST.Signals.Structural.BlankLineSignal
+  alias CodeQA.AST.Signals.Structural.BracketSignal
+  alias CodeQA.AST.Signals.Structural.ColonIndentSignal
+  alias CodeQA.AST.Signals.Structural.KeywordSignal
+  alias CodeQA.AST.Signals.Structural.TripleQuoteSignal
 
   alias CodeQA.Language
 
@@ -98,21 +97,14 @@ defmodule CodeQA.AST.Parsing.Parser do
     line_count = if start_line && end_line, do: end_line - start_line + 1, else: 1
 
     block = %Node{
-      tokens: tokens,
-      line_count: line_count,
       children: [],
+      end_line: end_line,
+      line_count: line_count,
       start_line: start_line,
-      end_line: end_line
+      tokens: tokens
     }
 
-    case find_sub_candidates(tokens, lang_mod) do
-      [] ->
-        block
-
-      candidates ->
-        children = Enum.map(candidates, &parse_block(&1, lang_mod))
-        %{block | children: children}
-    end
+    find_sub_candidates(tokens, lang_mod) |> attach_sub_blocks(block, lang_mod)
   end
 
   # Collect enclosure regions from rules.
@@ -143,7 +135,7 @@ defmodule CodeQA.AST.Parsing.Parser do
     |> Enum.uniq()
     |> Enum.sort()
     |> Enum.reject(fn {s, e} -> s == 0 and e == n - 1 end)
-    |> Enum.map(fn {s, e} -> Enum.slice(search_tokens, s..e) end)
+    |> Enum.map(fn {s, e} -> search_tokens |> Enum.slice(s..e) end)
     |> Enum.reject(&whitespace_only?/1)
   end
 
@@ -157,7 +149,7 @@ defmodule CodeQA.AST.Parsing.Parser do
 
     if last && MapSet.member?(@open_brackets, first.kind) &&
          Map.get(@matching_close, first.kind) == last.kind do
-      {Enum.drop(rest, -1), 1}
+      {rest |> Enum.drop(-1), 1}
     else
       {tokens, 0}
     end
@@ -174,7 +166,7 @@ defmodule CodeQA.AST.Parsing.Parser do
   end
 
   defp inside_protected?(idx, ranges) do
-    Enum.any?(ranges, fn {lo, hi} -> idx >= lo and idx <= hi end)
+    ranges |> Enum.any?(fn {lo, hi} -> idx >= lo and idx <= hi end)
   end
 
   # When TripleQuoteSignal splits `@doc """` mid-line, the tokens before the
@@ -210,12 +202,11 @@ defmodule CodeQA.AST.Parsing.Parser do
 
     boundaries
     |> Enum.chunk_every(2, 1, :discard)
-    |> Enum.map(fn [start, stop] -> Enum.slice(tokens, start..(stop - 1)//1) end)
+    |> Enum.map(fn [start, stop] -> tokens |> Enum.slice(start..(stop - 1)//1) end)
   end
 
-  defp whitespace_only?(tokens) do
-    Enum.all?(tokens, &(&1.kind in [WhitespaceToken.kind(), NewlineToken.kind()]))
-  end
+  defp whitespace_only?(tokens),
+    do: tokens |> Enum.all?(&(&1.kind in [WhitespaceToken.kind(), NewlineToken.kind()]))
 
   defp block_start_line([%{line: line} | _]), do: line
   defp block_start_line([]), do: nil
@@ -230,5 +221,12 @@ defmodule CodeQA.AST.Parsing.Parser do
       nil -> tokens |> List.last() |> Map.get(:line)
       token -> token.line
     end
+  end
+
+  defp attach_sub_blocks([], block, _lang_mod), do: block
+
+  defp attach_sub_blocks(candidates, block, lang_mod) do
+    children = candidates |> Enum.map(&parse_block(&1, lang_mod))
+    %{block | children: children}
   end
 end

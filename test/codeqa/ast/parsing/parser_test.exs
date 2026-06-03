@@ -69,16 +69,18 @@ defmodule CodeQA.AST.Parsing.ParserTest do
 
       # depth 1 — the outer argument list
       args =
-        Enum.find(block.children, fn b ->
-          Enum.any?(b.tokens, &(&1.content == "bar"))
+        block.children
+        |> Enum.find(fn b ->
+          b.tokens |> Enum.any?(&(&1.content == "bar"))
         end)
 
       assert args != nil, "expected an arg-list sub-block containing 'bar'"
 
       # depth 2 — the inner call (x, y) inside bar(...)
       inner =
-        Enum.find(args.children, fn b ->
-          Enum.any?(b.tokens, &(&1.content == "x"))
+        args.children
+        |> Enum.find(fn b ->
+          b.tokens |> Enum.any?(&(&1.content == "x"))
         end)
 
       assert inner != nil, "expected a sub-block for the inner call (x, y)"
@@ -93,24 +95,27 @@ defmodule CodeQA.AST.Parsing.ParserTest do
 
       # depth 1: (inner(deep(value)))
       d1 =
-        Enum.find(block.children, fn b ->
-          Enum.any?(b.tokens, &(&1.content == "inner"))
+        block.children
+        |> Enum.find(fn b ->
+          b.tokens |> Enum.any?(&(&1.content == "inner"))
         end)
 
       assert d1 != nil
 
       # depth 2: (deep(value))
       d2 =
-        Enum.find(d1.children, fn b ->
-          Enum.any?(b.tokens, &(&1.content == "deep"))
+        d1.children
+        |> Enum.find(fn b ->
+          b.tokens |> Enum.any?(&(&1.content == "deep"))
         end)
 
       assert d2 != nil
 
       # depth 3: (value) — leaf
       d3 =
-        Enum.find(d2.children, fn b ->
-          Enum.any?(b.tokens, &(&1.content == "value"))
+        d2.children
+        |> Enum.find(fn b ->
+          b.tokens |> Enum.any?(&(&1.content == "value"))
         end)
 
       assert d3 != nil
@@ -137,14 +142,15 @@ defmodule CodeQA.AST.Parsing.ParserTest do
       blocks = Parser.detect_blocks(tokens, Unknown)
       # The heredoc (including its blank line) should be ONE block, not split
       heredoc_block =
-        Enum.find(blocks, fn b ->
-          Enum.any?(b.tokens, &(&1.kind == "<DOC>"))
+        blocks
+        |> Enum.find(fn b ->
+          b.tokens |> Enum.any?(&(&1.kind == "<DOC>"))
         end)
 
       assert heredoc_block != nil
       # Ensure no split happened inside — the heredoc block contains both "Some" and "More"
-      contents = Enum.filter(heredoc_block.tokens, &(&1.kind == "<ID>"))
-      names = Enum.map(contents, & &1.content)
+      contents = heredoc_block.tokens |> Enum.filter(&(&1.kind == "<ID>"))
+      names = contents |> Enum.map(& &1.content)
       assert "Some" in names
       assert "More" in names
     end
@@ -170,9 +176,9 @@ defmodule CodeQA.AST.Parsing.ParserTest do
       blocks = Parser.detect_blocks(tokens, Unknown)
       # Expect exactly 3 blocks: code-before, heredoc, code-after
       assert length(blocks) == 3
-      assert Enum.any?(Enum.at(blocks, 0).tokens, &(&1.content == "foo"))
-      assert Enum.any?(Enum.at(blocks, 1).tokens, &(&1.kind == "<DOC>"))
-      assert Enum.any?(Enum.at(blocks, 2).tokens, &(&1.content == "bar"))
+      assert Enum.at(blocks, 0).tokens |> Enum.any?(&(&1.content == "foo"))
+      assert Enum.at(blocks, 1).tokens |> Enum.any?(&(&1.kind == "<DOC>"))
+      assert Enum.at(blocks, 2).tokens |> Enum.any?(&(&1.content == "bar"))
     end
   end
 

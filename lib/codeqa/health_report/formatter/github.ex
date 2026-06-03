@@ -1,6 +1,11 @@
 defmodule CodeQA.HealthReport.Formatter.Github do
   @moduledoc "Renders health report as rich GitHub-flavored markdown."
 
+  alias CodeQA.HealthReport.BehaviorLabels
+
+  import CodeQA.HealthReport.Formatter.Shared,
+    only: [count_severities_shared: 1, pr_summary_section: 1, worst_severity_shared: 1]
+
   @bar_width 20
   @filled "█"
   @empty "░"
@@ -8,7 +13,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   @spec render(map(), atom(), keyword()) :: String.t()
   def render(report, detail, opts \\ []) do
     chart? = Keyword.get(opts, :chart, true)
-    display_categories = merge_cosine_categories(report.categories)
+    categories = merge_cosine_categories(report.categories)
     worst_blocks = Map.get(report, :worst_blocks_by_category, %{})
 
     [
@@ -16,11 +21,11 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       header(report),
       cosine_legend(),
       delta_section(Map.get(report, :codebase_delta)),
-      if(chart?, do: mermaid_chart(display_categories), else: []),
-      progress_bars(display_categories),
+      if(chart?, do: mermaid_chart(categories), else: []),
+      progress_bars(categories),
       top_issues_section(Map.get(report, :top_issues, []), detail),
       blocks_section(Map.get(report, :top_blocks, [])),
-      category_sections(display_categories, detail, worst_blocks),
+      category_sections(categories, detail, worst_blocks),
       footer()
     ]
     |> List.flatten()
@@ -34,15 +39,15 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   @spec render_part_1(map(), keyword()) :: String.t()
   def render_part_1(report, opts \\ []) do
     chart? = Keyword.get(opts, :chart, true)
-    display_categories = merge_cosine_categories(report.categories)
+    categories = merge_cosine_categories(report.categories)
 
     [
       pr_summary_section(Map.get(report, :pr_summary)),
       header(report),
       cosine_legend(),
       delta_section(Map.get(report, :codebase_delta)),
-      if(chart?, do: mermaid_chart(display_categories), else: []),
-      progress_bars(display_categories),
+      if(chart?, do: mermaid_chart(categories), else: []),
+      progress_bars(categories),
       sentinel(1)
     ]
     |> List.flatten()
@@ -83,25 +88,25 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   defp sentinel_str(n), do: "<!-- codeqa-health-report-#{n} -->"
 
   defp merge_cosine_categories(categories) do
-    {cosine, threshold} = Enum.split_with(categories, &(&1.type == :cosine))
+    {cosine, threshold} = categories |> Enum.split_with(&(&1.type == :cosine))
 
     case cosine do
       [] ->
         threshold
 
       _ ->
-        total_impact = Enum.sum(Enum.map(cosine, & &1.impact))
+        total_impact = cosine |> Enum.map(& &1.impact) |> Enum.sum()
 
         combined_score =
-          round(Enum.sum(Enum.map(cosine, &(&1.score * &1.impact))) / max(total_impact, 1))
+          round(Enum.sum(cosine |> Enum.map(&(&1.score * &1.impact))) / max(total_impact, 1))
 
         combined = %{
-          type: :cosine_group,
+          categories: cosine,
+          grade: grade_letter_from_score(combined_score),
           key: "combined_metrics",
           name: "Combined Metrics",
           score: combined_score,
-          grade: grade_letter_from_score(combined_score),
-          categories: cosine
+          type: :cosine_group
         }
 
         threshold ++ [combined]
@@ -133,16 +138,15 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     ]
   end
 
-  defp cosine_legend do
-    [
+  defp cosine_legend,
+    do: [
       "> *Combined metric scores use cosine similarity: +1 = metric profile perfectly matches healthy pattern for this behavior, 0 = no signal, −1 = anti-pattern detected. Mapped to 0–100 using breakpoints (approx: ≥0.5→A, ≥0.2→B, ≥0.0→C, ≥−0.3→D, <−0.3→F); actual letter grades use the full 15-step scale.*",
       ""
     ]
-  end
 
   defp mermaid_chart(categories) do
-    names = Enum.map_join(categories, ", ", fn c -> ~s("#{c.name}") end)
-    scores = Enum.map_join(categories, ", ", fn c -> to_string(c.score) end)
+    names = categories |> Enum.map_join(", ", fn c -> ~s("#{c.name}") end)
+    scores = categories |> Enum.map_join(", ", fn c -> to_string(c.score) end)
 
     [
       "```mermaid",
@@ -159,12 +163,14 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
   defp progress_bars(categories) do
     max_name_len =
-      Enum.reduce(categories, 0, fn cat, acc ->
+      categories
+      |> Enum.reduce(0, fn cat, acc ->
         max(acc, String.length(cat.name))
       end)
 
     rows =
-      Enum.map(categories, fn cat ->
+      categories
+      |> Enum.map(fn cat ->
         name = String.pad_trailing(cat.name, max_name_len)
         bar = build_bar(cat.score)
         score_str = cat.score |> to_string() |> String.pad_leading(3)
@@ -185,9 +191,8 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
   defp category_sections(_categories, :summary, _worst_blocks), do: []
 
-  defp category_sections(categories, detail, worst_blocks) do
-    Enum.flat_map(categories, &render_category(&1, detail, worst_blocks))
-  end
+  defp category_sections(categories, detail, worst_blocks),
+    do: categories |> Enum.flat_map(&render_category(&1, detail, worst_blocks))
 
   defp render_category(%{type: :cosine_group} = group, detail, worst_blocks) do
     emoji = grade_emoji(group.grade)
@@ -251,7 +256,8 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
   defp cosine_group_content(group, detail, worst_blocks) do
     rows =
-      Enum.map(group.categories, fn cat ->
+      group.categories
+      |> Enum.map(fn cat ->
         emoji = grade_emoji(cat.grade)
         "| #{cat.name} | #{cat.score} | #{emoji} #{cat.grade} |"
       end)
@@ -263,7 +269,8 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     ]
 
     sub_sections =
-      Enum.flat_map(group.categories, fn cat ->
+      group.categories
+      |> Enum.flat_map(fn cat ->
         emoji = grade_emoji(cat.grade)
 
         inner =
@@ -290,9 +297,8 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     category_key = to_string(cat.key)
 
     behaviors_rows =
-      Enum.map(cat.behaviors, fn b ->
-        "| #{b.behavior} | #{format_num(b.cosine)} | #{b.score} | #{b.grade} |"
-      end)
+      cat.behaviors
+      |> Enum.map(&"| #{&1.behavior} | #{format_num(&1.cosine)} | #{&1.score} | #{&1.grade} |")
 
     behaviors_table = [
       "> Cosine similarity scores for #{n} behaviors.",
@@ -321,7 +327,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       [
         "> **Worst offender** (`#{location}`):",
         "> ```#{lang}",
-        block.source |> String.split("\n") |> Enum.map(&"> #{&1}") |> Enum.join("\n"),
+        block.source |> String.split("\n") |> Enum.map_join("\n", &"> #{&1}"),
         "> ```",
         ""
       ]
@@ -335,14 +341,13 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
   defp section_content(cat, _detail) do
     metric_summary =
-      Enum.map_join(cat.metric_scores, ", ", fn m -> "#{m.name}=#{format_num(m.value)}" end)
+      cat.metric_scores |> Enum.map_join(", ", fn m -> "#{m.name}=#{format_num(m.value)}" end)
 
     metrics_table =
       if cat.metric_scores != [] do
         rows =
-          Enum.map(cat.metric_scores, fn m ->
-            "| #{m.source}.#{m.name} | #{format_num(m.value)} | #{m.score} |"
-          end)
+          cat.metric_scores
+          |> Enum.map(&"| #{&1.source}.#{&1.name} | #{format_num(&1.value)} | #{&1.score} |")
 
         [
           "| Metric | Value | Score |",
@@ -365,7 +370,8 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
   defp top_issues_section(issues, _detail) do
     rows =
-      Enum.map_join(issues, "\n", fn i ->
+      issues
+      |> Enum.map_join("\n", fn i ->
         "| `#{i.category}.#{i.behavior}` | #{format_num(i.cosine)} | #{format_num(i.score)} |"
       end)
 
@@ -384,10 +390,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     ]
   end
 
-  defp footer do
-    # Legacy footer for single-part render/3 (used by --output file mode)
-    ["<!-- Sticky Pull Request Commentcodeqa-health-report -->", ""]
-  end
+  defp footer, do: ["<!-- Sticky Pull Request Commentcodeqa-health-report -->", ""]
 
   @doc false
   def grade_emoji(grade) do
@@ -412,22 +415,6 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   defp format_date(timestamp) when is_binary(timestamp), do: String.slice(timestamp, 0, 10)
   defp format_date(_), do: "unknown"
 
-  defp pr_summary_section(nil), do: []
-
-  defp pr_summary_section(summary) do
-    delta_str =
-      if summary.score_delta >= 0,
-        do: "+#{summary.score_delta}",
-        else: "#{summary.score_delta}"
-
-    status_str = "#{summary.files_modified} modified, #{summary.files_added} added"
-
-    [
-      "> **Score:** #{summary.base_grade} → #{summary.head_grade}  |  **Δ** #{delta_str} pts  |  **#{summary.blocks_flagged}** blocks flagged across #{summary.files_changed} files  |  #{status_str}",
-      ""
-    ]
-  end
-
   defp delta_section(nil), do: []
 
   defp delta_section(delta) do
@@ -441,7 +428,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       {"Structure", "branching", "mean_branch_count"}
     ]
 
-    rows = Enum.flat_map(metrics, &format_metric_row(&1, base_agg, head_agg))
+    rows = metrics |> Enum.flat_map(&format_metric_row(&1, base_agg, head_agg))
 
     if rows == [] do
       []
@@ -457,31 +444,28 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   end
 
   defp format_metric_row({label, group, key}, base_agg, head_agg) do
-    base_val = get_in(base_agg, [group, key])
-    head_val = get_in(head_agg, [group, key])
+    base_value = get_in(base_agg, [group, key])
+    head_value = get_in(head_agg, [group, key])
 
-    if is_number(base_val) and is_number(head_val) do
-      diff = Float.round(head_val - base_val, 2)
+    if is_number(base_value) and is_number(head_value) do
+      diff = Float.round(head_value - base_value, 2)
       diff_str = if diff >= 0, do: "+#{format_num(diff)}", else: "#{format_num(diff)}"
-      ["| #{label} | #{format_num(base_val)} | #{format_num(head_val)} | #{diff_str} |"]
+      ["| #{label} | #{format_num(base_value)} | #{format_num(head_value)} | #{diff_str} |"]
     else
       []
     end
   end
 
-  defp blocks_section([]) do
-    ["> 🟢 **No block-level issues detected**", ""]
-  end
+  defp blocks_section([]), do: ["> 🟢 **No block-level issues detected**", ""]
 
   defp blocks_section(top_blocks) do
-    alias CodeQA.HealthReport.BehaviorLabels
-
     severity_counts = count_severities(top_blocks)
     worst = worst_severity(severity_counts)
     {icon, verdict} = verdict_text(worst, severity_counts)
 
     {actionable, medium_blocks} =
-      Enum.split_with(top_blocks, fn b ->
+      top_blocks
+      |> Enum.split_with(fn b ->
         top = List.first(b.potentials)
         top && top.severity in [:critical, :high]
       end)
@@ -495,7 +479,8 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     action_table =
       if actionable != [] do
         rows =
-          Enum.map(actionable, fn block ->
+          actionable
+          |> Enum.map(fn block ->
             top = List.first(block.potentials)
             sev_icon = severity_icon(top.severity)
             label = BehaviorLabels.label(top.category, top.behavior)
@@ -513,13 +498,13 @@ defmodule CodeQA.HealthReport.Formatter.Github do
         []
       end
 
-    actionable_details = Enum.flat_map(actionable, &format_block_card/1)
+    actionable_details = actionable |> Enum.flat_map(&format_block_card/1)
 
     medium_section =
       if medium_blocks != [] do
         n = length(medium_blocks)
         word = if n == 1, do: "block", else: "blocks"
-        inner = Enum.flat_map(medium_blocks, &format_block_card/1) |> Enum.join("\n")
+        inner = medium_blocks |> Enum.flat_map(&format_block_card/1) |> Enum.join("\n")
 
         [
           "<details>",
@@ -537,20 +522,9 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     verdict_box ++ action_table ++ actionable_details ++ medium_section
   end
 
-  defp count_severities(blocks) do
-    blocks
-    |> Enum.map(fn b -> (List.first(b.potentials) || %{severity: :medium}).severity end)
-    |> Enum.frequencies()
-  end
+  defp count_severities(blocks), do: count_severities_shared(blocks)
 
-  defp worst_severity(counts) do
-    cond do
-      Map.get(counts, :critical, 0) > 0 -> :critical
-      Map.get(counts, :high, 0) > 0 -> :high
-      Map.get(counts, :medium, 0) > 0 -> :medium
-      true -> :none
-    end
-  end
+  defp worst_severity(counts), do: worst_severity_shared(counts)
 
   defp verdict_text(:critical, counts) do
     n = Map.get(counts, :critical, 0)
@@ -580,8 +554,6 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   end
 
   defp format_block_card(block) do
-    alias CodeQA.HealthReport.BehaviorLabels
-
     end_line = block.end_line || block.start_line
     top_potential = List.first(block.potentials)
     icon = severity_icon(top_potential.severity)
@@ -603,7 +575,8 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   end
 
   defp format_block_issues(potentials) do
-    Enum.flat_map(potentials, fn p ->
+    potentials
+    |> Enum.flat_map(fn p ->
       icon = severity_icon(p.severity)
       label = String.upcase(to_string(p.severity))
       delta_str = format_num(p.cosine_delta)
@@ -615,7 +588,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
 
   defp format_code_block(%{source: nil}), do: "_Source code not available_"
 
-  defp format_code_block(%{source: source, language: lang, start_line: start_line}) do
+  defp format_code_block(%{language: lang, source: source, start_line: start_line}) do
     lang_hint = code_fence_lang(lang)
     # Add line number comments for context
     lines = String.split(source, "\n")
@@ -623,8 +596,9 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     numbered_lines =
       lines
       |> Enum.with_index(start_line)
-      |> Enum.map(fn {line, num} -> "#{String.pad_leading(to_string(num), 4)} │ #{line}" end)
-      |> Enum.join("\n")
+      |> Enum.map_join("\n", fn {line, num} ->
+        "#{String.pad_leading(to_string(num), 4)} │ #{line}"
+      end)
 
     "```#{lang_hint}\n#{numbered_lines}\n```"
   end

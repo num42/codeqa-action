@@ -39,7 +39,7 @@ defmodule CodeQA.Engine.Parallel do
 
       {path, result}
     end)
-    |> Enum.into(%{})
+    |> Map.new()
   end
 
   defp maybe_cached_analyze(path, content, nil, opts),
@@ -49,23 +49,7 @@ defmodule CodeQA.Engine.Parallel do
     hash = :crypto.hash(:sha256, content) |> Base.encode16(case: :lower)
     cache_file = Path.join(cache_dir, hash <> ".json")
 
-    case File.read(cache_file) do
-      {:ok, cached} ->
-        case Jason.decode(cached) do
-          {:ok, data} ->
-            data
-
-          _ ->
-            data = analyze_single_file(path, content, opts)
-            File.write!(cache_file, Jason.encode!(data))
-            data
-        end
-
-      _ ->
-        data = analyze_single_file(path, content, opts)
-        File.write!(cache_file, Jason.encode!(data))
-        data
-    end
+    File.read(cache_file) |> analyze_or_use_cache(cache_file, content, opts, path)
   end
 
   defp analyze_single_file(path, content, opts) do
@@ -81,5 +65,25 @@ defmodule CodeQA.Engine.Parallel do
       "lines" => ctx.line_count,
       "metrics" => metrics
     }
+  end
+
+  defp analyze_or_use_cache({:ok, cached}, cache_file, content, opts, path),
+    do:
+      Jason.decode(cached)
+      |> decode_cache_or_reanalyze(cache_file, content, opts, path)
+
+  defp analyze_or_use_cache(_, cache_file, content, opts, path),
+    do: analyze_and_cache(cache_file, content, opts, path)
+
+  defp decode_cache_or_reanalyze({:ok, data}, _cache_file, _content, _opts, _path),
+    do: data
+
+  defp decode_cache_or_reanalyze(_, cache_file, content, opts, path),
+    do: analyze_and_cache(cache_file, content, opts, path)
+
+  defp analyze_and_cache(cache_file, content, opts, path) do
+    data = analyze_single_file(path, content, opts)
+    File.write!(cache_file, Jason.encode!(data))
+    data
   end
 end

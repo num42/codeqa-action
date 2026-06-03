@@ -1,4 +1,5 @@
 defmodule CodeQA.CLI.Diagnose do
+  alias CodeQA.Diagnostics
   @moduledoc false
 
   @behaviour CodeQA.CLI.Command
@@ -60,7 +61,7 @@ defmodule CodeQA.CLI.Diagnose do
         _ -> :plain
       end
 
-    CodeQA.Diagnostics.run(
+    Diagnostics.run(
       path: path,
       mode: mode,
       top: opts[:top] || 15,

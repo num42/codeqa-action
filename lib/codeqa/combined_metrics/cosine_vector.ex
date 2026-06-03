@@ -39,8 +39,8 @@ defmodule CodeQA.CombinedMetrics.CosineVector do
     log_metrics = Keyword.get(opts, :log_metrics)
 
     {dot, norm_s_sq, norm_v_sq, contributions} =
-      Enum.reduce(scalars, {0.0, 0.0, 0.0, []}, fn {{group, key}, scalar},
-                                                   {d, ns, nv, contribs} ->
+      scalars
+      |> Enum.reduce({0.0, 0.0, 0.0, []}, fn {{group, key}, scalar}, {d, ns, nv, contribs} ->
         log_m = lookup_log_metric(log_metrics, aggregate, group, key)
         contrib = scalar * log_m
 
@@ -61,13 +61,13 @@ defmodule CodeQA.CombinedMetrics.CosineVector do
       |> Enum.sort_by(fn {_, c} -> c end)
       |> Enum.take(5)
       |> Enum.map(fn {metric, contribution} ->
-        %{metric: to_string(metric), contribution: Float.round(contribution, 4)}
+        %{contribution: Float.round(contribution, 4), metric: to_string(metric)}
       end)
 
     [
       %{
-        category: category,
         behavior: behavior,
+        category: category,
         cosine: Float.round(cos_sim, 4),
         score: Float.round(calibrated, 4),
         top_metrics: top_metrics
@@ -81,10 +81,11 @@ defmodule CodeQA.CombinedMetrics.CosineVector do
   defp lookup_log_metric(nil, aggregate, group, key),
     do: :math.log(max(Scorer.get(aggregate, group, key) / 1.0, 1.0e-300))
 
-  defp lookup_log_metric(log_metrics, aggregate, group, key) do
-    case get_in(log_metrics, [group, key]) do
-      nil -> :math.log(max(Scorer.get(aggregate, group, key) / 1.0, 1.0e-300))
-      log_val -> log_val
-    end
-  end
+  defp lookup_log_metric(log_metrics, aggregate, group, key),
+    do: get_in(log_metrics, [group, key]) |> log_value_or_compute(aggregate, group, key)
+
+  defp log_value_or_compute(nil, aggregate, group, key),
+    do: max(Scorer.get(aggregate, group, key) / 1.0, 1.0e-300) |> :math.log()
+
+  defp log_value_or_compute(log_val, _aggregate, _group, _key), do: log_val
 end

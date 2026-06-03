@@ -36,26 +36,22 @@ defmodule CodeQA.AST.Classification.NodeClassifier do
 
   alias CodeQA.AST.Enrichment.Node
 
-  alias CodeQA.AST.Nodes.{
-    AttributeNode,
-    CodeNode,
-    DocNode,
-    FunctionNode,
-    ImportNode,
-    ModuleNode,
-    TestNode
-  }
+  alias CodeQA.AST.Nodes.AttributeNode
+  alias CodeQA.AST.Nodes.CodeNode
+  alias CodeQA.AST.Nodes.DocNode
+  alias CodeQA.AST.Nodes.FunctionNode
+  alias CodeQA.AST.Nodes.ImportNode
+  alias CodeQA.AST.Nodes.ModuleNode
+  alias CodeQA.AST.Nodes.TestNode
 
   alias CodeQA.AST.Parsing.SignalStream
 
-  alias CodeQA.AST.Signals.Classification.{
-    AttributeSignal,
-    DocSignal,
-    FunctionSignal,
-    ImportSignal,
-    ModuleSignal,
-    TestSignal
-  }
+  alias CodeQA.AST.Signals.Classification.AttributeSignal
+  alias CodeQA.AST.Signals.Classification.DocSignal
+  alias CodeQA.AST.Signals.Classification.FunctionSignal
+  alias CodeQA.AST.Signals.Classification.ImportSignal
+  alias CodeQA.AST.Signals.Classification.ModuleSignal
+  alias CodeQA.AST.Signals.Classification.TestSignal
 
   @classification_signals [
     %DocSignal{},
@@ -67,13 +63,13 @@ defmodule CodeQA.AST.Classification.NodeClassifier do
   ]
 
   @type_modules %{
-    doc: DocNode,
     attribute: AttributeNode,
+    code: CodeNode,
+    doc: DocNode,
     function: FunctionNode,
-    module: ModuleNode,
     import: ImportNode,
-    test: TestNode,
-    code: CodeNode
+    module: ModuleNode,
+    test: TestNode
   }
 
   @doc """
@@ -106,12 +102,12 @@ defmodule CodeQA.AST.Classification.NodeClassifier do
   defp prepend_context(tokens, []), do: tokens
   defp prepend_context(tokens, ctx) when is_list(ctx), do: ctx ++ tokens
 
-  defp vote(tokens, lang_mod) do
-    tokens
-    |> run_signals(lang_mod)
-    |> tally()
-    |> winner()
-  end
+  defp vote(tokens, lang_mod),
+    do:
+      tokens
+      |> run_signals(lang_mod)
+      |> tally()
+      |> winner()
 
   defp run_signals(tokens, lang_mod) do
     SignalStream.run(tokens, @classification_signals, lang_mod)
@@ -120,7 +116,8 @@ defmodule CodeQA.AST.Classification.NodeClassifier do
   end
 
   defp tally(emissions) do
-    Enum.reduce(emissions, %{}, fn {_src, _grp, name, weight}, acc ->
+    emissions
+    |> Enum.reduce(%{}, fn {_src, _grp, name, weight}, acc ->
       Map.update(acc, name, weight, &(&1 + weight))
     end)
   end
@@ -128,7 +125,7 @@ defmodule CodeQA.AST.Classification.NodeClassifier do
   defp winner(votes) when map_size(votes) == 0, do: :code
 
   defp winner(votes) do
-    {vote_name, _weight} = Enum.max_by(votes, fn {_, w} -> w end)
+    {vote_name, _weight} = votes |> Enum.max_by(fn {_, w} -> w end)
     vote_to_type(vote_name)
   end
 

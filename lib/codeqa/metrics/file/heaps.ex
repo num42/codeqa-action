@@ -1,4 +1,6 @@
 defmodule CodeQA.Metrics.File.Heaps do
+  alias CodeQA.Math
+
   @moduledoc """
   Fits Heaps' law to vocabulary growth in a file.
 
@@ -21,9 +23,7 @@ defmodule CodeQA.Metrics.File.Heaps do
 
   @spec analyze(map()) :: map()
   @impl true
-  def analyze(%{tokens: []}) do
-    %{"k" => 0.0, "beta" => 0.0, "r_squared" => 0.0}
-  end
+  def analyze(%{tokens: []}), do: %{"k" => 0.0, "beta" => 0.0, "r_squared" => 0.0}
 
   def analyze(%{tokens: tokens}) do
     total = length(tokens)
@@ -42,7 +42,7 @@ defmodule CodeQA.Metrics.File.Heaps do
     tokens
     |> Enum.with_index(1)
     |> Enum.reduce({MapSet.new(), []}, fn {token, i}, {seen, points} ->
-      seen = MapSet.put(seen, token.content)
+      seen = seen |> MapSet.put(token.content)
 
       if rem(i, interval) == 0 do
         {seen, [{i, MapSet.size(seen)} | points]}
@@ -56,13 +56,13 @@ defmodule CodeQA.Metrics.File.Heaps do
 
   defp fit_heaps(data_points) do
     # log(V) = log(k) + β * log(n)  →  linear regression in log-space
-    ns = Enum.map(data_points, &elem(&1, 0))
-    vs = Enum.map(data_points, &elem(&1, 1))
+    ns = data_points |> Enum.map(&elem(&1, 0))
+    vs = data_points |> Enum.map(&elem(&1, 1))
 
     log_ns = Nx.tensor(ns, type: :f64) |> Nx.log()
     log_vs = Nx.tensor(vs, type: :f64) |> Nx.log()
 
-    {slope, intercept, r_squared} = CodeQA.Math.linear_regression(log_ns, log_vs)
+    {slope, intercept, r_squared} = Math.linear_regression(log_ns, log_vs)
 
     k = :math.exp(Nx.to_number(intercept))
     beta = Nx.to_number(slope)

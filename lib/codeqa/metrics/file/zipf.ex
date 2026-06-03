@@ -1,4 +1,6 @@
 defmodule CodeQA.Metrics.File.Zipf do
+  alias CodeQA.Math
+
   @moduledoc """
   Fits Zipf's law to the token frequency distribution.
 
@@ -19,11 +21,10 @@ defmodule CodeQA.Metrics.File.Zipf do
 
   @spec analyze(map()) :: map()
   @impl true
-  def analyze(%{tokens: [], token_counts: _token_counts}) do
-    %{"exponent" => 0.0, "r_squared" => 0.0, "vocab_size" => 0, "total_tokens" => 0}
-  end
+  def analyze(%{token_counts: _token_counts, tokens: []}),
+    do: %{"exponent" => 0.0, "r_squared" => 0.0, "vocab_size" => 0, "total_tokens" => 0}
 
-  def analyze(%{tokens: tokens, token_counts: token_counts}) do
+  def analyze(%{token_counts: token_counts, tokens: tokens}) do
     frequencies = token_counts |> Map.values() |> Enum.sort(:desc)
     vocab_size = length(frequencies)
     total_tokens = length(tokens)
@@ -54,7 +55,7 @@ defmodule CodeQA.Metrics.File.Zipf do
     log_ranks = Nx.log(ranks)
     log_freqs = Nx.log(freqs)
 
-    {slope, _intercept, r_squared} = CodeQA.Math.linear_regression(log_ranks, log_freqs)
+    {slope, _intercept, r_squared} = Math.linear_regression(log_ranks, log_freqs)
 
     # Zipf: freq ∝ rank^(-s), so slope is negative; negate to return the positive exponent s
     {Float.round(-Nx.to_number(slope), 4), Float.round(Nx.to_number(r_squared), 4)}

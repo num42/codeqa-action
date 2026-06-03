@@ -14,16 +14,16 @@ defmodule CodeQA.Engine.FileContext do
   defstruct @enforce_keys ++ [:path, :blocks]
 
   @type t :: %__MODULE__{
-          content: String.t(),
-          tokens: [CodeQA.Engine.Pipeline.Token.t()],
-          token_counts: map(),
-          words: list(),
-          identifiers: list(),
-          lines: list(),
-          encoded: String.t(),
+          blocks: [CodeQA.AST.Enrichment.Node.t()] | nil,
           byte_count: non_neg_integer(),
+          content: String.t(),
+          encoded: String.t(),
+          identifiers: list(),
           line_count: non_neg_integer(),
+          lines: list(),
           path: String.t() | nil,
-          blocks: [CodeQA.AST.Enrichment.Node.t()] | nil
+          token_counts: map(),
+          tokens: [CodeQA.Engine.Pipeline.Token.t()],
+          words: list()
         }
 end

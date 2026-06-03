@@ -21,12 +21,11 @@ defmodule CodeQA.Metrics.File.IdentifierLengthVariance do
 
   @spec analyze(map()) :: map()
   @impl true
-  def analyze(%{identifiers: []}) do
-    %{"mean" => 0.0, "variance" => 0.0, "std_dev" => 0.0, "max" => 0}
-  end
+  def analyze(%{identifiers: []}),
+    do: %{"mean" => 0.0, "variance" => 0.0, "std_dev" => 0.0, "max" => 0}
 
   def analyze(%{identifiers: identifiers}) do
-    lengths = Enum.map(identifiers, &String.length/1)
+    lengths = identifiers |> Enum.map(&String.length/1)
     n = length(lengths)
     mean = Enum.sum(lengths) / n
 
@@ -41,7 +40,7 @@ defmodule CodeQA.Metrics.File.IdentifierLengthVariance do
       "mean" => Float.round(mean, 4),
       "variance" => Float.round(variance, 4),
       "std_dev" => Float.round(std_dev, 4),
-      "max" => Enum.max(lengths)
+      "max" => lengths |> Enum.max()
     }
   end
 end

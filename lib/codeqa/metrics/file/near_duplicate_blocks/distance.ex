@@ -32,7 +32,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Distance do
     a_arr = List.to_tuple(a)
     b_arr = List.to_tuple(b)
     lb = tuple_size(b_arr)
-    init_row = List.to_tuple(Enum.to_list(0..lb))
+    init_row = List.to_tuple(0..lb |> Enum.to_list())
     result_row = levenshtein_rows(a_arr, b_arr, tuple_size(a_arr), lb, init_row, 1)
     elem(result_row, lb)
   end
@@ -67,7 +67,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Distance do
     a_arr = List.to_tuple(a)
     b_arr = List.to_tuple(b)
     lb = tuple_size(b_arr)
-    init_row = List.to_tuple(Enum.to_list(0..lb))
+    init_row = List.to_tuple(0..lb |> Enum.to_list())
     levenshtein_rows_bounded(a_arr, b_arr, tuple_size(a_arr), lb, init_row, max_distance, 1)
   end
 
@@ -102,10 +102,10 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks.Distance do
   def percent_bucket(0, _min_count), do: 0
 
   def percent_bucket(ed, min_count) do
-    pct = ed / min_count
+    percent = ed / min_count
 
     @bucket_thresholds
-    |> Enum.find(fn {bucket, threshold} -> bucket > 0 and pct <= threshold end)
+    |> Enum.find(fn {bucket, threshold} -> bucket > 0 and percent <= threshold end)
     |> case do
       {bucket, _} -> bucket
       nil -> nil

@@ -99,7 +99,8 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeAssertionsLanguagesTest do
       none_of = Map.get(unquote(Macro.escape(block_assertion)), :none_of, [])
       all_of = unquote(Macro.escape(block_assertion)).all_of
 
-      assert Enum.any?(compounds, fn compound ->
+      assert compounds
+             |> Enum.any?(fn compound ->
                tokens = all_tokens(compound)
                compound_satisfies?(tokens, all_of, none_of)
              end),
@@ -107,22 +108,20 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeAssertionsLanguagesTest do
     end
   end
 
-  defp compound_nodes(code) do
-    code
-    |> TokenNormalizer.normalize_structural()
-    |> Parser.detect_blocks(Unknown)
-    |> NodeTypeDetector.detect_types(Unknown)
-    |> CompoundNodeBuilder.build()
-  end
+  defp compound_nodes(code),
+    do:
+      code
+      |> TokenNormalizer.normalize_structural()
+      |> Parser.detect_blocks(Unknown)
+      |> NodeTypeDetector.detect_types(Unknown)
+      |> CompoundNodeBuilder.build()
 
-  defp all_tokens(%CompoundNode{docs: docs, typespecs: typespecs, code: code}) do
-    (docs ++ typespecs ++ code)
-    |> Enum.flat_map(&node_tokens/1)
-  end
+  defp all_tokens(%CompoundNode{code: code, docs: docs, typespecs: typespecs}),
+    do:
+      (docs ++ typespecs ++ code)
+      |> Enum.flat_map(&node_tokens/1)
 
-  defp node_tokens(node) do
-    NodeProtocol.tokens(node)
-  end
+  defp node_tokens(node), do: node |> NodeProtocol.tokens()
 
   defp matches?({:exact, field, value}, token), do: Map.get(token, field) == value
 
@@ -130,7 +129,7 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeAssertionsLanguagesTest do
     do: String.contains?(Map.get(token, field, ""), value)
 
   defp compound_satisfies?(tokens, all_of, none_of) do
-    Enum.all?(all_of, fn matcher -> Enum.any?(tokens, &matches?(matcher, &1)) end) and
+    Enum.all?(all_of, fn matcher -> tokens |> Enum.any?(&matches?(matcher, &1)) end) and
       Enum.all?(none_of, fn matcher -> not Enum.any?(tokens, &matches?(matcher, &1)) end)
   end
 end

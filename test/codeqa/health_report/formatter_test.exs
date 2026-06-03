@@ -4,110 +4,104 @@ defmodule CodeQA.HealthReport.FormatterTest do
   alias CodeQA.HealthReport.Formatter
 
   @sample_report %{
-    metadata: %{path: "/home/user/project", timestamp: "2026-03-11T00:00:00Z", total_files: 42},
-    overall_score: 79,
-    overall_grade: "B+",
     categories: [
       %{
-        type: :threshold,
-        name: "Readability",
-        key: :readability,
-        score: 100,
         grade: "A",
         impact: 3,
-        summary: "Excellent",
+        key: :readability,
         metric_scores: [
           %{
-            name: "flesch_adapted",
-            source: "readability",
-            weight: 0.4,
             good: :high,
+            name: "flesch_adapted",
+            score: 100,
+            source: "readability",
             value: 102.5,
-            score: 100
+            weight: 0.4
           }
         ],
+        name: "Readability",
+        score: 100,
+        summary: "Excellent",
+        type: :threshold,
         worst_offenders: [
           %{
-            path: "lib/foo.ex",
-            score: 75,
+            bytes: 3840,
             grade: "B+",
             lines: 120,
-            bytes: 3840,
             metric_scores: [
               %{
-                name: "flesch_adapted",
-                source: "readability",
                 good: :high,
-                value: 65.0,
-                score: 75
+                name: "flesch_adapted",
+                score: 75,
+                source: "readability",
+                value: 65.0
               }
-            ]
+            ],
+            path: "lib/foo.ex",
+            score: 75
           }
         ]
       },
       %{
-        type: :threshold,
-        name: "Complexity",
-        key: :complexity,
-        score: 35,
         grade: "D",
         impact: 5,
-        summary: "Critical — requires attention",
+        key: :complexity,
         metric_scores: [
-          %{name: "difficulty", source: "halstead", weight: 0.35, value: 24.01, score: 65}
+          %{name: "difficulty", score: 65, source: "halstead", value: 24.01, weight: 0.35}
         ],
+        name: "Complexity",
+        score: 35,
+        summary: "Critical — requires attention",
+        type: :threshold,
         worst_offenders: []
       }
-    ]
+    ],
+    metadata: %{path: "/home/user/project", timestamp: "2026-03-11T00:00:00Z", total_files: 42},
+    overall_grade: "B+",
+    overall_score: 79
   }
 
   @cosine_category %{
-    type: :cosine,
-    key: "function_design",
-    name: "Function Design",
-    score: 64,
-    grade: "C",
-    impact: 1,
     behaviors: [
       %{
         behavior: "no_boolean_parameter",
         cosine: 0.12,
-        score: 56,
         grade: "C",
+        score: 56,
         worst_offenders: [
-          %{file: "lib/foo/bar.ex", cosine: -0.71}
+          %{cosine: -0.71, file: "lib/foo/bar.ex"}
         ]
       },
       %{
         behavior: "single_responsibility",
         cosine: 0.45,
-        score: 78,
         grade: "B+",
+        score: 78,
         worst_offenders: []
       }
-    ]
-  }
-
-  @enriched_cosine_category %{
-    type: :cosine,
+    ],
+    grade: "C",
+    impact: 1,
     key: "function_design",
     name: "Function Design",
     score: 64,
-    grade: "C",
-    impact: 1,
+    type: :cosine
+  }
+
+  @enriched_cosine_category %{
     behaviors: [
       %{
         behavior: "no_boolean_parameter",
         cosine: -0.65,
-        score: 42,
         grade: "D+",
+        score: 42,
         worst_offenders: [
           %{
-            file: "lib/codeqa/formatter.ex",
             cosine: -0.65,
+            file: "lib/codeqa/formatter.ex",
             top_metrics: [
-              %{metric: "branching.mean_depth", contribution: -4.10},
-              %{metric: "halstead.effort", contribution: -3.22}
+              %{contribution: -4.10, metric: "branching.mean_depth"},
+              %{contribution: -3.22, metric: "halstead.effort"}
             ],
             top_nodes: [
               %{"start_line" => 89, "type" => "block"},
@@ -116,30 +110,36 @@ defmodule CodeQA.HealthReport.FormatterTest do
           }
         ]
       }
-    ]
+    ],
+    grade: "C",
+    impact: 1,
+    key: "function_design",
+    name: "Function Design",
+    score: 64,
+    type: :cosine
   }
 
   @enriched_threshold_category %{
-    type: :threshold,
-    name: "Complexity",
-    key: :complexity,
-    score: 32,
     grade: "F",
     impact: 5,
-    summary: "Critical",
+    key: :complexity,
     metric_scores: [
-      %{name: "difficulty", source: "halstead", weight: 0.35, good: :low, value: 39.0, score: 32}
+      %{good: :low, name: "difficulty", score: 32, source: "halstead", value: 39.0, weight: 0.35}
     ],
+    name: "Complexity",
+    score: 32,
+    summary: "Critical",
+    type: :threshold,
     worst_offenders: [
       %{
-        path: "lib/foo.ex",
-        score: 32,
+        bytes: 15_872,
         grade: "F",
         lines: 491,
-        bytes: 15_872,
         metric_scores: [
-          %{name: "difficulty", source: "halstead", good: :low, value: 99.0, score: 0}
+          %{good: :low, name: "difficulty", score: 0, source: "halstead", value: 99.0}
         ],
+        path: "lib/foo.ex",
+        score: 32,
         top_nodes: [
           %{"start_line" => 201, "type" => "block"},
           %{"start_line" => 312, "type" => "block"}
@@ -210,15 +210,15 @@ defmodule CodeQA.HealthReport.FormatterTest do
 
   describe "plain formatter: PR summary section" do
     @sample_report_with_pr Map.put(@sample_report, :pr_summary, %{
-                             base_score: 85,
-                             head_score: 77,
-                             score_delta: -8,
                              base_grade: "B+",
-                             head_grade: "C+",
+                             base_score: 85,
                              blocks_flagged: 6,
-                             files_changed: 3,
                              files_added: 1,
-                             files_modified: 2
+                             files_changed: 3,
+                             files_modified: 2,
+                             head_grade: "C+",
+                             head_score: 77,
+                             score_delta: -8
                            })
 
     test "renders PR summary line when pr_summary present" do
@@ -271,24 +271,24 @@ defmodule CodeQA.HealthReport.FormatterTest do
 
   describe "plain formatter: block section" do
     @block_potential %{
-      category: "function_design",
       behavior: "cyclomatic_complexity_under_10",
+      category: "function_design",
       cosine_delta: 0.41,
-      severity: :critical,
-      fix_hint: "Reduce branching"
+      fix_hint: "Reduce branching",
+      severity: :critical
     }
 
     @top_blocks [
       %{
-        path: "lib/foo.ex",
-        status: "modified",
-        start_line: 42,
         end_line: 67,
-        type: "code",
-        token_count: 84,
-        source: "def foo do\n  :bar\nend",
         language: "elixir",
-        potentials: [@block_potential]
+        path: "lib/foo.ex",
+        potentials: [@block_potential],
+        source: "def foo do\n  :bar\nend",
+        start_line: 42,
+        status: "modified",
+        token_count: 84,
+        type: "code"
       }
     ]
 
@@ -426,24 +426,24 @@ defmodule CodeQA.HealthReport.FormatterTest do
 
   describe "github formatter: block section" do
     @block_potential %{
-      category: "function_design",
       behavior: "cyclomatic_complexity_under_10",
+      category: "function_design",
       cosine_delta: 0.41,
-      severity: :critical,
-      fix_hint: "Reduce branching"
+      fix_hint: "Reduce branching",
+      severity: :critical
     }
 
     @top_blocks_gh [
       %{
-        path: "lib/foo.ex",
-        status: "modified",
-        start_line: 42,
         end_line: 67,
-        type: "code",
-        token_count: 84,
-        source: "def foo do\n  :bar\nend",
         language: "elixir",
-        potentials: [@block_potential]
+        path: "lib/foo.ex",
+        potentials: [@block_potential],
+        source: "def foo do\n  :bar\nend",
+        start_line: 42,
+        status: "modified",
+        token_count: 84,
+        type: "code"
       }
     ]
 
@@ -472,15 +472,15 @@ defmodule CodeQA.HealthReport.FormatterTest do
 
   describe "github formatter: PR summary and delta" do
     @pr_summary_gh %{
-      base_score: 85,
-      head_score: 77,
-      score_delta: -8,
       base_grade: "B+",
-      head_grade: "C+",
+      base_score: 85,
       blocks_flagged: 6,
-      files_changed: 3,
       files_added: 1,
-      files_modified: 2
+      files_changed: 3,
+      files_modified: 2,
+      head_grade: "C+",
+      head_score: 77,
+      score_delta: -8
     }
 
     @delta_gh %{
@@ -514,7 +514,8 @@ defmodule CodeQA.HealthReport.FormatterTest do
     test "each part ends with sentinel comment" do
       parts = Formatter.render_parts(@sample_report)
 
-      Enum.with_index(parts, 1)
+      parts
+      |> Enum.with_index(1)
       |> Enum.each(fn {part, n} ->
         assert part =~ "<!-- codeqa-health-report-#{n} -->"
       end)
@@ -560,27 +561,28 @@ defmodule CodeQA.HealthReport.FormatterTest do
 
     test "returns single part with blocks (top 10 limit means no slicing needed)" do
       blocks =
-        Enum.map(1..10, fn i ->
-          %{
-            path: "lib/file_#{i}.ex",
-            status: "modified",
-            start_line: 10,
+        1..10
+        |> Enum.map(
+          &%{
             end_line: 30,
-            type: "function",
-            token_count: 150,
-            source: "def foo, do: :bar",
             language: "elixir",
+            path: "lib/file_#{&1}.ex",
             potentials: [
               %{
-                category: "function_design",
                 behavior: "single_responsibility",
+                category: "function_design",
                 cosine_delta: 0.35,
-                severity: :high,
-                fix_hint: "Consider extracting helper function"
+                fix_hint: "Consider extracting helper function",
+                severity: :high
               }
-            ]
+            ],
+            source: "def foo, do: :bar",
+            start_line: 10,
+            status: "modified",
+            token_count: 150,
+            type: "function"
           }
-        end)
+        )
 
       report = Map.put(@sample_report, :top_blocks, blocks)
       parts = Github.render_parts_3(report)
@@ -592,23 +594,23 @@ defmodule CodeQA.HealthReport.FormatterTest do
     test "part ends with sentinel" do
       blocks = [
         %{
-          path: "lib/foo.ex",
-          status: nil,
-          start_line: 1,
           end_line: 10,
-          type: "code",
-          token_count: 50,
-          source: "def foo, do: :bar",
           language: "elixir",
+          path: "lib/foo.ex",
           potentials: [
             %{
-              category: "function_design",
               behavior: "single_responsibility",
+              category: "function_design",
               cosine_delta: 0.35,
-              severity: :high,
-              fix_hint: nil
+              fix_hint: nil,
+              severity: :high
             }
-          ]
+          ],
+          source: "def foo, do: :bar",
+          start_line: 1,
+          status: nil,
+          token_count: 50,
+          type: "code"
         }
       ]
 
@@ -620,23 +622,23 @@ defmodule CodeQA.HealthReport.FormatterTest do
     test "renders source code in fenced block" do
       blocks = [
         %{
-          path: "lib/foo.ex",
-          status: nil,
-          start_line: 1,
           end_line: 10,
-          type: "code",
-          token_count: 50,
-          source: "def hello do\n  :world\nend",
           language: "elixir",
+          path: "lib/foo.ex",
           potentials: [
             %{
-              category: "function_design",
               behavior: "single_responsibility",
+              category: "function_design",
               cosine_delta: 0.35,
-              severity: :high,
-              fix_hint: nil
+              fix_hint: nil,
+              severity: :high
             }
-          ]
+          ],
+          source: "def hello do\n  :world\nend",
+          start_line: 1,
+          status: nil,
+          token_count: 50,
+          type: "code"
         }
       ]
 

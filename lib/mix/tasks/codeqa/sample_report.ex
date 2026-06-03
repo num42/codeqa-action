@@ -66,16 +66,19 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
     if opts[:apply_scalars] do
       stats = SampleRunner.apply_scalars(opts)
       IO.puts("\nApplied scalars to YAML configs:")
-      Enum.each(stats, &print_scalar_stats/1)
+      stats |> Enum.each(&print_scalar_stats/1)
     end
 
     if opts[:apply_languages] do
       stats = SampleRunner.apply_languages(opts)
       IO.puts("\nApplied language coverage to YAML configs:")
 
-      Enum.each(stats, fn %{category: cat, behaviors_with_languages: n} ->
-        IO.puts("  #{cat}: #{n} behaviors with language coverage")
-      end)
+      stats
+      |> Enum.each(
+        &IO.puts(
+          "  #{&1.category}: #{&1.behaviors_with_languages} behaviors with language coverage"
+        )
+      )
     end
 
     if path = opts[:file] do
@@ -96,7 +99,7 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
         "ok?"
     )
 
-    Enum.each(results, &print_row(&1, opts))
+    results |> Enum.each(&print_row(&1, opts))
   end
 
   defp print_row(r, opts) do
@@ -120,7 +123,7 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
     )
 
     if opts[:verbose] do
-      Enum.each(r.metric_detail, &print_metric_detail/1)
+      r.metric_detail |> Enum.each(&print_metric_detail/1)
     end
   end
 
@@ -166,26 +169,25 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
       IO.puts("\nTop #{top_n} likely issues (by cosine similarity):")
       IO.puts(String.duplicate("-", 75))
       IO.puts("  " <> pad("behavior", 38) <> pad("cosine", 9) <> "score")
-      Enum.each(issues, &print_issue_row/1)
+      issues |> Enum.each(&print_issue_row/1)
 
       IO.puts("\nFull breakdown by category:")
       combined = SampleRunner.score_aggregate(aggregate)
       IO.puts("")
-      Enum.each(combined, &print_combined_category/1)
+      combined |> Enum.each(&print_combined_category/1)
     else
       IO.puts("\nNo supported files found at: #{path}")
     end
   end
 
-  defp print_issue_row(%{category: cat, behavior: b, cosine: cos, score: s, top_metrics: metrics}) do
+  defp print_issue_row(%{behavior: b, category: cat, cosine: cos, score: s, top_metrics: metrics}) do
     IO.puts("  " <> pad("#{cat}.#{b}", 38) <> pad(fmt(cos), 9) <> fmt(s))
 
-    Enum.each(metrics, fn %{metric: m, contribution: c} ->
-      IO.puts("      " <> pad(m, 44) <> fmt(c))
-    end)
+    metrics
+    |> Enum.each(&IO.puts("      " <> pad(&1.metric, 44) <> fmt(&1.contribution)))
   end
 
-  defp print_combined_category(%{name: name, behaviors: behaviors}) do
+  defp print_combined_category(%{behaviors: behaviors, name: name}) do
     IO.puts(name)
     IO.puts(String.duplicate("-", 60))
 
@@ -201,9 +203,8 @@ defmodule Mix.Tasks.Codeqa.SampleReport do
     IO.puts("")
   end
 
-  defp print_scalar_stats(%{category: cat, updated: u, deadzoned: d, skipped: s}) do
-    IO.puts("  #{pad(cat, 30)}  #{u} written  #{d} deadzoned  #{s} skipped (no samples)")
-  end
+  defp print_scalar_stats(%{category: cat, deadzoned: d, skipped: s, updated: u}),
+    do: "  #{pad(cat, 30)}  #{u} written  #{d} deadzoned  #{s} skipped (no samples)" |> IO.puts()
 
   defp fmt(f), do: :erlang.float_to_binary(f / 1, decimals: 4)
   defp pad(s, n), do: String.pad_trailing(to_string(s), n)

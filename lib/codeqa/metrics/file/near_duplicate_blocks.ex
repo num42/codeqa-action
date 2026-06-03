@@ -45,7 +45,8 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
   @spec analyze([{String.t(), String.t()}], keyword()) :: map()
   def analyze(labeled_content, opts) do
     all_blocks =
-      Enum.flat_map(labeled_content, fn {path, content} ->
+      labeled_content
+      |> Enum.flat_map(fn {path, content} ->
         lang_mod = Language.detect(path)
         tokens = TokenNormalizer.normalize_structural(content)
 
@@ -65,7 +66,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
   @spec analyze_from_blocks([Node.t()], keyword()) :: map()
   def analyze_from_blocks(all_blocks, opts) do
     workers = Keyword.get(opts, :workers, System.schedulers_online())
-    max_pairs = Keyword.get(opts, :max_pairs_per_bucket, nil)
+    max_pairs = Keyword.get(opts, :max_pairs_per_bucket)
     include_pairs = Keyword.get(opts, :include_pairs, false)
 
     block_count = length(all_blocks)
@@ -84,20 +85,18 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
       end
 
     result =
-      Map.merge(result, %{"block_count" => block_count, "sub_block_count" => sub_block_count})
+      result |> Map.merge(%{"block_count" => block_count, "sub_block_count" => sub_block_count})
 
-    case include_pairs do
-      true ->
-        pairs_result =
-          for d <- 0..@max_bucket, into: %{} do
-            {"near_dup_block_d#{d}_pairs",
-             Map.get(buckets, d, %{pairs: []}).pairs |> format_pairs()}
-          end
+    if include_pairs do
+      pairs_result =
+        for d <- 0..@max_bucket, into: %{} do
+          {"near_dup_block_d#{d}_pairs",
+           Map.get(buckets, d, %{pairs: []}).pairs |> format_pairs()}
+        end
 
-        Map.merge(result, pairs_result)
-
-      false ->
-        result
+      Map.merge(result, pairs_result)
+    else
+      result
     end
   end
 
@@ -110,7 +109,8 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
 
   @doc false
   def label_blocks(blocks, path) do
-    Enum.map(blocks, fn block ->
+    blocks
+    |> Enum.map(fn block ->
       label = if block.start_line, do: "#{path}:#{block.start_line}", else: path
       %{block | label: label}
     end)
@@ -124,7 +124,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
   # analyze_from_blocks gets both without a redundant NodeProtocol.children pass.
   defp do_find_pairs(blocks, opts) do
     workers = Keyword.get(opts, :workers, System.schedulers_online())
-    max_pairs = Keyword.get(opts, :max_pairs_per_bucket, nil)
+    max_pairs = Keyword.get(opts, :max_pairs_per_bucket)
     idf_max_freq = Keyword.get(opts, :idf_max_freq, 1.0)
     has_progress = Keyword.has_key?(opts, :on_progress)
 
@@ -135,7 +135,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
 
       # sub_block_count derived from the already-computed children_count in decorated.
       sub_block_count =
-        Enum.reduce(decorated, 0, fn {_, _, _, _, _, cc, _, _}, acc -> acc + cc end)
+        decorated |> Enum.sum_by(fn {_, _, _, _, _, cc, _, _} -> cc end)
 
       # IDF: prune bigrams that appear in more than idf_max_freq fraction of blocks.
       # These are structural noise (e.g. "end nil", "return false") that inflate the
@@ -144,7 +144,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
 
       decorated =
         if MapSet.size(pruned) > 0 do
-          Enum.map(decorated, &Candidates.prune_bigrams(&1, pruned))
+          decorated |> Enum.map(&Candidates.prune_bigrams(&1, pruned))
         else
           decorated
         end
@@ -171,7 +171,8 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
   end
 
   defp bucket_pairs(raw_pairs, max_pairs) do
-    Enum.reduce(raw_pairs, %{}, fn {bucket, pair}, acc ->
+    raw_pairs
+    |> Enum.reduce(%{}, fn {bucket, pair}, acc ->
       Map.update(
         acc,
         bucket,
@@ -191,7 +192,8 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocks do
   defp maybe_append(list, pair, _max, _count), do: [pair | list]
 
   defp format_pairs(pairs) do
-    Enum.map(pairs, fn {label_a, label_b} ->
+    pairs
+    |> Enum.map(fn {label_a, label_b} ->
       %{"source_a" => label_a, "source_b" => label_b}
     end)
   end

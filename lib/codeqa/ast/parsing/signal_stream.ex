@@ -25,19 +25,21 @@ defmodule CodeQA.AST.Parsing.SignalStream do
   def run(tokens, signals, lang_mod) do
     prevs = [nil | tokens]
     nexts = Enum.drop(tokens, 1) ++ [nil]
-    triples = Enum.zip_with([prevs, tokens, nexts], fn [p, c, n] -> {p, c, n} end)
+    triples = [prevs, tokens, nexts] |> Enum.zip_with(fn [p, c, n] -> {p, c, n} end)
 
-    Enum.map(signals, fn signal ->
+    signals
+    |> Enum.map(fn signal ->
       init_state = Signal.init(signal, lang_mod)
       source = Signal.source(signal)
       group = Signal.group(signal)
 
       {_final_state, emissions} =
-        Enum.reduce_while(triples, {init_state, []}, fn triple, {state, acc} ->
+        triples
+        |> Enum.reduce_while({init_state, []}, fn triple, {state, acc} ->
           emit_step(signal, triple, state, acc, source, group)
         end)
 
-      Enum.reverse(emissions)
+      emissions |> Enum.reverse()
     end)
   end
 

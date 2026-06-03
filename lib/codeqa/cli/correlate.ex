@@ -1,4 +1,5 @@
 defmodule CodeQA.CLI.Correlate do
+  alias CodeQA.Math
   @moduledoc false
 
   @behaviour CodeQA.CLI.Command
@@ -80,8 +81,8 @@ defmodule CodeQA.CLI.Correlate do
     IO.puts(:stderr, "  Total time: #{total_end - total_start}ms")
 
     top_n = opts[:top] || 20
-    sorted = Enum.sort_by(correlations, &abs(&1["correlation"]), :desc)
-    top = Enum.take(sorted, top_n)
+    sorted = correlations |> Enum.sort_by(&abs(&1["correlation"]), :desc)
+    top = sorted |> Enum.take(top_n)
 
     Jason.encode!(top, pretty: true)
   end
@@ -90,7 +91,8 @@ defmodule CodeQA.CLI.Correlate do
     t0 = System.monotonic_time(:millisecond)
 
     extracted =
-      Enum.map(files, fn file ->
+      files
+      |> Enum.map(fn file ->
         Path.join(path, file)
         |> File.read!()
         |> Jason.decode!()
@@ -117,7 +119,7 @@ defmodule CodeQA.CLI.Correlate do
     series =
       keys
       |> Enum.map(fn key ->
-        values = Enum.map(extracted, &Map.get(&1, key, 0.0))
+        values = extracted |> Enum.map(&Map.get(&1, key, 0.0))
         {key, values, Enum.min(values) != Enum.max(values)}
       end)
       |> Enum.filter(fn {_, _, has_variance} -> has_variance end)
@@ -146,8 +148,9 @@ defmodule CodeQA.CLI.Correlate do
   end
 
   defp flatten_aggregate_metrics(aggregate) do
-    Enum.flat_map(aggregate, fn {category, metrics} ->
-      Enum.map(metrics, fn {name, val} -> {"#{category}.#{name}", val} end)
+    aggregate
+    |> Enum.flat_map(fn {category, metrics} ->
+      metrics |> Enum.map(fn {name, val} -> {"#{category}.#{name}", val} end)
     end)
   end
 
@@ -160,7 +163,7 @@ defmodule CodeQA.CLI.Correlate do
         else: all_pairs_stream(active_keys)
 
     pairs_stream =
-      if max_steps > 0, do: Stream.take(pairs_to_process, max_steps), else: pairs_to_process
+      if max_steps > 0, do: pairs_to_process |> Stream.take(max_steps), else: pairs_to_process
 
     total_pairs =
       cond do
@@ -168,8 +171,8 @@ defmodule CodeQA.CLI.Correlate do
           max_steps
 
         opts[:combined_only] ->
-          normal_count = Enum.count(active_keys, &(not String.contains?(&1, ",")))
-          combined_count = Enum.count(active_keys, &String.contains?(&1, ","))
+          normal_count = active_keys |> Enum.count(&(not String.contains?(&1, ",")))
+          combined_count = active_keys |> Enum.count(&String.contains?(&1, ","))
           normal_count * combined_count
 
         true ->
@@ -180,21 +183,23 @@ defmodule CodeQA.CLI.Correlate do
   end
 
   defp combined_pairs_stream(active_keys) do
-    normal = Enum.reject(active_keys, &String.contains?(&1, ","))
-    combined = Enum.filter(active_keys, &String.contains?(&1, ","))
+    normal = active_keys |> Enum.reject(&String.contains?(&1, ","))
+    combined = active_keys |> Enum.filter(&String.contains?(&1, ","))
 
-    Stream.flat_map(normal, fn k1 ->
-      Stream.map(combined, fn k2 -> {k1, k2} end)
+    normal
+    |> Stream.flat_map(fn k1 ->
+      combined |> Stream.map(&{k1, &1})
     end)
   end
 
   defp all_pairs_stream(active_keys) do
-    Stream.unfold(active_keys, fn
+    active_keys
+    |> Stream.unfold(fn
       [] -> nil
       [_h | t] = list -> {list, t}
     end)
     |> Stream.flat_map(fn
-      [k1 | rest] -> Stream.map(rest, fn k2 -> {k1, k2} end)
+      [k1 | rest] -> rest |> Stream.map(&{k1, &1})
       [] -> []
     end)
   end
@@ -241,7 +246,7 @@ defmodule CodeQA.CLI.Correlate do
         MapSet.disjoint?(Map.fetch!(category_map, k1), Map.fetch!(category_map, k2))
 
     if cross_valid do
-      corr = CodeQA.Math.pearson_correlation_list(Map.fetch!(series, k1), Map.fetch!(series, k2))
+      corr = Math.pearson_correlation_list(Map.fetch!(series, k1), Map.fetch!(series, k2))
       maybe_correlation_result(k1, k2, corr, opts)
     end
   end

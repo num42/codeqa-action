@@ -5,42 +5,42 @@ defmodule CodeQA.AST.Nodes.AttributeNode do
   """
 
   alias CodeQA.AST.Enrichment.Node
-  alias CodeQA.AST.Lexing.{NewlineToken, WhitespaceToken}
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
 
-  defstruct [:tokens, :line_count, :children, :start_line, :end_line, :label, :name, :kind]
+  defstruct [:children, :end_line, :kind, :label, :line_count, :name, :start_line, :tokens]
 
   @type t :: %__MODULE__{
-          tokens: [term()],
-          line_count: non_neg_integer(),
           children: [term()],
-          start_line: non_neg_integer() | nil,
           end_line: non_neg_integer() | nil,
+          kind: :field | :constant | :decorator | :annotation | :typespec | nil,
           label: term() | nil,
+          line_count: non_neg_integer(),
           name: String.t() | nil,
-          kind: :field | :constant | :decorator | :annotation | :typespec | nil
+          start_line: non_neg_integer() | nil,
+          tokens: [term()]
         }
 
   @typespec_attrs MapSet.new(~w[spec type typep opaque callback macrocallback])
 
   @doc "Build an AttributeNode from a raw %Node{}, detecting :typespec kind from tokens."
   @spec cast(Node.t()) :: t()
-  def cast(%Node{} = node) do
-    %__MODULE__{
-      tokens: node.tokens,
-      line_count: node.line_count,
+  def cast(%Node{} = node),
+    do: %__MODULE__{
       children: node.children,
-      start_line: node.start_line,
       end_line: node.end_line,
+      kind: detect_kind(node.tokens),
       label: node.label,
-      kind: detect_kind(node.tokens)
+      line_count: node.line_count,
+      start_line: node.start_line,
+      tokens: node.tokens
     }
-  end
 
   defp detect_kind(tokens) do
     tokens
     |> Enum.drop_while(&(&1.kind in [WhitespaceToken.kind(), NewlineToken.kind()]))
     |> case do
-      [%{kind: "@"}, %{kind: "<ID>", content: name} | _] ->
+      [%{kind: "@"}, %{content: name, kind: "<ID>"} | _] ->
         if MapSet.member?(@typespec_attrs, name), do: :typespec, else: nil
 
       _ ->
@@ -59,9 +59,9 @@ defmodule CodeQA.AST.Nodes.AttributeNode do
     def label(n), do: n.label
 
     def flat_tokens(n) do
-      if Enum.empty?(n.children),
+      if n.children |> Enum.empty?(),
         do: n.tokens,
-        else: Enum.flat_map(n.children, &NodeProtocol.flat_tokens/1)
+        else: n.children |> Enum.flat_map(&NodeProtocol.flat_tokens/1)
     end
   end
 end

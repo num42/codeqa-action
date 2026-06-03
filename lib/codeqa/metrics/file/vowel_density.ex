@@ -29,9 +29,9 @@ defmodule CodeQA.Metrics.File.VowelDensity do
     else
       {vowels, chars} =
         list
-        |> Enum.reduce({0, 0}, fn id, {v, c} ->
-          id_chars = String.length(id)
-          id_vowels = id |> String.graphemes() |> Enum.count(&MapSet.member?(@vowels, &1))
+        |> Enum.reduce({0, 0}, fn identifier, {v, c} ->
+          id_chars = String.length(identifier)
+          id_vowels = identifier |> String.graphemes() |> Enum.count(&MapSet.member?(@vowels, &1))
           {v + id_vowels, c + id_chars}
         end)
 

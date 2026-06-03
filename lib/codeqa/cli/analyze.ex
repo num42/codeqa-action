@@ -65,7 +65,7 @@ defmodule CodeQA.CLI.Analyze do
     IO.puts(:stderr, "Analysis completed in #{end_time - start_time}ms")
 
     total_bytes = results["files"] |> Map.values() |> Enum.map(& &1["bytes"]) |> Enum.sum()
-    results = filter_files_for_output(results, opts, "json")
+    results = results |> filter_files_for_output(opts, "json")
 
     report =
       %{

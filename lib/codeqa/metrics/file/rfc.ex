@@ -39,7 +39,7 @@ defmodule CodeQA.Metrics.File.RFC do
 
   @spec analyze(CodeQA.Engine.FileContext.t()) :: map()
   @impl true
-  def analyze(%{tokens: tokens, line_count: line_count}) do
+  def analyze(%{line_count: line_count, tokens: tokens}) do
     {func_def_count, call_targets} = scan_tokens(tokens)
 
     distinct_call_count = MapSet.size(call_targets)
@@ -62,7 +62,7 @@ defmodule CodeQA.Metrics.File.RFC do
   # Uses a sliding window of two adjacent tokens.
   defp scan_tokens(tokens) do
     tokens
-    |> Enum.zip(Enum.drop(tokens, 1))
+    |> Enum.zip(tokens |> Enum.drop(1))
     |> Enum.reduce({0, MapSet.new()}, fn {tok, next}, {defs, calls} ->
       cond do
         # Function definition: keyword followed by an identifier

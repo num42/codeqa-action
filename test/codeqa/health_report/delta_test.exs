@@ -3,9 +3,7 @@ defmodule CodeQA.HealthReport.DeltaTest do
 
   alias CodeQA.HealthReport.Delta
 
-  defp make_results(aggregate) do
-    %{"codebase" => %{"aggregate" => aggregate}}
-  end
+  defp make_results(aggregate), do: %{"codebase" => %{"aggregate" => aggregate}}
 
   test "returns base, head, and delta aggregates" do
     base = make_results(%{"entropy" => %{"mean_value" => 5.0}})

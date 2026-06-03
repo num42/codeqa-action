@@ -1,4 +1,6 @@
 defmodule CodeQA.CombinedMetrics.ScalarApplier do
+  alias CodeQA.Language
+
   @moduledoc """
   Writes suggested scalars and language metadata back to the combined-metrics YAML
   config files under `priv/combined_metrics/`.
@@ -78,9 +80,9 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
       File.write!(yaml_path, YamlFormatter.format(updated))
 
       behaviors_with_languages =
-        Enum.count(updated, fn {_b, groups} -> Map.has_key?(groups, "_languages") end)
+        updated |> Enum.count(fn {_b, groups} -> Map.has_key?(groups, "_languages") end)
 
-      %{category: category, behaviors_with_languages: behaviors_with_languages}
+      %{behaviors_with_languages: behaviors_with_languages, category: category}
     end)
   end
 
@@ -91,7 +93,7 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   defp apply_to_category(existing, category, report) do
     existing
     |> Enum.filter(fn {_k, v} -> is_map(v) end)
-    |> Enum.reduce({%{}, %{updated: 0, deadzoned: 0, skipped: 0}}, fn
+    |> Enum.reduce({%{}, %{deadzoned: 0, skipped: 0, updated: 0}}, fn
       {behavior, current_groups}, {acc_yaml, stats} ->
         report_key = "#{category}.#{behavior}"
         doc = read_behavior_doc(category, behavior)
@@ -126,8 +128,9 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   end
 
   defp groups_from_report(metrics) do
-    Enum.reduce(metrics, {%{}, 0.0, 0, 0}, fn {metric_key, data},
-                                              {groups, log_baseline, n_updated, n_deadzoned} ->
+    metrics
+    |> Enum.reduce({%{}, 0.0, 0, 0}, fn {metric_key, data},
+                                        {groups, log_baseline, n_updated, n_deadzoned} ->
       [group, key] = String.split(metric_key, ".", parts: 2)
 
       if deadzone?(data.ratio) do
@@ -157,16 +160,7 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   defp read_behavior_doc(category, behavior) do
     config_path = Path.join([@samples_root, category, behavior, "config.yml"])
 
-    case File.read(config_path) do
-      {:ok, content} ->
-        case YamlElixir.read_from_string(content) do
-          {:ok, %{"doc" => doc}} when is_binary(doc) -> doc
-          _ -> nil
-        end
-
-      _ ->
-        nil
-    end
+    File.read(config_path) |> parse_behavior_doc()
   end
 
   defp maybe_put_doc(groups, nil), do: groups
@@ -176,18 +170,7 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   # Language detection helpers
   # ---------------------------------------------------------------------------
 
-  defp dir_languages(dir) do
-    case File.ls(dir) do
-      {:ok, files} ->
-        files
-        |> Enum.map(&CodeQA.Language.detect/1)
-        |> Enum.map(& &1.name())
-        |> MapSet.new()
-
-      _ ->
-        MapSet.new()
-    end
-  end
+  defp dir_languages(dir), do: File.ls(dir) |> languages_from_files()
 
   defp languages_for_behavior(category, behavior) do
     bad_langs = dir_languages(sample_path(category, behavior, "bad"))
@@ -203,7 +186,24 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   defp maybe_put_languages(groups, []), do: groups
   defp maybe_put_languages(groups, langs), do: Map.put(groups, "_languages", langs)
 
-  defp sample_path(category, behavior, kind) do
-    Path.join([@samples_root, category, behavior, kind])
+  defp sample_path(category, behavior, kind),
+    do: [@samples_root, category, behavior, kind] |> Path.join()
+
+  defp parse_behavior_doc({:ok, content}) do
+    case YamlElixir.read_from_string(content) do
+      {:ok, %{"doc" => doc}} when is_binary(doc) -> doc
+      _ -> nil
+    end
   end
+
+  defp parse_behavior_doc(_), do: nil
+
+  defp languages_from_files({:ok, files}),
+    do:
+      files
+      |> Enum.map(&Language.detect/1)
+      |> Enum.map(& &1.name())
+      |> MapSet.new()
+
+  defp languages_from_files(_), do: MapSet.new()
 end

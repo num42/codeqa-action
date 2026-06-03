@@ -33,7 +33,7 @@ defmodule CodeQA.Metrics.File.Ngram do
   @spec analyze(map()) :: map()
   @impl true
   def analyze(ctx) do
-    tokens = Enum.map(ctx.tokens, & &1.content)
+    tokens = ctx.tokens |> Enum.map(& &1.content)
 
     bigram_stats = ngram_stats(tokens, 2) |> rename_keys("bigram")
     trigram_stats = ngram_stats(tokens, 3) |> rename_keys("trigram")
@@ -53,7 +53,7 @@ defmodule CodeQA.Metrics.File.Ngram do
 
   defp ngram_stats(tokens, n) do
     grams = tokens |> Enum.chunk_every(n, 1, :discard)
-    counts = Enum.frequencies(grams)
+    counts = grams |> Enum.frequencies()
     total = length(grams)
     unique = map_size(counts)
     repeated = counts |> Map.values() |> Enum.filter(&(&1 > 1)) |> Enum.sum()
@@ -70,6 +70,9 @@ defmodule CodeQA.Metrics.File.Ngram do
   end
 
   defp rename_keys(map, prefix) do
-    Map.new(map, fn {k, v} -> {"#{prefix}_#{k}", v} end)
+    for {k, v} <- map do
+      {"#{prefix}_#{k}", v}
+    end
+    |> Map.new()
   end
 end

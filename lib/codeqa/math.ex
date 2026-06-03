@@ -34,7 +34,8 @@ defmodule CodeQA.Math do
     n = length(x)
 
     {sum_x, sum_y, sum_xy, sum_x2, sum_y2} =
-      Enum.zip_reduce(x, y, {0.0, 0.0, 0.0, 0.0, 0.0}, fn vx, vy, {sx, sy, sxy, sx2, sy2} ->
+      x
+      |> Enum.zip_reduce(y, {0.0, 0.0, 0.0, 0.0, 0.0}, fn vx, vy, {sx, sy, sxy, sx2, sy2} ->
         vx_f = vx * 1.0
         vy_f = vy * 1.0
         {sx + vx_f, sy + vy_f, sxy + vx_f * vy_f, sx2 + vx_f * vx_f, sy2 + vy_f * vy_f}
@@ -55,8 +56,8 @@ defmodule CodeQA.Math do
 
   def pearson_correlation(x, y) do
     n = Nx.size(x) |> Nx.tensor(type: :f64)
-    x = Nx.as_type(x, :f64)
-    y = Nx.as_type(y, :f64)
+    x = x |> Nx.as_type(:f64)
+    y = y |> Nx.as_type(:f64)
 
     sum_x = Nx.sum(x)
     sum_y = Nx.sum(y)

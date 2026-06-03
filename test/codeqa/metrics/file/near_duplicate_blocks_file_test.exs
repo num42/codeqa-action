@@ -3,9 +3,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksFileTest do
   alias CodeQA.Engine.Pipeline
   alias CodeQA.Metrics.File.NearDuplicateBlocksFile
 
-  defp ctx(code, path \\ "test.ex") do
-    Pipeline.build_file_context(code, path: path)
-  end
+  defp ctx(code, path \\ "test.ex"), do: code |> Pipeline.build_file_context(path: path)
 
   describe "name/0" do
     test "returns near_duplicate_blocks_file" do
@@ -45,7 +43,7 @@ defmodule CodeQA.Metrics.File.NearDuplicateBlocksFileTest do
 
     test "no _pairs keys in output" do
       result = NearDuplicateBlocksFile.analyze(ctx("x = 1\n"))
-      refute Enum.any?(Map.keys(result), &String.ends_with?(&1, "_pairs"))
+      refute Map.keys(result) |> Enum.any?(&String.ends_with?(&1, "_pairs"))
     end
 
     test "detects exact duplicate blocks at d0" do

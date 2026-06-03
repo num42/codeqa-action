@@ -164,7 +164,7 @@ defmodule CodeQA.HealthReport.GraderTest do
     result = Analyzer.analyze_codebase(files)
     aggregate = get_in(result, ["codebase", "aggregate"])
     all_cosines = SampleRunner.diagnose_aggregate(aggregate, top: 99_999)
-    cosines_by_category = Enum.group_by(all_cosines, & &1.category)
+    cosines_by_category = all_cosines |> Enum.group_by(& &1.category)
     {:ok, cosines_by_category: cosines_by_category}
   end
 
@@ -251,7 +251,7 @@ defmodule CodeQA.HealthReport.GraderTest do
     end
 
     test "worst_offenders uses worst_files lookup", %{cosines_by_category: cosines_by_category} do
-      sentinel = [%{file: "lib/sentinel.ex", cosine: -0.99}]
+      sentinel = [%{cosine: -0.99, file: "lib/sentinel.ex"}]
       # Get one real behavior key to inject into worst_files
       [first_cat | _] = Grader.grade_cosine_categories(cosines_by_category, %{}, @default_scale)
       first_behavior = hd(first_cat.behaviors)
@@ -260,8 +260,8 @@ defmodule CodeQA.HealthReport.GraderTest do
       worst_files = %{lookup_key => sentinel}
       result = Grader.grade_cosine_categories(cosines_by_category, worst_files, @default_scale)
 
-      found_cat = Enum.find(result, &(&1.key == first_cat.key))
-      found_behavior = Enum.find(found_cat.behaviors, &(&1.behavior == first_behavior.behavior))
+      found_cat = result |> Enum.find(&(&1.key == first_cat.key))
+      found_behavior = found_cat.behaviors |> Enum.find(&(&1.behavior == first_behavior.behavior))
       assert found_behavior.worst_offenders == sentinel
     end
 
@@ -270,9 +270,9 @@ defmodule CodeQA.HealthReport.GraderTest do
     } do
       sentinel = [
         %{
-          file: "lib/sentinel.ex",
           cosine: -0.99,
-          top_metrics: [%{metric: "foo.bar", contribution: -1.5}],
+          file: "lib/sentinel.ex",
+          top_metrics: [%{contribution: -1.5, metric: "foo.bar"}],
           top_nodes: [%{"start_line" => 42, "type" => "block"}]
         }
       ]
@@ -284,8 +284,8 @@ defmodule CodeQA.HealthReport.GraderTest do
       worst_files = %{lookup_key => sentinel}
       result = Grader.grade_cosine_categories(cosines_by_category, worst_files, @default_scale)
 
-      found_cat = Enum.find(result, &(&1.key == first_cat.key))
-      found_behavior = Enum.find(found_cat.behaviors, &(&1.behavior == first_behavior.behavior))
+      found_cat = result |> Enum.find(&(&1.key == first_cat.key))
+      found_behavior = found_cat.behaviors |> Enum.find(&(&1.behavior == first_behavior.behavior))
       assert found_behavior.worst_offenders == sentinel
     end
 
@@ -304,16 +304,16 @@ defmodule CodeQA.HealthReport.GraderTest do
   describe "worst_offenders/4 top_nodes" do
     @category %{
       key: :function_design,
-      name: "Function Design",
       metrics: [
         %{
-          source: "halstead",
-          name: "tokens",
-          weight: 1.0,
           good: :low,
-          thresholds: %{a: 10, b: 20, c: 30, d: 40}
+          name: "tokens",
+          source: "halstead",
+          thresholds: %{a: 10, b: 20, c: 30, d: 40},
+          weight: 1.0
         }
-      ]
+      ],
+      name: "Function Design"
     }
 
     test "returns top_nodes: [] when file_data has no nodes key" do
@@ -488,7 +488,7 @@ defmodule CodeQA.HealthReport.GraderTest do
 
       # child_node is not top-level, so only top-level nodes are considered
       assert length(entry.top_nodes) == 3
-      start_lines = Enum.map(entry.top_nodes, & &1["start_line"])
+      start_lines = entry.top_nodes |> Enum.map(& &1["start_line"])
       refute 11 in start_lines
     end
   end

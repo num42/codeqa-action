@@ -15,10 +15,10 @@ defmodule CodeQA.Config do
     "testing" => 1
   }
 
-  defstruct ignore_paths: [],
-            impact_map: @default_impact,
-            combined_top: 2,
+  defstruct combined_top: 2,
             cosine_significance_threshold: 0.15,
+            ignore_paths: [],
+            impact_map: @default_impact,
             near_duplicate_blocks: []
 
   @spec load(String.t()) :: :ok
@@ -52,40 +52,33 @@ defmodule CodeQA.Config do
   @spec near_duplicate_blocks_opts() :: keyword()
   def near_duplicate_blocks_opts, do: fetch().near_duplicate_blocks
 
-  defp fetch do
-    :persistent_term.get(@key, %__MODULE__{})
-  end
+  defp fetch, do: @key |> :persistent_term.get(%__MODULE__{})
 
   defp parse(path) do
     config_file = Path.join(path, ".codeqa.yml")
 
-    case File.read(config_file) do
-      {:ok, contents} ->
-        case YamlElixir.read_from_string(contents) do
-          {:ok, yaml} -> from_yaml(yaml)
-          _ -> %__MODULE__{}
-        end
-
-      {:error, _} ->
-        %__MODULE__{}
-    end
+    File.read(config_file) |> parse_contents()
   end
 
-  defp from_yaml(yaml) do
-    %__MODULE__{
-      ignore_paths: parse_ignore_paths(yaml),
-      impact_map: parse_impact(yaml),
+  defp from_yaml(yaml),
+    do: %__MODULE__{
       combined_top: Map.get(yaml, "combined_top", 2),
       cosine_significance_threshold: Map.get(yaml, "cosine_significance_threshold", 0.15),
+      ignore_paths: parse_ignore_paths(yaml),
+      impact_map: parse_impact(yaml),
       near_duplicate_blocks: parse_near_duplicate_blocks(yaml)
     }
-  end
 
   defp parse_ignore_paths(%{"ignore_paths" => patterns}) when is_list(patterns), do: patterns
   defp parse_ignore_paths(_), do: []
 
   defp parse_impact(%{"impact" => overrides}) when is_map(overrides) do
-    string_overrides = Map.new(overrides, fn {k, v} -> {to_string(k), v} end)
+    string_overrides =
+      for {k, v} <- overrides do
+        {to_string(k), v}
+      end
+      |> Map.new()
+
     Map.merge(@default_impact, string_overrides)
   end
 
@@ -96,4 +89,13 @@ defmodule CodeQA.Config do
        do: [max_pairs_per_bucket: n]
 
   defp parse_near_duplicate_blocks(_), do: []
+
+  defp parse_contents({:ok, contents}),
+    do: YamlElixir.read_from_string(contents) |> parse_yaml_result()
+
+  defp parse_contents({:error, _}), do: %__MODULE__{}
+
+  defp parse_yaml_result({:ok, yaml}), do: yaml |> from_yaml()
+
+  defp parse_yaml_result(_), do: %__MODULE__{}
 end

@@ -1,4 +1,8 @@
 defmodule CodeQA.AST.Signals.Classification.TestSignal do
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
+  alias CodeQA.Language
+
   @moduledoc """
   Classification signal — votes `:test` when a test block keyword appears at
   indent 0.
@@ -16,20 +20,19 @@ defmodule CodeQA.AST.Signals.Classification.TestSignal do
   defstruct []
 
   defimpl CodeQA.AST.Parsing.Signal do
-    @nl CodeQA.AST.Lexing.NewlineToken.kind()
-    @ws CodeQA.AST.Lexing.WhitespaceToken.kind()
+    @nl NewlineToken.kind()
+    @ws WhitespaceToken.kind()
     def source(_), do: CodeQA.AST.Signals.Classification.TestSignal
     def group(_), do: :classification
 
-    def init(_, lang_mod) do
-      %{
+    def init(_, lang_mod),
+      do: %{
         at_line_start: true,
         indent: 0,
         is_first: true,
-        voted: false,
-        keywords: CodeQA.Language.test_keywords(lang_mod)
+        keywords: Language.test_keywords(lang_mod),
+        voted: false
       }
-    end
 
     def emit(_, _, %{voted: true} = state), do: {MapSet.new(), state}
 

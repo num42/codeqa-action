@@ -15,17 +15,17 @@ defmodule CodeQA.AST.Signals.Structural.BracketSignal do
     def source(_), do: CodeQA.AST.Signals.Structural.BracketSignal
     def group(_), do: :enclosure
 
-    def init(_, _lang_mod), do: %{idx: 0, depth: 0, start_idx: nil, stack: []}
+    def init(_, _lang_mod), do: %{depth: 0, idx: 0, stack: [], start_idx: nil}
 
-    def emit(_, {_, %{kind: k}, _}, %{idx: idx, depth: 0, stack: stack} = state)
+    def emit(_, {_, %{kind: k}, _}, %{depth: 0, idx: idx, stack: stack} = state)
         when k in ["(", "[", "{"],
         do: {MapSet.new(), %{state | idx: idx + 1, depth: 1, start_idx: idx, stack: [k | stack]}}
 
-    def emit(_, {_, %{kind: k}, _}, %{idx: idx, depth: d, stack: stack} = state)
+    def emit(_, {_, %{kind: k}, _}, %{depth: d, idx: idx, stack: stack} = state)
         when k in ["(", "[", "{"],
         do: {MapSet.new(), %{state | idx: idx + 1, depth: d + 1, stack: [k | stack]}}
 
-    def emit(_, {_, %{kind: k}, _}, %{idx: idx, depth: d, stack: [top | rest]} = state)
+    def emit(_, {_, %{kind: k}, _}, %{depth: d, idx: idx, stack: [top | rest]} = state)
         when k in [")", "]", "}"] do
       base = %{state | idx: idx + 1}
 

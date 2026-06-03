@@ -1,4 +1,8 @@
 defmodule CodeQA.AST.Signals.Classification.FunctionSignal do
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
+  alias CodeQA.Language
+
   @moduledoc """
   Classification signal — votes `:function` when a function definition keyword
   appears at indent 0 and bracket depth 0.
@@ -15,28 +19,27 @@ defmodule CodeQA.AST.Signals.Classification.FunctionSignal do
   defstruct []
 
   defimpl CodeQA.AST.Parsing.Signal do
-    @nl CodeQA.AST.Lexing.NewlineToken.kind()
-    @ws CodeQA.AST.Lexing.WhitespaceToken.kind()
+    @nl NewlineToken.kind()
+    @ws WhitespaceToken.kind()
     def source(_), do: CodeQA.AST.Signals.Classification.FunctionSignal
     def group(_), do: :classification
 
-    def init(_, lang_mod) do
-      %{
+    def init(_, lang_mod),
+      do: %{
         at_line_start: true,
-        indent: 0,
         bracket_depth: 0,
+        indent: 0,
         is_first: true,
-        voted: false,
-        keywords: CodeQA.Language.function_keywords(lang_mod)
+        keywords: Language.function_keywords(lang_mod),
+        voted: false
       }
-    end
 
     def emit(_, _, %{voted: true} = state), do: {MapSet.new(), state}
 
     def emit(
           _,
           {_prev, token, _next},
-          %{at_line_start: als, indent: ind, bracket_depth: bd, is_first: first} = state
+          %{at_line_start: als, bracket_depth: bd, indent: ind, is_first: first} = state
         ) do
       case token.kind do
         @nl ->

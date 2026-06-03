@@ -5,35 +5,44 @@ defmodule CodeQA.AST.Signals.Classification.TypeSignalTest do
 
   defp run(tokens), do: SignalStream.run(tokens, [%TypeSignal{}], []) |> List.flatten()
 
-  defp t(content, kind \\ "<ID>"), do: %{kind: kind, content: content, line: 1, col: 0}
+  defp token(content, kind \\ "<ID>"), do: %{col: 0, content: content, kind: kind, line: 1}
 
   test "emits type_vote weight 3 for @type at indent 0" do
-    emissions = run([t("@", "@"), t("type"), t("t"), t("::"), t("integer")])
+    emissions = run([token("@", "@"), token("type"), token("t"), token("::"), token("integer")])
     assert [{TypeSignal, :classification, :type_vote, 3}] = emissions
   end
 
   test "emits type_vote for @typep" do
-    emissions = run([t("@", "@"), t("typep"), t("t"), t("::")])
+    emissions = run([token("@", "@"), token("typep"), token("t"), token("::")])
     assert [{TypeSignal, :classification, :type_vote, 3}] = emissions
   end
 
   test "emits type_vote for @opaque" do
-    emissions = run([t("@", "@"), t("opaque"), t("t"), t("::")])
+    emissions = run([token("@", "@"), token("opaque"), token("t"), token("::")])
     assert [{TypeSignal, :classification, :type_vote, 3}] = emissions
   end
 
   test "does not emit for @spec" do
-    emissions = run([t("@", "@"), t("spec"), t("foo"), t("()")])
+    emissions = run([token("@", "@"), token("spec"), token("foo"), token("()")])
     assert emissions == []
   end
 
   test "does not emit for @type inside indented block" do
-    emissions = run([t("<WS>", "<WS>"), t("@", "@"), t("type"), t("t")])
+    emissions = run([token("<WS>", "<WS>"), token("@", "@"), token("type"), token("t")])
     assert emissions == []
   end
 
   test "emits at most one vote" do
-    tokens = [t("@", "@"), t("type"), t("a"), t("<NL>", "<NL>"), t("@", "@"), t("typep"), t("b")]
+    tokens = [
+      token("@", "@"),
+      token("type"),
+      token("a"),
+      token("<NL>", "<NL>"),
+      token("@", "@"),
+      token("typep"),
+      token("b")
+    ]
+
     emissions = run(tokens)
     assert length(emissions) == 1
   end

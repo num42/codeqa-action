@@ -6,11 +6,11 @@ defmodule CodeQA.BlockImpact.RefactoringPotentialsTest do
   alias CodeQA.CombinedMetrics.SampleRunner
   alias CodeQA.Engine.Analyzer
 
-  defp file_cosines(fm) do
-    fm
-    |> FileScorer.file_to_aggregate()
-    |> SampleRunner.diagnose_aggregate(top: 99_999)
-  end
+  defp file_cosines(fm),
+    do:
+      fm
+      |> FileScorer.file_to_aggregate()
+      |> SampleRunner.diagnose_aggregate(top: 99_999)
 
   describe "compute/5" do
     test "returns a list of maps with category, behavior, cosine_delta" do
@@ -49,7 +49,8 @@ defmodule CodeQA.BlockImpact.RefactoringPotentialsTest do
 
       assert is_list(result)
 
-      Enum.each(result, fn item ->
+      result
+      |> Enum.each(fn item ->
         assert Map.has_key?(item, "category")
         assert Map.has_key?(item, "behavior")
         assert Map.has_key?(item, "cosine_delta")
@@ -102,7 +103,7 @@ defmodule CodeQA.BlockImpact.RefactoringPotentialsTest do
           top: 99
         )
 
-      deltas = Enum.map(result, & &1["cosine_delta"])
+      deltas = result |> Enum.map(& &1["cosine_delta"])
       assert deltas == Enum.sort(deltas, :desc)
     end
 
@@ -170,7 +171,8 @@ defmodule CodeQA.BlockImpact.RefactoringPotentialsTest do
         )
 
       excluded_present? = fn result ->
-        Enum.any?(result, fn p ->
+        result
+        |> Enum.any?(fn p ->
           p["category"] == "function_design" and p["behavior"] == "cyclomatic_complexity_under_10"
         end)
       end

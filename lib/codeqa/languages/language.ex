@@ -67,15 +67,15 @@ defmodule CodeQA.Language do
   @spec all() :: [module()]
   def all do
     {:ok, modules} = :application.get_key(:codeqa, :modules)
-    Enum.filter(modules, &implements?/1)
+    modules |> Enum.filter(&implements?/1)
   end
 
   @spec all_keywords() :: [String.t()]
-  def all_keywords do
-    all()
-    |> Enum.flat_map(& &1.keywords())
-    |> Enum.uniq()
-  end
+  def all_keywords,
+    do:
+      all()
+      |> Enum.flat_map(& &1.keywords())
+      |> Enum.uniq()
 
   @spec keywords(atom() | String.t()) :: MapSet.t()
   def keywords(language) do
@@ -134,7 +134,7 @@ defmodule CodeQA.Language do
   @spec find(atom() | String.t()) :: module()
   def find(language) do
     name = to_string(language)
-    Enum.find(all(), fn mod -> mod.name() == name end) || CodeQA.Languages.Unknown
+    Enum.find(all(), &(&1.name() == name)) || CodeQA.Languages.Unknown
   end
 
   @spec detect(String.t()) :: module()
@@ -148,16 +148,17 @@ defmodule CodeQA.Language do
   end
 
   @spec strip_comments(String.t(), module()) :: String.t()
-  def strip_comments(content, language_mod) do
-    content
-    |> strip_block_comments(language_mod.block_comments())
-    |> strip_line_comments(language_mod.comment_prefixes())
-  end
+  def strip_comments(content, language_mod),
+    do:
+      content
+      |> strip_block_comments(language_mod.block_comments())
+      |> strip_line_comments(language_mod.comment_prefixes())
 
   defp strip_block_comments(content, []), do: content
 
   defp strip_block_comments(content, pairs) do
-    Enum.reduce(pairs, content, fn {open, close}, acc ->
+    pairs
+    |> Enum.reduce(content, fn {open, close}, acc ->
       regex = Regex.compile!(Regex.escape(open) <> ".*?" <> Regex.escape(close), [:dotall])
 
       Regex.replace(regex, acc, fn match ->
@@ -169,7 +170,7 @@ defmodule CodeQA.Language do
   defp strip_line_comments(content, []), do: content
 
   defp strip_line_comments(content, prefixes) do
-    pattern = Enum.map_join(prefixes, "|", &Regex.escape/1)
+    pattern = prefixes |> Enum.map_join("|", &Regex.escape/1)
     Regex.replace(Regex.compile!("(#{pattern}).*$", [:multiline]), content, "")
   end
 

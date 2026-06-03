@@ -40,7 +40,8 @@ defmodule CodeQA.BlockImpactAnalyzerTest do
 
       nodes = result["files"]["lib/my_module.ex"]["nodes"]
 
-      Enum.each(nodes, fn node ->
+      nodes
+      |> Enum.each(fn node ->
         assert Map.has_key?(node, "start_line")
         assert Map.has_key?(node, "end_line")
         assert Map.has_key?(node, "column_start")
@@ -60,7 +61,7 @@ defmodule CodeQA.BlockImpactAnalyzerTest do
       result = BlockImpactAnalyzer.analyze(pipeline_result, files)
 
       nodes = result["files"]["lib/my_module.ex"]["nodes"]
-      start_lines = Enum.map(nodes, & &1["start_line"])
+      start_lines = nodes |> Enum.map(& &1["start_line"])
       assert start_lines == Enum.sort(start_lines)
     end
 
@@ -80,9 +81,8 @@ defmodule CodeQA.BlockImpactAnalyzerTest do
 
       nodes = result["files"]["lib/my_module.ex"]["nodes"]
 
-      Enum.each(nodes, fn node ->
-        assert length(node["refactoring_potentials"]) <= 1
-      end)
+      nodes
+      |> Enum.each(&assert length(&1["refactoring_potentials"]) <= 1)
     end
 
     test "node['type'] reflects classified block kind, not the always-:code default" do

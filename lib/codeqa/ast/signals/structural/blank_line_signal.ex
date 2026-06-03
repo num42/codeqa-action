@@ -1,6 +1,7 @@
 defmodule CodeQA.AST.Signals.Structural.BlankLineSignal do
   alias CodeQA.AST.Lexing.NewlineToken
   alias CodeQA.AST.Lexing.WhitespaceToken
+  alias CodeQA.Language
 
   @moduledoc """
   Emits `:blank_split` at the first substantive token after 2+ consecutive
@@ -17,8 +18,8 @@ defmodule CodeQA.AST.Signals.Structural.BlankLineSignal do
     def group(_), do: :split
 
     def init(_, lang_mod) do
-      tokens = CodeQA.Language.block_end_tokens(lang_mod)
-      %{idx: 0, nl_run: 0, seen_content: false, last_content: nil, block_end_tokens: tokens}
+      tokens = Language.block_end_tokens(lang_mod)
+      %{block_end_tokens: tokens, idx: 0, last_content: nil, nl_run: 0, seen_content: false}
     end
 
     def emit(_, {_, %NewlineToken{}, _}, %{idx: idx, nl_run: nl} = state),
@@ -36,7 +37,7 @@ defmodule CodeQA.AST.Signals.Structural.BlankLineSignal do
       {emissions, base}
     end
 
-    defp blank_split?(%{seen_content: true, nl_run: nl, block_end_tokens: t, last_content: lc})
+    defp blank_split?(%{block_end_tokens: t, last_content: lc, nl_run: nl, seen_content: true})
          when nl >= 2,
          do: MapSet.member?(t, lc)
 

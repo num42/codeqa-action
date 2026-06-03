@@ -32,9 +32,7 @@ defmodule CodeQA.Metrics.File.Bradford do
 
   @spec analyze(map()) :: map()
   @impl true
-  def analyze(%{tokens: []}) do
-    %{"k1" => 0.0, "k2" => 0.0, "k_ratio" => 0.0}
-  end
+  def analyze(%{tokens: []}), do: %{"k1" => 0.0, "k2" => 0.0, "k_ratio" => 0.0}
 
   def analyze(%{tokens: tokens}) do
     # Count tokens per line using the .line field, then rank densest-first —
@@ -45,7 +43,7 @@ defmodule CodeQA.Metrics.File.Bradford do
       |> Enum.map(fn {_line, toks} -> length(toks) end)
       |> Enum.sort(:desc)
 
-    total = Enum.sum(counts)
+    total = counts |> Enum.sum()
 
     # Need at least 3 lines and 3 tokens to form meaningful zones.
     if total < 3 or length(counts) < 3 do
@@ -53,13 +51,13 @@ defmodule CodeQA.Metrics.File.Bradford do
     else
       # Each zone should contain one third of all tokens.
       # We find zone boundaries by walking the ranked list until each third is filled.
-      third = total / 3
+      target = total / 3
 
       # n1: lines in zone 1 (the dense core — fewest lines, highest token density)
       # n2: lines in zone 2 (middle tier)
       # n3: all remaining lines (the sparse tail)
-      {n1, rest} = count_until(counts, third)
-      {n2, _} = count_until(rest, third)
+      {n1, rest} = count_until(counts, target)
+      {n2, _} = count_until(rest, target)
       n3 = length(counts) - n1 - n2
 
       # k1 > 1 always: the middle zone always needs more lines than the core.

@@ -1,4 +1,6 @@
 defmodule CodeQA.AST.Signals.Classification.DataSignal do
+  alias CodeQA.AST.Lexing.StringToken
+
   @moduledoc """
   Classification signal — votes `:data` when a token stream consists primarily
   of literal values (`<STR>`, `<NUM>`) with no control-flow keywords.
@@ -10,7 +12,7 @@ defmodule CodeQA.AST.Signals.Classification.DataSignal do
   defstruct []
 
   defimpl CodeQA.AST.Parsing.Signal do
-    @str CodeQA.AST.Lexing.StringToken.kind()
+    @str StringToken.kind()
     @control_flow MapSet.new([
                     "if",
                     "else",
@@ -31,7 +33,7 @@ defmodule CodeQA.AST.Signals.Classification.DataSignal do
     def group(_), do: :classification
 
     def init(_, _lang_mod),
-      do: %{literal_count: 0, id_count: 0, has_control_flow: false}
+      do: %{has_control_flow: false, id_count: 0, literal_count: 0}
 
     def emit(_, {_prev, token, next}, state) do
       state =

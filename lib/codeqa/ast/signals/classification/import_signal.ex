@@ -1,4 +1,8 @@
 defmodule CodeQA.AST.Signals.Classification.ImportSignal do
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
+  alias CodeQA.Language
+
   @moduledoc """
   Classification signal — votes `:import` when an import/require/use/alias keyword
   appears at indent 0.
@@ -15,20 +19,19 @@ defmodule CodeQA.AST.Signals.Classification.ImportSignal do
   defstruct []
 
   defimpl CodeQA.AST.Parsing.Signal do
-    @nl CodeQA.AST.Lexing.NewlineToken.kind()
-    @ws CodeQA.AST.Lexing.WhitespaceToken.kind()
+    @nl NewlineToken.kind()
+    @ws WhitespaceToken.kind()
     def source(_), do: CodeQA.AST.Signals.Classification.ImportSignal
     def group(_), do: :classification
 
-    def init(_, lang_mod) do
-      %{
+    def init(_, lang_mod),
+      do: %{
         at_line_start: true,
         indent: 0,
         is_first: true,
-        voted: false,
-        keywords: CodeQA.Language.import_keywords(lang_mod)
+        keywords: Language.import_keywords(lang_mod),
+        voted: false
       }
-    end
 
     def emit(_, _, %{voted: true} = state), do: {MapSet.new(), state}
 

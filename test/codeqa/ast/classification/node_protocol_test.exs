@@ -1,5 +1,5 @@
 defmodule CodeQA.AST.NodeProtocolTest.FakeNode do
-  defstruct [:tokens, :line_count, :children, :start_line, :end_line, :label]
+  defstruct [:children, :end_line, :label, :line_count, :start_line, :tokens]
 
   defimpl CodeQA.AST.Classification.NodeProtocol do
     alias CodeQA.AST.Classification.NodeProtocol
@@ -12,9 +12,9 @@ defmodule CodeQA.AST.NodeProtocolTest.FakeNode do
     def label(n), do: n.label
 
     def flat_tokens(n) do
-      if Enum.empty?(n.children),
+      if n.children |> Enum.empty?(),
         do: n.tokens,
-        else: Enum.flat_map(n.children, &NodeProtocol.flat_tokens/1)
+        else: n.children |> Enum.flat_map(&NodeProtocol.flat_tokens/1)
     end
   end
 end
@@ -27,12 +27,12 @@ defmodule CodeQA.AST.NodeProtocolTest do
   alias CodeQA.AST.NodeProtocolTest.FakeNode
 
   @node %FakeNode{
-    tokens: [:a, :b],
-    line_count: 3,
     children: [],
-    start_line: 1,
     end_line: 3,
-    label: "foo.ex:1"
+    label: "foo.ex:1",
+    line_count: 3,
+    start_line: 1,
+    tokens: [:a, :b]
   }
 
   test "tokens/1" do
@@ -61,21 +61,21 @@ defmodule CodeQA.AST.NodeProtocolTest do
 
   describe "flat_tokens/1" do
     test "leaf node returns own tokens" do
-      leaf = %Node{tokens: [:a, :b], line_count: 1, children: []}
+      leaf = %Node{children: [], line_count: 1, tokens: [:a, :b]}
       assert NodeProtocol.flat_tokens(leaf) == [:a, :b]
     end
 
     test "non-leaf node returns flattened descendant tokens" do
-      child_a = %Node{tokens: [:a], line_count: 1, children: []}
-      child_b = %Node{tokens: [:b, :c], line_count: 1, children: []}
-      parent = %Node{tokens: [:x], line_count: 2, children: [child_a, child_b]}
+      child_a = %Node{children: [], line_count: 1, tokens: [:a]}
+      child_b = %Node{children: [], line_count: 1, tokens: [:b, :c]}
+      parent = %Node{children: [child_a, child_b], line_count: 2, tokens: [:x]}
       assert NodeProtocol.flat_tokens(parent) == [:a, :b, :c]
     end
 
     test "deeply nested node returns all leaf tokens" do
-      leaf = %Node{tokens: [:z], line_count: 1, children: []}
-      mid = %Node{tokens: [:y], line_count: 1, children: [leaf]}
-      root = %Node{tokens: [:x], line_count: 2, children: [mid]}
+      leaf = %Node{children: [], line_count: 1, tokens: [:z]}
+      mid = %Node{children: [leaf], line_count: 1, tokens: [:y]}
+      root = %Node{children: [mid], line_count: 2, tokens: [:x]}
       assert NodeProtocol.flat_tokens(root) == [:z]
     end
   end
@@ -83,12 +83,12 @@ defmodule CodeQA.AST.NodeProtocolTest do
   describe "Node implements NodeProtocol" do
     setup do
       node = %Node{
-        tokens: [:x, :y],
-        line_count: 3,
         children: [],
-        start_line: 1,
         end_line: 3,
-        label: "f.ex:1"
+        label: "f.ex:1",
+        line_count: 3,
+        start_line: 1,
+        tokens: [:x, :y]
       }
 
       %{node: node}

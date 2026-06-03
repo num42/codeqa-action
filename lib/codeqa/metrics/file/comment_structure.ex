@@ -27,10 +27,10 @@ defmodule CodeQA.Metrics.File.CommentStructure do
   @spec analyze(map()) :: map()
   @impl true
   def analyze(%{content: content, lines: lines}) do
-    non_blank = Enum.reject(lines, &(String.trim(&1) == ""))
+    non_blank = lines |> Enum.reject(&(String.trim(&1) == ""))
     non_blank_count = length(non_blank)
 
-    comment_count = Enum.count(non_blank, &Regex.match?(@comment_line, &1))
+    comment_count = non_blank |> Enum.count(&Regex.match?(@comment_line, &1))
     todo_count = @todo_marker |> Regex.scan(content) |> length()
 
     comment_ratio =

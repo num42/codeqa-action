@@ -108,7 +108,7 @@ defmodule CodeQA.CLI.History do
         else: analyze_opts
 
     files = Git.collect_files_at_ref(path, commit)
-    files = Collector.reject_ignored_map(files, ignore_patterns)
+    files = files |> Collector.reject_ignored_map(ignore_patterns)
 
     if map_size(files) == 0 do
       IO.puts(:stderr, "Warning: no source files found at commit #{commit}")

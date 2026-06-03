@@ -54,7 +54,7 @@ defmodule CodeQA.GitTest do
       in_tmp_git_repo(fn repo ->
         File.write!(Path.join(repo, ".gitignore"), "ignored.ex\n")
 
-        paths = Enum.map(1..1200, fn i -> "file_#{i}.ex" end) ++ ["ignored.ex"]
+        paths = Enum.map(1..1200, &"file_#{&1}.ex") ++ ["ignored.ex"]
 
         ignored = Git.gitignored_files(repo, paths)
 
@@ -136,7 +136,7 @@ defmodule CodeQA.GitTest do
 
     test "handles multiple hunks in same file" do
       in_tmp_git_repo(fn repo ->
-        lines = Enum.map_join(1..20, "\n", &"line#{&1}")
+        lines = 1..20 |> Enum.map_join("\n", &"line#{&1}")
         File.write!(Path.join(repo, "foo.ex"), lines <> "\n")
         {_, 0} = System.cmd("git", ["add", "."], cd: repo)
         {_, 0} = System.cmd("git", ["commit", "-m", "initial"], cd: repo)
@@ -144,12 +144,11 @@ defmodule CodeQA.GitTest do
         # Change line 2 and line 15
         new_lines =
           1..20
-          |> Enum.map(fn
+          |> Enum.map_join("\n", fn
             2 -> "changed2"
             15 -> "changed15"
             n -> "line#{n}"
           end)
-          |> Enum.join("\n")
 
         File.write!(Path.join(repo, "foo.ex"), new_lines <> "\n")
         {_, 0} = System.cmd("git", ["add", "."], cd: repo)
@@ -253,7 +252,7 @@ defmodule CodeQA.GitTest do
 
     test "returns ranges in ascending order" do
       in_tmp_git_repo(fn repo ->
-        lines = Enum.map_join(1..20, "\n", &"line#{&1}")
+        lines = 1..20 |> Enum.map_join("\n", &"line#{&1}")
         File.write!(Path.join(repo, "foo.ex"), lines <> "\n")
         {_, 0} = System.cmd("git", ["add", "."], cd: repo)
         {_, 0} = System.cmd("git", ["commit", "-m", "initial"], cd: repo)
@@ -261,13 +260,12 @@ defmodule CodeQA.GitTest do
         # Change lines 2, 10, and 18
         new_lines =
           1..20
-          |> Enum.map(fn
+          |> Enum.map_join("\n", fn
             2 -> "changed2"
             10 -> "changed10"
             18 -> "changed18"
             n -> "line#{n}"
           end)
-          |> Enum.join("\n")
 
         File.write!(Path.join(repo, "foo.ex"), new_lines <> "\n")
         {_, 0} = System.cmd("git", ["add", "."], cd: repo)

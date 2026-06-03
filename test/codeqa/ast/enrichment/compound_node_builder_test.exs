@@ -5,7 +5,9 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilderTest do
   alias CodeQA.AST.Enrichment.CompoundNode
   alias CodeQA.AST.Enrichment.CompoundNodeBuilder
   alias CodeQA.AST.Lexing.TokenNormalizer
-  alias CodeQA.AST.Nodes.{AttributeNode, CodeNode, DocNode}
+  alias CodeQA.AST.Nodes.AttributeNode
+  alias CodeQA.AST.Nodes.CodeNode
+  alias CodeQA.AST.Nodes.DocNode
   alias CodeQA.AST.Parsing.Parser
 
   defp build(code) do
@@ -108,8 +110,8 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilderTest do
 
   describe "build/1 with typed node structs" do
     test "routes DocNode to docs bucket" do
-      doc = %DocNode{tokens: [:d], line_count: 1, children: [], start_line: 1, end_line: 1}
-      code = %CodeNode{tokens: [:c], line_count: 2, children: [], start_line: 2, end_line: 3}
+      doc = %DocNode{children: [], end_line: 1, line_count: 1, start_line: 1, tokens: [:d]}
+      code = %CodeNode{children: [], end_line: 3, line_count: 2, start_line: 2, tokens: [:c]}
 
       [compound] = CompoundNodeBuilder.build([doc, code])
       assert length(compound.docs) == 1
@@ -118,15 +120,15 @@ defmodule CodeQA.AST.Enrichment.CompoundNodeBuilderTest do
 
     test "routes AttributeNode to typespecs bucket" do
       attr = %AttributeNode{
-        tokens: [:a],
-        line_count: 1,
         children: [],
-        start_line: 1,
         end_line: 1,
-        kind: :typespec
+        kind: :typespec,
+        line_count: 1,
+        start_line: 1,
+        tokens: [:a]
       }
 
-      code = %CodeNode{tokens: [:c], line_count: 2, children: [], start_line: 2, end_line: 3}
+      code = %CodeNode{children: [], end_line: 3, line_count: 2, start_line: 2, tokens: [:c]}
 
       [compound] = CompoundNodeBuilder.build([attr, code])
       assert length(compound.typespecs) == 1

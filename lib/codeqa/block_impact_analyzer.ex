@@ -1,4 +1,8 @@
 defmodule CodeQA.BlockImpactAnalyzer do
+  alias CodeQA.AST.Lexing.NewlineToken
+  alias CodeQA.AST.Lexing.WhitespaceToken
+  alias CodeQA.Language
+
   @moduledoc """
   Orchestrates block impact analysis across all files in a pipeline result.
 
@@ -31,14 +35,18 @@ defmodule CodeQA.BlockImpactAnalyzer do
   """
 
   alias CodeQA.Analysis.BehaviorConfigServer
-  alias CodeQA.AST.Classification.{NodeClassifier, TypedNodeKind}
+  alias CodeQA.AST.Classification.NodeClassifier
+  alias CodeQA.AST.Classification.TypedNodeKind
   alias CodeQA.AST.Enrichment.Node
   alias CodeQA.AST.Lexing.TokenNormalizer
   alias CodeQA.AST.Parsing.Parser
-  alias CodeQA.BlockImpact.{FileImpact, RefactoringPotentials}
-  alias CodeQA.CombinedMetrics.{FileScorer, SampleRunner}
+  alias CodeQA.BlockImpact.FileImpact
+  alias CodeQA.BlockImpact.RefactoringPotentials
+  alias CodeQA.CombinedMetrics.FileScorer
+  alias CodeQA.CombinedMetrics.SampleRunner
   alias CodeQA.Engine.Analyzer
   alias CodeQA.Languages.Unknown
+  import CodeQA.Shared, only: [project_languages_shared: 1]
 
   @min_tokens 10
 
@@ -132,7 +140,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
         ordered: false,
         timeout: :infinity
       )
-      |> Enum.reduce(%{}, fn {:ok, {path, data}}, acc -> Map.put(acc, path, data) end)
+      |> Map.new(fn {:ok, {path, data}} -> {path, data} end)
 
     :telemetry.execute(
       [:codeqa, :block_impact, :analyze],
@@ -144,6 +152,17 @@ defmodule CodeQA.BlockImpactAnalyzer do
   end
 
   defp compute_nodes_timed(
+         _path,
+         "",
+         _baseline_file_metrics,
+         _file_results,
+         _baseline_codebase_cosines,
+         _nodes_top,
+         _cached_behaviors
+       ),
+       do: {[], %{duration: 0, file_cosines_us: 0, node_count: 0, parse_us: 0, tokenize_us: 0}}
+
+  defp compute_nodes_timed(
          path,
          content,
          baseline_file_metrics,
@@ -152,81 +171,62 @@ defmodule CodeQA.BlockImpactAnalyzer do
          nodes_top,
          cached_behaviors
        ) do
-    if content == "" do
-      {[], %{duration: 0, tokenize_us: 0, parse_us: 0, file_cosines_us: 0, node_count: 0}}
-    else
-      t0 = now()
+    t0 = now()
 
-      {root_tokens, tokenize_us} = timed(fn -> TokenNormalizer.normalize_structural(content) end)
-      {top_level_nodes, parse_us} = timed(fn -> Parser.detect_blocks(root_tokens, Unknown) end)
+    {root_tokens, tokenize_us} = timed(fn -> TokenNormalizer.normalize_structural(content) end)
+    {top_level_nodes, parse_us} = timed(fn -> Parser.detect_blocks(root_tokens, Unknown) end)
 
-      baseline_file_agg = FileScorer.file_to_aggregate(baseline_file_metrics)
-      lang_mod = CodeQA.Language.detect(path)
-      language = lang_mod.name()
+    baseline_file_agg = FileScorer.file_to_aggregate(baseline_file_metrics)
+    lang_mod = Language.detect(path)
+    language = lang_mod.name()
 
-      {baseline_file_cosines, file_cosines_us} =
-        timed(fn ->
-          SampleRunner.diagnose_aggregate(baseline_file_agg,
-            top: 99_999,
-            language: language,
-            behavior_map: cached_behaviors
-          )
-        end)
+    {baseline_file_cosines, file_cosines_us} =
+      timed(fn ->
+        SampleRunner.diagnose_aggregate(baseline_file_agg,
+          top: 99_999,
+          language: language,
+          behavior_map: cached_behaviors
+        )
+      end)
 
-      inc_agg = build_incremental_agg(file_results)
-      old_file_triples = file_metrics_to_triples(baseline_file_metrics)
-      project_langs = project_languages(file_results)
+    inc_agg = build_incremental_agg(file_results)
+    old_file_triples = file_metrics_to_triples(baseline_file_metrics)
+    project_langs = project_languages(file_results)
 
-      node_ctx = %{
-        inc_agg: inc_agg,
-        old_file_triples: old_file_triples,
-        project_langs: project_langs,
-        cached_behaviors: cached_behaviors,
-        lang_mod: lang_mod,
-        baseline_file_metrics: baseline_file_metrics
-      }
+    node_ctx = %{
+      baseline_codebase_cosines: baseline_codebase_cosines,
+      baseline_file_cosines: baseline_file_cosines,
+      baseline_file_metrics: baseline_file_metrics,
+      cached_behaviors: cached_behaviors,
+      inc_agg: inc_agg,
+      lang_mod: lang_mod,
+      language: language,
+      nodes_top: nodes_top,
+      old_file_triples: old_file_triples,
+      path: path,
+      project_langs: project_langs,
+      root_tokens: root_tokens
+    }
 
-      nodes =
-        top_level_nodes
-        |> Enum.map(fn node ->
-          serialize_node(
-            node,
-            path,
-            root_tokens,
-            baseline_file_cosines,
-            baseline_codebase_cosines,
-            nodes_top,
-            language,
-            node_ctx
-          )
-        end)
-        |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
+    nodes =
+      top_level_nodes
+      |> Enum.map(&serialize_node(&1, node_ctx))
+      |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
 
-      measurements = %{
-        duration: now() - t0,
-        tokenize_us: tokenize_us,
-        parse_us: parse_us,
-        file_cosines_us: file_cosines_us,
-        node_count: length(top_level_nodes),
-        token_count: length(root_tokens),
-        bytes: byte_size(content)
-      }
+    measurements = %{
+      bytes: byte_size(content),
+      duration: now() - t0,
+      file_cosines_us: file_cosines_us,
+      node_count: length(top_level_nodes),
+      parse_us: parse_us,
+      token_count: length(root_tokens),
+      tokenize_us: tokenize_us
+    }
 
-      {nodes, measurements}
-    end
+    {nodes, measurements}
   end
 
-  defp serialize_node(
-         node,
-         path,
-         root_tokens,
-         baseline_file_cosines,
-         baseline_codebase_cosines,
-         nodes_top,
-         language,
-         node_ctx,
-         parent_context \\ nil
-       ) do
+  defp serialize_node(node, node_ctx, parent_context \\ nil) do
     block_type =
       node
       |> NodeClassifier.classify(node_ctx.lang_mod, parent_context)
@@ -236,40 +236,18 @@ defmodule CodeQA.BlockImpactAnalyzer do
       if length(node.tokens) < @min_tokens do
         []
       else
-        compute_potentials_timed(
-          node,
-          path,
-          root_tokens,
-          baseline_file_cosines,
-          baseline_codebase_cosines,
-          nodes_top,
-          language,
-          node_ctx,
-          block_type
-        )
+        compute_potentials_timed(node, node_ctx, block_type)
       end
 
     children =
       node.children
       |> Enum.map(fn child ->
-        child_context = parent_context_for(node.tokens, child)
-
-        serialize_node(
-          child,
-          path,
-          root_tokens,
-          baseline_file_cosines,
-          baseline_codebase_cosines,
-          nodes_top,
-          language,
-          node_ctx,
-          child_context
-        )
+        serialize_node(child, node_ctx, parent_context_for(node.tokens, child))
       end)
       |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
 
     first_token = List.first(node.tokens)
-    char_length = Enum.reduce(node.tokens, 0, fn t, acc -> acc + byte_size(t.content) end)
+    char_length = node.tokens |> Enum.sum_by(fn t -> byte_size(t.content) end)
 
     %{
       "start_line" => node.start_line,
@@ -288,46 +266,21 @@ defmodule CodeQA.BlockImpactAnalyzer do
   # leading whitespace stripped so the classification signals see the keyword at
   # indent 0. Lets NodeClassifier see the keyword that drove the bracket-split
   # (`alias`, `@name`, etc.) when classifying a sub-block.
-  defp parent_context_for(parent_tokens, child) do
-    case List.first(child.tokens) do
-      nil ->
-        []
+  defp parent_context_for(parent_tokens, child),
+    do: List.first(child.tokens) |> tokens_before_child(parent_tokens)
 
-      child_first ->
-        nl_kind = CodeQA.AST.Lexing.NewlineToken.kind()
-        ws_kind = CodeQA.AST.Lexing.WhitespaceToken.kind()
-
-        parent_tokens
-        |> Enum.take_while(fn t -> t != child_first end)
-        |> Enum.reverse()
-        |> Enum.take_while(fn t -> t.kind != nl_kind end)
-        |> Enum.reverse()
-        |> Enum.drop_while(fn t -> t.kind == ws_kind end)
-    end
-  end
-
-  defp compute_potentials_timed(
-         %Node{} = node,
-         path,
-         root_tokens,
-         baseline_file_cosines,
-         baseline_codebase_cosines,
-         nodes_top,
-         language,
-         node_ctx,
-         block_type
-       ) do
+  defp compute_potentials_timed(%Node{} = node, node_ctx, block_type) do
     t0 = now()
 
     {reconstructed, reconstruct_us} =
-      timed(fn -> FileImpact.reconstruct_without(root_tokens, node) end)
+      timed(fn -> FileImpact.reconstruct_without(node_ctx.root_tokens, node) end)
 
-    block_content = Enum.map_join(node.tokens, "", & &1.content)
+    block_content = node.tokens |> Enum.map_join("", & &1.content)
 
     {without_file_metrics, analyze_file_us} =
       timed(fn ->
         Analyzer.analyze_file_for_loo_partial(
-          path,
+          node_ctx.path,
           reconstructed,
           node_ctx.baseline_file_metrics,
           block_content
@@ -346,12 +299,12 @@ defmodule CodeQA.BlockImpactAnalyzer do
     {potentials, refactoring_us} =
       timed(fn ->
         RefactoringPotentials.compute(
-          baseline_file_cosines,
+          node_ctx.baseline_file_cosines,
           without_file_metrics,
-          baseline_codebase_cosines,
+          node_ctx.baseline_codebase_cosines,
           without_codebase_agg,
-          top: nodes_top,
-          language: language,
+          top: node_ctx.nodes_top,
+          language: node_ctx.language,
           languages: node_ctx.project_langs,
           behavior_map: node_ctx.cached_behaviors,
           block_type: block_type
@@ -361,13 +314,13 @@ defmodule CodeQA.BlockImpactAnalyzer do
     :telemetry.execute(
       [:codeqa, :block_impact, :node],
       %{
+        aggregate_us: aggregate_us,
+        analyze_file_us: analyze_file_us,
         duration: now() - t0,
         reconstruct_us: reconstruct_us,
-        analyze_file_us: analyze_file_us,
-        aggregate_us: aggregate_us,
         refactoring_us: refactoring_us
       },
-      %{path: path, token_count: length(node.tokens)}
+      %{path: node_ctx.path, token_count: length(node.tokens)}
     )
 
     potentials
@@ -395,20 +348,31 @@ defmodule CodeQA.BlockImpactAnalyzer do
     |> Enum.group_by(fn {metric, key, _val} -> {metric, key} end, fn {_, _, val} -> val end)
     |> Map.new(fn {{metric, key}, values} ->
       n = length(values)
-      sum = Enum.sum(values)
-      sum_sq = Enum.reduce(values, 0.0, fn v, acc -> acc + v * v end)
+      sum = values |> Enum.sum()
+      sum_sq = values |> Enum.reduce(0.0, fn v, acc -> acc + v * v end)
 
       {{metric, key},
-       %{sum: sum, sum_sq: sum_sq, min: Enum.min(values), max: Enum.max(values), count: n}}
+       %{count: n, max: values |> Enum.max(), min: values |> Enum.min(), sum: sum, sum_sq: sum_sq}}
     end)
   end
 
   defp swap_file_in_agg(inc_agg, old_triples, new_triples) do
-    old_map = Map.new(old_triples, fn {metric, key, val} -> {{metric, key}, val} end)
-    new_map = Map.new(new_triples, fn {metric, key, val} -> {{metric, key}, val} end)
-    all_keys = Enum.uniq(Map.keys(old_map) ++ Map.keys(new_map))
+    old_map =
+      for {metric, key, val} <- old_triples do
+        {{metric, key}, val}
+      end
+      |> Map.new()
 
-    Enum.reduce(all_keys, inc_agg, fn mk, acc ->
+    new_map =
+      for {metric, key, val} <- new_triples do
+        {{metric, key}, val}
+      end
+      |> Map.new()
+
+    all_keys = (Map.keys(old_map) ++ Map.keys(new_map)) |> Enum.uniq()
+
+    all_keys
+    |> Enum.reduce(inc_agg, fn mk, acc ->
       case Map.get(acc, mk) do
         nil ->
           acc
@@ -418,18 +382,19 @@ defmodule CodeQA.BlockImpactAnalyzer do
           new_val = Map.get(new_map, mk, 0.0)
 
           Map.put(acc, mk, %{
-            sum: state.sum - old_val + new_val,
-            sum_sq: state.sum_sq - old_val * old_val + new_val * new_val,
-            min: min(state.min, new_val),
+            count: state.count,
             max: max(state.max, new_val),
-            count: state.count
+            min: min(state.min, new_val),
+            sum: state.sum - old_val + new_val,
+            sum_sq: state.sum_sq - old_val * old_val + new_val * new_val
           })
       end
     end)
   end
 
   defp incremental_agg_to_aggregate(inc_agg) do
-    Enum.reduce(inc_agg, %{}, fn {{metric, key}, state}, acc ->
+    inc_agg
+    |> Enum.reduce(%{}, fn {{metric, key}, state}, acc ->
       n = state.count
       mean = if n > 0, do: state.sum / n, else: 0.0
       variance = if n > 0, do: max(state.sum_sq / n - mean * mean, 0.0), else: 0.0
@@ -452,7 +417,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
   defp filter_behaviors_by_languages(behaviors_map, project_langs) do
     Map.new(behaviors_map, fn {category, behaviors} ->
       filtered =
-        Enum.filter(behaviors, fn {_behavior, behavior_data} ->
+        behaviors
+        |> Enum.filter(fn {_behavior, behavior_data} ->
           behavior_langs = Map.get(behavior_data, "_languages", [])
           behavior_langs == [] or Enum.any?(behavior_langs, &(&1 in project_langs))
         end)
@@ -461,13 +427,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
     end)
   end
 
-  defp project_languages(path_keyed_map) do
-    path_keyed_map
-    |> Map.keys()
-    |> Enum.map(&CodeQA.Language.detect(&1).name())
-    |> Enum.reject(&(&1 == "unknown"))
-    |> Enum.uniq()
-  end
+  defp project_languages(path_keyed_map), do: project_languages_shared(path_keyed_map)
 
   defp timed(fun) do
     t = now()
@@ -476,4 +436,18 @@ defmodule CodeQA.BlockImpactAnalyzer do
   end
 
   defp now, do: System.monotonic_time(:microsecond)
+
+  defp tokens_before_child(nil, _parent_tokens), do: []
+
+  defp tokens_before_child(child_first, parent_tokens) do
+    nl_kind = NewlineToken.kind()
+    ws_kind = WhitespaceToken.kind()
+
+    parent_tokens
+    |> Enum.take_while(&(&1 != child_first))
+    |> Enum.reverse()
+    |> Enum.take_while(&(&1.kind != nl_kind))
+    |> Enum.reverse()
+    |> Enum.drop_while(&(&1.kind == ws_kind))
+  end
 end

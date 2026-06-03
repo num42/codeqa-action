@@ -4,17 +4,20 @@ defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
   alias CodeQA.AST.Enrichment.Node
   alias CodeQA.AST.Lexing.Token
   alias CodeQA.AST.Lexing.TokenNormalizer
-  alias CodeQA.AST.Nodes.{AttributeNode, CodeNode, DocNode, FunctionNode}
+  alias CodeQA.AST.Nodes.AttributeNode
+  alias CodeQA.AST.Nodes.CodeNode
+  alias CodeQA.AST.Nodes.DocNode
+  alias CodeQA.AST.Nodes.FunctionNode
   alias CodeQA.AST.Parsing.Parser
   alias CodeQA.Languages.Code.Vm.Elixir, as: ElixirLang
   alias CodeQA.Languages.Unknown
 
-  defp detect_types(code, lang_mod \\ ElixirLang) do
-    code
-    |> TokenNormalizer.normalize_structural()
-    |> Parser.detect_blocks(lang_mod)
-    |> NodeTypeDetector.detect_types(lang_mod)
-  end
+  defp detect_types(code, lang_mod \\ ElixirLang),
+    do:
+      code
+      |> TokenNormalizer.normalize_structural()
+      |> Parser.detect_blocks(lang_mod)
+      |> NodeTypeDetector.detect_types(lang_mod)
 
   describe "detect_types/1" do
     test "block with <TRIP_QUOTES> gets type :doc" do
@@ -50,8 +53,9 @@ defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
       blocks = detect_types(code)
 
       code_block =
-        Enum.find(blocks, fn b ->
-          Enum.any?(b.tokens, &(&1.kind == "<ID>" and &1.content == "def"))
+        blocks
+        |> Enum.find(fn b ->
+          b.tokens |> Enum.any?(&(&1.kind == "<ID>" and &1.content == "def"))
         end)
 
       assert is_struct(code_block, FunctionNode)
@@ -80,15 +84,15 @@ defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
 
   describe "detect_types/1 — typed struct output" do
     test "returns DocNode for doc blocks" do
-      doc_token = %Token{kind: "<DOC>", content: ~s("""), line: 1, col: 0}
-      nl = %Token{kind: "<NL>", content: "\n", line: 2, col: 0}
+      doc_token = %Token{col: 0, content: ~s("""), kind: "<DOC>", line: 1}
+      nl = %Token{col: 0, content: "\n", kind: "<NL>", line: 2}
 
       node = %Node{
-        tokens: [doc_token, nl],
-        line_count: 2,
         children: [],
+        end_line: 2,
+        line_count: 2,
         start_line: 1,
-        end_line: 2
+        tokens: [doc_token, nl]
       }
 
       [result] =
@@ -101,16 +105,16 @@ defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
     end
 
     test "returns AttributeNode for typespec blocks" do
-      at = %Token{kind: "@", content: "@", line: 1, col: 0}
-      spec = %Token{kind: "<ID>", content: "spec", line: 1, col: 1}
-      nl = %Token{kind: "<NL>", content: "\n", line: 1, col: 5}
+      at = %Token{col: 0, content: "@", kind: "@", line: 1}
+      spec = %Token{col: 1, content: "spec", kind: "<ID>", line: 1}
+      nl = %Token{col: 5, content: "\n", kind: "<NL>", line: 1}
 
       node = %Node{
-        tokens: [at, spec, nl],
-        line_count: 1,
         children: [],
+        end_line: 1,
+        line_count: 1,
         start_line: 1,
-        end_line: 1
+        tokens: [at, spec, nl]
       }
 
       [result] =
@@ -124,15 +128,15 @@ defmodule CodeQA.AST.Classification.NodeTypeDetectorTest do
     end
 
     test "returns CodeNode for unclassified blocks" do
-      id = %Token{kind: "<ID>", content: "foo", line: 1, col: 0}
-      nl = %Token{kind: "<NL>", content: "\n", line: 1, col: 3}
+      id = %Token{col: 0, content: "foo", kind: "<ID>", line: 1}
+      nl = %Token{col: 3, content: "\n", kind: "<NL>", line: 1}
 
       node = %Node{
-        tokens: [id, nl],
-        line_count: 1,
         children: [],
+        end_line: 1,
+        line_count: 1,
         start_line: 1,
-        end_line: 1
+        tokens: [id, nl]
       }
 
       [result] =

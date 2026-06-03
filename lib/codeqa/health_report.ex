@@ -1,8 +1,14 @@
 defmodule CodeQA.HealthReport do
   @moduledoc "Orchestrates health report generation from analysis results."
 
-  alias CodeQA.CombinedMetrics.{FileScorer, SampleRunner}
-  alias CodeQA.HealthReport.{Config, Delta, Formatter, Grader, TopBlocks}
+  alias CodeQA.CombinedMetrics.FileScorer
+  alias CodeQA.CombinedMetrics.SampleRunner
+  alias CodeQA.HealthReport.Config
+  alias CodeQA.HealthReport.Delta
+  alias CodeQA.HealthReport.Formatter
+  alias CodeQA.HealthReport.Grader
+  alias CodeQA.HealthReport.TopBlocks
+  import CodeQA.Shared, only: [project_languages_shared: 1]
 
   @spec generate(map(), keyword()) :: map()
   def generate(analysis_results, opts \\ []) do
@@ -12,12 +18,12 @@ defmodule CodeQA.HealthReport do
     diff_line_ranges = Keyword.get(opts, :diff_line_ranges, %{})
 
     %{
-      categories: categories,
-      grade_scale: grade_scale,
-      impact_map: impact_map,
-      combined_top: combined_top,
+      block_max_lines: block_max_lines,
       block_min_lines: block_min_lines,
-      block_max_lines: block_max_lines
+      categories: categories,
+      combined_top: combined_top,
+      grade_scale: grade_scale,
+      impact_map: impact_map
     } =
       Config.load(config_path)
 
@@ -42,25 +48,26 @@ defmodule CodeQA.HealthReport do
     all_cosines =
       SampleRunner.diagnose_aggregate(aggregate, top: 99_999, languages: project_langs)
 
-    cosines_by_category = Enum.group_by(all_cosines, & &1.category)
+    cosines_by_category = all_cosines |> Enum.group_by(& &1.category)
 
     cosine_grades =
       Grader.grade_cosine_categories(cosines_by_category, worst_files_map, grade_scale)
 
     all_categories =
       (threshold_grades ++ cosine_grades)
-      |> Enum.map(fn cat ->
-        Map.put(cat, :impact, Map.get(impact_map, to_string(cat.key), 1))
-      end)
+      |> Enum.map(&Map.put(&1, :impact, Map.get(impact_map, to_string(&1.key), 1)))
 
     {overall_score, overall_grade} = Grader.overall_score(all_categories, grade_scale, impact_map)
 
     metadata = build_metadata(analysis_results)
 
-    top_issues = Enum.take(all_cosines, 10)
+    top_issues = all_cosines |> Enum.take(10)
 
     codebase_cosine_lookup =
-      Map.new(all_cosines, fn i -> {{i.category, i.behavior}, i.cosine} end)
+      for i <- all_cosines do
+        {{i.category, i.behavior}, i.cosine}
+      end
+      |> Map.new()
 
     block_opts = [
       block_min_lines: block_min_lines,
@@ -81,9 +88,9 @@ defmodule CodeQA.HealthReport do
 
     grading_cfg = %{
       category_defs: categories,
+      combined_top: combined_top,
       grade_scale: grade_scale,
-      impact_map: impact_map,
-      combined_top: combined_top
+      impact_map: impact_map
     }
 
     {codebase_delta, pr_summary} =
@@ -102,22 +109,21 @@ defmodule CodeQA.HealthReport do
       end
 
     %{
-      metadata: metadata,
-      pr_summary: pr_summary,
-      overall_score: overall_score,
-      overall_grade: overall_grade,
-      codebase_delta: codebase_delta,
       categories: all_categories,
-      top_issues: top_issues,
+      codebase_delta: codebase_delta,
+      metadata: metadata,
+      overall_grade: overall_grade,
+      overall_score: overall_score,
+      pr_summary: pr_summary,
       top_blocks: top_blocks,
+      top_issues: top_issues,
       worst_blocks_by_category: worst_blocks_by_category
     }
   end
 
   @spec to_markdown(map(), atom(), atom()) :: String.t()
-  def to_markdown(report, detail \\ :default, format \\ :plain) do
-    Formatter.format_markdown(report, detail, format)
-  end
+  def to_markdown(report, detail \\ :default, format \\ :plain),
+    do: report |> Formatter.format_markdown(detail, format)
 
   defp build_delta_and_summary(
          base_results,
@@ -126,9 +132,9 @@ defmodule CodeQA.HealthReport do
          head_grade,
          %{
            category_defs: category_defs,
+           combined_top: combined_top,
            grade_scale: grade_scale,
-           impact_map: impact_map,
-           combined_top: combined_top
+           impact_map: impact_map
          },
          changed_files,
          top_blocks
@@ -165,26 +171,24 @@ defmodule CodeQA.HealthReport do
 
     base_all_categories =
       (base_threshold_grades ++ base_cosine_grades)
-      |> Enum.map(fn cat ->
-        Map.put(cat, :impact, Map.get(impact_map, to_string(cat.key), 1))
-      end)
+      |> Enum.map(&Map.put(&1, :impact, Map.get(impact_map, to_string(&1.key), 1)))
 
     {base_score, base_grade} = Grader.overall_score(base_all_categories, grade_scale, impact_map)
 
     blocks_flagged = length(top_blocks)
-    files_added = Enum.count(changed_files, &(&1.status == "added"))
-    files_modified = Enum.count(changed_files, &(&1.status == "modified"))
+    files_added = changed_files |> Enum.count(&(&1.status == "added"))
+    files_modified = changed_files |> Enum.count(&(&1.status == "modified"))
 
     summary = %{
-      base_score: base_score,
-      head_score: head_score,
-      score_delta: head_score - base_score,
       base_grade: base_grade,
-      head_grade: head_grade,
+      base_score: base_score,
       blocks_flagged: blocks_flagged,
-      files_changed: length(changed_files),
       files_added: files_added,
-      files_modified: files_modified
+      files_changed: length(changed_files),
+      files_modified: files_modified,
+      head_grade: head_grade,
+      head_score: head_score,
+      score_delta: head_score - base_score
     }
 
     {delta, summary}
@@ -200,20 +204,14 @@ defmodule CodeQA.HealthReport do
     }
   end
 
-  defp project_languages(files_map) do
-    files_map
-    |> Map.keys()
-    |> Enum.map(&CodeQA.Language.detect(&1).name())
-    |> Enum.reject(&(&1 == "unknown"))
-    |> Enum.uniq()
-  end
+  defp project_languages(files_map), do: project_languages_shared(files_map)
 
   defp build_category_summary(%{type: :cosine}), do: ""
 
   defp build_category_summary(graded) do
     low_scorers =
       graded.metric_scores
-      |> Enum.filter(fn m -> m.score < 60 end)
+      |> Enum.filter(&(&1.score < 60))
       |> length()
 
     cond do

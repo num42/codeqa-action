@@ -1,4 +1,5 @@
 defmodule CodeQA.HealthReport.TopBlocks do
+  alias CodeQA.Language
   @moduledoc "Assembles the top_blocks report section from analysis node data."
 
   alias CodeQA.CombinedMetrics.Scorer
@@ -16,16 +17,13 @@ defmodule CodeQA.HealthReport.TopBlocks do
     Scorer.all_yamls()
     |> Enum.flat_map(fn {yaml_path, data} ->
       category = yaml_path |> Path.basename() |> String.trim_trailing(".yml")
-      Enum.flat_map(data, &hints_for_behavior(category, &1))
+      data |> Enum.flat_map(&hints_for_behavior(category, &1))
     end)
     |> Map.new()
   end
 
   defp hints_for_behavior(category, {behavior, behavior_data}) when is_map(behavior_data) do
-    case Map.get(behavior_data, "_fix_hint") do
-      nil -> []
-      hint -> [{{category, behavior}, hint}]
-    end
+    Map.get(behavior_data, "_fix_hint") |> wrap_fix_hint(behavior, category)
   end
 
   defp hints_for_behavior(_category, _entry), do: []
@@ -66,7 +64,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
     |> Enum.group_by(&elem(&1, 0), fn {_cat, block, delta} -> {block, delta} end)
     |> Enum.map(fn {category, block_deltas} ->
       # Find the block with highest cosine_delta for this category
-      {worst_block, _delta} = Enum.max_by(block_deltas, fn {_block, delta} -> delta end)
+      {worst_block, _delta} = block_deltas |> Enum.max_by(fn {_block, delta} -> delta end)
       {category, add_source_code(worst_block, base_path)}
     end)
     |> Map.new()
@@ -83,7 +81,7 @@ defmodule CodeQA.HealthReport.TopBlocks do
 
     file_entries =
       if changed_files == [] do
-        Enum.map(files, fn {path, data} -> {path, nil, data} end)
+        files |> Enum.map(fn {path, data} -> {path, nil, data} end)
       else
         changed_index = Map.new(changed_files, &{&1.path, &1.status})
 
@@ -100,8 +98,9 @@ defmodule CodeQA.HealthReport.TopBlocks do
       file_data
       |> Map.get("nodes", [])
       |> Enum.flat_map(&collect_nodes/1)
-      |> Enum.filter(&(&1["token_count"] >= @min_tokens))
-      |> Enum.filter(&block_in_line_range?(&1, min_lines, max_lines))
+      |> Enum.filter(
+        &(&1["token_count"] >= @min_tokens and block_in_line_range?(&1, min_lines, max_lines))
+      )
       |> filter_by_diff_overlap(path_diff_ranges, diff_line_ranges)
       |> Enum.map(&enrich_block(&1, codebase_cosine_lookup, fix_hints))
       |> Enum.reject(&(&1.potentials == []))
@@ -124,9 +123,8 @@ defmodule CodeQA.HealthReport.TopBlocks do
        do: blocks
 
   # When diff_line_ranges provided, filter blocks by overlap
-  defp filter_by_diff_overlap(blocks, path_ranges, _diff_line_ranges) do
-    Enum.filter(blocks, &block_overlaps_diff?(&1, path_ranges))
-  end
+  defp filter_by_diff_overlap(blocks, path_ranges, _diff_line_ranges),
+    do: blocks |> Enum.filter(&block_overlaps_diff?(&1, path_ranges))
 
   @spec block_overlaps_diff?(map(), [{pos_integer(), pos_integer()}]) :: boolean()
   defp block_overlaps_diff?(_node, []), do: false
@@ -135,15 +133,14 @@ defmodule CodeQA.HealthReport.TopBlocks do
     block_start = node["start_line"] || 1
     block_end = node["end_line"] || block_start
 
-    Enum.any?(path_ranges, fn {diff_start, diff_end} ->
+    path_ranges
+    |> Enum.any?(fn {diff_start, diff_end} ->
       ranges_overlap?(block_start, block_end, diff_start, diff_end)
     end)
   end
 
   @spec ranges_overlap?(pos_integer(), pos_integer(), pos_integer(), pos_integer()) :: boolean()
-  defp ranges_overlap?(start1, end1, start2, end2) do
-    start1 <= end2 and start2 <= end1
-  end
+  defp ranges_overlap?(start1, end1, start2, end2), do: start1 <= end2 and start2 <= end1
 
   defp collect_nodes(node) do
     children = node |> Map.get("children", []) |> Enum.flat_map(&collect_nodes/1)
@@ -159,11 +156,11 @@ defmodule CodeQA.HealthReport.TopBlocks do
       |> Enum.sort_by(& &1.cosine_delta, :desc)
 
     %{
-      start_line: node["start_line"],
       end_line: node["end_line"],
-      type: node["type"],
+      potentials: potentials,
+      start_line: node["start_line"],
       token_count: node["token_count"],
-      potentials: potentials
+      type: node["type"]
     }
   end
 
@@ -180,11 +177,11 @@ defmodule CodeQA.HealthReport.TopBlocks do
       nil
     else
       %{
-        category: category,
         behavior: behavior,
+        category: category,
         cosine_delta: cosine_delta,
-        severity: severity,
-        fix_hint: Map.get(fix_hints, {category, behavior})
+        fix_hint: Map.get(fix_hints, {category, behavior}),
+        severity: severity
       }
     end
   end
@@ -216,7 +213,11 @@ defmodule CodeQA.HealthReport.TopBlocks do
           nil
       end
 
-    lang = CodeQA.Language.detect(block.path).name()
-    Map.merge(block, %{source: source, language: lang})
+    lang = Language.detect(block.path).name()
+    Map.merge(block, %{language: lang, source: source})
   end
+
+  defp wrap_fix_hint(nil, _behavior, _category), do: []
+
+  defp wrap_fix_hint(hint, behavior, category), do: [{{category, behavior}, hint}]
 end

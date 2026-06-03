@@ -57,7 +57,7 @@ defmodule CodeQA.BlockImpact.RefactoringPotentials do
         behavior_map
       )
 
-    all_keys = Enum.uniq(Map.keys(file_delta) ++ Map.keys(codebase_delta))
+    all_keys = (Map.keys(file_delta) ++ Map.keys(codebase_delta)) |> Enum.uniq()
 
     all_keys
     |> Enum.reject(fn {category, behavior} ->
@@ -106,9 +106,12 @@ defmodule CodeQA.BlockImpact.RefactoringPotentials do
 
   defp cosines_to_delta(baseline_cosines, without_cosines) do
     without_map =
-      Map.new(without_cosines, fn %{category: c, behavior: b, cosine: cos} -> {{c, b}, cos} end)
+      for %{behavior: b, category: c, cosine: cos} <- without_cosines do
+        {{c, b}, cos}
+      end
+      |> Map.new()
 
-    Map.new(baseline_cosines, fn %{category: c, behavior: b, cosine: cos} ->
+    Map.new(baseline_cosines, fn %{behavior: b, category: c, cosine: cos} ->
       without_cos = Map.get(without_map, {c, b}, 0.0)
       {{c, b}, without_cos - cos}
     end)
@@ -116,9 +119,8 @@ defmodule CodeQA.BlockImpact.RefactoringPotentials do
 
   defp excluded?(_category, _behavior, nil, _behavior_map), do: false
 
-  defp excluded?(category, behavior, block_type, behavior_map) do
-    Atom.to_string(block_type) in excludes_for(category, behavior, behavior_map)
-  end
+  defp excluded?(category, behavior, block_type, behavior_map),
+    do: Atom.to_string(block_type) in excludes_for(category, behavior, behavior_map)
 
   defp excludes_for(category, behavior, behavior_map) when is_map(behavior_map) do
     with [_ | _] = behaviors <- Map.get(behavior_map, category, []),

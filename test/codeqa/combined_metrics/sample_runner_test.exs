@@ -26,14 +26,15 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
       langs = get_in(data, ["name_is_generic", "_languages"])
       assert is_list(langs)
       assert langs != []
-      assert Enum.all?(langs, &is_binary/1)
+      assert langs |> Enum.all?(&is_binary/1)
     end
 
     test "behaviors without sample dirs get no _languages key" do
       SampleRunner.apply_languages(category: "variable_naming")
       {:ok, data} = YamlElixir.read_from_file("priv/combined_metrics/variable_naming.yml")
 
-      Enum.each(data, fn {_behavior, groups} ->
+      data
+      |> Enum.each(fn {_behavior, groups} ->
         if is_map(groups) do
           case Map.get(groups, "_languages") do
             nil -> :ok
@@ -93,7 +94,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
     test "accepts :languages option without crashing" do
       result = SampleRunner.score_aggregate(%{}, languages: ["elixir"])
       assert is_list(result)
-      assert Enum.all?(result, &Map.has_key?(&1, :behaviors))
+      assert result |> Enum.all?(&Map.has_key?(&1, :behaviors))
     end
 
     test "with languages option returns fewer behaviors than unfiltered" do
@@ -134,7 +135,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
     end
 
     test "name_is_generic result has good_score > bad_score", %{results: results} do
-      generic = Enum.find(results, &(&1.behavior == "name_is_generic"))
+      generic = results |> Enum.find(&(&1.behavior == "name_is_generic"))
       assert generic != nil
       assert generic.good_score > generic.bad_score
     end

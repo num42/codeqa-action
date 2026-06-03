@@ -11,12 +11,12 @@ defmodule CodeQA.Analysis.RunSupervisor do
 
   use Supervisor
 
-  alias CodeQA.Analysis.{BehaviorConfigServer, FileContextServer, RunContext}
+  alias CodeQA.Analysis.BehaviorConfigServer
+  alias CodeQA.Analysis.FileContextServer
+  alias CodeQA.Analysis.RunContext
 
   @spec start_link(keyword()) :: Supervisor.on_start()
-  def start_link(opts \\ []) do
-    Supervisor.start_link(__MODULE__, opts)
-  end
+  def start_link(opts \\ []), do: __MODULE__ |> Supervisor.start_link(opts)
 
   @doc """
   Queries child PIDs from `sup` and returns a `RunContext` struct.
@@ -45,7 +45,7 @@ defmodule CodeQA.Analysis.RunSupervisor do
 
   defp find_pid(children, module) do
     {_id, pid, _type, _modules} =
-      Enum.find(children, fn {id, _pid, _type, _modules} -> id == module end)
+      children |> Enum.find(fn {id, _pid, _type, _modules} -> id == module end)
 
     pid
   end

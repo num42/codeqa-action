@@ -38,11 +38,11 @@ defmodule CodeQA.AST.Lexing.StringToken do
   @type quotes :: :double | :single | :backtick
 
   @type t :: %__MODULE__{
-          content: String.t(),
-          line: non_neg_integer() | nil,
           col: non_neg_integer() | nil,
-          kind: String.t(),
+          content: String.t(),
           interpolations: [String.t()] | nil,
+          kind: String.t(),
+          line: non_neg_integer() | nil,
           multiline: boolean(),
           quotes: quotes()
         }

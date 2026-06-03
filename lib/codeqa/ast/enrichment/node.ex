@@ -34,12 +34,12 @@ defmodule CodeQA.AST.Enrichment.Node do
   ]
 
   @type t :: %__MODULE__{
-          tokens: [CodeQA.AST.Lexing.Token.t()],
-          line_count: non_neg_integer(),
           children: [term()],
-          label: term() | nil,
-          start_line: non_neg_integer() | nil,
           end_line: non_neg_integer() | nil,
+          label: term() | nil,
+          line_count: non_neg_integer(),
+          start_line: non_neg_integer() | nil,
+          tokens: [CodeQA.AST.Lexing.Token.t()],
           type: :code | :doc | :typespec
         }
 
@@ -63,8 +63,8 @@ defimpl CodeQA.AST.Classification.NodeProtocol, for: CodeQA.AST.Enrichment.Node 
   def label(n), do: n.label
 
   def flat_tokens(n) do
-    if Enum.empty?(n.children),
+    if n.children |> Enum.empty?(),
       do: n.tokens,
-      else: Enum.flat_map(n.children, &CodeQA.AST.Classification.NodeProtocol.flat_tokens/1)
+      else: n.children |> Enum.flat_map(&CodeQA.AST.Classification.NodeProtocol.flat_tokens/1)
   end
 end

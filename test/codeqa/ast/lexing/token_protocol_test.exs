@@ -7,7 +7,7 @@ defmodule CodeQA.AST.Lexing.TokenProtocolTest do
 
   describe "Token implementation" do
     setup do
-      {:ok, token: %Token{kind: "<ID>", content: "foo", line: 3, col: 7}}
+      {:ok, token: %Token{col: 7, content: "foo", kind: "<ID>", line: 3}}
     end
 
     test "kind/1", %{token: t} do
@@ -27,7 +27,7 @@ defmodule CodeQA.AST.Lexing.TokenProtocolTest do
     end
 
     test "nil location fields are preserved" do
-      t = %Token{kind: "<NL>", content: "\n", line: nil, col: nil}
+      t = %Token{col: nil, content: "\n", kind: "<NL>", line: nil}
       assert TokenProtocol.line(t) == nil
       assert TokenProtocol.col(t) == nil
     end
@@ -37,11 +37,11 @@ defmodule CodeQA.AST.Lexing.TokenProtocolTest do
     setup do
       {:ok,
        token: %StringToken{
-         kind: "<STR>",
-         content: "\"hello\"",
-         line: 10,
          col: 2,
-         interpolations: nil
+         content: "\"hello\"",
+         interpolations: nil,
+         kind: "<STR>",
+         line: 10
        }}
     end
 
@@ -63,11 +63,11 @@ defmodule CodeQA.AST.Lexing.TokenProtocolTest do
 
     test "works with interpolated string token" do
       t = %StringToken{
-        kind: "<STR>",
-        content: "\"\#{x}\"",
-        line: 5,
         col: 0,
-        interpolations: ["x"]
+        content: "\"\#{x}\"",
+        interpolations: ["x"],
+        kind: "<STR>",
+        line: 5
       }
 
       assert TokenProtocol.kind(t) == "<STR>"
@@ -79,10 +79,10 @@ defmodule CodeQA.AST.Lexing.TokenProtocolTest do
     setup do
       {:ok,
        token: %StringToken{
-         kind: "<DOC>",
-         content: ~s("""),
-         line: 2,
          col: 0,
+         content: ~s("""),
+         kind: "<DOC>",
+         line: 2,
          multiline: true,
          quotes: :double
        }}
@@ -106,10 +106,10 @@ defmodule CodeQA.AST.Lexing.TokenProtocolTest do
 
     test "single-quote variant" do
       t = %StringToken{
-        kind: "<DOC>",
-        content: "'''",
-        line: 5,
         col: 0,
+        content: "'''",
+        kind: "<DOC>",
+        line: 5,
         multiline: true,
         quotes: :single
       }
@@ -122,20 +122,20 @@ defmodule CodeQA.AST.Lexing.TokenProtocolTest do
   describe "polymorphic use" do
     test "mixed token list can be processed uniformly" do
       tokens = [
-        %Token{kind: "<ID>", content: "x", line: 1, col: 0},
-        %StringToken{kind: "<STR>", content: "\"hi\"", line: 1, col: 4},
+        %Token{col: 0, content: "x", kind: "<ID>", line: 1},
+        %StringToken{col: 4, content: "\"hi\"", kind: "<STR>", line: 1},
         %StringToken{
-          kind: "<DOC>",
-          content: ~s("""),
-          line: 2,
           col: 0,
+          content: ~s("""),
+          kind: "<DOC>",
+          line: 2,
           multiline: true,
           quotes: :double
         },
-        %Token{kind: "<NL>", content: "\n", line: 2, col: 3}
+        %Token{col: 3, content: "\n", kind: "<NL>", line: 2}
       ]
 
-      kinds = Enum.map(tokens, &TokenProtocol.kind/1)
+      kinds = tokens |> Enum.map(&TokenProtocol.kind/1)
       assert kinds == ["<ID>", "<STR>", "<DOC>", "<NL>"]
     end
   end

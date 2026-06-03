@@ -30,7 +30,7 @@ defmodule CodeQA.Engine.Pipeline do
       Regex.scan(@word_re, content)
       |> List.flatten()
 
-    identifiers = Enum.reject(words, &MapSet.member?(keywords, &1))
+    identifiers = words |> Enum.reject(&MapSet.member?(keywords, &1))
     lines = content |> String.split("\n") |> trim_trailing_empty()
     encoded = content
 
@@ -51,17 +51,17 @@ defmodule CodeQA.Engine.Pipeline do
       end
 
     %FileContext{
-      content: content,
-      tokens: tokens,
-      token_counts: token_counts,
-      words: words,
-      identifiers: identifiers,
-      lines: lines,
-      encoded: encoded,
+      blocks: blocks,
       byte_count: byte_size(content),
+      content: content,
+      encoded: encoded,
+      identifiers: identifiers,
       line_count: length(lines),
+      lines: lines,
       path: path,
-      blocks: blocks
+      token_counts: token_counts,
+      tokens: tokens,
+      words: words
     }
   end
 

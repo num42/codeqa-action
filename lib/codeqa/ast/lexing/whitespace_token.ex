@@ -21,9 +21,9 @@ defmodule CodeQA.AST.Lexing.WhitespaceToken do
   def kind, do: @kind
 
   @type t :: %__MODULE__{
-          kind: String.t(),
+          col: non_neg_integer() | nil,
           content: String.t(),
-          line: non_neg_integer() | nil,
-          col: non_neg_integer() | nil
+          kind: String.t(),
+          line: non_neg_integer() | nil
         }
 end

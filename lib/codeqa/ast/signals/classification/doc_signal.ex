@@ -1,4 +1,6 @@
 defmodule CodeQA.AST.Signals.Classification.DocSignal do
+  alias CodeQA.AST.Lexing.StringToken
+
   @moduledoc """
   Classification signal — votes `:doc` when a `<DOC>` (triple-quoted string) token
   is found anywhere in the node's token stream.
@@ -10,7 +12,7 @@ defmodule CodeQA.AST.Signals.Classification.DocSignal do
   defstruct []
 
   defimpl CodeQA.AST.Parsing.Signal do
-    @doc_kind CodeQA.AST.Lexing.StringToken.doc_kind()
+    @doc_kind StringToken.doc_kind()
     def source(_), do: CodeQA.AST.Signals.Classification.DocSignal
     def group(_), do: :classification
 

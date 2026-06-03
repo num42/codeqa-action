@@ -6,8 +6,12 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   manual scalar tuning of combined metric formulas.
   """
 
-  alias CodeQA.CombinedMetrics.{CosineVector, ScalarApplier, Scorer}
-  alias CodeQA.Engine.{Analyzer, Collector}
+  alias CodeQA.CombinedMetrics.CosineVector
+  alias CodeQA.CombinedMetrics.ScalarApplier
+  alias CodeQA.CombinedMetrics.Scorer
+  alias CodeQA.Engine.Analyzer
+  alias CodeQA.Engine.Collector
+  import CodeQA.Shared, only: [humanize_category_shared: 1]
 
   @samples_root "priv/combined_metrics/samples"
 
@@ -138,7 +142,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
         end)
         |> Enum.sort_by(& &1.score)
 
-      %{category: category, name: humanize(category), behaviors: behaviors}
+      %{behaviors: behaviors, category: category, name: humanize(category)}
     end)
   end
 
@@ -245,9 +249,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   Returns a list of `%{category: String.t(), behaviors_with_languages: non_neg_integer()}`.
   """
   @spec apply_languages(keyword()) :: [map()]
-  def apply_languages(opts \\ []) do
-    ScalarApplier.apply_languages(opts)
-  end
+  def apply_languages(opts \\ []), do: opts |> ScalarApplier.apply_languages()
 
   # ---------------------------------------------------------------------------
   # Sample discovery
@@ -263,21 +265,20 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     end)
   end
 
-  defp has_both_dirs?(category, behavior) do
-    File.dir?(sample_path(category, behavior, "bad")) and
-      File.dir?(sample_path(category, behavior, "good"))
-  end
+  defp has_both_dirs?(category, behavior),
+    do:
+      File.dir?(sample_path(category, behavior, "bad")) and
+        File.dir?(sample_path(category, behavior, "good"))
 
-  defp sample_path(category, behavior, kind) do
-    Path.join([@samples_root, category, behavior, kind])
-  end
+  defp sample_path(category, behavior, kind),
+    do: [@samples_root, category, behavior, kind] |> Path.join()
 
-  defp analyze(dir) do
-    dir
-    |> Collector.collect_files()
-    |> Analyzer.analyze_codebase()
-    |> get_in(["codebase", "aggregate"])
-  end
+  defp analyze(dir),
+    do:
+      dir
+      |> Collector.collect_files()
+      |> Analyzer.analyze_codebase()
+      |> get_in(["codebase", "aggregate"])
 
   # ---------------------------------------------------------------------------
   # Sample scoring
@@ -293,12 +294,12 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     ratio = if bad_score > 0, do: good_score / bad_score, else: 0.0
 
     base = %{
-      category: category,
-      behavior: behavior,
       bad_score: bad_score,
+      behavior: behavior,
+      category: category,
+      direction_ok: good_score >= bad_score,
       good_score: good_score,
-      ratio: Float.round(ratio, 2),
-      direction_ok: good_score >= bad_score
+      ratio: Float.round(ratio, 2)
     }
 
     if opts[:verbose] do
@@ -314,7 +315,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
       bad_val = Scorer.get(bad_agg, group, key)
       good_val = Scorer.get(good_agg, group, key)
       ratio = if bad_val > 0, do: Float.round(good_val / bad_val, 2), else: 0.0
-      %{group: group, key: key, scalar: scalar, bad: bad_val, good: good_val, ratio: ratio}
+      %{bad: bad_val, good: good_val, group: group, key: key, ratio: ratio, scalar: scalar}
     end)
     |> Enum.sort_by(&abs(&1.ratio - 1.0), :desc)
   end
@@ -396,7 +397,8 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
        ) do
     yaml_path = "priv/combined_metrics/#{category}.yml"
 
-    Enum.flat_map(behaviors, fn {behavior, behavior_data} ->
+    behaviors
+    |> Enum.flat_map(fn {behavior, behavior_data} ->
       maybe_diagnose_behavior(
         yaml_path,
         behavior,
@@ -461,16 +463,8 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     end
   end
 
-  defp track_behavior_us(behavior, us) do
-    case Process.get(:codeqa_cosine_breakdown) do
-      nil ->
-        :ok
-
-      breakdown ->
-        cur = Map.get(breakdown, behavior, 0)
-        Process.put(:codeqa_cosine_breakdown, Map.put(breakdown, behavior, cur + us))
-    end
-  end
+  defp track_behavior_us(behavior, us),
+    do: Process.get(:codeqa_cosine_breakdown) |> accumulate_behavior_us(behavior, us)
 
   # ---------------------------------------------------------------------------
   # Language filtering
@@ -490,7 +484,7 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
     do: language in behavior_langs
 
   defp behavior_language_applies?(behavior_langs, nil, languages) when is_list(languages),
-    do: Enum.any?(behavior_langs, &(&1 in languages))
+    do: behavior_langs |> Enum.any?(&(&1 in languages))
 
   defp behavior_language_applies?(behavior_langs, language, languages)
        when is_binary(language) and is_list(languages),
@@ -500,9 +494,12 @@ defmodule CodeQA.CombinedMetrics.SampleRunner do
   # Misc
   # ---------------------------------------------------------------------------
 
-  defp humanize(slug) do
-    slug
-    |> String.split("_")
-    |> Enum.map_join(" ", &String.capitalize/1)
+  defp humanize(slug), do: humanize_category_shared(slug)
+
+  defp accumulate_behavior_us(nil, _behavior, _us), do: :ok
+
+  defp accumulate_behavior_us(breakdown, behavior, us) do
+    cur = Map.get(breakdown, behavior, 0)
+    Process.put(:codeqa_cosine_breakdown, Map.put(breakdown, behavior, cur + us))
   end
 end

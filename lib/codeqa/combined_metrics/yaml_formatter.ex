@@ -47,20 +47,20 @@ defmodule CodeQA.CombinedMetrics.YamlFormatter do
   defp doc_line(doc), do: ["  _doc: #{inspect(doc)}"]
 
   defp baseline_line(nil), do: []
-  defp baseline_line(val), do: ["  _log_baseline: #{fmt_scalar(val)}"]
+  defp baseline_line(val), do: ["  _log_baseline: #{format_scalar(val)}"]
 
   defp fix_hint_line(nil), do: []
   defp fix_hint_line(hint), do: ["  _fix_hint: #{inspect(hint)}"]
 
   defp languages_line(nil), do: []
   defp languages_line([]), do: []
-  defp languages_line(langs), do: ["  _languages: [#{Enum.join(langs, ", ")}]"]
+  defp languages_line(langs), do: ["  _languages: [#{langs |> Enum.join(", ")}]"]
 
   defp excludes_block_types_line(nil), do: []
   defp excludes_block_types_line([]), do: []
 
   defp excludes_block_types_line(types),
-    do: ["  _excludes_block_types: [#{Enum.join(types, ", ")}]"]
+    do: ["  _excludes_block_types: [#{types |> Enum.join(", ")}]"]
 
   defp group_lines(groups) do
     groups
@@ -73,12 +73,12 @@ defmodule CodeQA.CombinedMetrics.YamlFormatter do
       key_lines =
         keys
         |> Enum.sort_by(fn {key, _} -> key end)
-        |> Enum.map(fn {key, scalar} -> "    #{key}: #{fmt_scalar(scalar)}" end)
+        |> Enum.map(fn {key, scalar} -> "    #{key}: #{format_scalar(scalar)}" end)
 
       ["  #{group}:" | key_lines]
     end)
   end
 
-  defp fmt_scalar(f) when is_float(f), do: :erlang.float_to_binary(f, decimals: 4)
-  defp fmt_scalar(n) when is_integer(n), do: "#{n}.0"
+  defp format_scalar(f) when is_float(f), do: :erlang.float_to_binary(f, decimals: 4)
+  defp format_scalar(n) when is_integer(n), do: "#{n}.0"
 end

@@ -7,9 +7,10 @@ defmodule CodeQA.HealthReport.CategoriesTest do
     test "all metrics have fix_hint field" do
       categories = Categories.defaults()
 
-      metrics = Enum.flat_map(categories, & &1.metrics)
+      metrics = categories |> Enum.flat_map(& &1.metrics)
 
-      Enum.each(metrics, fn metric ->
+      metrics
+      |> Enum.each(fn metric ->
         assert Map.has_key?(metric, :fix_hint),
                "Metric #{metric.name} missing :fix_hint field"
 
@@ -24,7 +25,8 @@ defmodule CodeQA.HealthReport.CategoriesTest do
     test "all categories have expected keys" do
       categories = Categories.defaults()
 
-      Enum.each(categories, fn category ->
+      categories
+      |> Enum.each(fn category ->
         assert Map.has_key?(category, :key)
         assert Map.has_key?(category, :name)
         assert Map.has_key?(category, :metrics)
@@ -34,9 +36,10 @@ defmodule CodeQA.HealthReport.CategoriesTest do
     test "all metrics have required threshold keys" do
       categories = Categories.defaults()
 
-      metrics = Enum.flat_map(categories, & &1.metrics)
+      metrics = categories |> Enum.flat_map(& &1.metrics)
 
-      Enum.each(metrics, fn metric ->
+      metrics
+      |> Enum.each(fn metric ->
         assert Map.has_key?(metric, :name)
         assert Map.has_key?(metric, :source)
         assert Map.has_key?(metric, :weight)
@@ -49,9 +52,10 @@ defmodule CodeQA.HealthReport.CategoriesTest do
     test "fix_hint is accessible via Map.get" do
       categories = Categories.defaults()
 
-      metrics = Enum.flat_map(categories, & &1.metrics)
+      metrics = categories |> Enum.flat_map(& &1.metrics)
 
-      Enum.each(metrics, fn metric ->
+      metrics
+      |> Enum.each(fn metric ->
         hint = Map.get(metric, :fix_hint)
         assert is_binary(hint)
         assert String.length(hint) > 0
@@ -63,7 +67,7 @@ defmodule CodeQA.HealthReport.CategoriesTest do
 
       assert length(categories) == 6
 
-      metrics = Enum.flat_map(categories, & &1.metrics)
+      metrics = categories |> Enum.flat_map(& &1.metrics)
 
       assert length(metrics) == 24
     end

@@ -1,7 +1,8 @@
 defmodule CodeQA.HealthReport.Formatter do
   @moduledoc "Renders health report as markdown in plain or github format."
 
-  alias CodeQA.HealthReport.Formatter.{Github, Plain}
+  alias CodeQA.HealthReport.Formatter.Github
+  alias CodeQA.HealthReport.Formatter.Plain
 
   @spec format_markdown(map(), atom(), atom(), keyword()) :: String.t()
   def format_markdown(report, detail, format \\ :plain, opts \\ [])
