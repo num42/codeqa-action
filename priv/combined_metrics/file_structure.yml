@@ -1,89 +1,133 @@
 has_consistent_indentation:
   _doc: "Files should use a single, consistent indentation style with no mixed tabs and spaces."
-  _log_baseline: -8.2745
+  _languages: [elixir]
+  _log_baseline: 19.1706
   branching:
-    mean_branching_density: 0.0144
-    mean_non_blank_count: -0.0302
+    mean_branch_count: 0.0582
+    mean_branching_density: 0.0172
+    mean_max_nesting_depth: -0.0362
+    mean_non_blank_count: 0.0597
   brevity:
-    mean_sample_size: -0.0053
+    mean_sample_size: 0.1351
   casing_entropy:
-    mean_entropy: 0.0021
-    mean_snake_case_count: -0.0030
+    mean_entropy: 0.0495
+    mean_other_count: -0.0194
+    mean_pascal_case_count: 0.2384
+    mean_snake_case_count: 0.1372
+  comment_structure:
+    mean_comment_line_count: -0.3815
+    mean_comment_line_ratio: -2.0000
   compression:
-    mean_raw_bytes: -0.0218
-    mean_redundancy: -0.0026
-    mean_unique_line_ratio: -0.0381
-    mean_zlib_bytes: -0.0128
-    mean_zlib_ratio: -0.0065
+    mean_raw_bytes: 0.1364
+    mean_redundancy: 0.0136
+    mean_unique_line_ratio: -0.0260
+    mean_zlib_bytes: 0.1338
+    mean_zlib_ratio: 0.0135
   entropy:
-    mean_char_entropy: 0.0079
-    mean_char_normalized: 0.0096
-    mean_token_entropy: -0.0018
-    mean_total_tokens: -0.0033
-    mean_vocab_size: -0.0053
+    mean_char_entropy: 0.0162
+    mean_char_max_entropy: 0.0089
+    mean_char_normalized: 0.0078
+    mean_token_entropy: 0.0153
+    mean_token_max_entropy: 0.0242
+    mean_token_normalized: -0.0085
+    mean_total_tokens: 0.1168
+    mean_vocab_size: 0.1351
   function_metrics:
-    mean_avg_function_lines: -0.0128
-    mean_max_function_lines: -0.0176
+    mean_avg_function_lines: -0.0166
+    mean_avg_param_count: -0.0188
+    mean_function_count: -0.0157
+    mean_max_function_lines: -0.0389
+    mean_max_param_count: -0.0556
   halstead:
-    mean_N1_total_operators: -0.0035
-    mean_difficulty: -0.0061
-    mean_effort: -0.0038
-    mean_estimated_bugs: -0.0025
-    mean_length: -0.0023
-    mean_n1_unique_operators: -0.0081
-    mean_time_to_implement_seconds: -0.0038
-    mean_vocabulary: -0.0030
-    mean_volume: -0.0026
+    mean_N1_total_operators: 0.0634
+    mean_N2_total_operands: 0.0266
+    mean_difficulty: 0.0118
+    mean_effort: 0.0719
+    mean_estimated_bugs: 0.0591
+    mean_length: 0.0509
+    mean_n1_unique_operators: 0.0250
+    mean_n2_unique_operands: 0.0385
+    mean_time_to_implement_seconds: 0.0719
+    mean_vocabulary: 0.0331
+    mean_volume: 0.0592
+  heaps:
+    mean_beta: 0.0192
+    mean_k: -0.0261
+    mean_r_squared: 0.0055
   identifier_length_variance:
-    mean_mean: 0.0089
-    mean_std_dev: -0.0025
-    mean_variance: -0.0054
+    mean_max: 0.0397
+    mean_mean: 0.0619
+    mean_std_dev: 0.0328
+    mean_variance: 0.0552
   indentation:
-    mean_blank_line_ratio: 0.0250
-    mean_max_depth: -0.2075
-    mean_mean_depth: -0.0900
-    mean_variance: -0.3941
+    mean_blank_line_ratio: 0.1123
+    mean_max_depth: -0.2886
+    mean_mean_depth: -0.1068
+    mean_variance: -0.4798
   line_patterns:
-    mean_blank_line_ratio: 0.0250
-    mean_string_literal_ratio: 0.0093
-    mean_unique_line_ratio: -0.0077
+    mean_blank_line_ratio: 0.1123
+    mean_max_nesting_depth: -0.0362
+    mean_string_literal_ratio: 0.1274
   magic_number_density:
-    mean_density: 2.0000
-    mean_magic_number_count: 0.2373
-    mean_string_literal_ratio: 0.0093
+    mean_density: 0.3180
+    mean_magic_number_count: 0.5772
+    mean_string_literal_ratio: 0.1274
+  near_duplicate_blocks_file:
+    mean_block_count: 0.0684
+    mean_near_dup_block_d0: 0.2886
+    mean_near_dup_block_d4: -0.3815
+    mean_near_dup_block_d6: 0.3815
+    mean_near_dup_block_d8: 0.3815
+    mean_sub_block_count: 0.0759
   ngram:
-    mean_bigram_hapax_fraction: -0.0042
-    mean_bigram_repeated_unique: -0.0026
-    mean_bigram_repetition_rate: 0.0023
-    mean_bigram_total: -0.0033
-    mean_bigram_unique: -0.0051
-    mean_trigram_hapax_fraction: -0.0055
-    mean_trigram_repetition_rate: 0.0058
-    mean_trigram_total: -0.0033
-    mean_trigram_unique: -0.0048
+    mean_bigram_repeated_unique: 0.0762
+    mean_bigram_repetition_rate: 0.0147
+    mean_bigram_total: 0.1172
+    mean_bigram_unique: 0.1111
+    mean_trigram_hapax_fraction: -0.0091
+    mean_trigram_repeated_unique: 0.1084
+    mean_trigram_repetition_rate: 0.0407
+    mean_trigram_total: 0.1177
+    mean_trigram_unique: 0.1072
   punctuation_density:
-    mean_colon_suffix_density: 0.0078
+    mean_arrow_density: -0.1090
+    mean_bracket_nonalpha_prefix_count: 0.0696
+    mean_bracket_nonalpha_suffix_count: 0.0203
+    mean_bracket_number_pair_count: -0.0929
+    mean_colon_suffix_density: -0.0027
+    mean_dot_count: 0.2541
+    mean_id_nonalpha_suffix_density: -0.0458
   readability:
-    mean_avg_tokens_per_line: 0.0087
-    mean_fog_adapted: 0.0083
-    mean_total_lines: -0.0302
+    mean_avg_line_length: 0.0651
+    mean_avg_sub_words_per_id: 0.0075
+    mean_avg_tokens_per_line: 0.0417
+    mean_flesch_adapted: -0.0096
+    mean_fog_adapted: 0.0518
+    mean_total_lines: 0.0556
   separator_counts:
-    mean_hyphen_count: -0.0221
+    mean_dot_count: 0.2541
+    mean_hyphen_count: -0.0278
+    mean_underscore_count: 0.1339
   symbol_density:
-    mean_density: 0.0145
-    mean_symbol_count: -0.0026
+    mean_density: -0.0188
+    mean_distinct_symbol_types: 0.0362
+    mean_symbol_count: 0.1219
   vocabulary:
-    mean_mattr: 0.0043
-    mean_raw_ttr: 0.0043
-    mean_total_identifiers: -0.0025
+    mean_mattr: 0.0262
+    mean_raw_ttr: 0.0097
+    mean_total_identifiers: 0.1513
+    mean_unique_identifiers: 0.1804
   vowel_density:
-    mean_total_chars: 0.0031
+    mean_total_chars: 0.2178
   zipf:
-    mean_total_tokens: -0.0033
-    mean_vocab_size: -0.0053
+    mean_exponent: 0.0026
+    mean_r_squared: 0.0037
+    mean_total_tokens: 0.1168
+    mean_vocab_size: 0.1351
 
 line_count_under_300:
   _doc: "Files should be under 300 lines; longer files typically violate single responsibility."
+  _languages: [elixir]
   _log_baseline: -48.1609
   branching:
     mean_branch_count: -0.4508
@@ -206,6 +250,7 @@ line_count_under_300:
 
 line_length_under_120:
   _doc: "Lines should be under 120 characters to avoid horizontal scrolling."
+  _languages: [elixir]
   _log_baseline: -16.9801
   branching:
     mean_branching_density: -0.0814
@@ -322,6 +367,7 @@ line_length_under_120:
 
 no_magic_numbers:
   _doc: "Numeric literals should be extracted to named constants rather than used inline."
+  _languages: [elixir]
   _log_baseline: 111.4823
   branching:
     mean_branch_count: -0.4352
@@ -432,6 +478,7 @@ no_magic_numbers:
 
 single_responsibility:
   _doc: "Each file should have one primary concern — low complexity spread across few, focused functions."
+  _languages: [elixir]
   _log_baseline: -38.0916
   branching:
     mean_branch_count: -0.0362
@@ -558,6 +605,7 @@ single_responsibility:
 
 uses_standard_indentation_width:
   _doc: "Indentation should use consistent multiples of 2 or 4 spaces throughout the file."
+  _languages: [elixir]
   _log_baseline: -8.4038
   compression:
     mean_raw_bytes: -0.2260

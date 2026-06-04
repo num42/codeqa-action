@@ -1,5 +1,6 @@
 declared_close_to_use:
   _doc: "Variables should be declared near their first use, not hoisted to the top of the function."
+  _languages: [elixir, go, javascript, python, ruby]
   _log_baseline: -35.4141
   branching:
     mean_branch_count: -0.2664
@@ -110,6 +111,7 @@ declared_close_to_use:
 
 mutated_after_initial_assignment:
   _doc: "Variables should not be reassigned after their initial value — prefer introducing a new name."
+  _languages: [elixir]
   _log_baseline: 6.2569
   branching:
     mean_branch_count: 0.1519
@@ -223,6 +225,7 @@ mutated_after_initial_assignment:
 
 reassigned_multiple_times:
   _doc: "A variable reassigned many times is a sign the name is too generic or the function does too much."
+  _languages: [elixir]
   _log_baseline: -6.7462
   branching:
     mean_max_nesting_depth: 0.0680
@@ -344,6 +347,7 @@ reassigned_multiple_times:
 
 scope_is_minimal:
   _doc: "Variables should be scoped as narrowly as possible — not declared at a wider scope than needed."
+  _languages: [elixir]
   _log_baseline: -7.6942
   branching:
     mean_branch_count: -0.1072
@@ -454,6 +458,7 @@ scope_is_minimal:
 
 shadowed_by_inner_scope:
   _doc: "Inner-scope names that shadow outer-scope names cause confusion about which value is in play."
+  _languages: [elixir]
   _log_baseline: -32.0799
   branching:
     mean_branching_density: 2.0000
@@ -561,6 +566,7 @@ shadowed_by_inner_scope:
 
 used_only_once:
   _doc: "A variable used only once is a candidate for inlining — it rarely adds clarity over a direct expression."
+  _languages: [elixir, go, javascript, python, ruby]
   _log_baseline: -37.0606
   branching:
     mean_branch_count: -0.2490

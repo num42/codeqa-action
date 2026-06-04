@@ -12,26 +12,41 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
   end
 
   describe "apply_languages/1" do
-    test "returns one entry per requested category" do
-      stats = SampleRunner.apply_languages(category: "variable_naming")
+    # Copy the real YAMLs into a scratch dir so the test never mutates the
+    # committed priv/ fixtures. apply_languages writes to opts[:dir].
+    setup do
+      tmp = Path.join(System.tmp_dir!(), "scalar_applier_#{System.unique_integer([:positive])}")
+      File.mkdir_p!(tmp)
+
+      ~w(variable_naming.yml code_smells.yml)
+      |> Enum.each(fn f ->
+        File.cp!(Path.join("priv/combined_metrics", f), Path.join(tmp, f))
+      end)
+
+      on_exit(fn -> File.rm_rf!(tmp) end)
+      %{dir: tmp}
+    end
+
+    test "returns one entry per requested category", %{dir: dir} do
+      stats = SampleRunner.apply_languages(category: "variable_naming", dir: dir)
       assert length(stats) == 1
       [entry] = stats
       assert entry.category == "variable_naming"
       assert is_integer(entry.behaviors_with_languages)
     end
 
-    test "writes _languages to behaviors that have samples" do
-      SampleRunner.apply_languages(category: "variable_naming")
-      {:ok, data} = YamlElixir.read_from_file("priv/combined_metrics/variable_naming.yml")
+    test "writes _languages to behaviors that have samples", %{dir: dir} do
+      SampleRunner.apply_languages(category: "variable_naming", dir: dir)
+      {:ok, data} = YamlElixir.read_from_file(Path.join(dir, "variable_naming.yml"))
       langs = get_in(data, ["name_is_generic", "_languages"])
       assert is_list(langs)
       assert langs != []
       assert langs |> Enum.all?(&is_binary/1)
     end
 
-    test "behaviors without sample dirs get no _languages key" do
-      SampleRunner.apply_languages(category: "variable_naming")
-      {:ok, data} = YamlElixir.read_from_file("priv/combined_metrics/variable_naming.yml")
+    test "behaviors without sample dirs get no _languages key", %{dir: dir} do
+      SampleRunner.apply_languages(category: "variable_naming", dir: dir)
+      {:ok, data} = YamlElixir.read_from_file(Path.join(dir, "variable_naming.yml"))
 
       data
       |> Enum.each(fn {_behavior, groups} ->
@@ -44,14 +59,15 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
       end)
     end
 
-    test "only includes languages with both good and bad samples" do
-      # uses code_smells which has single-language behaviors
-      SampleRunner.apply_languages(category: "code_smells")
-      {:ok, data} = YamlElixir.read_from_file("priv/combined_metrics/code_smells.yml")
+    test "leaves a behavior with _excludes_languages untouched", %{dir: dir} do
+      SampleRunner.apply_languages(category: "code_smells", dir: dir)
+      {:ok, data} = YamlElixir.read_from_file(Path.join(dir, "code_smells.yml"))
 
-      # no_dead_code_after_return has only .ex samples
-      langs = get_in(data, ["no_dead_code_after_return", "_languages"])
-      assert langs == ["elixir"]
+      # no_dead_code_after_return is blocklisted for elixir — the auto allowlist
+      # must not overwrite it.
+      groups = Map.get(data, "no_dead_code_after_return")
+      assert get_in(groups, ["_excludes_languages"]) == ["elixir"]
+      refute Map.has_key?(groups, "_languages")
     end
   end
 

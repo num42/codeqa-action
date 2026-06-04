@@ -1,5 +1,6 @@
 reasonable_test_to_code_ratio:
   _doc: "There should be an adequate number of test cases relative to the code being tested."
+  _languages: [elixir]
   _log_baseline: 12.6188
   branching:
     mean_branch_count: 0.1869
@@ -120,6 +121,7 @@ reasonable_test_to_code_ratio:
 
 test_has_assertion:
   _doc: "Every test body must contain at least one assertion — a test without assertions proves nothing."
+  _languages: [elixir]
   _log_baseline: -10.1975
   branching:
     mean_branch_count: 0.0918
@@ -233,6 +235,7 @@ test_has_assertion:
 
 test_name_describes_behavior:
   _doc: "Test names should describe the expected behaviour, not just the method under test."
+  _languages: [elixir]
   _log_baseline: 59.1394
   branching:
     mean_branch_count: 2.0000
@@ -334,6 +337,7 @@ test_name_describes_behavior:
 
 test_single_concept:
   _doc: "Each test should verify a single concept — tests covering multiple things are harder to diagnose when they fail."
+  _languages: [elixir]
   _log_baseline: 39.5531
   branching:
     mean_branch_count: 0.3696

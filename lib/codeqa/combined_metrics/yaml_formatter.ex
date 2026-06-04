@@ -36,10 +36,14 @@ defmodule CodeQA.CombinedMetrics.YamlFormatter do
     excludes_block_types_line =
       excludes_block_types_line(Map.get(groups, "_excludes_block_types"))
 
+    excludes_languages_line =
+      excludes_languages_line(Map.get(groups, "_excludes_languages"))
+
     group_lines = group_lines(groups)
 
     ["#{behavior}:" | doc_line] ++
       excludes_block_types_line ++
+      excludes_languages_line ++
       fix_hint_line ++ languages_line ++ baseline_line ++ group_lines ++ [""]
   end
 
@@ -62,10 +66,23 @@ defmodule CodeQA.CombinedMetrics.YamlFormatter do
   defp excludes_block_types_line(types),
     do: ["  _excludes_block_types: [#{types |> Enum.join(", ")}]"]
 
+  defp excludes_languages_line(nil), do: []
+  defp excludes_languages_line([]), do: []
+
+  defp excludes_languages_line(langs),
+    do: ["  _excludes_languages: [#{langs |> Enum.join(", ")}]"]
+
   defp group_lines(groups) do
     groups
     |> Enum.filter(fn {k, v} ->
-      k not in ["_doc", "_log_baseline", "_fix_hint", "_languages", "_excludes_block_types"] and
+      k not in [
+        "_doc",
+        "_log_baseline",
+        "_fix_hint",
+        "_languages",
+        "_excludes_block_types",
+        "_excludes_languages"
+      ] and
         is_map(v)
     end)
     |> Enum.sort_by(fn {group, _} -> group end)

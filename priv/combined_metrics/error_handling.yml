@@ -1,5 +1,6 @@
 does_not_swallow_errors:
   _doc: "Errors must be handled or re-raised — empty rescue/catch blocks silently hide failures."
+  _languages: [elixir]
   _log_baseline: 88.4465
   branching:
     mean_branch_count: -0.1041
@@ -115,6 +116,7 @@ does_not_swallow_errors:
 
 error_message_is_descriptive:
   _doc: "Error values should carry a meaningful message, not just a bare atom or empty string."
+  _languages: [elixir]
   _log_baseline: 54.3002
   branching:
     mean_branch_count: 0.0664
@@ -223,6 +225,7 @@ error_message_is_descriptive:
 
 returns_typed_error:
   _doc: "Functions should signal failure via a typed return (e.g. `{:error, reason}`) rather than returning `nil` or `false`."
+  _languages: [elixir]
   _log_baseline: 123.9515
   branching:
     mean_branch_count: -0.1286

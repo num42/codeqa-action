@@ -1,5 +1,6 @@
 class_name_is_noun:
   _doc: "Class and module names should be nouns describing what they represent, not verbs or gerunds."
+  _languages: [elixir]
   _log_baseline: 2.9861
   brevity:
     mean_sample_size: 0.7106
@@ -66,6 +67,7 @@ file_name_matches_primary_export:
 
 function_name_is_not_single_word:
   _doc: "Single-word function names like `run`, `process`, or `handle` are too vague to convey intent."
+  _languages: [elixir]
   _log_baseline: 23.5472
   compression:
     mean_raw_bytes: 0.2434
@@ -94,6 +96,7 @@ function_name_is_not_single_word:
 
 function_name_matches_return_type:
   _doc: "Functions prefixed with `get_`, `fetch_`, or `find_` should return the thing they name."
+  _languages: [elixir]
   _log_baseline: 7.7877
   branching:
     mean_max_nesting_depth: 0.1335
@@ -193,6 +196,7 @@ function_name_matches_return_type:
 
 test_name_starts_with_verb:
   _doc: "Test descriptions should start with a verb: `creates`, `raises`, `returns`, not a noun phrase."
+  _languages: [elixir]
   _log_baseline: 7.8915
   branching:
     mean_branch_count: 1.9977

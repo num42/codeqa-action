@@ -27,18 +27,13 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   """
   @spec apply_scalars(map(), keyword()) :: [map()]
   def apply_scalars(report, opts \\ []) do
-    filter_category = opts[:category]
+    dir = opts[:dir] || @yaml_dir
 
-    @yaml_dir
-    |> File.ls!()
-    |> Enum.filter(fn yml_file ->
-      String.ends_with?(yml_file, ".yml") and
-        (filter_category == nil or String.trim_trailing(yml_file, ".yml") == filter_category)
-    end)
-    |> Enum.sort()
+    dir
+    |> category_yamls(opts[:category])
     |> Enum.map(fn yml_file ->
       category = String.trim_trailing(yml_file, ".yml")
-      yaml_path = Path.join(@yaml_dir, yml_file)
+      yaml_path = Path.join(dir, yml_file)
       {:ok, existing} = YamlElixir.read_from_file(yaml_path)
 
       {updated_yaml, stats} = apply_to_category(existing, category, report)
@@ -55,18 +50,13 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   """
   @spec apply_languages(keyword()) :: [map()]
   def apply_languages(opts \\ []) do
-    filter_category = opts[:category]
+    dir = opts[:dir] || @yaml_dir
 
-    @yaml_dir
-    |> File.ls!()
-    |> Enum.filter(fn yml_file ->
-      String.ends_with?(yml_file, ".yml") and
-        (filter_category == nil or String.trim_trailing(yml_file, ".yml") == filter_category)
-    end)
-    |> Enum.sort()
+    dir
+    |> category_yamls(opts[:category])
     |> Enum.map(fn yml_file ->
       category = String.trim_trailing(yml_file, ".yml")
-      yaml_path = Path.join(@yaml_dir, yml_file)
+      yaml_path = Path.join(dir, yml_file)
       {:ok, existing} = YamlElixir.read_from_file(yaml_path)
 
       updated =
@@ -89,6 +79,16 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   # ---------------------------------------------------------------------------
   # Scalar application helpers
   # ---------------------------------------------------------------------------
+
+  defp category_yamls(dir, filter_category) do
+    dir
+    |> File.ls!()
+    |> Enum.filter(fn yml_file ->
+      String.ends_with?(yml_file, ".yml") and
+        (filter_category == nil or String.trim_trailing(yml_file, ".yml") == filter_category)
+    end)
+    |> Enum.sort()
+  end
 
   defp apply_to_category(existing, category, report) do
     existing
@@ -116,6 +116,7 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
 
     groups =
       base_groups
+      |> merge_meta_fields(current_groups)
       |> Map.put("_log_baseline", Float.round(log_baseline, 6))
       |> maybe_put_doc(doc)
 
@@ -184,7 +185,30 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
   end
 
   defp maybe_put_languages(groups, []), do: groups
-  defp maybe_put_languages(groups, langs), do: Map.put(groups, "_languages", langs)
+
+  defp maybe_put_languages(groups, langs) do
+    # An allowlist (`_languages`) and a blocklist (`_excludes_languages`) are
+    # mutually exclusive scoping models — a hand-authored blocklist wins.
+    if Map.has_key?(groups, "_excludes_languages") do
+      groups
+    else
+      Map.put(groups, "_languages", langs)
+    end
+  end
+
+  # Carry forward hand-authored meta fields (language/block-type scoping) that a
+  # scalar relearn would otherwise drop. `_log_baseline` and `_doc` are excluded
+  # because apply_metrics rewrites them explicitly.
+  @preserved_meta ~w(_languages _excludes_languages _excludes_block_types)
+  defp merge_meta_fields(groups, current_groups) do
+    @preserved_meta
+    |> Enum.reduce(groups, fn key, acc ->
+      case Map.get(current_groups, key) do
+        nil -> acc
+        value -> Map.put(acc, key, value)
+      end
+    end)
+  end
 
   defp sample_path(category, behavior, kind),
     do: [@samples_root, category, behavior, kind] |> Path.join()
