@@ -1,5 +1,6 @@
 has_consistent_indentation:
   _doc: "Files should use a single, consistent indentation style with no mixed tabs and spaces."
+  _languages: [elixir]
   _log_baseline: 19.1706
   branching:
     mean_branch_count: 0.0582
@@ -126,6 +127,7 @@ has_consistent_indentation:
 
 line_count_under_300:
   _doc: "Files should be under 300 lines; longer files typically violate single responsibility."
+  _languages: [elixir]
   _log_baseline: -48.1609
   branching:
     mean_branch_count: -0.4508
@@ -248,6 +250,7 @@ line_count_under_300:
 
 line_length_under_120:
   _doc: "Lines should be under 120 characters to avoid horizontal scrolling."
+  _languages: [elixir]
   _log_baseline: -16.9801
   branching:
     mean_branching_density: -0.0814
@@ -364,6 +367,7 @@ line_length_under_120:
 
 no_magic_numbers:
   _doc: "Numeric literals should be extracted to named constants rather than used inline."
+  _languages: [elixir]
   _log_baseline: 111.4823
   branching:
     mean_branch_count: -0.4352
@@ -474,6 +478,7 @@ no_magic_numbers:
 
 single_responsibility:
   _doc: "Each file should have one primary concern — low complexity spread across few, focused functions."
+  _languages: [elixir]
   _log_baseline: -38.0916
   branching:
     mean_branch_count: -0.0362
@@ -600,6 +605,7 @@ single_responsibility:
 
 uses_standard_indentation_width:
   _doc: "Indentation should use consistent multiples of 2 or 4 spaces throughout the file."
+  _languages: [elixir]
   _log_baseline: -8.4038
   compression:
     mean_raw_bytes: -0.2260
