@@ -187,6 +187,67 @@ defmodule CodeQA.BlockImpact.RefactoringPotentialsTest do
              "behavior should remain for :function block (not in negative list)"
     end
 
+    test "skips behaviors whose _excludes_languages includes the block language" do
+      content = """
+      defmodule Foo do
+        def bar(a, b, c) do
+          if a do
+            if b do
+              if c, do: :nested
+            end
+          end
+        end
+      end
+      """
+
+      simple = "defmodule Foo do\n  def bar, do: :ok\nend\n"
+      without_fm = Analyzer.analyze_file("lib/foo.ex", content)
+
+      files = %{"lib/foo.ex" => content}
+      baseline_agg = Analyzer.analyze_codebase_aggregate(files)
+      without_agg = Analyzer.analyze_codebase_aggregate(%{"lib/foo.ex" => simple})
+
+      baseline_file_cosines = file_cosines(Analyzer.analyze_file("lib/foo.ex", content))
+      baseline_codebase_cosines = SampleRunner.diagnose_aggregate(baseline_agg, top: 99_999)
+
+      behavior_map = %{
+        "function_design" => [
+          {"cyclomatic_complexity_under_10", %{"_excludes_languages" => ["elixir"]}}
+        ]
+      }
+
+      present? = fn result ->
+        Enum.any?(result, fn p ->
+          p["category"] == "function_design" and p["behavior"] == "cyclomatic_complexity_under_10"
+        end)
+      end
+
+      result_elixir =
+        RefactoringPotentials.compute(
+          baseline_file_cosines,
+          without_fm,
+          baseline_codebase_cosines,
+          without_agg,
+          top: 99_999,
+          language: :elixir,
+          behavior_map: behavior_map
+        )
+
+      result_python =
+        RefactoringPotentials.compute(
+          baseline_file_cosines,
+          without_fm,
+          baseline_codebase_cosines,
+          without_agg,
+          top: 99_999,
+          language: :python,
+          behavior_map: behavior_map
+        )
+
+      refute present?.(result_elixir), "behavior should be filtered out for an excluded language"
+      assert present?.(result_python), "behavior should remain for a non-excluded language"
+    end
+
     test "no block_type option means no filtering (backwards compat)" do
       content = "defmodule A do\n  def foo, do: 1\nend\n"
       fm = Analyzer.analyze_file("lib/a.ex", content)

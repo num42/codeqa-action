@@ -61,7 +61,7 @@ defmodule CodeQA.BlockImpact.RefactoringPotentials do
 
     all_keys
     |> Enum.reject(fn {category, behavior} ->
-      excluded?(category, behavior, block_type, behavior_map)
+      excluded?(category, behavior, block_type, language, behavior_map)
     end)
     |> Enum.map(fn {category, behavior} ->
       file_d = Map.get(file_delta, {category, behavior}, 0.0)
@@ -117,28 +117,44 @@ defmodule CodeQA.BlockImpact.RefactoringPotentials do
     end)
   end
 
-  defp excluded?(_category, _behavior, nil, _behavior_map), do: false
+  defp excluded?(category, behavior, block_type, language, behavior_map) do
+    block_type_excluded?(category, behavior, block_type, behavior_map) or
+      language_excluded?(category, behavior, language, behavior_map)
+  end
 
-  defp excluded?(category, behavior, block_type, behavior_map),
-    do: Atom.to_string(block_type) in excludes_for(category, behavior, behavior_map)
+  defp block_type_excluded?(_category, _behavior, nil, _behavior_map), do: false
 
-  defp excludes_for(category, behavior, behavior_map) when is_map(behavior_map) do
+  defp block_type_excluded?(category, behavior, block_type, behavior_map),
+    do:
+      Atom.to_string(block_type) in field_for(
+        category,
+        behavior,
+        "_excludes_block_types",
+        behavior_map
+      )
+
+  defp language_excluded?(_category, _behavior, nil, _behavior_map), do: false
+
+  defp language_excluded?(category, behavior, language, behavior_map),
+    do: to_string(language) in field_for(category, behavior, "_excludes_languages", behavior_map)
+
+  defp field_for(category, behavior, field, behavior_map) when is_map(behavior_map) do
     with [_ | _] = behaviors <- Map.get(behavior_map, category, []),
          {^behavior, data} <- Enum.find(behaviors, fn {b, _} -> b == behavior end),
-         list when is_list(list) <- Map.get(data, "_excludes_block_types") do
+         list when is_list(list) <- Map.get(data, field) do
       list
     else
       _ -> []
     end
   end
 
-  defp excludes_for(category, behavior, nil) do
+  defp field_for(category, behavior, field, nil) do
     yaml_path = "priv/combined_metrics/#{category}.yml"
 
     with %{} = yamls <- Scorer.all_yamls(),
          %{} = data <- Map.get(yamls, yaml_path),
          %{} = behavior_data <- Map.get(data, behavior),
-         list when is_list(list) <- Map.get(behavior_data, "_excludes_block_types") do
+         list when is_list(list) <- Map.get(behavior_data, field) do
       list
     else
       _ -> []

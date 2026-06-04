@@ -104,6 +104,7 @@ consistent_string_quote_style:
 
 no_dead_code_after_return:
   _doc: "There should be no unreachable statements after a return or early exit."
+  _excludes_languages: [elixir]
   _log_baseline: -69.4889
   branching:
     mean_branch_count: -0.9417
@@ -472,6 +473,7 @@ no_fixme_comments:
 
 no_nested_ternary:
   _doc: "Nested conditional expressions (ternary-within-ternary) are harder to read than a plain if-else."
+  _excludes_languages: [elixir]
   _log_baseline: 8.0040
   branching:
     mean_branch_count: -0.5662
