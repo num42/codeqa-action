@@ -129,6 +129,7 @@ collection_name_is_plural:
 
 loop_var_is_single_letter:
   _doc: "Loop index variables (`i`, `j`, `k`) are acceptable inside loop bodies."
+  _excludes_block_types: [doc]
   _languages: [elixir, javascript, ruby]
   _log_baseline: -32.9785
   brevity:
