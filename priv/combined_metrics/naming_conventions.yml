@@ -1,7 +1,7 @@
 class_name_is_noun:
   _doc: "Class and module names should be nouns describing what they represent, not verbs or gerunds."
   _languages: [elixir]
-  _log_baseline: 2.5713
+  _log_baseline: 5.3672
   brevity:
     mean_sample_size: 0.7106
   compression:
@@ -46,6 +46,13 @@ class_name_is_noun:
     mean_exclamation_density: -0.3314
   readability:
     mean_avg_line_length: 0.1418
+  renyi_entropy:
+    mean_hill_1: 0.4415
+    mean_hill_2: 0.1396
+    mean_renyi_0: 0.1716
+    mean_renyi_1: 0.1236
+    mean_renyi_2: 0.0441
+    mean_spectrum_slope: 0.5821
   symbol_density:
     mean_density: -0.1381
   vocabulary:
@@ -100,7 +107,7 @@ function_name_is_not_single_word:
 function_name_matches_return_type:
   _doc: "Functions prefixed with `get_`, `fetch_`, or `find_` should return the thing they name."
   _languages: [elixir]
-  _log_baseline: 7.8561
+  _log_baseline: 7.8218
   branching:
     mean_max_nesting_depth: 0.1335
   brevity:
@@ -180,6 +187,13 @@ function_name_matches_return_type:
     mean_avg_tokens_per_line: 0.0030
     mean_flesch_adapted: -0.0107
     mean_fog_adapted: 0.0058
+  renyi_entropy:
+    mean_hill_1: 0.0053
+    mean_hill_2: -0.0190
+    mean_renyi_0: 0.0059
+    mean_renyi_2: -0.0058
+    mean_renyi_inf: -0.0108
+    mean_spectrum_slope: 0.0414
   separator_counts:
     mean_dot_count: 0.1335
     mean_slash_count: 0.2282
@@ -204,7 +218,7 @@ function_name_matches_return_type:
 test_name_starts_with_verb:
   _doc: "Test descriptions should start with a verb: `creates`, `raises`, `returns`, not a noun phrase."
   _languages: [elixir]
-  _log_baseline: 8.0140
+  _log_baseline: 8.8394
   branching:
     mean_branch_count: 1.9977
     mean_branching_density: 2.0000
@@ -270,6 +284,14 @@ test_name_starts_with_verb:
     mean_avg_line_length: 0.0943
     mean_avg_tokens_per_line: 0.0600
     mean_fog_adapted: 0.0600
+  renyi_entropy:
+    mean_hill_1: 0.0982
+    mean_hill_2: 0.0959
+    mean_renyi_0: 0.0155
+    mean_renyi_1: 0.0259
+    mean_renyi_2: 0.0292
+    mean_renyi_inf: 0.0267
+    mean_spectrum_slope: -0.0220
   symbol_density:
     mean_density: -0.0912
   vocabulary:

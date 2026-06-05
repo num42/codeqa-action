@@ -1,7 +1,7 @@
 has_consistent_indentation:
   _doc: "Files should use a single, consistent indentation style with no mixed tabs and spaces."
   _languages: [elixir]
-  _log_baseline: 19.8257
+  _log_baseline: 20.2575
   branching:
     mean_branch_count: 0.0582
     mean_branching_density: 0.0172
@@ -108,6 +108,14 @@ has_consistent_indentation:
     mean_flesch_adapted: -0.0096
     mean_fog_adapted: 0.0518
     mean_total_lines: 0.0556
+  renyi_entropy:
+    mean_hill_1: 0.0751
+    mean_hill_2: 0.0156
+    mean_renyi_0: 0.0242
+    mean_renyi_1: 0.0153
+    mean_renyi_2: 0.0033
+    mean_renyi_inf: -0.0085
+    mean_spectrum_slope: 0.1012
   separator_counts:
     mean_dot_count: 0.2541
     mean_hyphen_count: -0.0278
@@ -132,7 +140,7 @@ has_consistent_indentation:
 line_count_under_300:
   _doc: "Files should be under 300 lines; longer files typically violate single responsibility."
   _languages: [elixir]
-  _log_baseline: -49.2976
+  _log_baseline: -50.0141
   branching:
     mean_branch_count: -0.4508
     mean_branching_density: -0.2446
@@ -235,6 +243,14 @@ line_count_under_300:
     mean_flesch_adapted: 0.0146
     mean_fog_adapted: 0.0323
     mean_total_lines: -0.2063
+  renyi_entropy:
+    mean_hill_1: -0.0985
+    mean_hill_2: -0.0329
+    mean_renyi_0: -0.0433
+    mean_renyi_1: -0.0264
+    mean_renyi_2: -0.0106
+    mean_renyi_inf: -0.0110
+    mean_spectrum_slope: -0.1050
   separator_counts:
     mean_dot_count: -0.0341
     mean_hyphen_count: -0.2532
@@ -259,7 +275,7 @@ line_count_under_300:
 line_length_under_120:
   _doc: "Lines should be under 120 characters to avoid horizontal scrolling."
   _languages: [elixir]
-  _log_baseline: -17.3646
+  _log_baseline: -17.4278
   branching:
     mean_branching_density: -0.0814
     mean_max_nesting_depth: -0.0341
@@ -358,6 +374,13 @@ line_length_under_120:
     mean_flesch_adapted: 0.0242
     mean_fog_adapted: -0.1420
     mean_total_lines: 0.0811
+  renyi_entropy:
+    mean_hill_1: -0.0095
+    mean_hill_2: 0.0072
+    mean_renyi_0: -0.0107
+    mean_renyi_1: -0.0024
+    mean_renyi_2: 0.0020
+    mean_spectrum_slope: -0.0427
   separator_counts:
     mean_dot_count: -0.0759
     mean_hyphen_count: -0.1626
@@ -380,7 +403,7 @@ line_length_under_120:
 no_magic_numbers:
   _doc: "Numeric literals should be extracted to named constants rather than used inline."
   _languages: [elixir]
-  _log_baseline: 114.2688
+  _log_baseline: 116.5271
   branching:
     mean_branch_count: -0.4352
     mean_branching_density: -0.9103
@@ -473,6 +496,14 @@ no_magic_numbers:
     mean_flesch_adapted: -0.7069
     mean_fog_adapted: 2.0000
     mean_total_lines: 0.4762
+  renyi_entropy:
+    mean_hill_1: 0.3111
+    mean_hill_2: 0.1357
+    mean_renyi_0: 0.0825
+    mean_renyi_1: 0.0769
+    mean_renyi_2: 0.0393
+    mean_renyi_inf: 0.0338
+    mean_spectrum_slope: 0.1938
   separator_counts:
     mean_hyphen_count: -0.8032
     mean_underscore_count: 1.7114
@@ -495,7 +526,7 @@ no_magic_numbers:
 single_responsibility:
   _doc: "Each file should have one primary concern — low complexity spread across few, focused functions."
   _languages: [elixir]
-  _log_baseline: -38.7512
+  _log_baseline: -39.2930
   branching:
     mean_branch_count: -0.0362
     mean_branching_density: 0.1360
@@ -602,6 +633,14 @@ single_responsibility:
     mean_flesch_adapted: 0.0144
     mean_fog_adapted: 0.0083
     mean_total_lines: -0.1645
+  renyi_entropy:
+    mean_hill_1: -0.0617
+    mean_hill_2: -0.0455
+    mean_renyi_0: -0.0255
+    mean_renyi_1: -0.0178
+    mean_renyi_2: -0.0156
+    mean_renyi_inf: -0.0215
+    mean_spectrum_slope: -0.0492
   separator_counts:
     mean_dot_count: -0.1823
     mean_hyphen_count: -0.1254

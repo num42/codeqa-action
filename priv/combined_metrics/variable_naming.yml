@@ -1,7 +1,7 @@
 boolean_has_is_has_prefix:
   _doc: "Boolean variables should be prefixed with `is_`, `has_`, or `can_`."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 22.3422
+  _log_baseline: 22.7733
   brevity:
     mean_sample_size: 0.0752
   casing_entropy:
@@ -51,6 +51,12 @@ boolean_has_is_has_prefix:
     mean_avg_sub_words_per_id: 0.3932
     mean_flesch_adapted: -0.4857
     mean_fog_adapted: 0.5482
+  renyi_entropy:
+    mean_hill_1: 0.0715
+    mean_hill_2: 0.0280
+    mean_renyi_0: 0.0173
+    mean_renyi_1: 0.0198
+    mean_spectrum_slope: 0.0370
   separator_counts:
     mean_underscore_count: 1.8116
   symbol_density:
@@ -69,7 +75,7 @@ boolean_has_is_has_prefix:
 collection_name_is_plural:
   _doc: "Variables holding a collection should use a plural name."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 24.4551
+  _log_baseline: 21.8672
   brevity:
     mean_sample_size: -0.5320
   casing_entropy:
@@ -117,6 +123,13 @@ collection_name_is_plural:
     mean_avg_sub_words_per_id: 0.1285
     mean_flesch_adapted: -0.1311
     mean_fog_adapted: 0.8035
+  renyi_entropy:
+    mean_hill_1: -0.3788
+    mean_hill_2: -0.1735
+    mean_renyi_0: -0.1242
+    mean_renyi_1: -0.1027
+    mean_renyi_2: -0.0525
+    mean_spectrum_slope: -0.3391
   separator_counts:
     mean_underscore_count: 0.6811
   symbol_density:
@@ -137,7 +150,7 @@ loop_var_is_single_letter:
   _doc: "Loop index variables (`i`, `j`, `k`) are acceptable inside loop bodies."
   _excludes_block_types: [doc]
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -32.8855
+  _log_baseline: -33.3401
   brevity:
     mean_sample_size: -0.1049
   casing_entropy:
@@ -202,6 +215,13 @@ loop_var_is_single_letter:
     mean_avg_tokens_per_line: 0.0100
     mean_flesch_adapted: 0.4102
     mean_fog_adapted: -1.3612
+  renyi_entropy:
+    mean_hill_1: -0.0644
+    mean_hill_2: -0.0329
+    mean_renyi_0: -0.0244
+    mean_renyi_1: -0.0181
+    mean_renyi_2: -0.0096
+    mean_spectrum_slope: -0.0606
   separator_counts:
     mean_hyphen_count: 0.1363
     mean_underscore_count: -1.4177
@@ -223,7 +243,7 @@ loop_var_is_single_letter:
 name_contains_and:
   _doc: "Variable names containing `and` signal a variable that holds two concerns."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -2.5335
+  _log_baseline: -2.6591
   branching:
     mean_branch_count: -0.3666
     mean_branching_density: -0.3925
@@ -327,6 +347,12 @@ name_contains_and:
     mean_flesch_adapted: 0.3817
     mean_fog_adapted: -0.9412
     mean_total_lines: 0.0244
+  renyi_entropy:
+    mean_hill_1: -0.0168
+    mean_hill_2: -0.0262
+    mean_renyi_2: -0.0083
+    mean_renyi_inf: 0.0174
+    mean_spectrum_slope: 0.0252
   separator_counts:
     mean_dot_count: -0.2504
     mean_underscore_count: -0.6180
@@ -349,7 +375,7 @@ name_contains_and:
 name_contains_type_suffix:
   _doc: "Type suffixes in names (`userString`, `nameList`) are redundant noise."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -27.7647
+  _log_baseline: -28.3725
   branching:
     mean_branch_count: -0.6581
     mean_branching_density: -0.8807
@@ -420,6 +446,13 @@ name_contains_type_suffix:
     mean_avg_tokens_per_line: -0.0091
     mean_flesch_adapted: 0.3824
     mean_fog_adapted: -0.7531
+  renyi_entropy:
+    mean_hill_1: -0.0997
+    mean_hill_2: -0.0129
+    mean_renyi_0: -0.0351
+    mean_renyi_1: -0.0241
+    mean_renyi_inf: 0.0172
+    mean_spectrum_slope: -0.1195
   separator_counts:
     mean_underscore_count: -2.0000
   symbol_density:
@@ -440,7 +473,7 @@ name_contains_type_suffix:
 name_is_abbreviation:
   _doc: "Abbreviated names (`usr`, `cfg`, `mgr`) reduce readability."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 21.8261
+  _log_baseline: 21.9968
   brevity:
     mean_sample_size: -0.0441
   casing_entropy:
@@ -510,6 +543,10 @@ name_is_abbreviation:
     mean_avg_tokens_per_line: -0.0896
     mean_flesch_adapted: -0.0479
     mean_fog_adapted: -0.0830
+  renyi_entropy:
+    mean_hill_2: 0.0338
+    mean_renyi_inf: 0.0724
+    mean_spectrum_slope: -0.0538
   separator_counts:
     mean_dot_count: -0.0928
     mean_slash_count: -0.5019
@@ -532,7 +569,7 @@ name_is_abbreviation:
 name_is_generic:
   _doc: "Generic names (`data`, `result`, `tmp`, `val`, `obj`) convey no domain meaning."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 44.0574
+  _log_baseline: 44.9220
   branching:
     mean_branch_count: 0.5193
     mean_branching_density: 0.3889
@@ -633,6 +670,14 @@ name_is_generic:
     mean_flesch_adapted: -0.2843
     mean_fog_adapted: 0.5030
     mean_total_lines: 0.0756
+  renyi_entropy:
+    mean_hill_1: 0.1404
+    mean_hill_2: 0.0289
+    mean_renyi_0: 0.0450
+    mean_renyi_1: 0.0371
+    mean_renyi_2: 0.0086
+    mean_renyi_inf: -0.0049
+    mean_spectrum_slope: 0.1444
   separator_counts:
     mean_slash_count: 0.9542
     mean_underscore_count: 1.9344
@@ -656,7 +701,7 @@ name_is_generic:
 name_is_number_like:
   _doc: "Number-suffixed names (`var1`, `thing2`) signal a missing abstraction."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 4.1421
+  _log_baseline: 3.9691
   brevity:
     mean_sample_size: -0.0262
   casing_entropy:
@@ -721,6 +766,14 @@ name_is_number_like:
     mean_avg_tokens_per_line: -0.0075
     mean_flesch_adapted: -0.1154
     mean_fog_adapted: 0.0448
+  renyi_entropy:
+    mean_hill_1: -0.0227
+    mean_hill_2: -0.0138
+    mean_renyi_0: -0.0054
+    mean_renyi_1: -0.0056
+    mean_renyi_2: -0.0042
+    mean_renyi_inf: -0.0034
+    mean_spectrum_slope: -0.0079
   separator_counts:
     mean_hyphen_count: -0.5988
     mean_underscore_count: 0.6819
@@ -742,7 +795,7 @@ name_is_number_like:
 name_is_single_letter:
   _doc: "Single-letter names outside loop indices are too opaque."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 30.3914
+  _log_baseline: 32.2399
   branching:
     mean_branching_density: -0.0445
     mean_non_blank_count: 0.0426
@@ -825,6 +878,14 @@ name_is_single_letter:
     mean_flesch_adapted: -0.2349
     mean_fog_adapted: -0.0666
     mean_total_lines: 0.0431
+  renyi_entropy:
+    mean_hill_1: 0.3014
+    mean_hill_2: 0.1225
+    mean_renyi_0: 0.0529
+    mean_renyi_1: 0.0808
+    mean_renyi_2: 0.0370
+    mean_renyi_inf: -0.0126
+    mean_spectrum_slope: 0.0926
   separator_counts:
     mean_hyphen_count: -0.1345
     mean_underscore_count: 2.0000
@@ -847,7 +908,7 @@ name_is_single_letter:
 name_is_too_long:
   _doc: "Names longer than ~30 characters harm readability."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -9.9643
+  _log_baseline: -10.2893
   branching:
     mean_branch_count: 0.0340
     mean_branching_density: 0.0916
@@ -953,6 +1014,14 @@ name_is_too_long:
     mean_flesch_adapted: 2.0000
     mean_fog_adapted: -0.3969
     mean_total_lines: -0.0733
+  renyi_entropy:
+    mean_hill_1: -0.0445
+    mean_hill_2: -0.0319
+    mean_renyi_0: -0.0038
+    mean_renyi_1: -0.0111
+    mean_renyi_2: -0.0089
+    mean_renyi_inf: -0.0064
+    mean_spectrum_slope: 0.0100
   separator_counts:
     mean_dot_count: 0.0613
     mean_hyphen_count: 0.1862
@@ -977,7 +1046,7 @@ name_is_too_long:
 name_is_too_short:
   _doc: "Names shorter than 3 characters (outside loops) are too opaque."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -3.7450
+  _log_baseline: -5.0614
   branching:
     mean_branch_count: -0.2327
     mean_branching_density: -0.2381
@@ -1050,6 +1119,13 @@ name_is_too_short:
     mean_avg_line_length: 0.2778
     mean_avg_tokens_per_line: -0.0329
     mean_fog_adapted: -0.0263
+  renyi_entropy:
+    mean_hill_1: -0.1805
+    mean_hill_2: -0.1245
+    mean_renyi_0: -0.0267
+    mean_renyi_1: -0.0467
+    mean_renyi_2: -0.0364
+    mean_renyi_inf: -0.0138
   separator_counts:
     mean_hyphen_count: -0.5797
     mean_underscore_count: -0.1641
@@ -1072,7 +1148,7 @@ name_is_too_short:
 negated_boolean_name:
   _doc: "Negated boolean names (`isNotValid`, `notActive`) are harder to reason about."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -13.6544
+  _log_baseline: -14.0280
   brevity:
     mean_sample_size: -0.0991
   casing_entropy:
@@ -1139,6 +1215,13 @@ negated_boolean_name:
     mean_avg_tokens_per_line: -0.0494
     mean_flesch_adapted: 0.2268
     mean_fog_adapted: -0.7244
+  renyi_entropy:
+    mean_hill_1: -0.0618
+    mean_hill_2: -0.0191
+    mean_renyi_0: -0.0208
+    mean_renyi_1: -0.0164
+    mean_renyi_inf: 0.0362
+    mean_spectrum_slope: -0.0621
   separator_counts:
     mean_underscore_count: -0.6273
   symbol_density:
@@ -1159,7 +1242,7 @@ negated_boolean_name:
 no_hungarian_notation:
   _doc: "Hungarian notation prefixes (`strName`, `bFlag`) add noise without type safety."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -8.5442
+  _log_baseline: -8.4145
   brevity:
     mean_sample_size: -0.0295
   casing_entropy:
@@ -1233,6 +1316,12 @@ no_hungarian_notation:
     mean_avg_tokens_per_line: 0.0141
     mean_flesch_adapted: 0.4848
     mean_fog_adapted: -0.5445
+  renyi_entropy:
+    mean_hill_1: -0.0128
+    mean_hill_2: 0.0439
+    mean_renyi_2: 0.0175
+    mean_renyi_inf: 0.0376
+    mean_spectrum_slope: -0.0564
   separator_counts:
     mean_dot_count: 0.0112
     mean_underscore_count: -1.6136
@@ -1255,7 +1344,7 @@ no_hungarian_notation:
 screaming_snake_for_constants:
   _doc: "Module-level constants should use SCREAMING_SNAKE_CASE."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -4.5280
+  _log_baseline: -4.5910
   branching:
     mean_branching_density: 0.0176
     mean_non_blank_count: -0.0180
@@ -1330,6 +1419,10 @@ screaming_snake_for_constants:
     mean_flesch_adapted: 0.0095
     mean_fog_adapted: -0.0082
     mean_total_lines: -0.0182
+  renyi_entropy:
+    mean_hill_1: -0.0110
+    mean_hill_2: -0.0036
+    mean_spectrum_slope: -0.0072
   separator_counts:
     mean_underscore_count: 0.3971
   symbol_density:

@@ -1,7 +1,7 @@
 reasonable_test_to_code_ratio:
   _doc: "There should be an adequate number of test cases relative to the code being tested."
   _languages: [elixir]
-  _log_baseline: 13.2191
+  _log_baseline: 13.4831
   branching:
     mean_branch_count: 0.1869
     mean_branching_density: 0.0352
@@ -102,6 +102,14 @@ reasonable_test_to_code_ratio:
     mean_flesch_adapted: 0.0106
     mean_fog_adapted: -0.0829
     mean_total_lines: 0.1973
+  renyi_entropy:
+    mean_hill_1: 0.0127
+    mean_hill_2: 0.0459
+    mean_renyi_0: 0.0063
+    mean_renyi_1: 0.0033
+    mean_renyi_2: 0.0139
+    mean_renyi_inf: 0.0256
+    mean_spectrum_slope: -0.0128
   separator_counts:
     mean_dot_count: 0.2776
     mean_hyphen_count: 0.2470
@@ -126,7 +134,7 @@ reasonable_test_to_code_ratio:
 test_has_assertion:
   _doc: "Every test body must contain at least one assertion — a test without assertions proves nothing."
   _languages: [elixir]
-  _log_baseline: -10.1327
+  _log_baseline: -10.4803
   branching:
     mean_branch_count: 0.0918
     mean_branching_density: 0.1642
@@ -219,6 +227,14 @@ test_has_assertion:
     mean_flesch_adapted: -0.0065
     mean_fog_adapted: 0.0284
     mean_total_lines: -0.0284
+  renyi_entropy:
+    mean_hill_1: -0.0479
+    mean_hill_2: -0.0243
+    mean_renyi_0: -0.0118
+    mean_renyi_1: -0.0124
+    mean_renyi_2: -0.0073
+    mean_renyi_inf: -0.0081
+    mean_spectrum_slope: -0.0228
   separator_counts:
     mean_dot_count: 0.0108
     mean_hyphen_count: -0.1294
@@ -243,7 +259,7 @@ test_has_assertion:
 test_name_describes_behavior:
   _doc: "Test names should describe the expected behaviour, not just the method under test."
   _languages: [elixir]
-  _log_baseline: 60.4069
+  _log_baseline: 61.6996
   branching:
     mean_branch_count: 2.0000
     mean_branching_density: -1.5965
@@ -326,6 +342,14 @@ test_name_describes_behavior:
     mean_avg_line_length: 0.1184
     mean_avg_tokens_per_line: 0.0316
     mean_total_lines: 0.2388
+  renyi_entropy:
+    mean_hill_1: 0.1588
+    mean_hill_2: 0.1383
+    mean_renyi_0: 0.0420
+    mean_renyi_1: 0.0449
+    mean_renyi_2: 0.0459
+    mean_renyi_inf: 0.0732
+    mean_spectrum_slope: 0.0331
   separator_counts:
     mean_dot_count: 0.0701
     mean_slash_count: 1.2619
@@ -349,7 +373,7 @@ test_name_describes_behavior:
 test_single_concept:
   _doc: "Each test should verify a single concept — tests covering multiple things are harder to diagnose when they fail."
   _languages: [elixir]
-  _log_baseline: 40.5455
+  _log_baseline: 40.8775
   branching:
     mean_branch_count: 0.3696
     mean_branching_density: -2.0000
@@ -451,6 +475,14 @@ test_single_concept:
     mean_flesch_adapted: 0.0098
     mean_fog_adapted: -0.1758
     mean_total_lines: 0.3391
+  renyi_entropy:
+    mean_hill_1: 0.0253
+    mean_hill_2: 0.0418
+    mean_renyi_0: 0.0104
+    mean_renyi_1: 0.0065
+    mean_renyi_2: 0.0124
+    mean_renyi_inf: 0.0303
+    mean_spectrum_slope: 0.0055
   separator_counts:
     mean_dot_count: 0.0317
     mean_slash_count: 0.9554

@@ -1,7 +1,7 @@
 consistent_casing_within_file:
   _doc: "A file should use one naming convention throughout — no mixing of camelCase and snake_case for the same kind of identifier."
   _languages: [elixir]
-  _log_baseline: -0.6528
+  _log_baseline: -0.8912
   brevity:
     mean_sample_size: -0.0471
   casing_entropy:
@@ -48,6 +48,13 @@ consistent_casing_within_file:
     mean_trigram_unique: -0.0172
   readability:
     mean_avg_line_length: 0.0221
+  renyi_entropy:
+    mean_hill_1: -0.0362
+    mean_hill_2: -0.0104
+    mean_renyi_0: -0.0101
+    mean_renyi_1: -0.0090
+    mean_renyi_2: -0.0030
+    mean_spectrum_slope: -0.0302
   separator_counts:
     mean_underscore_count: 0.4311
   symbol_density:
@@ -65,7 +72,7 @@ consistent_casing_within_file:
 consistent_error_return_shape:
   _doc: "All functions in a module should return errors in the same shape — mixed `nil`, `false`, and `{:error, _}` returns are confusing."
   _languages: [elixir]
-  _log_baseline: -2.8073
+  _log_baseline: -3.3807
   branching:
     mean_branch_count: -0.2800
     mean_branching_density: 0.5563
@@ -163,6 +170,13 @@ consistent_error_return_shape:
     mean_flesch_adapted: -0.0433
     mean_fog_adapted: 0.1454
     mean_total_lines: -0.3834
+  renyi_entropy:
+    mean_hill_1: -0.0658
+    mean_hill_2: -0.0443
+    mean_renyi_0: -0.0167
+    mean_renyi_1: -0.0195
+    mean_renyi_2: -0.0216
+    mean_renyi_inf: -0.0655
   separator_counts:
     mean_dot_count: 0.6069
     mean_hyphen_count: -1.1258
@@ -183,7 +197,7 @@ consistent_error_return_shape:
 consistent_function_style:
   _doc: "A module should not mix one-liner and multi-clause function definitions for the same concern."
   _languages: [elixir]
-  _log_baseline: 57.4562
+  _log_baseline: 60.0235
   branching:
     mean_branch_count: 0.3619
     mean_branching_density: 0.2247
@@ -293,6 +307,14 @@ consistent_function_style:
     mean_flesch_adapted: 0.0263
     mean_fog_adapted: -0.1088
     mean_total_lines: 0.3305
+  renyi_entropy:
+    mean_hill_1: 0.3154
+    mean_hill_2: 0.2457
+    mean_renyi_0: 0.0888
+    mean_renyi_1: 0.0864
+    mean_renyi_2: 0.0741
+    mean_renyi_inf: 0.0286
+    mean_spectrum_slope: 0.1323
   separator_counts:
     mean_dot_count: 0.3510
     mean_hyphen_count: 0.4708
@@ -318,7 +340,7 @@ consistent_function_style:
 same_concept_same_name:
   _doc: "The same domain concept should use the same name throughout a file — mixing `user`, `usr`, and `u` for the same thing harms readability."
   _languages: [elixir]
-  _log_baseline: -13.5397
+  _log_baseline: -22.1414
   brevity:
     mean_sample_size: -1.3457
   compression:
@@ -366,6 +388,13 @@ same_concept_same_name:
     mean_avg_line_length: 0.1837
     mean_avg_sub_words_per_id: -0.1771
     mean_flesch_adapted: 0.2348
+  renyi_entropy:
+    mean_hill_1: -1.3316
+    mean_hill_2: -0.5598
+    mean_renyi_0: -0.2899
+    mean_renyi_1: -0.3546
+    mean_renyi_2: -0.1759
+    mean_spectrum_slope: -0.5362
   separator_counts:
     mean_underscore_count: -0.5711
   symbol_density:
