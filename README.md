@@ -409,6 +409,7 @@ All metrics are computed per file and aggregated at the codebase level.
 | **Branching density** | Cyclomatic-complexity proxy — ratio of branching constructs to total tokens |
 | **Compression ratio** | zlib compression ratio — **higher** ratios indicate more repetitive or boilerplate-heavy code |
 | **Vocabulary (TTR)** | Type-to-token ratio — ratio of unique tokens to total tokens |
+| **Lexical concentration** | Yule's K and Simpson's D — length-invariant vocabulary concentration. High `yule_k` = a few tokens dominate; `simpson_d` = probability two random tokens are identical |
 | **Zipf** | How closely token frequency follows Zipf's law |
 | **N-gram analysis** | Bigram/trigram total count, unique count, repetition rate, and hapax fraction — high repetition may indicate copy-paste patterns |
 | **Heaps law** | Fits power-law curve `V = k·N^β` to vocabulary growth; reports `beta`, `k`, and R-squared — `beta` near 0.5 is typical |
