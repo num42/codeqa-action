@@ -1,7 +1,7 @@
 class_name_is_noun:
   _doc: "Class and module names should be nouns describing what they represent, not verbs or gerunds."
   _languages: [elixir]
-  _log_baseline: 2.9861
+  _log_baseline: 2.5713
   brevity:
     mean_sample_size: 0.7106
   compression:
@@ -30,6 +30,9 @@ class_name_is_noun:
     mean_mean: 0.3287
     mean_std_dev: -0.8347
     mean_variance: -1.6695
+  lexical_concentration:
+    mean_simpson_d: -0.1561
+    mean_yule_k: -0.1556
   ngram:
     mean_bigram_hapax_fraction: 0.2542
     mean_bigram_repeated_unique: -0.5967
@@ -97,7 +100,7 @@ function_name_is_not_single_word:
 function_name_matches_return_type:
   _doc: "Functions prefixed with `get_`, `fetch_`, or `find_` should return the thing they name."
   _languages: [elixir]
-  _log_baseline: 7.7877
+  _log_baseline: 7.8561
   branching:
     mean_max_nesting_depth: 0.1335
   brevity:
@@ -138,6 +141,10 @@ function_name_matches_return_type:
     mean_max: 0.1082
     mean_std_dev: 0.0326
     mean_variance: 0.0653
+  lexical_concentration:
+    mean_simpson_d: 0.0214
+    mean_total_tokens: 0.0030
+    mean_yule_k: 0.0209
   line_patterns:
     mean_max_nesting_depth: 0.1335
     mean_string_literal_ratio: -0.0027
@@ -197,7 +204,7 @@ function_name_matches_return_type:
 test_name_starts_with_verb:
   _doc: "Test descriptions should start with a verb: `creates`, `raises`, `returns`, not a noun phrase."
   _languages: [elixir]
-  _log_baseline: 7.8915
+  _log_baseline: 8.0140
   branching:
     mean_branch_count: 1.9977
     mean_branching_density: 2.0000
@@ -236,6 +243,10 @@ test_name_starts_with_verb:
   identifier_length_variance:
     mean_std_dev: -0.0192
     mean_variance: -0.0384
+  lexical_concentration:
+    mean_simpson_d: -0.0988
+    mean_total_tokens: 0.0600
+    mean_yule_k: -0.0982
   line_patterns:
     mean_string_literal_ratio: -0.0611
   magic_number_density:

@@ -1,7 +1,7 @@
 consistent_casing_within_file:
   _doc: "A file should use one naming convention throughout — no mixing of camelCase and snake_case for the same kind of identifier."
   _languages: [elixir]
-  _log_baseline: -0.6750
+  _log_baseline: -0.6528
   brevity:
     mean_sample_size: -0.0471
   casing_entropy:
@@ -35,6 +35,9 @@ consistent_casing_within_file:
     mean_mean: 0.0337
     mean_std_dev: 0.0139
     mean_variance: 0.0278
+  lexical_concentration:
+    mean_simpson_d: 0.0118
+    mean_yule_k: 0.0112
   ngram:
     mean_bigram_hapax_fraction: -0.0071
     mean_bigram_repetition_rate: 0.0267
@@ -62,7 +65,7 @@ consistent_casing_within_file:
 consistent_error_return_shape:
   _doc: "All functions in a module should return errors in the same shape — mixed `nil`, `false`, and `{:error, _}` returns are confusing."
   _languages: [elixir]
-  _log_baseline: -2.6048
+  _log_baseline: -2.8073
   branching:
     mean_branch_count: -0.2800
     mean_branching_density: 0.5563
@@ -115,6 +118,10 @@ consistent_error_return_shape:
     mean_max_depth: -0.4917
     mean_mean_depth: -0.4787
     mean_variance: -0.8229
+  lexical_concentration:
+    mean_simpson_d: 0.0870
+    mean_total_tokens: -0.0672
+    mean_yule_k: 0.0840
   line_patterns:
     mean_blank_line_ratio: 0.5151
     mean_max_nesting_depth: -0.4366
@@ -176,7 +183,7 @@ consistent_error_return_shape:
 consistent_function_style:
   _doc: "A module should not mix one-liner and multi-clause function definitions for the same concern."
   _languages: [elixir]
-  _log_baseline: 56.4329
+  _log_baseline: 57.4562
   branching:
     mean_branch_count: 0.3619
     mean_branching_density: 0.2247
@@ -237,6 +244,10 @@ consistent_function_style:
     mean_max_depth: 0.0478
     mean_mean_depth: 0.0119
     mean_variance: -0.0501
+  lexical_concentration:
+    mean_simpson_d: -0.2346
+    mean_total_tokens: 0.2676
+    mean_yule_k: -0.2335
   line_patterns:
     mean_blank_line_ratio: -0.2220
     mean_max_nesting_depth: -0.0629
@@ -307,7 +318,7 @@ consistent_function_style:
 same_concept_same_name:
   _doc: "The same domain concept should use the same name throughout a file — mixing `user`, `usr`, and `u` for the same thing harms readability."
   _languages: [elixir]
-  _log_baseline: -15.1568
+  _log_baseline: -13.5397
   brevity:
     mean_sample_size: -1.3457
   compression:
@@ -337,6 +348,9 @@ same_concept_same_name:
     mean_mean: 0.3431
     mean_std_dev: -0.4791
     mean_variance: -0.9580
+  lexical_concentration:
+    mean_simpson_d: 0.5816
+    mean_yule_k: 0.5820
   line_patterns:
     mean_unique_line_ratio: -0.6939
   ngram:

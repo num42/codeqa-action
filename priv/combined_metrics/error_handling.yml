@@ -1,7 +1,7 @@
 does_not_swallow_errors:
   _doc: "Errors must be handled or re-raised — empty rescue/catch blocks silently hide failures."
   _languages: [elixir]
-  _log_baseline: 88.4465
+  _log_baseline: 91.4421
   branching:
     mean_branch_count: -0.1041
     mean_branching_density: -0.2095
@@ -55,6 +55,8 @@ does_not_swallow_errors:
     mean_max_depth: 0.1740
     mean_mean_depth: 0.1043
     mean_variance: 0.3416
+  lexical_concentration:
+    mean_total_tokens: 0.4926
   line_patterns:
     mean_blank_line_ratio: 0.0451
     mean_max_nesting_depth: 0.5405
@@ -117,7 +119,7 @@ does_not_swallow_errors:
 error_message_is_descriptive:
   _doc: "Error values should carry a meaningful message, not just a bare atom or empty string."
   _languages: [elixir]
-  _log_baseline: 54.3002
+  _log_baseline: 55.7735
   branching:
     mean_branch_count: 0.0664
     mean_branching_density: -0.0540
@@ -172,6 +174,10 @@ error_message_is_descriptive:
     mean_max_depth: 0.1754
     mean_mean_depth: 0.1108
     mean_variance: 0.1967
+  lexical_concentration:
+    mean_simpson_d: -0.1683
+    mean_total_tokens: 0.3002
+    mean_yule_k: -0.1678
   line_patterns:
     mean_blank_line_ratio: -0.1098
     mean_max_nesting_depth: 0.3900
@@ -226,7 +232,7 @@ error_message_is_descriptive:
 returns_typed_error:
   _doc: "Functions should signal failure via a typed return (e.g. `{:error, reason}`) rather than returning `nil` or `false`."
   _languages: [elixir]
-  _log_baseline: 123.9515
+  _log_baseline: 128.7586
   branching:
     mean_branch_count: -0.1286
     mean_branching_density: -0.1895
@@ -284,6 +290,10 @@ returns_typed_error:
     mean_blank_line_ratio: -0.1515
     mean_mean_depth: -0.0287
     mean_variance: 0.0372
+  lexical_concentration:
+    mean_simpson_d: 0.1982
+    mean_total_tokens: 0.6727
+    mean_yule_k: 0.2006
   line_patterns:
     mean_blank_line_ratio: -0.1515
     mean_max_nesting_depth: 1.1292

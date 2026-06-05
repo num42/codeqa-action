@@ -1,7 +1,7 @@
 has_consistent_indentation:
   _doc: "Files should use a single, consistent indentation style with no mixed tabs and spaces."
   _languages: [elixir]
-  _log_baseline: 19.1706
+  _log_baseline: 19.8257
   branching:
     mean_branch_count: 0.0582
     mean_branching_density: 0.0172
@@ -64,6 +64,10 @@ has_consistent_indentation:
     mean_max_depth: -0.2886
     mean_mean_depth: -0.1068
     mean_variance: -0.4798
+  lexical_concentration:
+    mean_simpson_d: 0.0041
+    mean_total_tokens: 0.1168
+    mean_yule_k: 0.0031
   line_patterns:
     mean_blank_line_ratio: 0.1123
     mean_max_nesting_depth: -0.0362
@@ -128,7 +132,7 @@ has_consistent_indentation:
 line_count_under_300:
   _doc: "Files should be under 300 lines; longer files typically violate single responsibility."
   _languages: [elixir]
-  _log_baseline: -48.1609
+  _log_baseline: -49.2976
   branching:
     mean_branch_count: -0.4508
     mean_branching_density: -0.2446
@@ -187,6 +191,10 @@ line_count_under_300:
     mean_max_depth: 0.0301
     mean_mean_depth: 0.0114
     mean_variance: 0.1685
+  lexical_concentration:
+    mean_simpson_d: 0.0291
+    mean_total_tokens: -0.1807
+    mean_yule_k: 0.0290
   line_patterns:
     mean_blank_line_ratio: -0.4899
     mean_string_literal_ratio: 0.0039
@@ -251,7 +259,7 @@ line_count_under_300:
 line_length_under_120:
   _doc: "Lines should be under 120 characters to avoid horizontal scrolling."
   _languages: [elixir]
-  _log_baseline: -16.9801
+  _log_baseline: -17.3646
   branching:
     mean_branching_density: -0.0814
     mean_max_nesting_depth: -0.0341
@@ -308,6 +316,10 @@ line_length_under_120:
     mean_max_depth: -0.0394
     mean_mean_depth: 0.0038
     mean_variance: -0.1164
+  lexical_concentration:
+    mean_simpson_d: -0.0143
+    mean_total_tokens: -0.0554
+    mean_yule_k: -0.0145
   line_patterns:
     mean_blank_line_ratio: 0.0218
     mean_max_nesting_depth: -0.0341
@@ -368,7 +380,7 @@ line_length_under_120:
 no_magic_numbers:
   _doc: "Numeric literals should be extracted to named constants rather than used inline."
   _languages: [elixir]
-  _log_baseline: 111.4823
+  _log_baseline: 114.2688
   branching:
     mean_branch_count: -0.4352
     mean_branching_density: -0.9103
@@ -421,6 +433,10 @@ no_magic_numbers:
     mean_blank_line_ratio: 0.3137
     mean_mean_depth: -0.4612
     mean_variance: -0.5503
+  lexical_concentration:
+    mean_simpson_d: -0.1122
+    mean_total_tokens: 0.4877
+    mean_yule_k: -0.1119
   line_patterns:
     mean_blank_line_ratio: 0.3137
     mean_string_literal_ratio: -0.5060
@@ -479,7 +495,7 @@ no_magic_numbers:
 single_responsibility:
   _doc: "Each file should have one primary concern — low complexity spread across few, focused functions."
   _languages: [elixir]
-  _log_baseline: -38.0916
+  _log_baseline: -38.7512
   branching:
     mean_branch_count: -0.0362
     mean_branching_density: 0.1360
@@ -539,6 +555,10 @@ single_responsibility:
     mean_max_depth: -0.0590
     mean_mean_depth: -0.0459
     mean_variance: -0.0805
+  lexical_concentration:
+    mean_simpson_d: 0.0501
+    mean_total_tokens: -0.1318
+    mean_yule_k: 0.0502
   line_patterns:
     mean_blank_line_ratio: 0.0442
     mean_string_literal_ratio: -0.0292

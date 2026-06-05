@@ -16,6 +16,7 @@ defmodule CodeQA.Engine.Analyzer do
             |> Registry.register_file_metric(Metrics.Zipf)
             |> Registry.register_file_metric(Metrics.Heaps)
             |> Registry.register_file_metric(Metrics.Vocabulary)
+            |> Registry.register_file_metric(Metrics.LexicalConcentration)
             |> Registry.register_file_metric(Metrics.Ngram)
             |> Registry.register_file_metric(Metrics.Halstead)
             |> Registry.register_file_metric(Metrics.Readability)
