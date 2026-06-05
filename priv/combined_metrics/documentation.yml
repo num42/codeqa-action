@@ -1,7 +1,7 @@
 docstring_is_nonempty:
   _doc: "Docstrings must contain meaningful content, not just a placeholder or empty string."
   _languages: [elixir]
-  _log_baseline: 29.7782
+  _log_baseline: 30.1436
   branching:
     mean_branch_count: 0.3089
     mean_branching_density: 0.2652
@@ -55,6 +55,10 @@ docstring_is_nonempty:
     mean_blank_line_ratio: 0.0413
     mean_mean_depth: -0.0330
     mean_variance: -0.0309
+  lexical_concentration:
+    mean_simpson_d: -0.1234
+    mean_total_tokens: 0.1038
+    mean_yule_k: -0.1231
   line_patterns:
     mean_blank_line_ratio: 0.0413
     mean_string_literal_ratio: 0.1078
@@ -118,7 +122,7 @@ docstring_is_nonempty:
 file_has_license_header:
   _doc: "Source files should begin with a license or copyright header."
   _languages: [elixir]
-  _log_baseline: 9.5617
+  _log_baseline: 9.6516
   branching:
     mean_branching_density: -0.0282
     mean_non_blank_count: 0.0295
@@ -164,6 +168,10 @@ file_has_license_header:
     mean_blank_line_ratio: 0.0299
     mean_mean_depth: -0.0369
     mean_variance: 0.0393
+  lexical_concentration:
+    mean_simpson_d: -0.0383
+    mean_total_tokens: 0.0318
+    mean_yule_k: -0.0390
   line_patterns:
     mean_blank_line_ratio: 0.0299
     mean_string_literal_ratio: -0.0363
@@ -215,7 +223,7 @@ file_has_license_header:
 file_has_module_docstring:
   _doc: "Files should have a module-level docstring explaining purpose and usage."
   _languages: [elixir]
-  _log_baseline: 24.4917
+  _log_baseline: 24.7485
   branching:
     mean_branch_count: 0.3854
     mean_branching_density: -2.0000
@@ -266,6 +274,10 @@ file_has_module_docstring:
     mean_blank_line_ratio: 0.0686
     mean_mean_depth: -0.0240
     mean_variance: -0.0634
+  lexical_concentration:
+    mean_simpson_d: -0.1075
+    mean_total_tokens: 0.0837
+    mean_yule_k: -0.1071
   line_patterns:
     mean_blank_line_ratio: 0.0686
     mean_string_literal_ratio: 0.1425
@@ -321,7 +333,7 @@ file_has_module_docstring:
 file_has_no_commented_out_code:
   _doc: "Files should not contain commented-out code blocks left from development."
   _languages: [elixir]
-  _log_baseline: -8.4785
+  _log_baseline: -8.5693
   branching:
     mean_branching_density: 0.0368
     mean_non_blank_count: -0.0367
@@ -374,6 +386,10 @@ file_has_no_commented_out_code:
     mean_max_depth: 0.0324
     mean_mean_depth: 0.0564
     mean_variance: 0.0552
+  lexical_concentration:
+    mean_simpson_d: 0.0064
+    mean_total_tokens: -0.0158
+    mean_yule_k: 0.0060
   line_patterns:
     mean_blank_line_ratio: 0.0551
     mean_string_literal_ratio: -0.0818
@@ -433,7 +449,7 @@ file_has_no_commented_out_code:
 function_has_docstring:
   _doc: "Public functions should have a docstring describing behaviour, params, and return value."
   _languages: [elixir]
-  _log_baseline: 43.3959
+  _log_baseline: 44.4131
   branching:
     mean_branch_count: 0.5279
     mean_branching_density: 0.3832
@@ -492,6 +508,10 @@ function_has_docstring:
     mean_max_depth: -0.1288
     mean_mean_depth: -0.0904
     mean_variance: -0.2118
+  lexical_concentration:
+    mean_simpson_d: -0.1780
+    mean_total_tokens: 0.2284
+    mean_yule_k: -0.1773
   line_patterns:
     mean_blank_line_ratio: 0.1003
     mean_string_literal_ratio: 0.5931
@@ -557,7 +577,7 @@ function_has_docstring:
 function_todo_comment_in_body:
   _doc: "Functions should not contain TODO/FIXME comments indicating unfinished work."
   _languages: [elixir]
-  _log_baseline: 8.0649
+  _log_baseline: 8.1611
   branching:
     mean_branch_count: -0.0287
     mean_branching_density: -0.0435
@@ -611,6 +631,10 @@ function_todo_comment_in_body:
     mean_blank_line_ratio: 0.0593
     mean_mean_depth: -0.0184
     mean_variance: -0.0277
+  lexical_concentration:
+    mean_simpson_d: -0.0039
+    mean_total_tokens: 0.0157
+    mean_yule_k: -0.0037
   line_patterns:
     mean_blank_line_ratio: 0.0593
     mean_string_literal_ratio: -0.0151

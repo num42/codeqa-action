@@ -1,7 +1,7 @@
 boolean_has_is_has_prefix:
   _doc: "Boolean variables should be prefixed with `is_`, `has_`, or `can_`."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 22.4319
+  _log_baseline: 22.3422
   brevity:
     mean_sample_size: 0.0752
   casing_entropy:
@@ -33,6 +33,9 @@ boolean_has_is_has_prefix:
     mean_mean: 0.3109
     mean_std_dev: 0.3325
     mean_variance: 0.6646
+  lexical_concentration:
+    mean_simpson_d: -0.0270
+    mean_yule_k: -0.0286
   ngram:
     mean_bigram_hapax_fraction: 0.0164
     mean_bigram_repeated_unique: -0.0209
@@ -66,7 +69,7 @@ boolean_has_is_has_prefix:
 collection_name_is_plural:
   _doc: "Variables holding a collection should use a plural name."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 24.0478
+  _log_baseline: 24.4551
   brevity:
     mean_sample_size: -0.5320
   casing_entropy:
@@ -97,6 +100,9 @@ collection_name_is_plural:
     mean_mean: 1.6364
     mean_std_dev: -0.9858
     mean_variance: -2.0000
+  lexical_concentration:
+    mean_simpson_d: 0.1910
+    mean_yule_k: 0.1761
   ngram:
     mean_bigram_hapax_fraction: -0.1392
     mean_bigram_repetition_rate: 0.1490
@@ -131,7 +137,7 @@ loop_var_is_single_letter:
   _doc: "Loop index variables (`i`, `j`, `k`) are acceptable inside loop bodies."
   _excludes_block_types: [doc]
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -32.9785
+  _log_baseline: -32.8855
   brevity:
     mean_sample_size: -0.1049
   casing_entropy:
@@ -176,6 +182,9 @@ loop_var_is_single_letter:
     mean_max_depth: -0.0956
     mean_mean_depth: -0.0126
     mean_variance: -0.0698
+  lexical_concentration:
+    mean_simpson_d: 0.0246
+    mean_yule_k: 0.0277
   line_patterns:
     mean_unique_line_ratio: -0.0229
   ngram:
@@ -214,7 +223,7 @@ loop_var_is_single_letter:
 name_contains_and:
   _doc: "Variable names containing `and` signal a variable that holds two concerns."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -2.9877
+  _log_baseline: -2.5335
   branching:
     mean_branch_count: -0.3666
     mean_branching_density: -0.3925
@@ -271,6 +280,10 @@ name_contains_and:
     mean_max_depth: -0.1211
     mean_mean_depth: -0.1378
     mean_variance: -0.2812
+  lexical_concentration:
+    mean_simpson_d: 0.0332
+    mean_total_tokens: 0.0583
+    mean_yule_k: 0.0335
   line_patterns:
     mean_blank_line_ratio: -0.0595
     mean_string_literal_ratio: -0.3480
@@ -336,7 +349,7 @@ name_contains_and:
 name_contains_type_suffix:
   _doc: "Type suffixes in names (`userString`, `nameList`) are redundant noise."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -27.7441
+  _log_baseline: -27.7647
   branching:
     mean_branch_count: -0.6581
     mean_branching_density: -0.8807
@@ -381,6 +394,9 @@ name_contains_type_suffix:
     mean_mean: -0.4896
     mean_std_dev: -0.6347
     mean_variance: -1.2781
+  lexical_concentration:
+    mean_total_tokens: -0.0113
+    mean_yule_k: 0.0086
   line_patterns:
     mean_string_literal_ratio: 0.0103
   ngram:
@@ -424,7 +440,7 @@ name_contains_type_suffix:
 name_is_abbreviation:
   _doc: "Abbreviated names (`usr`, `cfg`, `mgr`) reduce readability."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 22.6050
+  _log_baseline: 21.8261
   brevity:
     mean_sample_size: -0.0441
   casing_entropy:
@@ -459,6 +475,10 @@ name_is_abbreviation:
     mean_mean: 1.7543
     mean_std_dev: 0.6161
     mean_variance: 1.1907
+  lexical_concentration:
+    mean_simpson_d: -0.0426
+    mean_total_tokens: -0.0955
+    mean_yule_k: -0.0546
   line_patterns:
     mean_string_literal_ratio: -0.0288
     mean_unique_line_ratio: 0.0571
@@ -512,7 +532,7 @@ name_is_abbreviation:
 name_is_generic:
   _doc: "Generic names (`data`, `result`, `tmp`, `val`, `obj`) convey no domain meaning."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 43.6270
+  _log_baseline: 44.0574
   branching:
     mean_branch_count: 0.5193
     mean_branching_density: 0.3889
@@ -569,6 +589,10 @@ name_is_generic:
     mean_max_depth: -0.1451
     mean_mean_depth: -0.0760
     mean_variance: -0.2765
+  lexical_concentration:
+    mean_simpson_d: -0.0256
+    mean_total_tokens: 0.0784
+    mean_yule_k: -0.0267
   line_patterns:
     mean_blank_line_ratio: 0.0556
     mean_max_nesting_depth: -0.0599
@@ -632,7 +656,7 @@ name_is_generic:
 name_is_number_like:
   _doc: "Number-suffixed names (`var1`, `thing2`) signal a missing abstraction."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 4.1505
+  _log_baseline: 4.1421
   brevity:
     mean_sample_size: -0.0262
   casing_entropy:
@@ -673,6 +697,10 @@ name_is_number_like:
     mean_mean: 0.2335
     mean_std_dev: 0.2269
     mean_variance: 0.4543
+  lexical_concentration:
+    mean_simpson_d: 0.0120
+    mean_total_tokens: -0.0075
+    mean_yule_k: 0.0133
   line_patterns:
     mean_string_literal_ratio: 0.0201
   ngram:
@@ -714,7 +742,7 @@ name_is_number_like:
 name_is_single_letter:
   _doc: "Single-letter names outside loop indices are too opaque."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 30.8986
+  _log_baseline: 30.3914
   branching:
     mean_branching_density: -0.0445
     mean_non_blank_count: 0.0426
@@ -766,6 +794,10 @@ name_is_single_letter:
     mean_blank_line_ratio: -0.0401
     mean_mean_depth: 0.0273
     mean_variance: 0.0329
+  lexical_concentration:
+    mean_simpson_d: -0.1237
+    mean_total_tokens: -0.0290
+    mean_yule_k: -0.1221
   line_patterns:
     mean_blank_line_ratio: -0.0401
     mean_unique_line_ratio: 0.0990
@@ -815,7 +847,7 @@ name_is_single_letter:
 name_is_too_long:
   _doc: "Names longer than ~30 characters harm readability."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -10.5110
+  _log_baseline: -9.9643
   branching:
     mean_branch_count: 0.0340
     mean_branching_density: 0.0916
@@ -874,6 +906,10 @@ name_is_too_long:
     mean_max_depth: -0.2280
     mean_mean_depth: -0.1355
     mean_variance: -0.2997
+  lexical_concentration:
+    mean_simpson_d: 0.0339
+    mean_total_tokens: 0.0756
+    mean_yule_k: 0.0351
   line_patterns:
     mean_blank_line_ratio: 0.0206
     mean_max_nesting_depth: 0.0484
@@ -941,7 +977,7 @@ name_is_too_long:
 name_is_too_short:
   _doc: "Names shorter than 3 characters (outside loops) are too opaque."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -3.8620
+  _log_baseline: -3.7450
   branching:
     mean_branch_count: -0.2327
     mean_branching_density: -0.2381
@@ -989,6 +1025,10 @@ name_is_too_short:
     mean_variance: -0.5009
   indentation:
     mean_variance: 0.0168
+  lexical_concentration:
+    mean_simpson_d: 0.1271
+    mean_total_tokens: -0.0256
+    mean_yule_k: 0.1222
   line_patterns:
     mean_string_literal_ratio: 0.0229
   near_duplicate_blocks_file:
@@ -1032,7 +1072,7 @@ name_is_too_short:
 negated_boolean_name:
   _doc: "Negated boolean names (`isNotValid`, `notActive`) are harder to reason about."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -13.4921
+  _log_baseline: -13.6544
   brevity:
     mean_sample_size: -0.0991
   casing_entropy:
@@ -1065,6 +1105,8 @@ negated_boolean_name:
     mean_mean: -0.1495
     mean_std_dev: -0.4708
     mean_variance: -0.8704
+  lexical_concentration:
+    mean_total_tokens: -0.0258
   line_patterns:
     mean_string_literal_ratio: 0.0727
   magic_number_density:
@@ -1117,7 +1159,7 @@ negated_boolean_name:
 no_hungarian_notation:
   _doc: "Hungarian notation prefixes (`strName`, `bFlag`) add noise without type safety."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -8.4371
+  _log_baseline: -8.5442
   brevity:
     mean_sample_size: -0.0295
   casing_entropy:
@@ -1157,6 +1199,10 @@ no_hungarian_notation:
     mean_variance: 0.0825
   indentation:
     mean_blank_line_ratio: -0.0083
+  lexical_concentration:
+    mean_simpson_d: -0.0742
+    mean_total_tokens: 0.0139
+    mean_yule_k: -0.0756
   line_patterns:
     mean_blank_line_ratio: -0.0083
     mean_string_literal_ratio: -0.2464
@@ -1209,7 +1255,7 @@ no_hungarian_notation:
 screaming_snake_for_constants:
   _doc: "Module-level constants should use SCREAMING_SNAKE_CASE."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -4.4685
+  _log_baseline: -4.5280
   branching:
     mean_branching_density: 0.0176
     mean_non_blank_count: -0.0180
@@ -1254,6 +1300,9 @@ screaming_snake_for_constants:
     mean_blank_line_ratio: 0.0078
     mean_mean_depth: 0.0069
     mean_variance: 0.0048
+  lexical_concentration:
+    mean_simpson_d: 0.0045
+    mean_total_tokens: -0.0066
   line_patterns:
     mean_blank_line_ratio: 0.0078
     mean_string_literal_ratio: 0.0089

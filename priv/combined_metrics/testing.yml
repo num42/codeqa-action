@@ -1,7 +1,7 @@
 reasonable_test_to_code_ratio:
   _doc: "There should be an adequate number of test cases relative to the code being tested."
   _languages: [elixir]
-  _log_baseline: 12.6188
+  _log_baseline: 13.2191
   branching:
     mean_branch_count: 0.1869
     mean_branching_density: 0.0352
@@ -58,6 +58,10 @@ reasonable_test_to_code_ratio:
     mean_max_depth: 0.1093
     mean_mean_depth: 0.1424
     mean_variance: 0.3988
+  lexical_concentration:
+    mean_simpson_d: -0.0440
+    mean_total_tokens: 0.1093
+    mean_yule_k: -0.0432
   line_patterns:
     mean_blank_line_ratio: -0.0175
     mean_string_literal_ratio: 0.2536
@@ -122,7 +126,7 @@ reasonable_test_to_code_ratio:
 test_has_assertion:
   _doc: "Every test body must contain at least one assertion — a test without assertions proves nothing."
   _languages: [elixir]
-  _log_baseline: -10.1975
+  _log_baseline: -10.1327
   branching:
     mean_branch_count: 0.0918
     mean_branching_density: 0.1642
@@ -175,6 +179,9 @@ test_has_assertion:
     mean_max_depth: -0.1294
     mean_mean_depth: -0.0289
     mean_variance: -0.0253
+  lexical_concentration:
+    mean_simpson_d: 0.0252
+    mean_yule_k: 0.0257
   line_patterns:
     mean_blank_line_ratio: 0.0261
     mean_string_literal_ratio: -0.0139
@@ -236,7 +243,7 @@ test_has_assertion:
 test_name_describes_behavior:
   _doc: "Test names should describe the expected behaviour, not just the method under test."
   _languages: [elixir]
-  _log_baseline: 59.1394
+  _log_baseline: 60.4069
   branching:
     mean_branch_count: 2.0000
     mean_branching_density: -1.5965
@@ -285,6 +292,10 @@ test_name_describes_behavior:
     mean_max_depth: 0.3691
     mean_mean_depth: 0.3712
     mean_variance: 0.8827
+  lexical_concentration:
+    mean_simpson_d: -0.1332
+    mean_total_tokens: 0.2704
+    mean_yule_k: -0.1326
   line_patterns:
     mean_blank_line_ratio: -0.1184
     mean_string_literal_ratio: -0.1419
@@ -338,7 +349,7 @@ test_name_describes_behavior:
 test_single_concept:
   _doc: "Each test should verify a single concept — tests covering multiple things are harder to diagnose when they fail."
   _languages: [elixir]
-  _log_baseline: 39.5531
+  _log_baseline: 40.5455
   branching:
     mean_branch_count: 0.3696
     mean_branching_density: -2.0000
@@ -398,6 +409,10 @@ test_single_concept:
     mean_max_depth: 0.2162
     mean_mean_depth: 0.1207
     mean_variance: 0.3787
+  lexical_concentration:
+    mean_simpson_d: -0.0371
+    mean_total_tokens: 0.1633
+    mean_yule_k: -0.0369
   line_patterns:
     mean_blank_line_ratio: -0.0702
     mean_max_nesting_depth: 0.1534
