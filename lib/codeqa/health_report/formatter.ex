@@ -1,31 +1,37 @@
 defmodule CodeQA.HealthReport.Formatter do
   @moduledoc "Renders health report as markdown in plain or github format."
 
+  alias CodeQA.HealthReport.Formatter.AgentActions
   alias CodeQA.HealthReport.Formatter.Github
   alias CodeQA.HealthReport.Formatter.Plain
 
-  @spec format_markdown(map(), atom(), atom(), keyword()) :: String.t()
-  def format_markdown(report, detail, format \\ :plain, opts \\ [])
+  @spec format_markdown(map(), atom(), atom(), atom()) :: String.t()
+  def format_markdown(report, detail, format \\ :plain, view \\ :both)
 
-  def format_markdown(report, detail, :plain, _opts), do: Plain.render(report, detail)
-  def format_markdown(report, detail, :github, opts), do: Github.render(report, detail, opts)
+  def format_markdown(report, _detail, _format, :actions), do: AgentActions.render(report)
+  def format_markdown(report, detail, :plain, view), do: Plain.render(report, detail, view)
+  def format_markdown(report, detail, :github, view), do: Github.render(report, detail, [], view)
 
   @doc """
-  Renders the report as multiple parts for GitHub PR comments.
-  Returns a flat list of strings: [part_1, part_2, part_3, ...].
+  Renders the report as multiple parts for GitHub PR comments, scoped to `view`.
 
-  Part 1: Header, summary, PR summary, delta, chart, progress bars
-  Part 2: Top issues, category detail sections
-  Part 3+: Blocks section, sliced at 60,000 chars per part
+  - `:metrics` — Part 1 (header/summary/delta/chart) + Part 2 (top issues/categories)
+  - `:actions` — a single agent-actions part
+  - `:both` — metric parts followed by the agent-actions part
 
-  Each part ends with a sentinel comment for sticky comment identification.
+  Each metric part ends with a sentinel comment for sticky comment identification.
   """
   @spec render_parts(map(), keyword()) :: [String.t()]
   def render_parts(report, opts \\ []) do
-    part_1 = Github.render_part_1(report, opts)
-    part_2 = Github.render_part_2(report, opts)
-    parts_3 = Github.render_parts_3(report, opts)
-
-    [part_1, part_2 | parts_3]
+    view = Keyword.get(opts, :view, :both)
+    render_parts_for(view, report, opts)
   end
+
+  defp render_parts_for(:metrics, report, opts),
+    do: [Github.render_part_1(report, opts), Github.render_part_2(report, opts)]
+
+  defp render_parts_for(:actions, report, _opts), do: [AgentActions.render(report)]
+
+  defp render_parts_for(:both, report, opts),
+    do: render_parts_for(:metrics, report, opts) ++ render_parts_for(:actions, report, opts)
 end

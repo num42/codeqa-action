@@ -22,6 +22,8 @@ defmodule CodeQA.CLI.HealthReport do
       --config FILE         YAML config file for category/threshold overrides
       --detail MODE         Detail level: summary, default, or full (default: default)
       --format FORMAT       Output format: plain or github (default: plain)
+      --view VIEW           metrics (scales only), actions (agent prompt), or both (default: both)
+                            --view actions without --base-ref scans the whole codebase (slow)
       --top N               Number of worst offenders per category (default: 5)
       --progress            Show per-file progress on stderr
       -w, --workers N       Number of parallel workers
@@ -46,6 +48,7 @@ defmodule CodeQA.CLI.HealthReport do
     detail: :string,
     top: :integer,
     format: :string,
+    view: :string,
     ignore_paths: :string,
     base_ref: :string,
     head_ref: :string,
@@ -60,6 +63,8 @@ defmodule CodeQA.CLI.HealthReport do
 
     base_ref = opts[:base_ref]
     head_ref = opts[:head_ref] || "HEAD"
+    view = parse_view(opts[:view])
+    warn_actions_full_scan(view, base_ref)
 
     collect_t0 = System.monotonic_time(:microsecond)
 
@@ -84,10 +89,17 @@ defmodule CodeQA.CLI.HealthReport do
     {changed_files, diff_line_ranges} = collect_diff(path, base_ref, head_ref)
     node_paths = if changed_files == [], do: nil, else: Enum.map(changed_files, & &1.path)
 
+    # Block-impact LOO is the heaviest phase. Skip it whenever the view renders
+    # no blocks (metrics-only).
+    compute_nodes? = view in [:actions, :both]
+
+    node_opts =
+      if compute_nodes?,
+        do: [compute_nodes: true, node_paths: node_paths],
+        else: [compute_nodes: false]
+
     analyze_opts =
-      Options.build_analyze_opts(opts) ++
-        Config.near_duplicate_blocks_opts() ++
-        [compute_nodes: true, node_paths: node_paths]
+      Options.build_analyze_opts(opts) ++ Config.near_duplicate_blocks_opts() ++ node_opts
 
     start_time = System.monotonic_time(:millisecond)
     results = Analyzer.analyze_codebase(files, analyze_opts)
@@ -109,7 +121,12 @@ defmodule CodeQA.CLI.HealthReport do
         "total_bytes" => total_bytes
       })
 
-    base_results = collect_base_snapshot(path, base_ref, analyze_opts)
+    # The base snapshot is a full second analysis run; it only feeds the metric
+    # changes delta, so skip it when no metric view is rendered.
+    base_results =
+      if view in [:metrics, :both],
+        do: collect_base_snapshot(path, base_ref, analyze_opts),
+        else: nil
 
     detail = parse_detail(opts[:detail])
     format = parse_format(opts[:format])
@@ -122,6 +139,7 @@ defmodule CodeQA.CLI.HealthReport do
         config: opts[:config],
         detail: detail,
         top: top_n,
+        view: view,
         base_results: base_results,
         changed_files: changed_files,
         diff_line_ranges: diff_line_ranges
@@ -134,12 +152,21 @@ defmodule CodeQA.CLI.HealthReport do
       record_phase(telemetry_pid, :report_gen, report_gen_us)
     end
 
-    output = build_output(report, opts, detail, format, telemetry_pid)
+    output = build_output(report, opts, detail, format, view, telemetry_pid)
 
     if telemetry_pid, do: print_telemetry(telemetry_pid)
 
     output
   end
+
+  defp warn_actions_full_scan(:actions, nil),
+    do:
+      IO.puts(
+        :stderr,
+        "Warning: --view actions without --base-ref scans the whole codebase (slow). Pass --base-ref to scope blocks to changed files."
+      )
+
+  defp warn_actions_full_scan(_view, _base_ref), do: :ok
 
   # Resolves the changed files and per-file diff line ranges once, up front, so
   # the head analysis can scope its per-node work to the changed files. Returns
@@ -174,17 +201,17 @@ defmodule CodeQA.CLI.HealthReport do
     end
   end
 
-  defp build_output(report, opts, detail, format, telemetry_pid) do
+  defp build_output(report, opts, detail, format, view, telemetry_pid) do
     if opts[:comment] do
-      write_comment_parts(report, detail)
+      write_comment_parts(report, detail, view)
     else
-      render_markdown(report, opts, detail, format, telemetry_pid)
+      render_markdown(report, opts, detail, format, view, telemetry_pid)
     end
   end
 
-  defp render_markdown(report, opts, detail, format, telemetry_pid) do
+  defp render_markdown(report, opts, detail, format, view, telemetry_pid) do
     render_t0 = System.monotonic_time(:microsecond)
-    markdown = HealthReport.to_markdown(report, detail, format)
+    markdown = HealthReport.to_markdown(report, detail, format, view)
     render_us = System.monotonic_time(:microsecond) - render_t0
     if telemetry_pid, do: record_phase(telemetry_pid, :render, render_us)
 
@@ -199,9 +226,9 @@ defmodule CodeQA.CLI.HealthReport do
     ""
   end
 
-  defp write_comment_parts(report, detail) do
+  defp write_comment_parts(report, detail, view) do
     tmpdir = System.get_env("TMPDIR", "/tmp")
-    parts = HealthReport.Formatter.render_parts(report, detail: detail)
+    parts = HealthReport.Formatter.render_parts(report, detail: detail, view: view)
 
     # Write each part to a numbered file
     parts
@@ -248,6 +275,16 @@ defmodule CodeQA.CLI.HealthReport do
   defp parse_format(other) do
     IO.puts(:stderr, "Warning: unknown format '#{other}', using 'plain'")
     :plain
+  end
+
+  defp parse_view(nil), do: :both
+  defp parse_view("metrics"), do: :metrics
+  defp parse_view("actions"), do: :actions
+  defp parse_view("both"), do: :both
+
+  defp parse_view(other) do
+    IO.puts(:stderr, "Warning: unknown view '#{other}', using 'both'")
+    :both
   end
 
   # ---------------------------------------------------------------------------
