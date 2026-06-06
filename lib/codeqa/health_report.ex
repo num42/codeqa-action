@@ -12,23 +12,36 @@ defmodule CodeQA.HealthReport do
 
   @spec generate(map(), keyword()) :: map()
   def generate(analysis_results, opts \\ []) do
-    config_path = Keyword.get(opts, :config)
-    base_results = Keyword.get(opts, :base_results)
-    changed_files = Keyword.get(opts, :changed_files, [])
-    diff_line_ranges = Keyword.get(opts, :diff_line_ranges, %{})
+    view = Keyword.get(opts, :view, :both)
+    config = Config.load(Keyword.get(opts, :config))
 
+    aggregate = get_in(analysis_results, ["codebase", "aggregate"]) || %{}
+    files = Map.get(analysis_results, "files", %{})
+
+    metrics = if view in [:metrics, :both], do: build_metrics(aggregate, files, config), else: %{}
+
+    actions =
+      if view in [:actions, :both], do: build_actions(analysis_results, config, opts), else: %{}
+
+    base = %{metadata: build_metadata(analysis_results)}
+
+    base
+    |> Map.merge(metrics)
+    |> Map.merge(actions)
+    |> put_delta_and_summary(analysis_results, metrics, actions, config, opts)
+  end
+
+  # Numberified metric scales: threshold + cosine grades, overall, top issues.
+  # No block work — TopBlocks and codebase_cosine_lookup are skipped entirely.
+  defp build_metrics(aggregate, files, config) do
     %{
-      block_max_lines: block_max_lines,
-      block_min_lines: block_min_lines,
       categories: categories,
       combined_top: combined_top,
       grade_scale: grade_scale,
       impact_map: impact_map
     } =
-      Config.load(config_path)
+      config
 
-    aggregate = get_in(analysis_results, ["codebase", "aggregate"]) || %{}
-    files = Map.get(analysis_results, "files", %{})
     project_langs = project_languages(files)
 
     threshold_grades =
@@ -36,11 +49,9 @@ defmodule CodeQA.HealthReport do
       |> Grader.grade_aggregate(aggregate, grade_scale)
       |> Enum.zip(categories)
       |> Enum.map(fn {graded, _cat_def} ->
-        summary = build_category_summary(graded)
-
         graded
         |> Map.put(:type, :threshold)
-        |> Map.merge(%{summary: summary, worst_offenders: []})
+        |> Map.merge(%{summary: build_category_summary(graded), worst_offenders: []})
       end)
 
     worst_files_map = FileScorer.worst_files_per_behavior(files, combined_top: combined_top)
@@ -48,7 +59,7 @@ defmodule CodeQA.HealthReport do
     all_cosines =
       SampleRunner.diagnose_aggregate(aggregate, top: 99_999, languages: project_langs)
 
-    cosines_by_category = all_cosines |> Enum.group_by(& &1.category)
+    cosines_by_category = Enum.group_by(all_cosines, & &1.category)
 
     cosine_grades =
       Grader.grade_cosine_categories(cosines_by_category, worst_files_map, grade_scale)
@@ -59,71 +70,85 @@ defmodule CodeQA.HealthReport do
 
     {overall_score, overall_grade} = Grader.overall_score(all_categories, grade_scale, impact_map)
 
-    metadata = build_metadata(analysis_results)
+    %{
+      categories: all_categories,
+      overall_grade: overall_grade,
+      overall_score: overall_score,
+      top_issues: Enum.take(all_cosines, 10)
+    }
+  end
 
-    top_issues = all_cosines |> Enum.take(10)
+  # Agent-actionable blocks: only the cosine lookup feeding TopBlocks is built.
+  # FileScorer, grading and overall score are skipped — none reach the prompt.
+  defp build_actions(analysis_results, config, opts) do
+    aggregate = get_in(analysis_results, ["codebase", "aggregate"]) || %{}
+    files = Map.get(analysis_results, "files", %{})
+    project_langs = project_languages(files)
+    changed_files = Keyword.get(opts, :changed_files, [])
+
+    all_cosines =
+      SampleRunner.diagnose_aggregate(aggregate, top: 99_999, languages: project_langs)
 
     codebase_cosine_lookup =
-      for i <- all_cosines do
-        {{i.category, i.behavior}, i.cosine}
-      end
-      |> Map.new()
+      Map.new(all_cosines, fn i -> {{i.category, i.behavior}, i.cosine} end)
 
     block_opts = [
-      block_min_lines: block_min_lines,
-      block_max_lines: block_max_lines,
-      diff_line_ranges: diff_line_ranges
+      block_min_lines: config.block_min_lines,
+      block_max_lines: config.block_max_lines,
+      diff_line_ranges: Keyword.get(opts, :diff_line_ranges, %{})
     ]
 
-    top_blocks =
-      TopBlocks.build(analysis_results, changed_files, codebase_cosine_lookup, block_opts)
-
-    worst_blocks_by_category =
-      TopBlocks.worst_per_category(
-        analysis_results,
-        changed_files,
-        codebase_cosine_lookup,
-        block_opts
-      )
-
-    grading_cfg = %{
-      category_defs: categories,
-      combined_top: combined_top,
-      grade_scale: grade_scale,
-      impact_map: impact_map
+    %{
+      top_blocks:
+        TopBlocks.build(analysis_results, changed_files, codebase_cosine_lookup, block_opts),
+      worst_blocks_by_category:
+        TopBlocks.worst_per_category(
+          analysis_results,
+          changed_files,
+          codebase_cosine_lookup,
+          block_opts
+        )
     }
+  end
+
+  # Delta needs both metric grades (head + base) and the block list; only the
+  # `:both`/`:metrics`+base path provides metrics, so guard on its presence.
+  defp put_delta_and_summary(report, _analysis, metrics, _actions, _config, _opts)
+       when metrics == %{},
+       do: Map.merge(report, %{codebase_delta: nil, pr_summary: nil})
+
+  defp put_delta_and_summary(report, analysis_results, metrics, actions, config, opts) do
+    base_results = Keyword.get(opts, :base_results)
+    top_blocks = Map.get(actions, :top_blocks, [])
 
     {codebase_delta, pr_summary} =
       if base_results do
+        grading_cfg = %{
+          category_defs: config.categories,
+          combined_top: config.combined_top,
+          grade_scale: config.grade_scale,
+          impact_map: config.impact_map
+        }
+
         build_delta_and_summary(
           base_results,
           analysis_results,
-          overall_score,
-          overall_grade,
+          metrics.overall_score,
+          metrics.overall_grade,
           grading_cfg,
-          changed_files,
+          Keyword.get(opts, :changed_files, []),
           top_blocks
         )
       else
         {nil, nil}
       end
 
-    %{
-      categories: all_categories,
-      codebase_delta: codebase_delta,
-      metadata: metadata,
-      overall_grade: overall_grade,
-      overall_score: overall_score,
-      pr_summary: pr_summary,
-      top_blocks: top_blocks,
-      top_issues: top_issues,
-      worst_blocks_by_category: worst_blocks_by_category
-    }
+    Map.merge(report, %{codebase_delta: codebase_delta, pr_summary: pr_summary})
   end
 
-  @spec to_markdown(map(), atom(), atom()) :: String.t()
-  def to_markdown(report, detail \\ :default, format \\ :plain),
-    do: report |> Formatter.format_markdown(detail, format)
+  @spec to_markdown(map(), atom(), atom(), atom()) :: String.t()
+  def to_markdown(report, detail \\ :default, format \\ :plain, view \\ :both),
+    do: report |> Formatter.format_markdown(detail, format, view)
 
   defp build_delta_and_summary(
          base_results,

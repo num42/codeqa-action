@@ -1,20 +1,18 @@
 defmodule CodeQA.HealthReport.Formatter.Github do
   @moduledoc "Renders health report as rich GitHub-flavored markdown."
 
-  alias CodeQA.HealthReport.BehaviorLabels
+  alias CodeQA.HealthReport.Formatter.AgentActions
 
-  import CodeQA.HealthReport.Formatter.Shared,
-    only: [count_severities_shared: 1, pr_summary_section: 1, worst_severity_shared: 1]
+  import CodeQA.HealthReport.Formatter.Shared, only: [pr_summary_section: 1]
 
   @bar_width 20
   @filled "█"
   @empty "░"
 
-  @spec render(map(), atom(), keyword()) :: String.t()
-  def render(report, detail, opts \\ []) do
+  @spec render(map(), atom(), keyword(), atom()) :: String.t()
+  def render(report, detail, opts \\ [], view \\ :both) do
     chart? = Keyword.get(opts, :chart, true)
     categories = merge_cosine_categories(report.categories)
-    worst_blocks = Map.get(report, :worst_blocks_by_category, %{})
 
     [
       pr_summary_section(Map.get(report, :pr_summary)),
@@ -24,13 +22,16 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       if(chart?, do: mermaid_chart(categories), else: []),
       progress_bars(categories),
       top_issues_section(Map.get(report, :top_issues, []), detail),
-      blocks_section(Map.get(report, :top_blocks, [])),
-      category_sections(categories, detail, worst_blocks),
+      category_sections(categories, detail),
+      actions_section(report, view),
       footer()
     ]
     |> List.flatten()
     |> Enum.join("\n")
   end
+
+  defp actions_section(_report, :metrics), do: []
+  defp actions_section(report, _view), do: ["", AgentActions.render(report)]
 
   @doc """
   Renders Part 1: header, summary table, PR summary, delta, mermaid chart, progress bars.
@@ -61,31 +62,17 @@ defmodule CodeQA.HealthReport.Formatter.Github do
   def render_part_2(report, opts \\ []) do
     detail = Keyword.get(opts, :detail, :default)
     display_categories = merge_cosine_categories(report.categories)
-    worst_blocks = Map.get(report, :worst_blocks_by_category, %{})
 
     [
       top_issues_section(Map.get(report, :top_issues, []), detail),
-      category_sections(display_categories, detail, worst_blocks),
+      category_sections(display_categories, detail),
       sentinel(2)
     ]
     |> List.flatten()
     |> Enum.join("\n")
   end
 
-  @doc """
-  Renders Part 3: blocks section (top 10 blocks with code).
-  Returns a list with a single part since blocks are now limited to top 10.
-  """
-  @spec render_parts_3(map(), keyword()) :: [String.t()]
-  def render_parts_3(report, _opts \\ []) do
-    top_blocks = Map.get(report, :top_blocks, [])
-    blocks_content = blocks_section(top_blocks) |> List.flatten() |> Enum.join("\n")
-    [blocks_content <> "\n\n" <> sentinel_str(3)]
-  end
-
-  defp sentinel(n), do: [sentinel_str(n)]
-
-  defp sentinel_str(n), do: "<!-- codeqa-health-report-#{n} -->"
+  defp sentinel(n), do: ["<!-- codeqa-health-report-#{n} -->"]
 
   defp merge_cosine_categories(categories) do
     {cosine, threshold} = categories |> Enum.split_with(&(&1.type == :cosine))
@@ -189,17 +176,17 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     String.duplicate(@filled, filled) <> String.duplicate(@empty, empty)
   end
 
-  defp category_sections(_categories, :summary, _worst_blocks), do: []
+  defp category_sections(_categories, :summary), do: []
 
-  defp category_sections(categories, detail, worst_blocks),
-    do: categories |> Enum.flat_map(&render_category(&1, detail, worst_blocks))
+  defp category_sections(categories, detail),
+    do: categories |> Enum.flat_map(&render_category(&1, detail))
 
-  defp render_category(%{type: :cosine_group} = group, detail, worst_blocks) do
+  defp render_category(%{type: :cosine_group} = group, detail) do
     emoji = grade_emoji(group.grade)
     summary_line = "#{emoji} #{group.name} — #{group.grade} (#{group.score}/100)"
 
     inner =
-      cosine_group_content(group, detail, worst_blocks)
+      cosine_group_content(group, detail)
       |> List.flatten()
       |> Enum.join("\n")
 
@@ -214,12 +201,12 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     ]
   end
 
-  defp render_category(%{type: :cosine} = cat, detail, worst_blocks) do
+  defp render_category(%{type: :cosine} = cat, detail) do
     emoji = grade_emoji(cat.grade)
     summary_line = "#{emoji} #{cat.name} — #{cat.grade} (#{cat.score}/100)"
 
     inner =
-      cosine_section_content(cat, detail, worst_blocks)
+      cosine_section_content(cat, detail)
       |> List.flatten()
       |> Enum.join("\n")
 
@@ -234,7 +221,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     ]
   end
 
-  defp render_category(cat, detail, _worst_blocks) do
+  defp render_category(cat, detail) do
     emoji = grade_emoji(cat.grade)
     summary_line = "#{emoji} #{cat.name} — #{cat.grade} (#{cat.score}/100)"
 
@@ -254,7 +241,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     ]
   end
 
-  defp cosine_group_content(group, detail, worst_blocks) do
+  defp cosine_group_content(group, detail) do
     rows =
       group.categories
       |> Enum.map(fn cat ->
@@ -274,7 +261,7 @@ defmodule CodeQA.HealthReport.Formatter.Github do
         emoji = grade_emoji(cat.grade)
 
         inner =
-          cosine_section_content(cat, detail, worst_blocks)
+          cosine_section_content(cat, detail)
           |> List.flatten()
           |> Enum.join("\n")
 
@@ -292,51 +279,20 @@ defmodule CodeQA.HealthReport.Formatter.Github do
     summary_table ++ [""] ++ sub_sections
   end
 
-  defp cosine_section_content(cat, _detail, worst_blocks) do
+  defp cosine_section_content(cat, _detail) do
     n = length(cat.behaviors)
-    category_key = to_string(cat.key)
 
     behaviors_rows =
       cat.behaviors
       |> Enum.map(&"| #{&1.behavior} | #{format_num(&1.cosine)} | #{&1.score} | #{&1.grade} |")
 
-    behaviors_table = [
+    [
       "> Cosine similarity scores for #{n} behaviors.",
       "",
       "| Behavior | Cosine | Score | Grade |",
       "|----------|--------|-------|-------|"
       | behaviors_rows
-    ]
-
-    worst_block_section =
-      case Map.get(worst_blocks, category_key) do
-        nil -> []
-        block -> render_worst_block(block)
-      end
-
-    behaviors_table ++ [""] ++ worst_block_section
-  end
-
-  defp render_worst_block(block) do
-    line_count = (block.end_line || block.start_line) - block.start_line + 1
-    location = "#{block.path}:#{block.start_line}-#{block.end_line}"
-
-    if line_count >= 1 and line_count <= 15 and block.source do
-      lang = block.language || ""
-
-      [
-        "> **Worst offender** (`#{location}`):",
-        "> ```#{lang}",
-        block.source |> String.split("\n") |> Enum.map_join("\n", &"> #{&1}"),
-        "> ```",
-        ""
-      ]
-    else
-      [
-        "> **Worst offender**: `#{location}` (#{line_count} lines)",
-        ""
-      ]
-    end
+    ] ++ [""]
   end
 
   defp section_content(cat, _detail) do
@@ -455,168 +411,4 @@ defmodule CodeQA.HealthReport.Formatter.Github do
       []
     end
   end
-
-  defp blocks_section([]), do: ["> 🟢 **No block-level issues detected**", ""]
-
-  defp blocks_section(top_blocks) do
-    severity_counts = count_severities(top_blocks)
-    worst = worst_severity(severity_counts)
-    {icon, verdict} = verdict_text(worst, severity_counts)
-
-    {actionable, medium_blocks} =
-      top_blocks
-      |> Enum.split_with(fn b ->
-        top = List.first(b.potentials)
-        top && top.severity in [:critical, :high]
-      end)
-
-    verdict_box = [
-      "> ### #{icon} #{verdict}",
-      "> #{severity_summary(severity_counts)}",
-      ""
-    ]
-
-    action_table =
-      if actionable != [] do
-        rows =
-          actionable
-          |> Enum.map(fn block ->
-            top = List.first(block.potentials)
-            sev_icon = severity_icon(top.severity)
-            label = BehaviorLabels.label(top.category, top.behavior)
-            location = "`#{block.path}:#{block.start_line}-#{block.end_line || block.start_line}`"
-            action = BehaviorLabels.action(top.category, top.behavior)
-            "| #{sev_icon} #{label} | #{location} | #{action} |"
-          end)
-
-        [
-          "| What | Where | Action |",
-          "|------|-------|--------|"
-          | rows
-        ] ++ [""]
-      else
-        []
-      end
-
-    actionable_details = actionable |> Enum.flat_map(&format_block_card/1)
-
-    medium_section =
-      if medium_blocks != [] do
-        n = length(medium_blocks)
-        word = if n == 1, do: "block", else: "blocks"
-        inner = medium_blocks |> Enum.flat_map(&format_block_card/1) |> Enum.join("\n")
-
-        [
-          "<details>",
-          "<summary>#{n} medium-severity #{word} (expand)</summary>",
-          "",
-          inner,
-          "",
-          "</details>",
-          ""
-        ]
-      else
-        []
-      end
-
-    verdict_box ++ action_table ++ actionable_details ++ medium_section
-  end
-
-  defp count_severities(blocks), do: count_severities_shared(blocks)
-
-  defp worst_severity(counts), do: worst_severity_shared(counts)
-
-  defp verdict_text(:critical, counts) do
-    n = Map.get(counts, :critical, 0)
-    {"🔴", "#{n} critical #{pl(n, "block")} — review required before merge"}
-  end
-
-  defp verdict_text(:high, counts) do
-    n = Map.get(counts, :high, 0) + Map.get(counts, :critical, 0)
-    {"🟠", "#{n} #{pl(n, "block")} need attention before merge"}
-  end
-
-  defp verdict_text(:medium, counts) do
-    n = Map.get(counts, :medium, 0)
-    {"🟡", "#{n} #{pl(n, "block")} with minor issues (safe to merge)"}
-  end
-
-  defp verdict_text(:none, _), do: {"🟢", "No block-level issues detected"}
-
-  defp pl(1, word), do: word
-  defp pl(_, word), do: word <> "s"
-
-  defp severity_summary(counts) do
-    [:critical, :high, :medium]
-    |> Enum.map(fn sev -> {sev, Map.get(counts, sev, 0)} end)
-    |> Enum.reject(fn {_, n} -> n == 0 end)
-    |> Enum.map_join(" · ", fn {sev, n} -> "**#{n} #{sev}**" end)
-  end
-
-  defp format_block_card(block) do
-    end_line = block.end_line || block.start_line
-    top_potential = List.first(block.potentials)
-    icon = severity_icon(top_potential.severity)
-    label = BehaviorLabels.label(top_potential.category, top_potential.behavior)
-
-    summary_line = "#{icon} #{block.path}:#{block.start_line}-#{end_line} — #{label}"
-
-    issues = format_block_issues(block.potentials)
-    code_block = format_code_block(block)
-
-    [
-      "<details>",
-      "<summary>#{summary_line}</summary>",
-      "",
-      "**Issues:**",
-      ""
-      | issues
-    ] ++ ["", code_block, "", "</details>", ""]
-  end
-
-  defp format_block_issues(potentials) do
-    potentials
-    |> Enum.flat_map(fn p ->
-      icon = severity_icon(p.severity)
-      label = String.upcase(to_string(p.severity))
-      delta_str = format_num(p.cosine_delta)
-      line = "- #{icon} **#{label}** `#{p.category}/#{p.behavior}` (Δ #{delta_str})"
-      fix = if p.fix_hint, do: ["  > #{p.fix_hint}"], else: []
-      [line | fix]
-    end)
-  end
-
-  defp format_code_block(%{source: nil}), do: "_Source code not available_"
-
-  defp format_code_block(%{language: lang, source: source, start_line: start_line}) do
-    lang_hint = code_fence_lang(lang)
-    # Add line number comments for context
-    lines = String.split(source, "\n")
-
-    numbered_lines =
-      lines
-      |> Enum.with_index(start_line)
-      |> Enum.map_join("\n", fn {line, num} ->
-        "#{String.pad_leading(to_string(num), 4)} │ #{line}"
-      end)
-
-    "```#{lang_hint}\n#{numbered_lines}\n```"
-  end
-
-  defp code_fence_lang("elixir"), do: "elixir"
-  defp code_fence_lang("ruby"), do: "ruby"
-  defp code_fence_lang("javascript"), do: "javascript"
-  defp code_fence_lang("typescript"), do: "typescript"
-  defp code_fence_lang("python"), do: "python"
-  defp code_fence_lang("swift"), do: "swift"
-  defp code_fence_lang("kotlin"), do: "kotlin"
-  defp code_fence_lang("java"), do: "java"
-  defp code_fence_lang("go"), do: "go"
-  defp code_fence_lang("rust"), do: "rust"
-  defp code_fence_lang(_), do: ""
-
-  defp severity_icon(:critical), do: "🔴"
-  defp severity_icon(:high), do: "🟠"
-  defp severity_icon(:medium), do: "🟡"
-  defp severity_icon(_), do: "⚪"
 end

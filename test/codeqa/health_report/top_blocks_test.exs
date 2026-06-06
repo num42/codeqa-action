@@ -199,6 +199,31 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
       [block] = TopBlocks.build(make_results([node]), [], %{})
       assert hd(block.potentials).fix_hint == nil
     end
+
+    test "substitutes {{line_count}} and {{type}} from the block" do
+      # function_design/cyclomatic_complexity_under_10 has a templated _fix_hint
+      node = %{
+        "start_line" => 5,
+        "end_line" => 22,
+        "type" => "function",
+        "token_count" => 40,
+        "refactoring_potentials" => [
+          %{
+            "category" => "function_design",
+            "behavior" => "cyclomatic_complexity_under_10",
+            "cosine_delta" => 0.60
+          }
+        ],
+        "children" => []
+      }
+
+      [block] = TopBlocks.build(make_results([node]), [], %{})
+      hint = hd(block.potentials).fix_hint
+
+      assert hint =~ "18-line"
+      assert hint =~ "function"
+      refute hint =~ "{{"
+    end
   end
 
   describe "source code extraction" do

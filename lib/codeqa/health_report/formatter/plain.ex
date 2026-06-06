@@ -1,26 +1,30 @@
 defmodule CodeQA.HealthReport.Formatter.Plain do
   @moduledoc "Renders health report as plain markdown."
 
-  alias CodeQA.HealthReport.BehaviorLabels
+  alias CodeQA.HealthReport.Formatter.AgentActions
 
-  import CodeQA.HealthReport.Formatter.Shared,
-    only: [count_severities_shared: 1, pr_summary_section: 1, worst_severity_shared: 1]
+  import CodeQA.HealthReport.Formatter.Shared, only: [pr_summary_section: 1]
 
-  @spec render(map(), atom()) :: String.t()
-  def render(report, detail),
-    do:
-      [
-        pr_summary_section(Map.get(report, :pr_summary)),
-        header(report),
-        cosine_legend(),
-        delta_section(Map.get(report, :codebase_delta)),
-        overall_table(report),
-        top_issues_section(Map.get(report, :top_issues, []), detail),
-        blocks_section(Map.get(report, :top_blocks, [])),
-        category_sections(report.categories, detail)
-      ]
-      |> List.flatten()
-      |> Enum.join("\n")
+  @spec render(map(), atom(), atom()) :: String.t()
+  def render(report, detail, view \\ :both) do
+    [metrics_sections(report, detail), actions_section(report, view)]
+    |> List.flatten()
+    |> Enum.join("\n")
+  end
+
+  defp metrics_sections(report, detail),
+    do: [
+      pr_summary_section(Map.get(report, :pr_summary)),
+      header(report),
+      cosine_legend(),
+      delta_section(Map.get(report, :codebase_delta)),
+      overall_table(report),
+      top_issues_section(Map.get(report, :top_issues, []), detail),
+      category_sections(report.categories, detail)
+    ]
+
+  defp actions_section(_report, :metrics), do: []
+  defp actions_section(report, _view), do: ["", AgentActions.render(report)]
 
   defp header(report),
     do: [
@@ -193,112 +197,4 @@ defmodule CodeQA.HealthReport.Formatter.Plain do
       []
     end
   end
-
-  defp blocks_section([]), do: ["## Code Blocks: 🟢 No block-level issues detected", ""]
-
-  defp blocks_section(top_blocks) do
-    severity_counts = count_severities(top_blocks)
-    worst = worst_severity(severity_counts)
-    {icon, verdict} = verdict_text(worst, severity_counts)
-
-    {actionable, medium_blocks} =
-      top_blocks
-      |> Enum.split_with(fn b ->
-        top = List.first(b.potentials)
-        top && top.severity in [:critical, :high]
-      end)
-
-    header = ["## Code Blocks: #{icon} #{verdict}", ""]
-
-    action_table =
-      if actionable != [] do
-        rows =
-          actionable
-          |> Enum.map(fn block ->
-            top = List.first(block.potentials)
-            label = BehaviorLabels.label(top.category, top.behavior)
-            location = "#{block.path}:#{block.start_line}-#{block.end_line || block.start_line}"
-            action = BehaviorLabels.action(top.category, top.behavior)
-            "| #{label} | #{location} | #{action} |"
-          end)
-
-        [
-          "| What | Where | Action |",
-          "|------|-------|--------|"
-          | rows
-        ] ++ [""]
-      else
-        []
-      end
-
-    block_details = (actionable ++ medium_blocks) |> Enum.flat_map(&format_block/1)
-
-    header ++ action_table ++ block_details
-  end
-
-  defp count_severities(blocks), do: count_severities_shared(blocks)
-
-  defp worst_severity(counts), do: worst_severity_shared(counts)
-
-  defp verdict_text(:critical, counts) do
-    n = Map.get(counts, :critical, 0)
-    {"🔴", "#{n} critical #{pluralize(n, "block")} — review required before merge"}
-  end
-
-  defp verdict_text(:high, counts) do
-    n = Map.get(counts, :high, 0) + Map.get(counts, :critical, 0)
-    {"🟠", "#{n} #{pluralize(n, "block")} need attention before merge"}
-  end
-
-  defp verdict_text(:medium, counts) do
-    n = Map.get(counts, :medium, 0)
-    {"🟡", "#{n} #{pluralize(n, "block")} with minor issues (safe to merge)"}
-  end
-
-  defp verdict_text(:none, _), do: {"🟢", "No block-level issues detected"}
-
-  defp pluralize(1, word), do: word
-  defp pluralize(_, word), do: word <> "s"
-
-  defp format_block(block) do
-    end_line = block.end_line || block.start_line
-    status_str = if block.status, do: " [#{block.status}]", else: ""
-
-    header =
-      "### #{block.path}:#{block.start_line}-#{end_line}#{status_str}"
-
-    subheader =
-      "#{block.type} · #{block.token_count} tokens"
-
-    potential_lines = block.potentials |> Enum.flat_map(&format_potential/1)
-    code_lines = format_code_block(block)
-    [header, subheader, "" | potential_lines] ++ ["" | code_lines] ++ [""]
-  end
-
-  defp format_code_block(%{source: nil}), do: ["_Source code not available_"]
-
-  defp format_code_block(%{source: source, start_line: start_line}) do
-    lines = String.split(source, "\n")
-
-    numbered_lines =
-      lines
-      |> Enum.with_index(start_line)
-      |> Enum.map(fn {line, num} -> "  #{String.pad_leading(to_string(num), 4)} │ #{line}" end)
-
-    ["```" | numbered_lines] ++ ["```"]
-  end
-
-  defp format_potential(p) do
-    icon = severity_icon(p.severity)
-    delta_str = format_num(p.cosine_delta)
-    label = String.upcase(to_string(p.severity))
-    line = "  #{icon} #{label}  #{p.category} / #{p.behavior}  (Δ #{delta_str})"
-    fix = if p.fix_hint, do: ["    → #{p.fix_hint}"], else: []
-    [line | fix]
-  end
-
-  defp severity_icon(:critical), do: "🔴"
-  defp severity_icon(:high), do: "🟠"
-  defp severity_icon(:medium), do: "🟡"
-  defp severity_icon(_), do: "⚪"
 end

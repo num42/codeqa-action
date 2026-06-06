@@ -128,4 +128,44 @@ defmodule CodeQA.HealthReportTest do
       refute "lib/bar.ex" in paths
     end
   end
+
+  describe "generate/2 view scoping" do
+    @tag :slow
+    test ":metrics skips block work — no top_blocks, full metric keys" do
+      files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
+      results = Analyzer.analyze_codebase(files)
+
+      report = HealthReport.generate(results, view: :metrics)
+
+      assert Map.has_key?(report, :categories)
+      assert Map.has_key?(report, :overall_score)
+      assert Map.has_key?(report, :top_issues)
+      refute Map.has_key?(report, :top_blocks)
+    end
+
+    @tag :slow
+    test ":actions skips metric grading — top_blocks present, no categories" do
+      files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
+      results = Analyzer.analyze_codebase(files)
+      results = results |> BlockImpactAnalyzer.analyze(files)
+
+      report = HealthReport.generate(results, view: :actions)
+
+      assert is_list(report.top_blocks)
+      refute Map.has_key?(report, :categories)
+      refute Map.has_key?(report, :overall_score)
+    end
+
+    @tag :slow
+    test ":actions without base_results leaves delta and pr_summary nil" do
+      files = %{"lib/foo.ex" => "defmodule Foo do\n  def bar, do: :ok\nend\n"}
+      results = Analyzer.analyze_codebase(files)
+      results = results |> BlockImpactAnalyzer.analyze(files)
+
+      report = HealthReport.generate(results, view: :actions)
+
+      assert report.codebase_delta == nil
+      assert report.pr_summary == nil
+    end
+  end
 end

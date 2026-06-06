@@ -1,5 +1,6 @@
 docstring_is_nonempty:
   _doc: "Docstrings must contain meaningful content, not just a placeholder or empty string."
+  _fix_hint: "Fill in the empty docstring with a real description of what this does."
   _languages: [elixir]
   _log_baseline: 30.1436
   branching:
@@ -121,6 +122,7 @@ docstring_is_nonempty:
 
 file_has_license_header:
   _doc: "Source files should begin with a license or copyright header."
+  _fix_hint: "Add the project's license header to the top of the file."
   _languages: [elixir]
   _log_baseline: 9.6516
   branching:
@@ -222,6 +224,7 @@ file_has_license_header:
 
 file_has_module_docstring:
   _doc: "Files should have a module-level docstring explaining purpose and usage."
+  _fix_hint: "Add a @moduledoc describing this module's responsibility."
   _languages: [elixir]
   _log_baseline: 24.7485
   branching:
@@ -332,6 +335,7 @@ file_has_module_docstring:
 
 file_has_no_commented_out_code:
   _doc: "Files should not contain commented-out code blocks left from development."
+  _fix_hint: "Delete the commented-out code; rely on version control for history."
   _languages: [elixir]
   _log_baseline: -8.5693
   branching:
@@ -448,6 +452,7 @@ file_has_no_commented_out_code:
 
 function_has_docstring:
   _doc: "Public functions should have a docstring describing behaviour, params, and return value."
+  _fix_hint: "Add a @doc explaining this function's contract (args, return, side effects)."
   _languages: [elixir]
   _log_baseline: 44.4131
   branching:
@@ -576,6 +581,7 @@ function_has_docstring:
 
 function_todo_comment_in_body:
   _doc: "Functions should not contain TODO/FIXME comments indicating unfinished work."
+  _fix_hint: "Resolve the TODO in the body or move it to a tracked issue."
   _languages: [elixir]
   _log_baseline: 8.1611
   branching:
