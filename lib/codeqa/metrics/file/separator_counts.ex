@@ -25,14 +25,13 @@ defmodule CodeQA.Metrics.File.SeparatorCounts do
       "dot_count" => count(content, ".")
     }
 
-  @impl true
-  def analyze_loo(baseline, block_content),
-    do: %{
-      "underscore_count" => baseline["underscore_count"] - count(block_content, "_"),
-      "hyphen_count" => baseline["hyphen_count"] - count(block_content, "-"),
-      "slash_count" => baseline["slash_count"] - count(block_content, "/"),
-      "dot_count" => baseline["dot_count"] - count(block_content, ".")
-    }
+  # No `analyze_loo/2`: the subtractive path is incorrect here. The block-impact
+  # analyzer subtracts a block whose content is rebuilt from normalized
+  # structural tokens (which drop inter-token whitespace), while the baseline is
+  # computed from the original file. Counting separators in that whitespace-
+  # collapsed block string diverges from re-analyzing the reconstructed file
+  # (empirically 0/50 matches). Falling back to a full re-analyze keeps the LOO
+  # delta consistent with every other metric.
 
   defp count(content, char),
     do:

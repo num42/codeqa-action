@@ -85,6 +85,42 @@ defmodule CodeQA.BlockImpactAnalyzerTest do
       |> Enum.each(&assert length(&1["refactoring_potentials"]) <= 1)
     end
 
+    test "node_paths scopes per-node work without changing scoped files' nodes" do
+      files = %{
+        "lib/changed.ex" => @fixture_content,
+        "lib/untouched.ex" => @fixture_content
+      }
+
+      pipeline_result = Analyzer.analyze_codebase(files)
+
+      full = BlockImpactAnalyzer.analyze(pipeline_result, files)
+      scoped = BlockImpactAnalyzer.analyze(pipeline_result, files, node_paths: ["lib/changed.ex"])
+
+      # The scoped file's nodes are bit-identical to the unscoped run: scoping
+      # only decides WHICH files compute nodes, never HOW.
+      assert scoped["files"]["lib/changed.ex"]["nodes"] ==
+               full["files"]["lib/changed.ex"]["nodes"]
+
+      # The out-of-scope file gets no nodes (its expensive LOO is skipped)...
+      assert scoped["files"]["lib/untouched.ex"]["nodes"] == []
+      # ...but it still carries its metrics, so the codebase aggregate is intact.
+      assert scoped["files"]["lib/untouched.ex"]["metrics"] ==
+               full["files"]["lib/untouched.ex"]["metrics"]
+
+      # The codebase scope (aggregate) is identical with and without scoping.
+      assert scoped["codebase"] == full["codebase"]
+    end
+
+    test "node_paths: nil computes nodes for all files (standalone behavior)" do
+      files = %{"lib/a.ex" => @fixture_content, "lib/b.ex" => @fixture_content}
+      pipeline_result = Analyzer.analyze_codebase(files)
+
+      result = BlockImpactAnalyzer.analyze(pipeline_result, files, node_paths: nil)
+
+      assert result["files"]["lib/a.ex"]["nodes"] != []
+      assert result["files"]["lib/b.ex"]["nodes"] != []
+    end
+
     test "node['type'] reflects classified block kind, not the always-:code default" do
       content = """
       defmodule Foo do

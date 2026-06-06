@@ -70,6 +70,12 @@ defmodule CodeQA.BlockImpactAnalyzer do
   def analyze(pipeline_result, files_map, opts \\ []) do
     nodes_top = Keyword.get(opts, :nodes_top, 3)
     workers = Keyword.get(opts, :workers, System.schedulers_online())
+    # When set, per-node leave-one-out is computed only for these paths (the PR's
+    # changed files). The codebase aggregate and baseline cosines below are still
+    # built from every file, so the codebase scope and overall grade are
+    # unaffected — only the per-file node computation, whose output is read for
+    # changed files alone, is skipped for the rest. `nil` means all files.
+    node_paths = Keyword.get(opts, :node_paths)
 
     t0 = now()
 
@@ -109,12 +115,13 @@ defmodule CodeQA.BlockImpactAnalyzer do
     )
 
     file_results = pipeline_result["files"]
+    node_path_set = node_paths && MapSet.new(node_paths)
 
     updated_files =
       file_results
       |> Task.async_stream(
         fn {path, file_data} ->
-          content = Map.get(files_map, path, "")
+          content = node_content(path, files_map, node_path_set)
           baseline_file_metrics = Map.get(file_data, "metrics", %{})
 
           {nodes, file_measurements} =
@@ -149,6 +156,16 @@ defmodule CodeQA.BlockImpactAnalyzer do
     )
 
     Map.put(pipeline_result, "files", updated_files)
+  end
+
+  # Returns a file's content for node computation. With no scope (`nil`), every
+  # file is in scope. With a scope set, files outside it get "" — which makes
+  # compute_nodes_timed short-circuit to no nodes, skipping the expensive
+  # per-node leave-one-out while leaving the codebase aggregate untouched.
+  defp node_content(path, files_map, nil), do: Map.get(files_map, path, "")
+
+  defp node_content(path, files_map, set) do
+    if MapSet.member?(set, path), do: Map.get(files_map, path, ""), else: ""
   end
 
   defp compute_nodes_timed(

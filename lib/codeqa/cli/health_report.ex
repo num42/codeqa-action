@@ -77,9 +77,17 @@ defmodule CodeQA.CLI.HealthReport do
 
     telemetry_pid = if opts[:telemetry], do: attach_telemetry()
 
+    # In a PR context the report only shows blocks from changed files, so per-node
+    # leave-one-out is computed only for those. The codebase aggregate and
+    # baseline cosines are still built from every file. `nil` (no base ref) means
+    # all files get nodes, preserving standalone-run behavior.
+    {changed_files, diff_line_ranges} = collect_diff(path, base_ref, head_ref)
+    node_paths = if changed_files == [], do: nil, else: Enum.map(changed_files, & &1.path)
+
     analyze_opts =
       Options.build_analyze_opts(opts) ++
-        Config.near_duplicate_blocks_opts() ++ [compute_nodes: true]
+        Config.near_duplicate_blocks_opts() ++
+        [compute_nodes: true, node_paths: node_paths]
 
     start_time = System.monotonic_time(:millisecond)
     results = Analyzer.analyze_codebase(files, analyze_opts)
@@ -101,8 +109,7 @@ defmodule CodeQA.CLI.HealthReport do
         "total_bytes" => total_bytes
       })
 
-    {base_results, changed_files, diff_line_ranges} =
-      collect_base_snapshot(path, base_ref, head_ref, analyze_opts)
+    base_results = collect_base_snapshot(path, base_ref, analyze_opts)
 
     detail = parse_detail(opts[:detail])
     format = parse_format(opts[:format])
@@ -134,18 +141,25 @@ defmodule CodeQA.CLI.HealthReport do
     output
   end
 
-  defp collect_base_snapshot(_path, nil, _head_ref, _analyze_opts), do: {nil, [], %{}}
+  # Resolves the changed files and per-file diff line ranges once, up front, so
+  # the head analysis can scope its per-node work to the changed files. Returns
+  # `{[], %{}}` outside a PR context (no base ref) — meaning "no scoping".
+  defp collect_diff(_path, nil, _head_ref), do: {[], %{}}
 
-  defp collect_base_snapshot(path, base_ref, head_ref, analyze_opts) do
-    IO.puts(:stderr, "Collecting base snapshot at #{base_ref}...")
-    base_files = Git.collect_files_at_ref(path, base_ref)
+  defp collect_diff(path, base_ref, head_ref) do
     changed = Git.changed_files(path, base_ref, head_ref)
     diff_ranges = collect_diff_ranges(path, base_ref, head_ref)
+    {changed, diff_ranges}
+  end
+
+  defp collect_base_snapshot(_path, nil, _analyze_opts), do: nil
+
+  defp collect_base_snapshot(path, base_ref, analyze_opts) do
+    IO.puts(:stderr, "Collecting base snapshot at #{base_ref}...")
+    base_files = Git.collect_files_at_ref(path, base_ref)
 
     IO.puts(:stderr, "Analyzing base snapshot (#{map_size(base_files)} files)...")
-    base_res = Analyzer.analyze_codebase(base_files, analyze_opts)
-
-    {base_res, changed, diff_ranges}
+    Analyzer.analyze_codebase(base_files, analyze_opts)
   end
 
   defp collect_diff_ranges(path, base_ref, head_ref) do
