@@ -839,8 +839,8 @@ parameter_count_under_4:
 
 uses_ternary_expression:
   _doc: "Simple conditional assignments should use inline expressions rather than full if-blocks."
-  _fix_hint: "Replace the ternary with pattern matching or an if/else expression."
   _excludes_languages: [elixir]
+  _fix_hint: "Replace the ternary with pattern matching or an if/else expression."
   _log_baseline: 2.1802
   branching:
     mean_branch_count: -0.6221
