@@ -35,8 +35,10 @@ defmodule CodeQA.HealthReport.BehaviorLabelsTest do
       assert is_binary(BehaviorLabels.action("naming_conventions", "filename_matches_module"))
     end
 
-    test "returns generic action for completely unknown behavior" do
-      assert BehaviorLabels.action("unknown", "unknown") == "Review this code block"
+    test "falls back to a behavior-named action for a completely unknown behavior" do
+      action = BehaviorLabels.action("unknown", "needs_descriptive_name")
+      assert action =~ "Needs Descriptive Name"
+      refute action == "Review this code block"
     end
   end
 end

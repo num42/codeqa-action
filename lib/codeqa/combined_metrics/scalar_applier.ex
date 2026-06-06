@@ -196,10 +196,11 @@ defmodule CodeQA.CombinedMetrics.ScalarApplier do
     end
   end
 
-  # Carry forward hand-authored meta fields (language/block-type scoping) that a
-  # scalar relearn would otherwise drop. `_log_baseline` and `_doc` are excluded
-  # because apply_metrics rewrites them explicitly.
-  @preserved_meta ~w(_languages _excludes_languages _excludes_block_types)
+  # Carry forward hand-authored meta fields (language/block-type scoping,
+  # remediation hints) that a scalar relearn would otherwise drop.
+  # `_log_baseline` and `_doc` are excluded because apply_metrics rewrites them
+  # explicitly.
+  @preserved_meta ~w(_languages _excludes_languages _excludes_block_types _fix_hint)
   defp merge_meta_fields(groups, current_groups) do
     @preserved_meta
     |> Enum.reduce(groups, fn key, acc ->

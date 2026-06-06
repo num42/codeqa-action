@@ -1,5 +1,6 @@
 has_consistent_indentation:
   _doc: "Files should use a single, consistent indentation style with no mixed tabs and spaces."
+  _fix_hint: "Normalize indentation in this {{type}} — no mixed tabs and spaces."
   _languages: [elixir]
   _log_baseline: 19.8257
   branching:
@@ -131,6 +132,7 @@ has_consistent_indentation:
 
 line_count_under_300:
   _doc: "Files should be under 300 lines; longer files typically violate single responsibility."
+  _fix_hint: "This file is too long — split it into focused modules."
   _languages: [elixir]
   _log_baseline: -49.2976
   branching:
@@ -258,6 +260,7 @@ line_count_under_300:
 
 line_length_under_120:
   _doc: "Lines should be under 120 characters to avoid horizontal scrolling."
+  _fix_hint: "Wrap the over-long lines in this {{type}} to stay under the line-length limit."
   _languages: [elixir]
   _log_baseline: -17.3646
   branching:
@@ -379,6 +382,7 @@ line_length_under_120:
 
 no_magic_numbers:
   _doc: "Numeric literals should be extracted to named constants rather than used inline."
+  _fix_hint: "Extract the magic numbers in this {{type}} into named constants."
   _languages: [elixir]
   _log_baseline: 114.2688
   branching:
@@ -494,6 +498,7 @@ no_magic_numbers:
 
 single_responsibility:
   _doc: "Each file should have one primary concern — low complexity spread across few, focused functions."
+  _fix_hint: "This {{type}} ({{line_count}} lines) does too much — split it along its responsibilities."
   _languages: [elixir]
   _log_baseline: -38.7512
   branching:
@@ -625,6 +630,7 @@ single_responsibility:
 
 uses_standard_indentation_width:
   _doc: "Indentation should use consistent multiples of 2 or 4 spaces throughout the file."
+  _fix_hint: "Use the project's standard indentation width in this {{type}}."
   _languages: [elixir]
   _log_baseline: -8.4038
   compression:

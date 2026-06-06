@@ -1,5 +1,6 @@
 reasonable_test_to_code_ratio:
   _doc: "There should be an adequate number of test cases relative to the code being tested."
+  _fix_hint: "Add tests for this module to reach a reasonable test-to-code ratio."
   _languages: [elixir]
   _log_baseline: 13.2191
   branching:
@@ -125,6 +126,7 @@ reasonable_test_to_code_ratio:
 
 test_has_assertion:
   _doc: "Every test body must contain at least one assertion — a test without assertions proves nothing."
+  _fix_hint: "Add an assertion — this test currently verifies nothing."
   _languages: [elixir]
   _log_baseline: -10.1327
   branching:
@@ -242,6 +244,7 @@ test_has_assertion:
 
 test_name_describes_behavior:
   _doc: "Test names should describe the expected behaviour, not just the method under test."
+  _fix_hint: "Rename this test to describe the behavior it verifies, not the method called."
   _languages: [elixir]
   _log_baseline: 60.4069
   branching:
@@ -348,6 +351,7 @@ test_name_describes_behavior:
 
 test_single_concept:
   _doc: "Each test should verify a single concept — tests covering multiple things are harder to diagnose when they fail."
+  _fix_hint: "Split this test so it exercises a single concept."
   _languages: [elixir]
   _log_baseline: 40.5455
   branching:

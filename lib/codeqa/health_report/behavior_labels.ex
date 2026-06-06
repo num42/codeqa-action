@@ -65,7 +65,7 @@ defmodule CodeQA.HealthReport.BehaviorLabels do
     |> Enum.find_value(fn {yaml_path, data} ->
       cat = yaml_path |> Path.basename() |> String.trim_trailing(".yml")
       if cat == category, do: get_in(data, [behavior, "_fix_hint"])
-    end) || "Review this code block"
+    end) || "Refactor this block to satisfy #{humanize(behavior)}"
   end
 
   defp humanize(behavior),

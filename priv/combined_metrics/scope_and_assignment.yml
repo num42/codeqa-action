@@ -1,5 +1,6 @@
 declared_close_to_use:
   _doc: "Variables should be declared near their first use, not hoisted to the top of the function."
+  _fix_hint: "Move this declaration closer to where it is first used."
   _excludes_block_types: [doc]
   _languages: [elixir, go, javascript, python, ruby]
   _log_baseline: -36.1172
@@ -116,6 +117,7 @@ declared_close_to_use:
 
 mutated_after_initial_assignment:
   _doc: "Variables should not be reassigned after their initial value — prefer introducing a new name."
+  _fix_hint: "Avoid reassigning after the initial binding — use a new binding or pipe the transformation."
   _languages: [elixir]
   _log_baseline: 6.0053
   branching:
@@ -234,6 +236,7 @@ mutated_after_initial_assignment:
 
 reassigned_multiple_times:
   _doc: "A variable reassigned many times is a sign the name is too generic or the function does too much."
+  _fix_hint: "This {{type}} reassigns the same binding repeatedly — restructure into a transformation chain."
   _languages: [elixir]
   _log_baseline: -7.2135
   branching:
@@ -360,6 +363,7 @@ reassigned_multiple_times:
 
 scope_is_minimal:
   _doc: "Variables should be scoped as narrowly as possible — not declared at a wider scope than needed."
+  _fix_hint: "Narrow this binding's scope to the block that actually uses it."
   _languages: [elixir]
   _log_baseline: -7.8917
   branching:
@@ -475,6 +479,7 @@ scope_is_minimal:
 
 shadowed_by_inner_scope:
   _doc: "Inner-scope names that shadow outer-scope names cause confusion about which value is in play."
+  _fix_hint: "Rename the inner binding so it no longer shadows the outer one."
   _languages: [elixir]
   _log_baseline: -32.8272
   branching:
@@ -587,6 +592,7 @@ shadowed_by_inner_scope:
 
 used_only_once:
   _doc: "A variable used only once is a candidate for inlining — it rarely adds clarity over a direct expression."
+  _fix_hint: "Inline this single-use binding unless the name aids readability."
   _languages: [elixir, go, javascript, python, ruby]
   _log_baseline: -38.0360
   branching:

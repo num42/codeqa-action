@@ -1,5 +1,6 @@
 consistent_casing_within_file:
   _doc: "A file should use one naming convention throughout — no mixing of camelCase and snake_case for the same kind of identifier."
+  _fix_hint: "Align identifier casing in this {{type}} with the rest of the file."
   _languages: [elixir]
   _log_baseline: -0.6528
   brevity:
@@ -64,6 +65,7 @@ consistent_casing_within_file:
 
 consistent_error_return_shape:
   _doc: "All functions in a module should return errors in the same shape — mixed `nil`, `false`, and `{:error, _}` returns are confusing."
+  _fix_hint: "Return errors in one shape everywhere (e.g. {:error, reason})."
   _languages: [elixir]
   _log_baseline: -2.8073
   branching:
@@ -182,6 +184,7 @@ consistent_error_return_shape:
 
 consistent_function_style:
   _doc: "A module should not mix one-liner and multi-clause function definitions for the same concern."
+  _fix_hint: "Match the surrounding function-definition style (def vs anonymous, single vs multi-clause)."
   _languages: [elixir]
   _log_baseline: 57.4562
   branching:
@@ -317,6 +320,7 @@ consistent_function_style:
 
 same_concept_same_name:
   _doc: "The same domain concept should use the same name throughout a file — mixing `user`, `usr`, and `u` for the same thing harms readability."
+  _fix_hint: "Use one name for this concept across the file instead of synonyms."
   _languages: [elixir]
   _log_baseline: -13.5397
   brevity:

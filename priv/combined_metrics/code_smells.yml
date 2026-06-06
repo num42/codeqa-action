@@ -1,5 +1,6 @@
 consistent_string_quote_style:
   _doc: "Files should use a single, consistent string quoting style throughout."
+  _fix_hint: "Use one quote style consistently for string literals in this {{type}}."
   _languages: [elixir]
   _log_baseline: -19.2276
   branching:
@@ -109,6 +110,7 @@ consistent_string_quote_style:
 
 no_dead_code_after_return:
   _doc: "There should be no unreachable statements after a return or early exit."
+  _fix_hint: "Remove the unreachable code after the return/raise in this {{type}}."
   _excludes_languages: [elixir]
   _log_baseline: -70.7283
   branching:
@@ -232,6 +234,7 @@ no_dead_code_after_return:
 
 no_debug_print_statements:
   _doc: "Debug output (`console.log`, `IO.inspect`, `fmt.Println`) must not be left in committed code."
+  _fix_hint: "Remove the debug print (IO.puts/IO.inspect/console.log) or replace it with a proper logger."
   _languages: [elixir, go, javascript, python, ruby]
   _log_baseline: -29.5797
   branching:
@@ -361,6 +364,7 @@ no_debug_print_statements:
 
 no_fixme_comments:
   _doc: "FIXME, XXX, and HACK comments indicate known problems that should be resolved before merging."
+  _fix_hint: "Resolve the FIXME and delete the comment, or convert it into a tracked issue."
   _languages: [elixir, go, javascript, python, ruby]
   _log_baseline: 12.0359
   branching:
@@ -493,6 +497,7 @@ no_fixme_comments:
 
 no_nested_ternary:
   _doc: "Nested conditional expressions (ternary-within-ternary) are harder to read than a plain if-else."
+  _fix_hint: "Flatten the nested ternary into pattern matching or an if/cond expression."
   _excludes_languages: [elixir]
   _log_baseline: 8.9473
   branching:
