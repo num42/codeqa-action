@@ -1,5 +1,6 @@
 boolean_assigned_from_comparison:
   _doc: "Boolean variables should be assigned directly from comparisons or predicate calls, not set via conditionals."
+  _fix_hint: "Assign the comparison result directly instead of via a redundant if/else."
   _languages: [elixir]
   _log_baseline: -6.7155
   branching:
@@ -142,6 +143,7 @@ boolean_assigned_from_comparison:
 
 hardcoded_url_or_path:
   _doc: "URLs, file paths, and host names should be configuration values, not inline string literals."
+  _fix_hint: "Move the hardcoded URL/path into configuration."
   _languages: [elixir]
   _log_baseline: 60.1101
   branching:
@@ -263,6 +265,7 @@ hardcoded_url_or_path:
 
 no_empty_string_initial:
   _doc: "Initialising a variable to an empty string and reassigning later signals missing structure."
+  _fix_hint: "Avoid the empty-string placeholder — initialize with a real value or nil."
   _languages: [elixir]
   _log_baseline: -4.9000
   branching:
@@ -397,6 +400,7 @@ no_empty_string_initial:
 
 no_implicit_null_initial:
   _doc: "Initialising a variable to `nil`/`null` and assigning it later in a branch signals missing structure."
+  _fix_hint: "Avoid the implicit nil initializer — give this a meaningful initial value."
   _languages: [elixir]
   _log_baseline: -12.9700
   branching:
@@ -536,6 +540,7 @@ no_implicit_null_initial:
 
 no_magic_value_assigned:
   _doc: "Literal strings and numbers assigned to variables should be named constants, not inline values."
+  _fix_hint: "Extract this magic value into a named constant."
   _languages: [elixir]
   _log_baseline: -9.2288
   branching:

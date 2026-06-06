@@ -194,10 +194,12 @@ defmodule CodeQA.HealthReport.TopBlocks do
   end
 
   defp enrich_block(node, cosine_lookup, fix_hints, baselines) do
+    block_vars = block_template_vars(node)
+
     potentials =
       node
       |> Map.get("refactoring_potentials", [])
-      |> Enum.map(&enrich_potential(&1, cosine_lookup, fix_hints, baselines))
+      |> Enum.map(&enrich_potential(&1, cosine_lookup, fix_hints, baselines, block_vars))
       |> Enum.reject(&is_nil/1)
       |> Enum.sort_by(& &1.cosine_delta, :desc)
 
@@ -210,7 +212,21 @@ defmodule CodeQA.HealthReport.TopBlocks do
     }
   end
 
-  defp enrich_potential(p, cosine_lookup, fix_hints, baselines) do
+  defp block_template_vars(node) do
+    start_line = node["start_line"] || 1
+    end_line = node["end_line"] || start_line
+
+    %{
+      "line_count" => end_line - start_line + 1,
+      "start_line" => start_line,
+      "end_line" => end_line,
+      "token_count" => node["token_count"] || 0,
+      "char_length" => node["char_length"] || 0,
+      "type" => node["type"] || "block"
+    }
+  end
+
+  defp enrich_potential(p, cosine_lookup, fix_hints, baselines, block_vars) do
     category = p["category"]
     behavior = p["behavior"]
     # Block-relative delta: how far this block stands above the file baseline for
@@ -225,14 +241,30 @@ defmodule CodeQA.HealthReport.TopBlocks do
     if severity == :filtered do
       nil
     else
+      vars = Map.put(block_vars, "severity", severity)
+      hint = fix_hints |> Map.get({category, behavior}) |> render_template(vars)
+
       %{
         behavior: behavior,
         category: category,
         cosine_delta: cosine_delta,
-        fix_hint: Map.get(fix_hints, {category, behavior}),
+        fix_hint: hint,
         severity: severity
       }
     end
+  end
+
+  # Substitutes {{var}} placeholders with block context. Unknown placeholders are
+  # left untouched so a typo stays visible rather than silently vanishing.
+  defp render_template(nil, _vars), do: nil
+
+  defp render_template(hint, vars) do
+    Regex.replace(~r/\{\{(\w+)\}\}/, hint, fn whole, key ->
+      case Map.fetch(vars, key) do
+        {:ok, value} -> to_string(value)
+        :error -> whole
+      end
+    end)
   end
 
   defp classify(ratio) when ratio > @severity_critical, do: :critical

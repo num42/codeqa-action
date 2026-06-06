@@ -88,66 +88,6 @@ defmodule CodeQA.HealthReport.FormatterTest do
     type: :cosine
   }
 
-  @enriched_cosine_category %{
-    behaviors: [
-      %{
-        behavior: "no_boolean_parameter",
-        cosine: -0.65,
-        grade: "D+",
-        score: 42,
-        worst_offenders: [
-          %{
-            cosine: -0.65,
-            file: "lib/codeqa/formatter.ex",
-            top_metrics: [
-              %{contribution: -4.10, metric: "branching.mean_depth"},
-              %{contribution: -3.22, metric: "halstead.effort"}
-            ],
-            top_nodes: [
-              %{"start_line" => 89, "type" => "block"},
-              %{"start_line" => 134, "type" => "block"}
-            ]
-          }
-        ]
-      }
-    ],
-    grade: "C",
-    impact: 1,
-    key: "function_design",
-    name: "Function Design",
-    score: 64,
-    type: :cosine
-  }
-
-  @enriched_threshold_category %{
-    grade: "F",
-    impact: 5,
-    key: :complexity,
-    metric_scores: [
-      %{good: :low, name: "difficulty", score: 32, source: "halstead", value: 39.0, weight: 0.35}
-    ],
-    name: "Complexity",
-    score: 32,
-    summary: "Critical",
-    type: :threshold,
-    worst_offenders: [
-      %{
-        bytes: 15_872,
-        grade: "F",
-        lines: 491,
-        metric_scores: [
-          %{good: :low, name: "difficulty", score: 0, source: "halstead", value: 99.0}
-        ],
-        path: "lib/foo.ex",
-        score: 32,
-        top_nodes: [
-          %{"start_line" => 201, "type" => "block"},
-          %{"start_line" => 312, "type" => "block"}
-        ]
-      }
-    ]
-  }
-
   @report_with_cosine %{
     @sample_report
     | categories: @sample_report.categories ++ [@cosine_category]
@@ -269,7 +209,7 @@ defmodule CodeQA.HealthReport.FormatterTest do
     end
   end
 
-  describe "plain formatter: block section" do
+  describe "plain formatter: agent-actions section (view :both)" do
     @block_potential %{
       behavior: "cyclomatic_complexity_under_10",
       category: "function_design",
@@ -294,52 +234,37 @@ defmodule CodeQA.HealthReport.FormatterTest do
 
     @sample_report_with_blocks Map.put(@sample_report, :top_blocks, @top_blocks)
 
-    test "renders block verdict header" do
+    test "appends the refactoring-tasks frontmatter and body" do
       result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
-      assert result =~ "review required"
-      assert result =~ "🔴"
+      assert result =~ "kind: refactoring-tasks"
+      assert result =~ "# Refactoring Tasks"
+      assert result =~ "lib/foo.ex:42-67"
     end
 
-    test "renders file path with status" do
+    test "renders severity, behavior and fix hint as a task" do
       result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
-      assert result =~ "lib/foo.ex"
-      assert result =~ "modified"
-    end
-
-    test "renders block location and type" do
-      result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
-      assert result =~ "42-67"
-      assert result =~ "84 tokens"
-    end
-
-    test "renders severity icon and behavior" do
-      result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
-      assert result =~ "🔴"
-      assert result =~ "CRITICAL"
-      assert result =~ "cyclomatic_complexity_under_10"
-      assert result =~ "0.41"
-    end
-
-    test "renders fix hint" do
-      result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
+      assert result =~ "**Severity:** critical"
+      assert result =~ "function_design/cyclomatic_complexity_under_10"
       assert result =~ "Reduce branching"
     end
 
-    test "renders source code" do
+    test "renders source code in a fenced block" do
       result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain)
+      assert result =~ "```elixir"
       assert result =~ "def foo do"
       assert result =~ ":bar"
     end
 
-    test "shows green verdict when top_blocks is empty" do
+    test "shows the all-clear body when no actionable blocks" do
       report = Map.put(@sample_report, :top_blocks, [])
       result = Formatter.format_markdown(report, :default, :plain)
-      assert result =~ "No block-level issues detected"
+      assert result =~ "No critical or high-severity blocks need attention"
     end
 
-    test "shows green verdict when top_blocks key absent" do
-      result = Formatter.format_markdown(@sample_report, :default, :plain)
-      refute result =~ "review required"
+    test ":metrics view omits the agent-actions section entirely" do
+      result = Formatter.format_markdown(@sample_report_with_blocks, :default, :plain, :metrics)
+      refute result =~ "kind: refactoring-tasks"
+      refute result =~ "# Refactoring Tasks"
     end
   end
 
@@ -416,15 +341,17 @@ defmodule CodeQA.HealthReport.FormatterTest do
     end
   end
 
-  describe "format_markdown/4 with :github format and chart: false" do
+  describe "Github.render with chart: false" do
+    alias CodeQA.HealthReport.Formatter.Github
+
     test "omits mermaid chart when chart option is false" do
-      result = Formatter.format_markdown(@sample_report, :default, :github, chart: false)
+      result = Github.render(@sample_report, :default, [chart: false], :both)
       refute result =~ "```mermaid"
       assert result =~ "████"
     end
   end
 
-  describe "github formatter: block section" do
+  describe "github formatter: agent-actions section (view :both)" do
     @block_potential %{
       behavior: "cyclomatic_complexity_under_10",
       category: "function_design",
@@ -449,24 +376,23 @@ defmodule CodeQA.HealthReport.FormatterTest do
 
     @report_with_blocks_gh Map.put(@sample_report, :top_blocks, @top_blocks_gh)
 
-    test "renders block section with verdict and details per block" do
+    test "appends the refactoring-tasks prompt after the metric sections" do
       result = Formatter.format_markdown(@report_with_blocks_gh, :default, :github)
-      assert result =~ "review required"
-      assert result =~ "<details>"
-      assert result =~ "lib/foo.ex"
+      assert result =~ "kind: refactoring-tasks"
+      assert result =~ "# Refactoring Tasks"
+      assert result =~ "lib/foo.ex:42-67"
     end
 
-    test "renders severity and fix hint" do
+    test "renders severity, behavior and fix hint as a task" do
       result = Formatter.format_markdown(@report_with_blocks_gh, :default, :github)
-      assert result =~ "🔴"
-      assert result =~ "cyclomatic_complexity_under_10"
+      assert result =~ "**Severity:** critical"
+      assert result =~ "function_design/cyclomatic_complexity_under_10"
       assert result =~ "Reduce branching"
     end
 
-    test "renders source code in collapsed block" do
-      result = Formatter.format_markdown(@report_with_blocks_gh, :default, :github)
-      assert result =~ "```elixir"
-      assert result =~ "def foo do"
+    test ":metrics view omits the agent-actions section" do
+      result = Formatter.format_markdown(@report_with_blocks_gh, :default, :github, :metrics)
+      refute result =~ "kind: refactoring-tasks"
     end
   end
 
@@ -505,20 +431,16 @@ defmodule CodeQA.HealthReport.FormatterTest do
     end
   end
 
-  describe "render_parts/2" do
-    test "returns at least 3 parts" do
+  describe "render_parts/2 (view :both)" do
+    test "returns metric parts plus the agent-actions part" do
       parts = Formatter.render_parts(@sample_report)
-      assert length(parts) >= 3
+      assert length(parts) == 3
     end
 
-    test "each part ends with sentinel comment" do
-      parts = Formatter.render_parts(@sample_report)
-
-      parts
-      |> Enum.with_index(1)
-      |> Enum.each(fn {part, n} ->
-        assert part =~ "<!-- codeqa-health-report-#{n} -->"
-      end)
+    test "each metric part ends with sentinel comment" do
+      [part_1, part_2 | _] = Formatter.render_parts(@sample_report)
+      assert part_1 =~ "<!-- codeqa-health-report-1 -->"
+      assert part_2 =~ "<!-- codeqa-health-report-2 -->"
     end
 
     test "part 1 contains header and grade" do
@@ -543,110 +465,23 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert part_2 =~ "Readability"
     end
 
-    test "part 3 shows green verdict when no blocks" do
-      [_, _, part_3 | _] = Formatter.render_parts(@sample_report)
-      assert part_3 =~ "No block-level issues detected"
-    end
-
-    test "part 3 contains verdict and blocks when present" do
+    test "last part is the agent-actions prompt" do
       report = Map.put(@sample_report, :top_blocks, @top_blocks_gh)
-      [_, _, part_3 | _] = Formatter.render_parts(report)
-      assert part_3 =~ "lib/foo.ex"
-      assert part_3 =~ "review required"
-    end
-  end
-
-  describe "Github.render_parts_3/2" do
-    alias CodeQA.HealthReport.Formatter.Github
-
-    test "returns single part with blocks (top 10 limit means no slicing needed)" do
-      blocks =
-        1..10
-        |> Enum.map(
-          &%{
-            end_line: 30,
-            language: "elixir",
-            path: "lib/file_#{&1}.ex",
-            potentials: [
-              %{
-                behavior: "single_responsibility",
-                category: "function_design",
-                cosine_delta: 0.35,
-                fix_hint: "Consider extracting helper function",
-                severity: :high
-              }
-            ],
-            source: "def foo, do: :bar",
-            start_line: 10,
-            status: "modified",
-            token_count: 150,
-            type: "function"
-          }
-        )
-
-      report = Map.put(@sample_report, :top_blocks, blocks)
-      parts = Github.render_parts_3(report)
-
-      # With top 10 blocks, should be a single part
-      assert length(parts) == 1
+      [_, _, part_3] = Formatter.render_parts(report)
+      assert part_3 =~ "kind: refactoring-tasks"
+      assert part_3 =~ "lib/foo.ex:42-67"
     end
 
-    test "part ends with sentinel" do
-      blocks = [
-        %{
-          end_line: 10,
-          language: "elixir",
-          path: "lib/foo.ex",
-          potentials: [
-            %{
-              behavior: "single_responsibility",
-              category: "function_design",
-              cosine_delta: 0.35,
-              fix_hint: nil,
-              severity: :high
-            }
-          ],
-          source: "def foo, do: :bar",
-          start_line: 1,
-          status: nil,
-          token_count: 50,
-          type: "code"
-        }
-      ]
-
-      report = Map.put(@sample_report, :top_blocks, blocks)
-      [part] = Github.render_parts_3(report)
-      assert part =~ "<!-- codeqa-health-report-3 -->"
+    test ":metrics view returns only the metric parts" do
+      parts = Formatter.render_parts(@sample_report, view: :metrics)
+      assert length(parts) == 2
+      refute Enum.any?(parts, &(&1 =~ "kind: refactoring-tasks"))
     end
 
-    test "renders source code in fenced block" do
-      blocks = [
-        %{
-          end_line: 10,
-          language: "elixir",
-          path: "lib/foo.ex",
-          potentials: [
-            %{
-              behavior: "single_responsibility",
-              category: "function_design",
-              cosine_delta: 0.35,
-              fix_hint: nil,
-              severity: :high
-            }
-          ],
-          source: "def hello do\n  :world\nend",
-          start_line: 1,
-          status: nil,
-          token_count: 50,
-          type: "code"
-        }
-      ]
-
-      report = Map.put(@sample_report, :top_blocks, blocks)
-      [part] = Github.render_parts_3(report)
-      assert part =~ "```elixir"
-      assert part =~ "def hello do"
-      assert part =~ ":world"
+    test ":actions view returns only the agent-actions part" do
+      report = Map.put(@sample_report, :top_blocks, @top_blocks_gh)
+      assert [part] = Formatter.render_parts(report, view: :actions)
+      assert part =~ "kind: refactoring-tasks"
     end
   end
 end

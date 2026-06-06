@@ -1,5 +1,6 @@
 class_name_is_noun:
   _doc: "Class and module names should be nouns describing what they represent, not verbs or gerunds."
+  _fix_hint: "Rename this module/class to a noun describing what it is."
   _languages: [elixir]
   _log_baseline: 5.3672
   brevity:
@@ -67,7 +68,7 @@ class_name_is_noun:
 
 file_name_matches_primary_export:
   _doc: "The file name should match the primary class or module it exports (e.g. `user.js` exports `User`)."
-  _fix_hint: "Rename the file to match the primary module it defines"
+  _fix_hint: "Rename the file to match the primary module it defines."
   _languages: [elixir]
   _log_baseline: 0.0000
   casing_entropy:
@@ -77,6 +78,7 @@ file_name_matches_primary_export:
 
 function_name_is_not_single_word:
   _doc: "Single-word function names like `run`, `process`, or `handle` are too vague to convey intent."
+  _fix_hint: "Give this function a more specific multi-word name."
   _languages: [elixir]
   _log_baseline: 23.5472
   compression:
@@ -106,6 +108,7 @@ function_name_is_not_single_word:
 
 function_name_matches_return_type:
   _doc: "Functions prefixed with `get_`, `fetch_`, or `find_` should return the thing they name."
+  _fix_hint: "Align the function name with what it returns (e.g. ? for booleans)."
   _languages: [elixir]
   _log_baseline: 7.8218
   branching:
@@ -217,6 +220,7 @@ function_name_matches_return_type:
 
 test_name_starts_with_verb:
   _doc: "Test descriptions should start with a verb: `creates`, `raises`, `returns`, not a noun phrase."
+  _fix_hint: "Rename this test to start with a verb describing the behavior under test."
   _languages: [elixir]
   _log_baseline: 8.8394
   branching:

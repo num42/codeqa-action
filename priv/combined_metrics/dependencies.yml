@@ -1,5 +1,6 @@
 import_count_under_10:
   _doc: "Files should import fewer than 10 modules; high import counts signal excessive coupling."
+  _fix_hint: "This {{type}} pulls in too many dependencies — split it or narrow the imports."
   _languages: [elixir]
   _log_baseline: 7.0143
   branching:
@@ -129,6 +130,7 @@ import_count_under_10:
 
 low_coupling:
   _doc: "Modules should depend on few external symbols — a low unique-operand count relative to total is a proxy for tight coupling."
+  _fix_hint: "Reduce this {{type}}'s outbound references; depend on fewer modules or invert the dependency."
   _languages: [elixir]
   _log_baseline: -45.6308
   branching:
@@ -259,6 +261,7 @@ low_coupling:
 
 no_wildcard_imports:
   _doc: "Wildcard imports (`import *`, `using Module`) pollute the local namespace and hide dependencies."
+  _fix_hint: "Replace the wildcard import with explicit named imports."
   _languages: [elixir]
   _log_baseline: -8.7732
   branching:
