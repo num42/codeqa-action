@@ -44,6 +44,22 @@ case "$INPUT_COMMAND" in
     ;;
 esac
 
+# Resolves the base ref: explicit input wins, otherwise the PR base branch
+# (fetched so the ref exists locally). Echoes the resolved ref, or nothing when
+# none is available — callers decide whether that is fatal.
+resolve_base_ref() {
+  if [[ -n "$INPUT_BASE_REF" ]]; then
+    echo "$INPUT_BASE_REF"
+    return
+  fi
+
+  local pr_base="${GITHUB_BASE_REF:-}"
+  if [[ -n "$pr_base" ]]; then
+    git -C "$INPUT_PATH" fetch origin "$pr_base" --depth=1 2>/dev/null || true
+    echo "origin/${pr_base}"
+  fi
+}
+
 # --- Build CLI arguments ---
 ARGS=("$INPUT_COMMAND" "$INPUT_PATH")
 CAPTURE_STDOUT=false
@@ -56,6 +72,13 @@ case "$INPUT_COMMAND" in
     if [[ -n "$INPUT_CONFIG" ]]; then
       ARGS+=("--config" "$INPUT_CONFIG")
     fi
+    # Scope blocks to the diff when a base ref is available — keeps PR runs fast
+    # by skipping leave-one-out over the whole codebase. Optional: a standalone
+    # run (no PR context) falls through and analyzes everything.
+    BASE_REF="$(resolve_base_ref)"
+    if [[ -n "$BASE_REF" ]]; then
+      ARGS+=("--base-ref" "$BASE_REF")
+    fi
     if [[ "${INPUT_COMMENT:-false}" == "true" ]]; then
       ARGS+=("--comment")
       COMMENT_MODE=true
@@ -64,15 +87,10 @@ case "$INPUT_COMMAND" in
     fi
     ;;
   compare)
-    BASE_REF="${INPUT_BASE_REF}"
+    BASE_REF="$(resolve_base_ref)"
     if [[ -z "$BASE_REF" ]]; then
-      BASE_REF="${GITHUB_BASE_REF:-}"
-      if [[ -z "$BASE_REF" ]]; then
-        echo "::error::No base-ref provided and not running in a PR context"
-        exit 1
-      fi
-      git -C "$INPUT_PATH" fetch origin "$BASE_REF" --depth=1 2>/dev/null || true
-      BASE_REF="origin/${BASE_REF}"
+      echo "::error::No base-ref provided and not running in a PR context"
+      exit 1
     fi
     ARGS+=("--base-ref" "$BASE_REF")
     if [[ "${INPUT_COMMENT:-false}" == "true" ]]; then
