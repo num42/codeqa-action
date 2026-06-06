@@ -87,19 +87,10 @@ defmodule CodeQA.CLI.HealthReport do
     # baseline cosines are still built from every file. `nil` (no base ref) means
     # all files get nodes, preserving standalone-run behavior.
     {changed_files, diff_line_ranges} = collect_diff(path, base_ref, head_ref)
-    node_paths = if changed_files == [], do: nil, else: Enum.map(changed_files, & &1.path)
-
-    # Block-impact LOO is the heaviest phase. Skip it whenever the view renders
-    # no blocks (metrics-only).
-    compute_nodes? = view in [:actions, :both]
-
-    node_opts =
-      if compute_nodes?,
-        do: [compute_nodes: true, node_paths: node_paths],
-        else: [compute_nodes: false]
 
     analyze_opts =
-      Options.build_analyze_opts(opts) ++ Config.near_duplicate_blocks_opts() ++ node_opts
+      Options.build_analyze_opts(opts) ++
+        Config.near_duplicate_blocks_opts() ++ node_opts(view, changed_files)
 
     start_time = System.monotonic_time(:millisecond)
     results = Analyzer.analyze_codebase(files, analyze_opts)
@@ -121,12 +112,7 @@ defmodule CodeQA.CLI.HealthReport do
         "total_bytes" => total_bytes
       })
 
-    # The base snapshot is a full second analysis run; it only feeds the metric
-    # changes delta, so skip it when no metric view is rendered.
-    base_results =
-      if view in [:metrics, :both],
-        do: collect_base_snapshot(path, base_ref, analyze_opts),
-        else: nil
+    base_results = base_snapshot_for_view(view, path, base_ref, analyze_opts)
 
     detail = parse_detail(opts[:detail])
     format = parse_format(opts[:format])
@@ -158,6 +144,22 @@ defmodule CodeQA.CLI.HealthReport do
 
     output
   end
+
+  # Block-impact LOO is the heaviest phase, so it runs only for views that
+  # render blocks. In a PR context per-node work is scoped to the changed files.
+  defp node_opts(:metrics, _changed_files), do: [compute_nodes: false]
+
+  defp node_opts(_view, changed_files) do
+    node_paths = if changed_files == [], do: nil, else: Enum.map(changed_files, & &1.path)
+    [compute_nodes: true, node_paths: node_paths]
+  end
+
+  # The base snapshot is a full second analysis run; it only feeds the metric
+  # changes delta, so skip it for the actions-only view.
+  defp base_snapshot_for_view(:actions, _path, _base_ref, _analyze_opts), do: nil
+
+  defp base_snapshot_for_view(_view, path, base_ref, analyze_opts),
+    do: collect_base_snapshot(path, base_ref, analyze_opts)
 
   defp warn_actions_full_scan(:actions, nil),
     do:
