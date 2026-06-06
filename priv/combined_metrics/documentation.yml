@@ -2,7 +2,7 @@ docstring_is_nonempty:
   _doc: "Docstrings must contain meaningful content, not just a placeholder or empty string."
   _fix_hint: "Fill in the empty docstring with a real description of what this does."
   _languages: [elixir]
-  _log_baseline: 30.1436
+  _log_baseline: 31.4876
   branching:
     mean_branch_count: 0.3089
     mean_branching_density: 0.2652
@@ -98,6 +98,14 @@ docstring_is_nonempty:
     mean_avg_tokens_per_line: 0.0601
     mean_fog_adapted: 0.0452
     mean_total_lines: 0.0437
+  renyi_entropy:
+    mean_hill_1: 0.1612
+    mean_hill_2: 0.1223
+    mean_renyi_0: 0.0400
+    mean_renyi_1: 0.0408
+    mean_renyi_2: 0.0371
+    mean_renyi_inf: 0.0460
+    mean_spectrum_slope: 0.0465
   separator_counts:
     mean_dot_count: 0.1435
     mean_hyphen_count: 0.2418
@@ -124,7 +132,7 @@ file_has_license_header:
   _doc: "Source files should begin with a license or copyright header."
   _fix_hint: "Add the project's license header to the top of the file."
   _languages: [elixir]
-  _log_baseline: 9.6516
+  _log_baseline: 10.1273
   branching:
     mean_branching_density: -0.0282
     mean_non_blank_count: 0.0295
@@ -203,6 +211,14 @@ file_has_license_header:
   readability:
     mean_avg_tokens_per_line: 0.0407
     mean_fog_adapted: 0.0316
+  renyi_entropy:
+    mean_hill_1: 0.0608
+    mean_hill_2: 0.0383
+    mean_renyi_0: 0.0185
+    mean_renyi_1: 0.0163
+    mean_renyi_2: 0.0119
+    mean_renyi_inf: 0.0086
+    mean_spectrum_slope: 0.0349
   separator_counts:
     mean_dot_count: 0.0772
     mean_hyphen_count: 0.2471
@@ -226,7 +242,7 @@ file_has_module_docstring:
   _doc: "Files should have a module-level docstring explaining purpose and usage."
   _fix_hint: "Add a @moduledoc describing this module's responsibility."
   _languages: [elixir]
-  _log_baseline: 24.7485
+  _log_baseline: 26.0789
   branching:
     mean_branch_count: 0.3854
     mean_branching_density: -2.0000
@@ -315,6 +331,14 @@ file_has_module_docstring:
     mean_flesch_adapted: 0.0205
     mean_fog_adapted: -0.0266
     mean_total_lines: 0.0908
+  renyi_entropy:
+    mean_hill_1: 0.1719
+    mean_hill_2: 0.1063
+    mean_renyi_0: 0.0457
+    mean_renyi_1: 0.0441
+    mean_renyi_2: 0.0333
+    mean_renyi_inf: 0.0361
+    mean_spectrum_slope: 0.0692
   separator_counts:
     mean_dot_count: 0.0777
   symbol_density:
@@ -337,7 +361,7 @@ file_has_no_commented_out_code:
   _doc: "Files should not contain commented-out code blocks left from development."
   _fix_hint: "Delete the commented-out code; rely on version control for history."
   _languages: [elixir]
-  _log_baseline: -8.5693
+  _log_baseline: -8.6108
   branching:
     mean_branching_density: 0.0368
     mean_non_blank_count: -0.0367
@@ -431,6 +455,11 @@ file_has_no_commented_out_code:
     mean_flesch_adapted: 0.0114
     mean_fog_adapted: -0.0779
     mean_total_lines: 0.0785
+  renyi_entropy:
+    mean_hill_1: -0.0019
+    mean_hill_2: -0.0065
+    mean_renyi_2: -0.0019
+    mean_renyi_inf: -0.0060
   separator_counts:
     mean_dot_count: -0.0411
     mean_hyphen_count: 0.1390
@@ -454,7 +483,7 @@ function_has_docstring:
   _doc: "Public functions should have a docstring describing behaviour, params, and return value."
   _fix_hint: "Add a @doc explaining this function's contract (args, return, side effects)."
   _languages: [elixir]
-  _log_baseline: 44.4131
+  _log_baseline: 46.2082
   branching:
     mean_branch_count: 0.5279
     mean_branching_density: 0.3832
@@ -558,6 +587,14 @@ function_has_docstring:
     mean_flesch_adapted: 0.0026
     mean_fog_adapted: 0.0948
     mean_total_lines: 0.1394
+  renyi_entropy:
+    mean_hill_1: 0.2006
+    mean_hill_2: 0.1795
+    mean_renyi_0: 0.0557
+    mean_renyi_1: 0.0517
+    mean_renyi_2: 0.0548
+    mean_renyi_inf: 0.0848
+    mean_spectrum_slope: 0.0580
   separator_counts:
     mean_dot_count: 0.1816
     mean_hyphen_count: 0.2506
@@ -583,7 +620,7 @@ function_todo_comment_in_body:
   _doc: "Functions should not contain TODO/FIXME comments indicating unfinished work."
   _fix_hint: "Resolve the TODO in the body or move it to a tracked issue."
   _languages: [elixir]
-  _log_baseline: 8.1611
+  _log_baseline: 8.1682
   branching:
     mean_branch_count: -0.0287
     mean_branching_density: -0.0435
@@ -676,6 +713,11 @@ function_todo_comment_in_body:
     mean_flesch_adapted: -0.0053
     mean_fog_adapted: -0.0109
     mean_total_lines: 0.0381
+  renyi_entropy:
+    mean_hill_2: 0.0042
+    mean_renyi_0: -0.0017
+    mean_renyi_inf: 0.0020
+    mean_spectrum_slope: -0.0082
   separator_counts:
     mean_dot_count: 0.0485
     mean_hyphen_count: 0.0317

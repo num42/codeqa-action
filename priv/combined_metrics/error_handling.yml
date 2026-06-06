@@ -2,7 +2,7 @@ does_not_swallow_errors:
   _doc: "Errors must be handled or re-raised — empty rescue/catch blocks silently hide failures."
   _fix_hint: "Handle or propagate the error instead of discarding it in this {{type}}."
   _languages: [elixir]
-  _log_baseline: 91.4421
+  _log_baseline: 92.2460
   branching:
     mean_branch_count: -0.1041
     mean_branching_density: -0.2095
@@ -97,6 +97,14 @@ does_not_swallow_errors:
     mean_flesch_adapted: -0.0373
     mean_fog_adapted: 0.3019
     mean_total_lines: 0.1054
+  renyi_entropy:
+    mean_hill_1: 0.0859
+    mean_hill_2: 0.0348
+    mean_renyi_0: 0.0620
+    mean_renyi_1: 0.0223
+    mean_renyi_2: 0.0102
+    mean_renyi_inf: 0.0553
+    mean_spectrum_slope: 0.2146
   separator_counts:
     mean_dot_count: 0.5172
     mean_hyphen_count: 0.2483
@@ -121,7 +129,7 @@ error_message_is_descriptive:
   _doc: "Error values should carry a meaningful message, not just a bare atom or empty string."
   _fix_hint: "Make the error message state what failed and why, not just that it failed."
   _languages: [elixir]
-  _log_baseline: 55.7735
+  _log_baseline: 57.6622
   branching:
     mean_branch_count: 0.0664
     mean_branching_density: -0.0540
@@ -213,6 +221,14 @@ error_message_is_descriptive:
     mean_flesch_adapted: -0.0175
     mean_fog_adapted: 0.1420
     mean_total_lines: 0.1204
+  renyi_entropy:
+    mean_hill_1: 0.2264
+    mean_hill_2: 0.1745
+    mean_renyi_0: 0.0685
+    mean_renyi_1: 0.0596
+    mean_renyi_2: 0.0528
+    mean_renyi_inf: 0.0575
+    mean_spectrum_slope: 0.1093
   separator_counts:
     mean_hyphen_count: 0.2417
     mean_underscore_count: 0.2177
@@ -235,7 +251,7 @@ returns_typed_error:
   _doc: "Functions should signal failure via a typed return (e.g. `{:error, reason}`) rather than returning `nil` or `false`."
   _fix_hint: "Return a tagged error ({:error, reason}) instead of a bare value or nil."
   _languages: [elixir]
-  _log_baseline: 128.7586
+  _log_baseline: 128.1260
   branching:
     mean_branch_count: -0.1286
     mean_branching_density: -0.1895
@@ -336,6 +352,14 @@ returns_typed_error:
     mean_flesch_adapted: -0.1272
     mean_fog_adapted: 0.6637
     mean_total_lines: 0.0608
+  renyi_entropy:
+    mean_hill_1: -0.0427
+    mean_hill_2: -0.1633
+    mean_renyi_0: 0.0531
+    mean_renyi_1: -0.0120
+    mean_renyi_2: -0.0534
+    mean_renyi_inf: -0.1476
+    mean_spectrum_slope: 0.3019
   separator_counts:
     mean_dot_count: 1.1292
     mean_underscore_count: 0.6279

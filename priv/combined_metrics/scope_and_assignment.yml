@@ -3,7 +3,7 @@ declared_close_to_use:
   _excludes_block_types: [doc]
   _fix_hint: "Move this declaration closer to where it is first used."
   _languages: [elixir, go, javascript, python, ruby]
-  _log_baseline: -36.1172
+  _log_baseline: -37.4837
   branching:
     mean_branch_count: -0.2664
     mean_branching_density: -0.0972
@@ -97,6 +97,14 @@ declared_close_to_use:
     mean_avg_tokens_per_line: -0.0827
     mean_fog_adapted: -0.0557
     mean_total_lines: -0.0874
+  renyi_entropy:
+    mean_hill_1: -0.1497
+    mean_hill_2: -0.1387
+    mean_renyi_0: -0.0328
+    mean_renyi_1: -0.0362
+    mean_renyi_2: -0.0393
+    mean_renyi_inf: -0.0311
+    mean_spectrum_slope: -0.0120
   separator_counts:
     mean_slash_count: -0.9706
     mean_underscore_count: -0.1539
@@ -119,7 +127,7 @@ mutated_after_initial_assignment:
   _doc: "Variables should not be reassigned after their initial value — prefer introducing a new name."
   _fix_hint: "Avoid reassigning after the initial binding — use a new binding or pipe the transformation."
   _languages: [elixir]
-  _log_baseline: 6.0053
+  _log_baseline: 6.0995
   branching:
     mean_branch_count: 0.1519
     mean_branching_density: 0.2073
@@ -213,6 +221,12 @@ mutated_after_initial_assignment:
     mean_avg_tokens_per_line: 0.0161
     mean_fog_adapted: 0.0169
     mean_total_lines: -0.0553
+  renyi_entropy:
+    mean_hill_1: 0.0309
+    mean_renyi_0: 0.0015
+    mean_renyi_1: 0.0082
+    mean_renyi_inf: -0.0351
+    mean_spectrum_slope: 0.0044
   separator_counts:
     mean_dot_count: -0.1332
     mean_hyphen_count: 0.3267
@@ -238,7 +252,7 @@ reassigned_multiple_times:
   _doc: "A variable reassigned many times is a sign the name is too generic or the function does too much."
   _fix_hint: "This {{type}} reassigns the same binding repeatedly — restructure into a transformation chain."
   _languages: [elixir]
-  _log_baseline: -7.2135
+  _log_baseline: -7.1302
   branching:
     mean_max_nesting_depth: 0.0680
     mean_non_blank_count: 0.0226
@@ -339,6 +353,14 @@ reassigned_multiple_times:
     mean_flesch_adapted: -0.0030
     mean_fog_adapted: -0.1102
     mean_total_lines: 0.0226
+  renyi_entropy:
+    mean_hill_1: 0.0390
+    mean_hill_2: -0.0240
+    mean_renyi_0: 0.0072
+    mean_renyi_1: 0.0105
+    mean_renyi_2: -0.0073
+    mean_renyi_inf: -0.0310
+    mean_spectrum_slope: 0.0355
   separator_counts:
     mean_dot_count: -0.1300
     mean_hyphen_count: 0.2586
@@ -365,7 +387,7 @@ scope_is_minimal:
   _doc: "Variables should be scoped as narrowly as possible — not declared at a wider scope than needed."
   _fix_hint: "Narrow this binding's scope to the block that actually uses it."
   _languages: [elixir]
-  _log_baseline: -7.8917
+  _log_baseline: -7.4444
   branching:
     mean_branch_count: -0.1072
     mean_branching_density: -0.0452
@@ -459,6 +481,14 @@ scope_is_minimal:
     mean_flesch_adapted: 0.0319
     mean_fog_adapted: 0.0564
     mean_total_lines: -0.0420
+  renyi_entropy:
+    mean_hill_1: 0.0142
+    mean_hill_2: 0.1024
+    mean_renyi_0: -0.0081
+    mean_renyi_1: 0.0037
+    mean_renyi_2: 0.0320
+    mean_renyi_inf: 0.0853
+    mean_spectrum_slope: -0.1027
   separator_counts:
     mean_dot_count: 0.3290
     mean_underscore_count: -0.1941
@@ -481,7 +511,7 @@ shadowed_by_inner_scope:
   _doc: "Inner-scope names that shadow outer-scope names cause confusion about which value is in play."
   _fix_hint: "Rename the inner binding so it no longer shadows the outer one."
   _languages: [elixir]
-  _log_baseline: -32.8272
+  _log_baseline: -33.4708
   branching:
     mean_branching_density: 2.0000
     mean_max_nesting_depth: -0.1450
@@ -570,6 +600,14 @@ shadowed_by_inner_scope:
     mean_flesch_adapted: -0.0728
     mean_fog_adapted: -0.1060
     mean_total_lines: -0.0480
+  renyi_entropy:
+    mean_hill_1: -0.0573
+    mean_hill_2: -0.0750
+    mean_renyi_0: -0.0178
+    mean_renyi_1: -0.0147
+    mean_renyi_2: -0.0218
+    mean_renyi_inf: -0.0517
+    mean_spectrum_slope: -0.0037
   separator_counts:
     mean_dot_count: -0.0206
     mean_underscore_count: 0.6826
@@ -594,7 +632,7 @@ used_only_once:
   _doc: "A variable used only once is a candidate for inlining — it rarely adds clarity over a direct expression."
   _fix_hint: "Inline this single-use binding unless the name aids readability."
   _languages: [elixir, go, javascript, python, ruby]
-  _log_baseline: -38.0360
+  _log_baseline: -39.0085
   branching:
     mean_branch_count: -0.2490
     mean_branching_density: -0.4526
@@ -688,6 +726,14 @@ used_only_once:
     mean_avg_tokens_per_line: -0.0534
     mean_fog_adapted: 0.0120
     mean_total_lines: -0.1653
+  renyi_entropy:
+    mean_hill_1: -0.1214
+    mean_hill_2: -0.0881
+    mean_renyi_0: -0.0279
+    mean_renyi_1: -0.0310
+    mean_renyi_2: -0.0262
+    mean_renyi_inf: -0.0226
+    mean_spectrum_slope: -0.0323
   separator_counts:
     mean_hyphen_count: 0.3212
     mean_underscore_count: -0.1733

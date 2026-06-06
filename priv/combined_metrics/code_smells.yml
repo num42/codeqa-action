@@ -2,7 +2,7 @@ consistent_string_quote_style:
   _doc: "Files should use a single, consistent string quoting style throughout."
   _fix_hint: "Use one quote style consistently for string literals in this {{type}}."
   _languages: [elixir]
-  _log_baseline: -19.2276
+  _log_baseline: -20.1399
   branching:
     mean_branching_density: 0.0243
     mean_non_blank_count: -0.0248
@@ -90,6 +90,14 @@ consistent_string_quote_style:
     mean_flesch_adapted: 0.0046
     mean_fog_adapted: -0.0301
     mean_total_lines: -0.0248
+  renyi_entropy:
+    mean_hill_1: -0.0705
+    mean_hill_2: -0.1119
+    mean_renyi_0: -0.0141
+    mean_renyi_1: -0.0178
+    mean_renyi_2: -0.0322
+    mean_renyi_inf: -0.1217
+    mean_spectrum_slope: 0.0390
   separator_counts:
     mean_dot_count: -0.1743
     mean_underscore_count: -0.0644
@@ -112,7 +120,7 @@ no_dead_code_after_return:
   _doc: "There should be no unreachable statements after a return or early exit."
   _excludes_languages: [elixir]
   _fix_hint: "Remove the unreachable code after the return/raise in this {{type}}."
-  _log_baseline: -70.7283
+  _log_baseline: -71.9927
   branching:
     mean_branch_count: -0.9417
     mean_branching_density: -0.1794
@@ -211,6 +219,14 @@ no_dead_code_after_return:
     mean_flesch_adapted: 0.0346
     mean_fog_adapted: 0.0141
     mean_total_lines: -0.7334
+  renyi_entropy:
+    mean_hill_1: -0.1341
+    mean_hill_2: -0.1381
+    mean_renyi_0: -0.0501
+    mean_renyi_1: -0.0360
+    mean_renyi_2: -0.0409
+    mean_renyi_inf: -0.0720
+    mean_spectrum_slope: -0.0737
   separator_counts:
     mean_dot_count: -1.2574
     mean_hyphen_count: -1.8488
@@ -236,7 +252,7 @@ no_debug_print_statements:
   _doc: "Debug output (`console.log`, `IO.inspect`, `fmt.Println`) must not be left in committed code."
   _fix_hint: "Remove the debug print (IO.puts/IO.inspect/console.log) or replace it with a proper logger."
   _languages: [elixir, go, javascript, python, ruby]
-  _log_baseline: -29.5797
+  _log_baseline: -29.0583
   branching:
     mean_branch_count: 0.1865
     mean_branching_density: 0.4692
@@ -341,6 +357,14 @@ no_debug_print_statements:
     mean_flesch_adapted: -0.0375
     mean_fog_adapted: 0.0931
     mean_total_lines: -0.1329
+  renyi_entropy:
+    mean_hill_1: 0.0824
+    mean_hill_2: 0.0412
+    mean_renyi_0: 0.0188
+    mean_renyi_1: 0.0224
+    mean_renyi_2: 0.0114
+    mean_renyi_inf: -0.0190
+    mean_spectrum_slope: 0.0415
   separator_counts:
     mean_dot_count: -0.1479
     mean_hyphen_count: 0.0827
@@ -366,7 +390,7 @@ no_fixme_comments:
   _doc: "FIXME, XXX, and HACK comments indicate known problems that should be resolved before merging."
   _fix_hint: "Resolve the FIXME and delete the comment, or convert it into a tracked issue."
   _languages: [elixir, go, javascript, python, ruby]
-  _log_baseline: 12.0359
+  _log_baseline: 10.9439
   branching:
     mean_branch_count: 0.1713
     mean_branching_density: 0.1042
@@ -475,6 +499,14 @@ no_fixme_comments:
     mean_flesch_adapted: -0.0152
     mean_fog_adapted: -0.0037
     mean_total_lines: 0.0927
+  renyi_entropy:
+    mean_hill_1: -0.1284
+    mean_hill_2: -0.1032
+    mean_renyi_0: -0.0222
+    mean_renyi_1: -0.0313
+    mean_renyi_2: -0.0296
+    mean_renyi_inf: -0.0276
+    mean_spectrum_slope: -0.0024
   separator_counts:
     mean_dot_count: 0.3139
     mean_hyphen_count: -0.0251
@@ -499,7 +531,7 @@ no_nested_ternary:
   _doc: "Nested conditional expressions (ternary-within-ternary) are harder to read than a plain if-else."
   _excludes_languages: [elixir]
   _fix_hint: "Flatten the nested ternary into pattern matching or an if/cond expression."
-  _log_baseline: 8.9473
+  _log_baseline: 8.7697
   branching:
     mean_branch_count: -0.5662
     mean_branching_density: -0.3441
@@ -599,6 +631,14 @@ no_nested_ternary:
     mean_flesch_adapted: -0.0367
     mean_fog_adapted: 0.3545
     mean_total_lines: -0.2221
+  renyi_entropy:
+    mean_hill_1: -0.0050
+    mean_hill_2: -0.0440
+    mean_renyi_0: 0.0110
+    mean_renyi_1: -0.0014
+    mean_renyi_2: -0.0142
+    mean_renyi_inf: -0.0561
+    mean_spectrum_slope: 0.0714
   separator_counts:
     mean_dot_count: -0.1824
     mean_hyphen_count: -0.1067

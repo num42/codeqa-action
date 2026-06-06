@@ -2,7 +2,7 @@ import_count_under_10:
   _doc: "Files should import fewer than 10 modules; high import counts signal excessive coupling."
   _fix_hint: "This {{type}} pulls in too many dependencies — split it or narrow the imports."
   _languages: [elixir]
-  _log_baseline: 7.1957
+  _log_baseline: 7.0143
   branching:
     mean_branch_count: 0.2110
     mean_branching_density: -1.0683
@@ -101,6 +101,14 @@ import_count_under_10:
     mean_flesch_adapted: -0.0204
     mean_fog_adapted: 0.2028
     mean_total_lines: -0.0265
+  renyi_entropy:
+    mean_hill_1: -0.0153
+    mean_hill_2: -0.0444
+    mean_renyi_0: 0.0026
+    mean_renyi_1: -0.0040
+    mean_renyi_2: -0.0139
+    mean_renyi_inf: 0.0125
+    mean_spectrum_slope: 0.0397
   separator_counts:
     mean_dot_count: -0.1234
     mean_underscore_count: 0.1368
@@ -124,7 +132,7 @@ low_coupling:
   _doc: "Modules should depend on few external symbols — a low unique-operand count relative to total is a proxy for tight coupling."
   _fix_hint: "Reduce this {{type}}'s outbound references; depend on fewer modules or invert the dependency."
   _languages: [elixir]
-  _log_baseline: -45.2561
+  _log_baseline: -45.6308
   branching:
     mean_branch_count: 0.0398
     mean_branching_density: 0.2038
@@ -225,6 +233,13 @@ low_coupling:
     mean_flesch_adapted: 0.0138
     mean_fog_adapted: -0.0557
     mean_total_lines: -0.1476
+  renyi_entropy:
+    mean_hill_1: -0.0660
+    mean_hill_2: -0.0031
+    mean_renyi_0: -0.0276
+    mean_renyi_1: -0.0174
+    mean_renyi_inf: 0.0132
+    mean_spectrum_slope: -0.1079
   separator_counts:
     mean_dot_count: -0.3285
     mean_underscore_count: -0.1206
@@ -248,7 +263,7 @@ no_wildcard_imports:
   _doc: "Wildcard imports (`import *`, `using Module`) pollute the local namespace and hide dependencies."
   _fix_hint: "Replace the wildcard import with explicit named imports."
   _languages: [elixir]
-  _log_baseline: -8.8366
+  _log_baseline: -8.7732
   branching:
     mean_branching_density: 0.0249
     mean_non_blank_count: -0.0268
@@ -331,6 +346,11 @@ no_wildcard_imports:
     mean_flesch_adapted: -0.0142
     mean_fog_adapted: 0.0290
     mean_total_lines: -0.0268
+  renyi_entropy:
+    mean_hill_1: 0.0090
+    mean_hill_2: 0.0059
+    mean_renyi_inf: 0.0160
+    mean_spectrum_slope: -0.0086
   separator_counts:
     mean_dot_count: -0.0137
     mean_underscore_count: 0.0302
