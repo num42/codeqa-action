@@ -23,7 +23,7 @@ inputs:
     required: false
     default: ""
   base-ref:
-    description: "Base git ref for compare (defaults to PR base SHA)"
+    description: "Base git ref for compare and health-report block scoping (defaults to the PR base branch)"
     required: false
     default: ""
   detail:
