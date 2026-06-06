@@ -137,7 +137,7 @@ defmodule CodeQA.Engine.Analyzer do
     if Keyword.get(opts, :compute_nodes, false) do
       nodes_opts =
         [baseline_codebase_agg: aggregate] ++
-          Keyword.take(opts, [:nodes_top, :workers, :behavior_config_pid])
+          Keyword.take(opts, [:nodes_top, :workers, :behavior_config_pid, :node_paths])
 
       pipeline_result = %{
         "files" => file_results,
