@@ -215,6 +215,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
       baseline_file_cosines: baseline_file_cosines,
       baseline_file_metrics: baseline_file_metrics,
       cached_behaviors: cached_behaviors,
+      content: content,
       inc_agg: inc_agg,
       lang_mod: lang_mod,
       language: language,
@@ -289,10 +290,8 @@ defmodule CodeQA.BlockImpactAnalyzer do
   defp compute_potentials_timed(%Node{} = node, node_ctx, block_type) do
     t0 = now()
 
-    {reconstructed, reconstruct_us} =
-      timed(fn -> FileImpact.reconstruct_without(node_ctx.root_tokens, node) end)
-
-    block_content = node.tokens |> Enum.map_join("", & &1.content)
+    {{block_content, reconstructed}, reconstruct_us} =
+      timed(fn -> FileImpact.slice_without_original(node_ctx.content, node) end)
 
     {without_file_metrics, analyze_file_us} =
       timed(fn ->

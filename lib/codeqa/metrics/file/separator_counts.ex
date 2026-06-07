@@ -25,13 +25,20 @@ defmodule CodeQA.Metrics.File.SeparatorCounts do
       "dot_count" => count(content, ".")
     }
 
-  # No `analyze_loo/2`: the subtractive path is incorrect here. The block-impact
-  # analyzer subtracts a block whose content is rebuilt from normalized
-  # structural tokens (which drop inter-token whitespace), while the baseline is
-  # computed from the original file. Counting separators in that whitespace-
-  # collapsed block string diverges from re-analyzing the reconstructed file
-  # (empirically 0/50 matches). Falling back to a full re-analyze keeps the LOO
-  # delta consistent with every other metric.
+  # Separators are plain character counts, so file-minus-block is exactly
+  # baseline minus the block's counts — provided the block string is the verbatim
+  # original span (FileImpact.slice_without_original/2), not a normalized-token
+  # rejoin. The subtractive_loo guard asserts this matches a full re-analyze.
+  @spec analyze_loo(map(), CodeQA.Engine.FileContext.t()) :: map()
+  @impl true
+  def analyze_loo(baseline, %{content: block_content}) do
+    %{
+      "underscore_count" => baseline["underscore_count"] - count(block_content, "_"),
+      "hyphen_count" => baseline["hyphen_count"] - count(block_content, "-"),
+      "slash_count" => baseline["slash_count"] - count(block_content, "/"),
+      "dot_count" => baseline["dot_count"] - count(block_content, ".")
+    }
+  end
 
   defp count(content, char),
     do:

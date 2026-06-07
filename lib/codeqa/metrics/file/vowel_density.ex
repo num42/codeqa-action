@@ -19,6 +19,22 @@ defmodule CodeQA.Metrics.File.VowelDensity do
   @impl true
   def keys, do: ["density", "vowel_count", "total_chars"]
 
+  # Counts are over identifiers, which a block cut never splits (cuts fall on
+  # token boundaries). So file-minus-block counts are baseline minus the block's
+  # own counts; density is recomputed from the subtracted totals. The block's
+  # identifiers are extracted by the same pipeline as the baseline (build a
+  # context over the block's verbatim source), so the subtraction is exact — the
+  # subtractive_loo guard asserts this matches a full re-analyze.
+  @spec analyze_loo(map(), CodeQA.Engine.FileContext.t()) :: map()
+  @impl true
+  def analyze_loo(baseline, block_ctx) do
+    block = analyze(block_ctx)
+    vowels = baseline["vowel_count"] - block["vowel_count"]
+    chars = baseline["total_chars"] - block["total_chars"]
+    density = if chars == 0, do: 0.0, else: Float.round(vowels / chars, 4)
+    %{"density" => density, "vowel_count" => vowels, "total_chars" => chars}
+  end
+
   @spec analyze(map()) :: map()
   @impl true
   def analyze(%{identifiers: identifiers}) do

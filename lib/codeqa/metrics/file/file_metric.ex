@@ -38,15 +38,21 @@ defmodule CodeQA.Metrics.File.FileMetric do
 
   @doc """
   Subtractive leave-one-out path. When implemented, the block-impact analyzer
-  uses this instead of a full re-run on the file-minus-block reconstruction:
-  it derives the new metric values from the unchanged baseline values for the
-  whole file plus the content of the block being removed.
+  uses this instead of a full re-run on the file-minus-block reconstruction: it
+  derives the new metric values from the unchanged whole-file baseline plus the
+  removed block's own context.
 
-  Must return the same map shape as `analyze/1` and produce values bit-equal
-  to what `analyze/1` would yield on the file-minus-block content. A goldfile
-  test asserts this.
+  `block_ctx` is a `FileContext` built once per node over the block's verbatim
+  original source (`FileImpact.slice_without_original/2`), shared across every
+  subtractive metric — so the block's identifiers, tokens, and content are
+  extracted by the same pipeline as the baseline. Counts subtract exactly only
+  because the slice is byte-exact and block cuts fall on token boundaries.
+
+  Must return the same map shape as `analyze/1` and produce values bit-equal to
+  what `analyze/1` would yield on the file-minus-block content. The
+  `subtractive_loo` goldfile test asserts this against real sample blocks.
   """
-  @callback analyze_loo(baseline :: map(), block_content :: String.t()) :: map()
+  @callback analyze_loo(baseline :: map(), block_ctx :: CodeQA.Engine.FileContext.t()) :: map()
 
   @optional_callbacks [description: 0, enabled?: 0, analyze_loo: 2]
 end
