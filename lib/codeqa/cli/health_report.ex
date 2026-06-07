@@ -158,8 +158,18 @@ defmodule CodeQA.CLI.HealthReport do
   # changes delta, so skip it for the actions-only view.
   defp base_snapshot_for_view(:actions, _path, _base_ref, _analyze_opts), do: nil
 
-  defp base_snapshot_for_view(_view, path, base_ref, analyze_opts),
-    do: collect_base_snapshot(path, base_ref, analyze_opts)
+  # The delta only reads codebase aggregates (Delta.compute), never per-node
+  # block impact — so the snapshot skips leave-one-out entirely. This halves the
+  # PR run on large repos: the base tree is the whole codebase, and LOO over it
+  # was the dominant cost while its nodes were thrown away.
+  defp base_snapshot_for_view(_view, path, base_ref, analyze_opts) do
+    base_opts =
+      analyze_opts
+      |> Keyword.put(:compute_nodes, false)
+      |> Keyword.delete(:node_paths)
+
+    collect_base_snapshot(path, base_ref, base_opts)
+  end
 
   defp warn_actions_full_scan(:actions, nil),
     do:
