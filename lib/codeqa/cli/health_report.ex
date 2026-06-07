@@ -159,13 +159,15 @@ defmodule CodeQA.CLI.HealthReport do
   defp base_snapshot_for_view(:actions, _path, _base_ref, _analyze_opts), do: nil
 
   # The delta only reads codebase aggregates (Delta.compute), never per-node
-  # block impact — so the snapshot skips leave-one-out entirely. This halves the
-  # PR run on large repos: the base tree is the whole codebase, and LOO over it
-  # was the dominant cost while its nodes were thrown away.
+  # block impact nor codebase metrics (near-duplicate blocks, similarity) — so
+  # the snapshot skips both. On large repos the base tree is the whole codebase;
+  # leave-one-out and the O(files^2) near-duplicate pass were the two dominant
+  # costs, and both produced data the delta throws away.
   defp base_snapshot_for_view(_view, path, base_ref, analyze_opts) do
     base_opts =
       analyze_opts
       |> Keyword.put(:compute_nodes, false)
+      |> Keyword.put(:skip_codebase_metrics, true)
       |> Keyword.delete(:node_paths)
 
     collect_base_snapshot(path, base_ref, base_opts)
