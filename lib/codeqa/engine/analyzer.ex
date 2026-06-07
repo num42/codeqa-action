@@ -156,25 +156,35 @@ defmodule CodeQA.Engine.Analyzer do
           BlockImpactAnalyzer.analyze(pipeline_result, files, nodes_opts)
         end)
 
-      codebase_metrics =
-        stage(:codebase_metrics, %{file_count: map_size(files)}, fn ->
-          Registry.run_codebase_metrics(registry, files, opts)
-        end)
+      codebase_metrics = run_codebase_metrics_unless_skipped(registry, files, opts)
 
       updated_codebase =
         Map.merge(codebase_metrics, updated_pipeline_result["codebase"])
 
       Map.put(updated_pipeline_result, "codebase", updated_codebase)
     else
-      codebase_metrics =
-        stage(:codebase_metrics, %{file_count: map_size(files)}, fn ->
-          Registry.run_codebase_metrics(registry, files, opts)
-        end)
+      codebase_metrics = run_codebase_metrics_unless_skipped(registry, files, opts)
 
       %{
         "files" => file_results,
         "codebase" => Map.put(codebase_metrics, "aggregate", aggregate)
       }
+    end
+  end
+
+  # Codebase metrics (near-duplicate blocks, similarity) sit beside the
+  # aggregate, not inside it, so a consumer that only reads the aggregate — the
+  # base snapshot, which feeds only Delta.compute — never uses them. They are
+  # O(files^2)-ish and dominate that pass on large repos, so `skip_codebase_metrics`
+  # drops them entirely while the aggregate (the only thing the delta needs) is
+  # still built from every file.
+  defp run_codebase_metrics_unless_skipped(registry, files, opts) do
+    if Keyword.get(opts, :skip_codebase_metrics, false) do
+      %{}
+    else
+      stage(:codebase_metrics, %{file_count: map_size(files)}, fn ->
+        Registry.run_codebase_metrics(registry, files, opts)
+      end)
     end
   end
 
