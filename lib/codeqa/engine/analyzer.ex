@@ -56,8 +56,13 @@ defmodule CodeQA.Engine.Analyzer do
   Like `analyze_file_for_loo/2` but only re-runs file metrics whose name is in
   `Scorer.referenced_file_metric_names/0`. Metrics not referenced by any
   behavior YAML inherit their value from `baseline_metrics`. Metrics that
-  implement the optional `analyze_loo/2` callback derive their LOO value from
-  the baseline + the removed block's content, skipping a full file re-analyze.
+  implement the optional `analyze_loo/2` callback derive their LOO value
+  subtractively from the whole-file baseline plus the removed block's own
+  context, skipping the full file-minus-block re-analyze.
+
+  `block_content` is the verbatim original source of the removed block. Its
+  context is built once and shared across every subtractive metric; the
+  non-subtractive ones still re-analyze the reconstructed `content`.
   """
   @spec analyze_file_for_loo_partial(String.t(), String.t(), map(), String.t()) :: map()
   def analyze_file_for_loo_partial(_path, content, baseline_metrics, block_content \\ "") do
@@ -66,30 +71,32 @@ defmodule CodeQA.Engine.Analyzer do
     {ctx_us, ctx} =
       :timer.tc(fn -> Pipeline.build_file_context(content, skip_structural: true) end)
 
+    block_ctx = Pipeline.build_file_context(block_content, skip_structural: true)
+
     {result, breakdown} =
       baseline_metrics
       |> Enum.reduce({[], %{ctx: ctx_us}}, fn {name, baseline_value}, {acc, breakdown} ->
-        reduce_loo_metric(name, baseline_value, referenced, ctx, block_content, acc, breakdown)
+        reduce_loo_metric(name, baseline_value, referenced, ctx, block_ctx, acc, breakdown)
       end)
 
     :telemetry.execute([:codeqa, :loo_breakdown], breakdown, %{})
     result |> Map.new()
   end
 
-  defp reduce_loo_metric(name, baseline_value, referenced, ctx, block_content, acc, breakdown) do
+  defp reduce_loo_metric(name, baseline_value, referenced, ctx, block_ctx, acc, breakdown) do
     if MapSet.member?(referenced, name) do
-      {us, value} = time_loo_metric(name, baseline_value, ctx, block_content)
+      {us, value} = time_loo_metric(name, baseline_value, ctx, block_ctx)
       {[{name, value} | acc], Map.put(breakdown, name, us)}
     else
       {[{name, baseline_value} | acc], breakdown}
     end
   end
 
-  defp time_loo_metric(name, baseline_value, ctx, block_content) do
+  defp time_loo_metric(name, baseline_value, ctx, block_ctx) do
     mod = registered_module_for(name)
 
     if function_exported?(mod, :analyze_loo, 2) do
-      :timer.tc(fn -> mod.analyze_loo(baseline_value, block_content) end)
+      :timer.tc(fn -> mod.analyze_loo(baseline_value, block_ctx) end)
     else
       :timer.tc(fn -> mod.analyze(ctx) end)
     end
