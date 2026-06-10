@@ -15,10 +15,13 @@ defmodule CodeQA.Config do
     "testing" => 1
   }
 
+  @default_max_loo_file_bytes 32_768
+
   defstruct combined_top: 2,
             cosine_significance_threshold: 0.15,
             ignore_paths: [],
             impact_map: @default_impact,
+            max_loo_file_bytes: @default_max_loo_file_bytes,
             near_duplicate_blocks: []
 
   @spec load(String.t()) :: :ok
@@ -52,6 +55,9 @@ defmodule CodeQA.Config do
   @spec near_duplicate_blocks_opts() :: keyword()
   def near_duplicate_blocks_opts, do: fetch().near_duplicate_blocks
 
+  @spec max_loo_file_bytes() :: pos_integer() | nil
+  def max_loo_file_bytes, do: fetch().max_loo_file_bytes
+
   defp fetch, do: @key |> :persistent_term.get(%__MODULE__{})
 
   defp parse(path) do
@@ -66,8 +72,13 @@ defmodule CodeQA.Config do
       cosine_significance_threshold: Map.get(yaml, "cosine_significance_threshold", 0.15),
       ignore_paths: parse_ignore_paths(yaml),
       impact_map: parse_impact(yaml),
+      max_loo_file_bytes: parse_max_loo_file_bytes(yaml),
       near_duplicate_blocks: parse_near_duplicate_blocks(yaml)
     }
+
+  defp parse_max_loo_file_bytes(%{"max_loo_file_bytes" => n}) when is_integer(n) and n > 0, do: n
+  defp parse_max_loo_file_bytes(%{"max_loo_file_bytes" => nil}), do: nil
+  defp parse_max_loo_file_bytes(_), do: @default_max_loo_file_bytes
 
   defp parse_ignore_paths(%{"ignore_paths" => patterns}) when is_list(patterns), do: patterns
   defp parse_ignore_paths(_), do: []

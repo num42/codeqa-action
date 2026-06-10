@@ -173,4 +173,57 @@ defmodule CodeQA.CollectorTest do
       refute Map.has_key?(files, "generated/schema.ex")
     end
   end
+
+  describe "collect_files/3 with subpaths" do
+    setup do
+      tmp_dir =
+        Path.join(System.tmp_dir!(), "codeqa_subpath_#{System.unique_integer([:positive])}")
+
+      File.mkdir_p!(Path.join(tmp_dir, "lib"))
+      File.mkdir_p!(Path.join(tmp_dir, "test"))
+      File.mkdir_p!(Path.join(tmp_dir, "priv"))
+      File.mkdir_p!(Path.join(tmp_dir, "assets"))
+      File.write!(Path.join(tmp_dir, "lib/app.ex"), "defmodule App do\nend")
+      File.write!(Path.join(tmp_dir, "test/app_test.exs"), "defmodule AppTest do\nend")
+      File.write!(Path.join(tmp_dir, "priv/seeds.exs"), "IO.puts(:seed)")
+      File.write!(Path.join(tmp_dir, "assets/app.js"), "console.log('x')")
+
+      on_exit(fn -> File.rm_rf!(tmp_dir) end)
+
+      %{tmp_dir: tmp_dir}
+    end
+
+    test "empty subpaths collects whole repo", %{tmp_dir: tmp_dir} do
+      files = Collector.collect_files(tmp_dir, [], [])
+      assert Map.has_key?(files, "lib/app.ex")
+      assert Map.has_key?(files, "priv/seeds.exs")
+      assert Map.has_key?(files, "assets/app.js")
+    end
+
+    test "restricts walk to given subpaths", %{tmp_dir: tmp_dir} do
+      files = Collector.collect_files(tmp_dir, [], ["lib", "test"])
+      assert Map.has_key?(files, "lib/app.ex")
+      assert Map.has_key?(files, "test/app_test.exs")
+      refute Map.has_key?(files, "priv/seeds.exs")
+      refute Map.has_key?(files, "assets/app.js")
+    end
+
+    test "keys stay relative to root, not to subpath", %{tmp_dir: tmp_dir} do
+      files = Collector.collect_files(tmp_dir, [], ["lib"])
+      assert Map.has_key?(files, "lib/app.ex")
+      refute Map.has_key?(files, "app.ex")
+    end
+
+    test "ignore patterns still apply within subpaths", %{tmp_dir: tmp_dir} do
+      files = Collector.collect_files(tmp_dir, ["lib/*"], ["lib", "test"])
+      refute Map.has_key?(files, "lib/app.ex")
+      assert Map.has_key?(files, "test/app_test.exs")
+    end
+
+    test "nonexistent subpath is skipped, not raised", %{tmp_dir: tmp_dir} do
+      files = Collector.collect_files(tmp_dir, [], ["lib", "nope"])
+      assert Map.has_key?(files, "lib/app.ex")
+      refute Map.has_key?(files, "priv/seeds.exs")
+    end
+  end
 end

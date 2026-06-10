@@ -121,6 +121,66 @@ defmodule CodeQA.BlockImpactAnalyzerTest do
       assert result["files"]["lib/b.ex"]["nodes"] != []
     end
 
+    test "max_loo_file_bytes skips nodes for files over the cap, leaving aggregate intact" do
+      big_content = @fixture_content <> "\n# pad\n" <> String.duplicate("x", 5_000)
+
+      files = %{
+        "lib/small.ex" => @fixture_content,
+        "lib/big.ex" => big_content
+      }
+
+      pipeline_result = Analyzer.analyze_codebase(files)
+
+      full = BlockImpactAnalyzer.analyze(pipeline_result, files)
+      capped = BlockImpactAnalyzer.analyze(pipeline_result, files, max_loo_file_bytes: 1_000)
+
+      # Small file is under the cap: nodes computed, bit-identical to uncapped.
+      assert capped["files"]["lib/small.ex"]["nodes"] ==
+               full["files"]["lib/small.ex"]["nodes"]
+
+      # Big file is over the cap: its expensive LOO is skipped...
+      assert capped["files"]["lib/big.ex"]["nodes"] == []
+
+      # ...but its metrics still flow into the codebase aggregate.
+      assert capped["files"]["lib/big.ex"]["metrics"] ==
+               full["files"]["lib/big.ex"]["metrics"]
+
+      assert capped["codebase"] == full["codebase"]
+    end
+
+    test "node results are identical regardless of worker count (parallel == serial)" do
+      # Nodes of all files share one work pool. A file-local node id would
+      # collide across files (every file has a top-level node at index 0),
+      # letting parallel completion order pick a different file's result. This
+      # guards bit-identity between serial (workers: 1) and parallel runs.
+      big = @fixture_content <> "\n# pad\n" <> String.duplicate("x", 4_000)
+
+      files = %{
+        "lib/a.ex" => @fixture_content,
+        "lib/b.ex" => big,
+        "lib/c.ex" => @fixture_content
+      }
+
+      pipeline_result = Analyzer.analyze_codebase(files)
+
+      serial = BlockImpactAnalyzer.analyze(pipeline_result, files, workers: 1)
+      parallel = BlockImpactAnalyzer.analyze(pipeline_result, files, workers: 8)
+
+      assert serial["files"]["lib/a.ex"]["nodes"] == parallel["files"]["lib/a.ex"]["nodes"]
+      assert serial["files"]["lib/b.ex"]["nodes"] == parallel["files"]["lib/b.ex"]["nodes"]
+      assert serial["files"]["lib/c.ex"]["nodes"] == parallel["files"]["lib/c.ex"]["nodes"]
+    end
+
+    test "max_loo_file_bytes nil (default) computes nodes regardless of size" do
+      big_content = @fixture_content <> "\n# pad\n" <> String.duplicate("x", 5_000)
+      files = %{"lib/big.ex" => big_content}
+      pipeline_result = Analyzer.analyze_codebase(files)
+
+      result = BlockImpactAnalyzer.analyze(pipeline_result, files, max_loo_file_bytes: nil)
+
+      assert result["files"]["lib/big.ex"]["nodes"] != []
+    end
+
     test "node['type'] reflects classified block kind, not the always-:code default" do
       content = """
       defmodule Foo do

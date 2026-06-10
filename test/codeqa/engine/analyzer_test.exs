@@ -48,6 +48,20 @@ defmodule CodeQA.Engine.AnalyzerTest do
     end
   end
 
+  describe "analyze_codebase/2 with max_loo_file_bytes" do
+    test "passes the byte cap through to block impact, skipping oversized files" do
+      small = "defmodule Small do\n  def foo, do: :ok\nend\n"
+      big = small <> "\n# pad\n" <> String.duplicate("x", 5_000)
+      files = %{"lib/small.ex" => small, "lib/big.ex" => big}
+
+      result =
+        Analyzer.analyze_codebase(files, compute_nodes: true, max_loo_file_bytes: 1_000)
+
+      assert result["files"]["lib/small.ex"]["nodes"] != []
+      assert result["files"]["lib/big.ex"]["nodes"] == []
+    end
+  end
+
   describe "analyze_file_for_loo_partial/3" do
     @sample """
     defmodule Foo do
