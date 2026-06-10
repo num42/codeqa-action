@@ -1,88 +1,84 @@
 boolean_function_has_question_mark:
   _doc: "Functions returning a boolean should end with `?` (Elixir/Ruby) or start with `is_`/`has_` (JS/Python)."
   _fix_hint: "Rename this predicate to end with ? per the boolean-function convention."
-  _languages: [elixir, javascript, python, ruby]
-  _log_baseline: -6.6567
+  _languages: [elixir, python, ruby]
+  _log_baseline: -6.2668
   brevity:
-    mean_sample_size: 0.0127
-  casing_entropy:
-    mean_camel_case_count: 0.3410
-    mean_entropy: 0.0137
-    mean_snake_case_count: -0.0205
+    mean_sample_size: 0.0076
   compression:
-    mean_raw_bytes: -0.0088
-    mean_zlib_bytes: -0.0060
+    mean_raw_bytes: -0.0124
+    mean_redundancy: -0.0072
+    mean_zlib_bytes: -0.0059
+    mean_zlib_ratio: -0.0063
   entropy:
-    mean_token_max_entropy: 0.0036
-    mean_token_normalized: -0.0045
-    mean_total_tokens: 0.0278
-    mean_vocab_size: 0.0127
+    mean_token_normalized: -0.0043
+    mean_total_tokens: 0.0336
+    mean_vocab_size: 0.0076
   halstead:
-    mean_difficulty: -0.0101
-    mean_effort: -0.0070
-    mean_n2_unique_operands: 0.0049
-    mean_time_to_implement_seconds: -0.0070
+    mean_difficulty: -0.0050
+    mean_effort: -0.0037
+    mean_time_to_implement_seconds: -0.0037
   heaps:
-    mean_beta: -0.0136
-    mean_k: 0.0266
+    mean_beta: -0.0185
+    mean_k: 0.0318
   identifier_length_variance:
-    mean_max: 0.0167
-    mean_mean: -0.0315
-    mean_std_dev: -0.0588
-    mean_variance: -0.0896
+    mean_max: 0.0223
+    mean_mean: -0.0476
+    mean_std_dev: -0.0665
+    mean_variance: -0.0976
   lexical_concentration:
-    mean_simpson_d: 0.0160
-    mean_total_tokens: 0.0278
-    mean_yule_k: 0.0161
+    mean_simpson_d: 0.0219
+    mean_total_tokens: 0.0336
+    mean_yule_k: 0.0216
   line_patterns:
-    mean_string_literal_ratio: -0.0125
+    mean_string_literal_ratio: -0.0157
   magic_number_density:
-    mean_string_literal_ratio: -0.0125
+    mean_string_literal_ratio: -0.0157
   near_duplicate_blocks_file:
     mean_near_dup_block_d5: 0.2707
-    mean_near_dup_block_d6: 1.0745
+    mean_near_dup_block_d6: 0.9255
     mean_near_dup_block_d8: 0.4628
   ngram:
-    mean_bigram_repeated_unique: 0.0212
-    mean_bigram_repetition_rate: 0.0188
-    mean_bigram_total: 0.0281
-    mean_bigram_unique: 0.0114
-    mean_trigram_repeated_unique: 0.0334
-    mean_trigram_repetition_rate: 0.0258
-    mean_trigram_total: 0.0283
-    mean_trigram_unique: 0.0227
+    mean_bigram_repeated_unique: 0.0273
+    mean_bigram_repetition_rate: 0.0258
+    mean_bigram_total: 0.0339
+    mean_bigram_unique: 0.0134
+    mean_trigram_repeated_unique: 0.0445
+    mean_trigram_repetition_rate: 0.0376
+    mean_trigram_total: 0.0342
+    mean_trigram_unique: 0.0269
   punctuation_density:
     mean_bracket_nonalpha_prefix_count: 2.0000
-    mean_colon_suffix_density: -0.0269
-    mean_exclamation_density: 0.0234
-    mean_id_nonalpha_suffix_density: 0.0246
-    mean_question_mark_density: 1.1524
+    mean_colon_suffix_density: -0.0287
+    mean_exclamation_density: 0.0361
+    mean_id_nonalpha_suffix_density: 0.0305
+    mean_question_mark_density: 1.1611
   readability:
-    mean_avg_line_length: -0.0092
-    mean_avg_sub_words_per_id: -0.0097
-    mean_avg_tokens_per_line: 0.0248
-    mean_flesch_adapted: 0.0078
-    mean_fog_adapted: 0.0564
+    mean_avg_line_length: -0.0129
+    mean_avg_sub_words_per_id: -0.0270
+    mean_avg_tokens_per_line: 0.0300
+    mean_flesch_adapted: 0.0232
+    mean_fog_adapted: 0.0733
   renyi_entropy:
-    mean_renyi_0: 0.0036
-    mean_spectrum_slope: 0.0238
+    mean_hill_1: -0.0052
+    mean_hill_2: -0.0051
+    mean_spectrum_slope: 0.0185
   separator_counts:
     mean_underscore_count: -0.2039
   symbol_density:
-    mean_density: 0.0691
-    mean_distinct_symbol_types: 0.0138
-    mean_symbol_count: 0.0600
+    mean_density: 0.0992
+    mean_distinct_symbol_types: 0.0178
+    mean_symbol_count: 0.0775
   vocabulary:
-    mean_mattr: 0.0250
-    mean_raw_ttr: 0.0250
-    mean_unique_identifiers: 0.0175
+    mean_mattr: 0.0110
+    mean_raw_ttr: 0.0110
+    mean_unique_identifiers: 0.0069
   vowel_density:
-    mean_total_chars: -0.0370
+    mean_total_chars: -0.0483
   zipf:
-    mean_exponent: 0.0154
-    mean_r_squared: -0.0050
-    mean_total_tokens: 0.0278
-    mean_vocab_size: 0.0127
+    mean_exponent: 0.0215
+    mean_total_tokens: 0.0336
+    mean_vocab_size: 0.0076
 
 cyclomatic_complexity_under_10:
   _doc: "Functions should have a cyclomatic complexity under 10."
