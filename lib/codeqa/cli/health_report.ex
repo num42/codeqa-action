@@ -13,9 +13,13 @@ defmodule CodeQA.CLI.HealthReport do
   @impl CodeQA.CLI.Command
   def usage do
     """
-    Usage: codeqa health-report <path> [options]
+    Usage: codeqa health-report <path> [subpath ...] [options]
 
       Generate a graded health report for a codebase.
+
+      Pass one or more subpaths after <path> to restrict analysis to them
+      (e.g. `codeqa health-report . lib test` skips priv/assets/config).
+      Git context (base-ref, .gitignore) stays anchored at <path>.
 
     Options:
       -o, --output FILE     Output file path (default: stdout)
@@ -33,6 +37,8 @@ defmodule CodeQA.CLI.HealthReport do
       --ignore-paths PATHS  Comma-separated list of path patterns to ignore (supports wildcards, e.g. "test/*,docs/*")
       --base-ref REF        Base git ref for PR comparison (enables delta and block scoping)
       --head-ref REF        Head git ref (default: HEAD)
+      --max-loo-file-bytes N  Skip per-block analysis for files larger than N bytes
+                            (default: 32768; large/generated files dominate runtime)
       --comment             Multi-part mode: writes numbered part files to TMPDIR for PR comments
     """
   end
@@ -52,12 +58,13 @@ defmodule CodeQA.CLI.HealthReport do
     ignore_paths: :string,
     base_ref: :string,
     head_ref: :string,
+    max_loo_file_bytes: :integer,
     telemetry: :boolean,
     comment: :boolean
   ]
 
   def run(args) do
-    {opts, [path], _} = Options.parse(args, @command_options, o: :output)
+    {opts, [path | subpaths], _} = Options.parse(args, @command_options, o: :output)
     Options.validate_dir!(path)
     extra_ignore_patterns = Options.parse_ignore_paths(opts[:ignore_paths])
 
@@ -69,7 +76,7 @@ defmodule CodeQA.CLI.HealthReport do
     collect_t0 = System.monotonic_time(:microsecond)
 
     files =
-      Collector.collect_files(path, extra_ignore_patterns)
+      Collector.collect_files(path, extra_ignore_patterns, subpaths)
 
     collect_us = System.monotonic_time(:microsecond) - collect_t0
 
@@ -88,9 +95,12 @@ defmodule CodeQA.CLI.HealthReport do
     # all files get nodes, preserving standalone-run behavior.
     {changed_files, diff_line_ranges} = collect_diff(path, base_ref, head_ref)
 
+    max_loo_file_bytes = opts[:max_loo_file_bytes] || Config.max_loo_file_bytes()
+
     analyze_opts =
       Options.build_analyze_opts(opts) ++
-        Config.near_duplicate_blocks_opts() ++ node_opts(view, changed_files)
+        Config.near_duplicate_blocks_opts() ++
+        node_opts(view, changed_files, max_loo_file_bytes)
 
     start_time = System.monotonic_time(:millisecond)
     results = Analyzer.analyze_codebase(files, analyze_opts)
@@ -146,12 +156,18 @@ defmodule CodeQA.CLI.HealthReport do
   end
 
   # Block-impact LOO is the heaviest phase, so it runs only for views that
-  # render blocks. In a PR context per-node work is scoped to the changed files.
-  defp node_opts(:metrics, _changed_files), do: [compute_nodes: false]
+  # render blocks. In a PR context per-node work is scoped to the changed files,
+  # and files over the byte cap are skipped regardless of scope.
+  defp node_opts(:metrics, _changed_files, _max_loo_file_bytes), do: [compute_nodes: false]
 
-  defp node_opts(_view, changed_files) do
+  defp node_opts(_view, changed_files, max_loo_file_bytes) do
     node_paths = if changed_files == [], do: nil, else: Enum.map(changed_files, & &1.path)
-    [compute_nodes: true, node_paths: node_paths]
+
+    [
+      compute_nodes: true,
+      node_paths: node_paths,
+      max_loo_file_bytes: max_loo_file_bytes
+    ]
   end
 
   # The base snapshot is a full second analysis run; it only feeds the metric

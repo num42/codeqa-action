@@ -20,8 +20,8 @@ defmodule CodeQA.Engine.Collector do
       |> Enum.map(&".#{&1}")
       |> MapSet.new()
 
-  @spec collect_files(String.t(), [String.t()]) :: %{String.t() => String.t()}
-  def collect_files(root, extra_ignore_patterns \\ []) do
+  @spec collect_files(String.t(), [String.t()], [String.t()]) :: %{String.t() => String.t()}
+  def collect_files(root, extra_ignore_patterns \\ [], subpaths \\ []) do
     root_path = Path.expand(root)
     Config.load(root_path)
     patterns = all_ignore_patterns(extra_ignore_patterns)
@@ -33,7 +33,7 @@ defmodule CodeQA.Engine.Collector do
 
     files_map =
       root_path
-      |> walk_directory(extensions)
+      |> walk_roots(subpaths, extensions)
       |> Map.new(fn path ->
         rel = Path.relative_to(path, root_path)
         {rel, File.read!(path)}
@@ -84,6 +84,15 @@ defmodule CodeQA.Engine.Collector do
       {:ok, regex} -> Regex.match?(regex, path)
       _ -> false
     end
+  end
+
+  defp walk_roots(root_path, [], extensions), do: walk_directory(root_path, extensions)
+
+  defp walk_roots(root_path, subpaths, extensions) do
+    subpaths
+    |> Enum.map(&Path.join(root_path, &1))
+    |> Enum.filter(&File.dir?/1)
+    |> Enum.flat_map(&walk_directory(&1, extensions))
   end
 
   defp walk_directory(dir, extensions) do

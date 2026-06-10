@@ -76,6 +76,11 @@ defmodule CodeQA.BlockImpactAnalyzer do
     # unaffected — only the per-file node computation, whose output is read for
     # changed files alone, is skipped for the rest. `nil` means all files.
     node_paths = Keyword.get(opts, :node_paths)
+    # Files larger than this byte cap skip per-node leave-one-out entirely. LOO
+    # is O(file_bytes) per node, so a few large/generated files (lockfiles,
+    # bundled assets) dominate the run. They still flow into the codebase
+    # aggregate — only their refactoring nodes are dropped. `nil` means no cap.
+    max_loo_file_bytes = Keyword.get(opts, :max_loo_file_bytes)
 
     t0 = now()
 
@@ -121,7 +126,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
       file_results
       |> Task.async_stream(
         fn {path, file_data} ->
-          content = node_content(path, files_map, node_path_set)
+          content = node_content(path, files_map, node_path_set, max_loo_file_bytes)
           baseline_file_metrics = Map.get(file_data, "metrics", %{})
 
           {nodes, file_measurements} =
@@ -158,15 +163,23 @@ defmodule CodeQA.BlockImpactAnalyzer do
     Map.put(pipeline_result, "files", updated_files)
   end
 
-  # Returns a file's content for node computation. With no scope (`nil`), every
-  # file is in scope. With a scope set, files outside it get "" — which makes
-  # compute_nodes_timed short-circuit to no nodes, skipping the expensive
+  # Returns a file's content for node computation, or "" to skip it. A file is
+  # skipped if it's out of the changed-file scope OR over the byte cap. Either
+  # way compute_nodes_timed short-circuits to no nodes, skipping the expensive
   # per-node leave-one-out while leaving the codebase aggregate untouched.
-  defp node_content(path, files_map, nil), do: Map.get(files_map, path, "")
-
-  defp node_content(path, files_map, set) do
-    if MapSet.member?(set, path), do: Map.get(files_map, path, ""), else: ""
+  defp node_content(path, files_map, scope_set, max_bytes) do
+    if scope_set && not MapSet.member?(scope_set, path) do
+      ""
+    else
+      cap_by_bytes(Map.get(files_map, path, ""), max_bytes)
+    end
   end
+
+  defp cap_by_bytes(content, nil), do: content
+
+  defp cap_by_bytes(content, max_bytes) when byte_size(content) > max_bytes, do: ""
+
+  defp cap_by_bytes(content, _max_bytes), do: content
 
   defp compute_nodes_timed(
          _path,
