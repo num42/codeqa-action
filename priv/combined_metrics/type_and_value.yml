@@ -2,7 +2,7 @@ boolean_assigned_from_comparison:
   _doc: "Boolean variables should be assigned directly from comparisons or predicate calls, not set via conditionals."
   _fix_hint: "Assign the comparison result directly instead of via a redundant if/else."
   _languages: [elixir]
-  _log_baseline: -6.7155
+  _log_baseline: -9.7076
   branching:
     mean_branch_count: -1.5392
     mean_branching_density: 0.7530
@@ -128,6 +128,10 @@ boolean_assigned_from_comparison:
     mean_density: 0.1828
     mean_distinct_symbol_types: 0.0417
     mean_symbol_count: 0.1715
+  unreachable_code:
+    mean_terminal_statement_count: 0.9288
+    mean_unreachable_after_terminal_ratio: 1.3967
+    mean_unreachable_line_count: -0.8000
   vocabulary:
     mean_mattr: -0.0260
     mean_raw_ttr: -0.0279

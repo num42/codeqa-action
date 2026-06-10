@@ -247,7 +247,7 @@ name_contains_and:
   _doc: "Variable names containing `and` signal a variable that holds two concerns."
   _fix_hint: "Split this binding — a name containing 'and' signals it holds two things."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -2.6591
+  _log_baseline: -1.1875
   branching:
     mean_branch_count: -0.3666
     mean_branching_density: -0.3925
@@ -364,6 +364,9 @@ name_contains_and:
     mean_density: 0.0832
     mean_distinct_symbol_types: 0.0748
     mean_symbol_count: 0.0212
+  unreachable_code:
+    mean_terminal_statement_count: 0.5539
+    mean_unreachable_after_terminal_ratio: -0.0875
   vocabulary:
     mean_mattr: -0.0887
     mean_raw_ttr: -0.0633
@@ -918,7 +921,7 @@ name_is_too_long:
   _doc: "Names longer than ~30 characters harm readability."
   _fix_hint: "Shorten this overly long name while keeping it clear."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -10.2893
+  _log_baseline: -10.0545
   branching:
     mean_branch_count: 0.0340
     mean_branching_density: 0.0916
@@ -1041,6 +1044,10 @@ name_is_too_long:
     mean_density: 0.2971
     mean_distinct_symbol_types: 0.0446
     mean_symbol_count: 0.0831
+  unreachable_code:
+    mean_terminal_statement_count: 0.1025
+    mean_unreachable_after_terminal_ratio: -0.0495
+    mean_unreachable_line_count: -0.1862
   vocabulary:
     mean_mattr: -0.0939
     mean_raw_ttr: -0.1041
@@ -1358,7 +1365,7 @@ screaming_snake_for_constants:
   _doc: "Module-level constants should use SCREAMING_SNAKE_CASE."
   _fix_hint: "Name this constant in SCREAMING_SNAKE_CASE."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -4.5910
+  _log_baseline: -4.7797
   branching:
     mean_branching_density: 0.0176
     mean_non_blank_count: -0.0180
@@ -1441,6 +1448,8 @@ screaming_snake_for_constants:
     mean_underscore_count: 0.3971
   symbol_density:
     mean_symbol_count: -0.0036
+  unreachable_code:
+    mean_unreachable_after_terminal_ratio: 0.0533
   vocabulary:
     mean_mattr: -0.0037
     mean_raw_ttr: -0.0055
