@@ -34,6 +34,7 @@ defmodule CodeQA.Engine.Analyzer do
             |> Registry.register_file_metric(Metrics.CommentStructure)
             |> Registry.register_file_metric(Metrics.SeparatorCounts)
             |> Registry.register_file_metric(Metrics.LinePatterns)
+            |> Registry.register_file_metric(Metrics.UnreachableCode)
             |> Registry.register_codebase_metric(CodebaseMetrics.Similarity)
             |> Registry.register_file_metric(Metrics.NearDuplicateBlocksFile)
             |> Registry.register_codebase_metric(CodebaseMetrics.NearDuplicateBlocksCodebase)
