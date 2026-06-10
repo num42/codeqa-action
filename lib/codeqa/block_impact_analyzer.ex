@@ -122,37 +122,45 @@ defmodule CodeQA.BlockImpactAnalyzer do
     file_results = pipeline_result["files"]
     node_path_set = node_paths && MapSet.new(node_paths)
 
-    updated_files =
+    # Phase A — prepare each file (tokenize, parse, file cosines, index the node
+    # tree). Cheap; parallelized over files. Produces the per-file indexed tree
+    # plus the work units, which are pooled across all files in phase B.
+    preps =
       file_results
       |> Task.async_stream(
         fn {path, file_data} ->
           content = node_content(path, files_map, node_path_set, max_loo_file_bytes)
-          baseline_file_metrics = Map.get(file_data, "metrics", %{})
 
-          {nodes, file_measurements} =
-            compute_nodes_timed(
-              path,
-              content,
-              baseline_file_metrics,
-              file_results,
-              baseline_codebase_cosines,
-              nodes_top,
-              filtered_behaviors
-            )
-
-          :telemetry.execute(
-            [:codeqa, :block_impact, :file],
-            file_measurements,
-            %{path: path}
+          prepare_file(path, content, file_data, file_results, baseline_codebase_cosines,
+            nodes_top: nodes_top,
+            cached_behaviors: filtered_behaviors
           )
-
-          {path, Map.put(file_data, "nodes", nodes)}
         end,
         max_concurrency: workers,
         ordered: false,
         timeout: :infinity
       )
-      |> Map.new(fn {:ok, {path, data}} -> {path, data} end)
+      |> Enum.map(fn {:ok, prep} -> prep end)
+
+    # Phase B — compute every node of every file in ONE shared pool, so a few
+    # large files (hundreds of nodes each) can't leave most cores idle while
+    # they grind serially. Units are independent (read-only node_ctx), keyed by
+    # their stable index path for exact tree reconstruction.
+    work =
+      preps
+      |> Enum.flat_map(& &1.units)
+      |> Task.async_stream(fn unit -> {unit.id, compute_unit(unit)} end,
+        max_concurrency: workers,
+        ordered: false,
+        timeout: :infinity
+      )
+      |> Map.new(fn {:ok, kv} -> kv end)
+
+    # Phase C — rebuild each file's node tree from the pooled results and emit
+    # per-file telemetry. Cheap and serial.
+    updated_files =
+      preps
+      |> Map.new(fn prep -> finalize_file(prep, work) end)
 
     :telemetry.execute(
       [:codeqa, :block_impact, :analyze],
@@ -181,27 +189,24 @@ defmodule CodeQA.BlockImpactAnalyzer do
 
   defp cap_by_bytes(content, _max_bytes), do: content
 
-  defp compute_nodes_timed(
-         _path,
-         "",
-         _baseline_file_metrics,
-         _file_results,
-         _baseline_codebase_cosines,
-         _nodes_top,
-         _cached_behaviors
-       ),
-       do: {[], %{duration: 0, file_cosines_us: 0, node_count: 0, parse_us: 0, tokenize_us: 0}}
+  # Phase A — tokenize, parse, file cosines, and index the node tree into flat
+  # work units. A skipped file (out of scope / over byte cap) yields no units
+  # and an empty indexed tree. The returned prep carries everything phase C
+  # needs to rebuild the file's nodes after the units are computed in phase B.
+  defp prepare_file(path, "", file_data, _file_results, _cosines, _opts) do
+    %{
+      path: path,
+      file_data: file_data,
+      indexed_tree: [],
+      units: [],
+      measurements: %{duration: 0, file_cosines_us: 0, node_count: 0, parse_us: 0, tokenize_us: 0}
+    }
+  end
 
-  defp compute_nodes_timed(
-         path,
-         content,
-         baseline_file_metrics,
-         file_results,
-         baseline_codebase_cosines,
-         nodes_top,
-         cached_behaviors
-       ) do
-    t0 = now()
+  defp prepare_file(path, content, file_data, file_results, baseline_codebase_cosines, opts) do
+    nodes_top = Keyword.fetch!(opts, :nodes_top)
+    cached_behaviors = Keyword.fetch!(opts, :cached_behaviors)
+    baseline_file_metrics = Map.get(file_data, "metrics", %{})
 
     {root_tokens, tokenize_us} = timed(fn -> TokenNormalizer.normalize_structural(content) end)
     {top_level_nodes, parse_us} = timed(fn -> Parser.detect_blocks(root_tokens, Unknown) end)
@@ -219,63 +224,120 @@ defmodule CodeQA.BlockImpactAnalyzer do
         )
       end)
 
-    inc_agg = build_incremental_agg(file_results)
-    old_file_triples = file_metrics_to_triples(baseline_file_metrics)
-    project_langs = project_languages(file_results)
-
     node_ctx = %{
       baseline_codebase_cosines: baseline_codebase_cosines,
       baseline_file_cosines: baseline_file_cosines,
       baseline_file_metrics: baseline_file_metrics,
       cached_behaviors: cached_behaviors,
       content: content,
-      inc_agg: inc_agg,
+      inc_agg: build_incremental_agg(file_results),
       lang_mod: lang_mod,
       language: language,
       nodes_top: nodes_top,
-      old_file_triples: old_file_triples,
+      old_file_triples: file_metrics_to_triples(baseline_file_metrics),
       path: path,
-      project_langs: project_langs,
+      project_langs: project_languages(file_results),
       root_tokens: root_tokens
     }
 
-    nodes =
-      top_level_nodes
-      |> Enum.map(&serialize_node(&1, node_ctx))
-      |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
+    # The index path is prefixed with `path` so unit ids are globally unique
+    # across files — units of all files share one work pool, where a file-local
+    # index alone would collide (every file has a top-level node at index 0).
+    indexed_tree = index_tree(top_level_nodes, node_ctx, nil, [path])
 
-    measurements = %{
-      bytes: byte_size(content),
-      duration: now() - t0,
-      file_cosines_us: file_cosines_us,
-      node_count: length(top_level_nodes),
-      parse_us: parse_us,
-      token_count: length(root_tokens),
-      tokenize_us: tokenize_us
+    %{
+      path: path,
+      file_data: file_data,
+      indexed_tree: indexed_tree,
+      units: flatten_units(indexed_tree),
+      measurements: %{
+        bytes: byte_size(content),
+        file_cosines_us: file_cosines_us,
+        node_count: length(top_level_nodes),
+        parse_us: parse_us,
+        token_count: length(root_tokens),
+        tokenize_us: tokenize_us
+      }
     }
-
-    {nodes, measurements}
   end
 
-  defp serialize_node(node, node_ctx, parent_context \\ nil) do
+  # Phase C — rebuild a file's node tree from the pooled work results and emit
+  # per-file telemetry. The per-file `duration` is the sum of its nodes' own
+  # durations (not wall-clock — nodes run in the shared phase-B pool now).
+  defp finalize_file(%{path: path, file_data: file_data} = prep, work) do
+    nodes = rebuild_nodes(prep.indexed_tree, work)
+
+    node_duration_sum =
+      prep.units
+      |> Enum.map(fn unit -> work |> Map.get(unit.id) |> unit_node_duration() end)
+      |> Enum.sum()
+
+    measurements = Map.put(prep.measurements, :duration, node_duration_sum)
+    :telemetry.execute([:codeqa, :block_impact, :file], measurements, %{path: path})
+
+    {path, Map.put(file_data, "nodes", nodes)}
+  end
+
+  defp unit_node_duration({_block_type, _potentials, node_us}), do: node_us
+
+  # Wraps each node with a stable index path (its position in the pre-order
+  # tree), its resolved parent_context, and its node_ctx — preserving the
+  # children structure. Each node's parent_context is resolved by its parent
+  # before the recursive call (`parent_context_for(parent.tokens, node)`),
+  # exactly as the original recursion did; top-level nodes get `nil`. The index
+  # path is deterministic and order-independent, so work can be computed in any
+  # order and rebuilt exactly.
+  defp index_tree(nodes, node_ctx, parent_tokens, prefix) do
+    nodes
+    |> Enum.with_index()
+    |> Enum.map(fn {node, i} ->
+      id = prefix ++ [i]
+      parent_context = if parent_tokens, do: parent_context_for(parent_tokens, node)
+
+      %{
+        id: id,
+        node: node,
+        node_ctx: node_ctx,
+        parent_context: parent_context,
+        children: index_tree(node.children, node_ctx, node.tokens, id)
+      }
+    end)
+  end
+
+  defp flatten_units(indexed) do
+    Enum.flat_map(indexed, fn unit ->
+      [Map.delete(unit, :children) | flatten_units(unit.children)]
+    end)
+  end
+
+  # The expensive, independent per-node work: classify + leave-one-out
+  # potentials. Reads only the node and the read-only node_ctx, so units can be
+  # computed in parallel across files. Returns the node's own duration so phase
+  # C can sum it into the per-file telemetry.
+  defp compute_unit(%{node: node, node_ctx: node_ctx, parent_context: parent_context}) do
     block_type =
       node
       |> NodeClassifier.classify(node_ctx.lang_mod, parent_context)
       |> TypedNodeKind.of()
 
-    potentials =
+    {potentials, node_us} =
       if length(node.tokens) < @min_tokens do
-        []
+        {[], 0}
       else
         compute_potentials_timed(node, node_ctx, block_type)
       end
 
-    children =
-      node.children
-      |> Enum.map(fn child ->
-        serialize_node(child, node_ctx, parent_context_for(node.tokens, child))
-      end)
-      |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
+    {block_type, potentials, node_us}
+  end
+
+  defp rebuild_nodes(indexed, work) do
+    indexed
+    |> Enum.map(&rebuild_node(&1, work))
+    |> Enum.sort_by(fn n -> {n["start_line"], n["column_start"]} end)
+  end
+
+  defp rebuild_node(%{id: id, node: node, children: children}, work) do
+    {block_type, potentials, _node_us} = Map.fetch!(work, id)
 
     first_token = List.first(node.tokens)
     char_length = node.tokens |> Enum.sum_by(fn t -> byte_size(t.content) end)
@@ -288,7 +350,7 @@ defmodule CodeQA.BlockImpactAnalyzer do
       "type" => Atom.to_string(block_type),
       "token_count" => length(node.tokens),
       "refactoring_potentials" => potentials,
-      "children" => children
+      "children" => rebuild_nodes(children, work)
     }
   end
 
@@ -340,19 +402,21 @@ defmodule CodeQA.BlockImpactAnalyzer do
         )
       end)
 
+    duration = now() - t0
+
     :telemetry.execute(
       [:codeqa, :block_impact, :node],
       %{
         aggregate_us: aggregate_us,
         analyze_file_us: analyze_file_us,
-        duration: now() - t0,
+        duration: duration,
         reconstruct_us: reconstruct_us,
         refactoring_us: refactoring_us
       },
       %{path: node_ctx.path, token_count: length(node.tokens)}
     )
 
-    potentials
+    {potentials, duration}
   end
 
   defp file_metrics_to_triples(metrics) when is_map(metrics) do
