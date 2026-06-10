@@ -122,6 +122,12 @@ defmodule CodeQA.BlockImpactAnalyzer do
     file_results = pipeline_result["files"]
     node_path_set = node_paths && MapSet.new(node_paths)
 
+    # The incremental aggregate and project languages are identical for every
+    # file, so they're built once here. Building them per file (over all
+    # file_results) was O(files^2) and dominated large-repo runs.
+    inc_agg = build_incremental_agg(file_results)
+    project_langs = project_languages(file_results)
+
     # Phase A — prepare each file (tokenize, parse, file cosines, index the node
     # tree). Cheap; parallelized over files. Produces the per-file indexed tree
     # plus the work units, which are pooled across all files in phase B.
@@ -131,9 +137,11 @@ defmodule CodeQA.BlockImpactAnalyzer do
         fn {path, file_data} ->
           content = node_content(path, files_map, node_path_set, max_loo_file_bytes)
 
-          prepare_file(path, content, file_data, file_results, baseline_codebase_cosines,
+          prepare_file(path, content, file_data, baseline_codebase_cosines,
             nodes_top: nodes_top,
-            cached_behaviors: filtered_behaviors
+            cached_behaviors: filtered_behaviors,
+            inc_agg: inc_agg,
+            project_langs: project_langs
           )
         end,
         max_concurrency: workers,
@@ -142,19 +150,24 @@ defmodule CodeQA.BlockImpactAnalyzer do
       )
       |> Enum.map(fn {:ok, prep} -> prep end)
 
+    # The per-file node_ctx is large (file content, tokens, cosines). Held in a
+    # map keyed by file path and captured once per Flow stage, it is copied
+    # O(stages) times — not once per node, which at thousands of nodes drove
+    # memory into tens of GB and a hard slowdown cliff.
+    ctx_by_file = Map.new(preps, fn prep -> {prep.path, prep.node_ctx} end)
+
     # Phase B — compute every node of every file in ONE shared pool, so a few
     # large files (hundreds of nodes each) can't leave most cores idle while
-    # they grind serially. Units are independent (read-only node_ctx), keyed by
-    # their stable index path for exact tree reconstruction.
+    # they grind serially. Flow's `max_demand` bounds in-flight units per stage,
+    # giving backpressure so the whole unit set isn't materialized at once.
+    # Units are independent; keyed by their stable index path for exact tree
+    # reconstruction.
     work =
       preps
       |> Enum.flat_map(& &1.units)
-      |> Task.async_stream(fn unit -> {unit.id, compute_unit(unit)} end,
-        max_concurrency: workers,
-        ordered: false,
-        timeout: :infinity
-      )
-      |> Map.new(fn {:ok, kv} -> kv end)
+      |> Flow.from_enumerable(max_demand: 5, stages: workers)
+      |> Flow.map(fn unit -> {unit.id, compute_unit(unit, ctx_by_file)} end)
+      |> Map.new()
 
     # Phase C — rebuild each file's node tree from the pooled results and emit
     # per-file telemetry. Cheap and serial.
@@ -193,19 +206,22 @@ defmodule CodeQA.BlockImpactAnalyzer do
   # work units. A skipped file (out of scope / over byte cap) yields no units
   # and an empty indexed tree. The returned prep carries everything phase C
   # needs to rebuild the file's nodes after the units are computed in phase B.
-  defp prepare_file(path, "", file_data, _file_results, _cosines, _opts) do
+  defp prepare_file(path, "", file_data, _cosines, _opts) do
     %{
       path: path,
       file_data: file_data,
+      node_ctx: nil,
       indexed_tree: [],
       units: [],
       measurements: %{duration: 0, file_cosines_us: 0, node_count: 0, parse_us: 0, tokenize_us: 0}
     }
   end
 
-  defp prepare_file(path, content, file_data, file_results, baseline_codebase_cosines, opts) do
+  defp prepare_file(path, content, file_data, baseline_codebase_cosines, opts) do
     nodes_top = Keyword.fetch!(opts, :nodes_top)
     cached_behaviors = Keyword.fetch!(opts, :cached_behaviors)
+    inc_agg = Keyword.fetch!(opts, :inc_agg)
+    project_langs = Keyword.fetch!(opts, :project_langs)
     baseline_file_metrics = Map.get(file_data, "metrics", %{})
 
     {root_tokens, tokenize_us} = timed(fn -> TokenNormalizer.normalize_structural(content) end)
@@ -230,24 +246,24 @@ defmodule CodeQA.BlockImpactAnalyzer do
       baseline_file_metrics: baseline_file_metrics,
       cached_behaviors: cached_behaviors,
       content: content,
-      inc_agg: build_incremental_agg(file_results),
+      inc_agg: inc_agg,
       lang_mod: lang_mod,
       language: language,
       nodes_top: nodes_top,
       old_file_triples: file_metrics_to_triples(baseline_file_metrics),
       path: path,
-      project_langs: project_languages(file_results),
-      root_tokens: root_tokens
+      project_langs: project_langs
     }
 
     # The index path is prefixed with `path` so unit ids are globally unique
     # across files — units of all files share one work pool, where a file-local
     # index alone would collide (every file has a top-level node at index 0).
-    indexed_tree = index_tree(top_level_nodes, node_ctx, nil, [path])
+    indexed_tree = index_tree(top_level_nodes, path, nil, [path])
 
     %{
       path: path,
       file_data: file_data,
+      node_ctx: node_ctx,
       indexed_tree: indexed_tree,
       units: flatten_units(indexed_tree),
       measurements: %{
@@ -281,13 +297,16 @@ defmodule CodeQA.BlockImpactAnalyzer do
   defp unit_node_duration({_block_type, _potentials, node_us}), do: node_us
 
   # Wraps each node with a stable index path (its position in the pre-order
-  # tree), its resolved parent_context, and its node_ctx — preserving the
-  # children structure. Each node's parent_context is resolved by its parent
-  # before the recursive call (`parent_context_for(parent.tokens, node)`),
-  # exactly as the original recursion did; top-level nodes get `nil`. The index
-  # path is deterministic and order-independent, so work can be computed in any
-  # order and rebuilt exactly.
-  defp index_tree(nodes, node_ctx, parent_tokens, prefix) do
+  # tree), its resolved parent_context, and its owning file's key — preserving
+  # the children structure. The node_ctx is NOT carried per unit: it is large
+  # (file content, tokens, cosines) and would be copied once per node when units
+  # are dispatched to the Flow workers, blowing up memory. Instead units carry
+  # only `file_key`, and the worker looks the node_ctx up from a per-file map
+  # captured once per stage. Each node's parent_context is resolved by its
+  # parent before the recursive call, exactly as the original recursion did;
+  # top-level nodes get `nil`. The index path is deterministic and
+  # order-independent, so work can be computed in any order and rebuilt exactly.
+  defp index_tree(nodes, file_key, parent_tokens, prefix) do
     nodes
     |> Enum.with_index()
     |> Enum.map(fn {node, i} ->
@@ -297,9 +316,9 @@ defmodule CodeQA.BlockImpactAnalyzer do
       %{
         id: id,
         node: node,
-        node_ctx: node_ctx,
+        file_key: file_key,
         parent_context: parent_context,
-        children: index_tree(node.children, node_ctx, node.tokens, id)
+        children: index_tree(node.children, file_key, node.tokens, id)
       }
     end)
   end
@@ -314,7 +333,12 @@ defmodule CodeQA.BlockImpactAnalyzer do
   # potentials. Reads only the node and the read-only node_ctx, so units can be
   # computed in parallel across files. Returns the node's own duration so phase
   # C can sum it into the per-file telemetry.
-  defp compute_unit(%{node: node, node_ctx: node_ctx, parent_context: parent_context}) do
+  defp compute_unit(
+         %{node: node, file_key: file_key, parent_context: parent_context},
+         ctx_by_file
+       ) do
+    node_ctx = Map.fetch!(ctx_by_file, file_key)
+
     block_type =
       node
       |> NodeClassifier.classify(node_ctx.lang_mod, parent_context)
