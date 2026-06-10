@@ -158,13 +158,13 @@ defmodule CodeQA.BlockImpactAnalyzer do
 
     # Phase B — compute every node of every file in ONE shared pool, so a few
     # large files (hundreds of nodes each) can't leave most cores idle while
-    # they grind serially. Flow's `max_demand` bounds in-flight units per stage,
-    # giving backpressure so the whole unit set isn't materialized at once.
-    # Units are independent; keyed by their stable index path for exact tree
-    # reconstruction.
+    # they grind serially. Units stream lazily out of the preps (Stream, not
+    # Enum) so the full unit set is never materialized at once; Flow's
+    # `max_demand` then bounds in-flight units per stage. Units are independent;
+    # keyed by their stable index path for exact tree reconstruction.
     work =
       preps
-      |> Enum.flat_map(& &1.units)
+      |> Stream.flat_map(& &1.units)
       |> Flow.from_enumerable(max_demand: 5, stages: workers)
       |> Flow.map(fn unit -> {unit.id, compute_unit(unit, ctx_by_file)} end)
       |> Map.new()
