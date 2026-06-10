@@ -63,10 +63,10 @@ defmodule CodeQA.CombinedMetrics.SampleRunnerTest do
       SampleRunner.apply_languages(category: "code_smells", dir: dir)
       {:ok, data} = YamlElixir.read_from_file(Path.join(dir, "code_smells.yml"))
 
-      # no_dead_code_after_return is blocklisted for elixir — the auto allowlist
-      # must not overwrite it.
+      # no_dead_code_after_return is blocklisted for elixir/json/xml — the auto
+      # allowlist must not overwrite it.
       groups = Map.get(data, "no_dead_code_after_return")
-      assert get_in(groups, ["_excludes_languages"]) == ["elixir"]
+      assert get_in(groups, ["_excludes_languages"]) == ["elixir", "json", "xml"]
       refute Map.has_key?(groups, "_languages")
     end
   end

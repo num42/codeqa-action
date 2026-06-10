@@ -200,7 +200,7 @@ consistent_function_style:
   _doc: "A module should not mix one-liner and multi-clause function definitions for the same concern."
   _fix_hint: "Match the surrounding function-definition style (def vs anonymous, single vs multi-clause)."
   _languages: [elixir]
-  _log_baseline: 60.0235
+  _log_baseline: 60.7969
   branching:
     mean_branch_count: 0.3619
     mean_branching_density: 0.2247
@@ -327,6 +327,8 @@ consistent_function_style:
     mean_density: -0.0911
     mean_distinct_symbol_types: 0.0769
     mean_symbol_count: 0.1933
+  unreachable_code:
+    mean_terminal_statement_count: -0.9610
   vocabulary:
     mean_mattr: 0.0764
     mean_raw_ttr: 0.0549
