@@ -472,6 +472,18 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert part_3 =~ "lib/foo.ex:42-67"
     end
 
+    test "agent-actions part carries the part-3 sentinel" do
+      [_, _, part_3] = Formatter.render_parts(@sample_report)
+      assert part_3 =~ "<!-- codeqa-health-report-3 -->"
+    end
+
+    test "sentinels are not duplicated on metric parts" do
+      [part_1, part_2 | _] = Formatter.render_parts(@sample_report)
+
+      assert count_occurrences(part_1, "<!-- codeqa-health-report-1 -->") == 1
+      assert count_occurrences(part_2, "<!-- codeqa-health-report-2 -->") == 1
+    end
+
     test ":metrics view returns only the metric parts" do
       parts = Formatter.render_parts(@sample_report, view: :metrics)
       assert length(parts) == 2
@@ -483,5 +495,14 @@ defmodule CodeQA.HealthReport.FormatterTest do
       assert [part] = Formatter.render_parts(report, view: :actions)
       assert part =~ "kind: refactoring-tasks"
     end
+
+    test ":actions view part carries the part-1 sentinel" do
+      assert [part] = Formatter.render_parts(@sample_report, view: :actions)
+      assert part =~ "<!-- codeqa-health-report-1 -->"
+    end
+  end
+
+  defp count_occurrences(string, substring) do
+    string |> String.split(substring) |> length() |> Kernel.-(1)
   end
 end
