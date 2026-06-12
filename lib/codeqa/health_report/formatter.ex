@@ -24,7 +24,11 @@ defmodule CodeQA.HealthReport.Formatter do
   @spec render_parts(map(), keyword()) :: [String.t()]
   def render_parts(report, opts \\ []) do
     view = Keyword.get(opts, :view, :both)
-    render_parts_for(view, report, opts)
+
+    view
+    |> render_parts_for(report, opts)
+    |> Enum.with_index(1)
+    |> Enum.map(&ensure_sentinel/1)
   end
 
   defp render_parts_for(:metrics, report, opts),
@@ -34,4 +38,11 @@ defmodule CodeQA.HealthReport.Formatter do
 
   defp render_parts_for(:both, report, opts),
     do: render_parts_for(:metrics, report, opts) ++ render_parts_for(:actions, report, opts)
+
+  # run.sh locates the sticky comment for part N via this exact marker; a part
+  # without it gets re-created as a new comment on every run.
+  defp ensure_sentinel({part, n}) do
+    sentinel = "<!-- codeqa-health-report-#{n} -->"
+    if String.contains?(part, sentinel), do: part, else: part <> "\n" <> sentinel
+  end
 end
