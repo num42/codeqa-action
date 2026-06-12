@@ -2,7 +2,7 @@ consistent_casing_within_file:
   _doc: "A file should use one naming convention throughout — no mixing of camelCase and snake_case for the same kind of identifier."
   _fix_hint: "Align identifier casing in this {{type}} with the rest of the file."
   _languages: [elixir]
-  _log_baseline: -0.8970
+  _log_baseline: -2.3395
   brevity:
     mean_sample_size: -0.0471
   casing_entropy:
@@ -43,6 +43,10 @@ consistent_casing_within_file:
   lexical_concentration:
     mean_simpson_d: 0.0118
     mean_yule_k: 0.0112
+  mtld:
+    mean_mtld: -0.1635
+    mean_mtld_backward: -0.1369
+    mean_mtld_forward: -0.1901
   ngram:
     mean_bigram_hapax_fraction: -0.0071
     mean_bigram_repetition_rate: 0.0267
@@ -78,7 +82,7 @@ consistent_error_return_shape:
   _doc: "All functions in a module should return errors in the same shape — mixed `nil`, `false`, and `{:error, _}` returns are confusing."
   _fix_hint: "Return errors in one shape everywhere (e.g. {:error, reason})."
   _languages: [elixir]
-  _log_baseline: -4.1947
+  _log_baseline: -9.7436
   branching:
     mean_branch_count: -0.2800
     mean_branching_density: 0.5563
@@ -150,6 +154,10 @@ consistent_error_return_shape:
   magic_number_density:
     mean_density: -0.2062
     mean_string_literal_ratio: -0.5234
+  mtld:
+    mean_mtld: -0.5904
+    mean_mtld_backward: -0.4460
+    mean_mtld_forward: -0.6807
   near_duplicate_blocks_file:
     mean_block_count: -0.1566
     mean_near_dup_block_d0: -1.3562
@@ -211,7 +219,7 @@ consistent_function_style:
   _doc: "A module should not mix one-liner and multi-clause function definitions for the same concern."
   _fix_hint: "Match the surrounding function-definition style (def vs anonymous, single vs multi-clause)."
   _languages: [elixir]
-  _log_baseline: 63.7248
+  _log_baseline: 67.3695
   branching:
     mean_branch_count: 0.3619
     mean_branching_density: 0.2247
@@ -293,6 +301,10 @@ consistent_function_style:
     mean_density: -0.1667
     mean_magic_number_count: 0.2032
     mean_string_literal_ratio: 0.4297
+  mtld:
+    mean_mtld: 0.4481
+    mean_mtld_backward: 0.4298
+    mean_mtld_forward: 0.4634
   near_duplicate_blocks_file:
     mean_block_count: 0.2833
     mean_near_dup_block_d0: 1.3442
@@ -365,75 +377,79 @@ same_concept_same_name:
   _doc: "The same domain concept should use the same name throughout a file — mixing `user`, `usr`, and `u` for the same thing harms readability."
   _fix_hint: "Use one name for this concept across the file instead of synonyms."
   _languages: [elixir]
-  _log_baseline: -22.7019
+  _log_baseline: -17.8551
   brevity:
-    mean_sample_size: -1.3457
+    mean_sample_size: -0.3529
   compression:
-    mean_raw_bytes: 0.1773
-    mean_redundancy: 0.3935
-    mean_unique_line_ratio: -0.3251
-    mean_zlib_bytes: -0.8263
-    mean_zlib_ratio: 1.0033
+    mean_raw_bytes: 0.0465
+    mean_redundancy: 0.1032
+    mean_unique_line_ratio: -0.0853
+    mean_zlib_bytes: -0.2167
+    mean_zlib_ratio: 0.2631
   conditional_entropy:
-    mean_conditional_entropy: -0.2157
-    mean_perplexity: -0.2990
+    mean_conditional_entropy: -0.0566
+    mean_perplexity: -0.0784
   entropy:
-    mean_char_entropy: -0.1808
-    mean_char_normalized: -0.1800
-    mean_token_entropy: -0.3546
-    mean_token_max_entropy: -0.2899
-    mean_vocab_size: -1.3457
+    mean_char_entropy: -0.0474
+    mean_char_normalized: -0.0472
+    mean_token_entropy: -0.0930
+    mean_token_max_entropy: -0.0760
+    mean_vocab_size: -0.3529
   halstead:
-    mean_difficulty: 1.8665
-    mean_effort: 1.5662
-    mean_estimated_bugs: -0.2997
-    mean_n2_unique_operands: -1.8665
-    mean_time_to_implement_seconds: 1.5662
-    mean_vocabulary: -1.3857
-    mean_volume: -0.3003
+    mean_difficulty: 0.4895
+    mean_effort: 0.4108
+    mean_estimated_bugs: -0.0786
+    mean_n2_unique_operands: -0.4895
+    mean_time_to_implement_seconds: 0.4108
+    mean_vocabulary: -0.3634
+    mean_volume: -0.0788
   heaps:
-    mean_beta: -0.5870
-    mean_k: 0.5102
+    mean_beta: -0.1539
+    mean_k: 0.1338
   identifier_length_variance:
-    mean_mean: 0.3431
-    mean_std_dev: -0.4791
-    mean_variance: -0.9580
+    mean_mean: 0.0900
+    mean_std_dev: -0.1256
+    mean_variance: -0.2512
   lexical_concentration:
-    mean_simpson_d: 0.5816
-    mean_yule_k: 0.5820
+    mean_simpson_d: 0.1525
+    mean_yule_k: 0.1526
   line_patterns:
-    mean_unique_line_ratio: -0.6939
+    mean_unique_line_ratio: -0.1820
+  mtld:
+    mean_mtld: -1.4606
+    mean_mtld_backward: -0.8420
+    mean_mtld_forward: -2.0000
   ngram:
-    mean_bigram_hapax_fraction: -0.6466
-    mean_bigram_repeated_unique: -0.2091
-    mean_bigram_repetition_rate: 0.6530
-    mean_bigram_unique: -1.1746
-    mean_trigram_hapax_fraction: -0.6625
-    mean_trigram_repeated_unique: 1.2887
-    mean_trigram_repetition_rate: 1.6149
-    mean_trigram_unique: -0.9875
+    mean_bigram_hapax_fraction: -0.1696
+    mean_bigram_repeated_unique: -0.0548
+    mean_bigram_repetition_rate: 0.1713
+    mean_bigram_unique: -0.3080
+    mean_trigram_hapax_fraction: -0.1737
+    mean_trigram_repeated_unique: 0.3380
+    mean_trigram_repetition_rate: 0.4235
+    mean_trigram_unique: -0.2590
   readability:
-    mean_avg_line_length: 0.1837
-    mean_avg_sub_words_per_id: -0.1771
-    mean_flesch_adapted: 0.2348
+    mean_avg_line_length: 0.0482
+    mean_avg_sub_words_per_id: -0.0464
+    mean_flesch_adapted: 0.0616
   renyi_entropy:
-    mean_hill_1: -1.3316
-    mean_hill_2: -0.5598
-    mean_renyi_0: -0.2899
-    mean_renyi_1: -0.3546
-    mean_renyi_2: -0.1759
-    mean_spectrum_slope: -0.5362
+    mean_hill_1: -0.3492
+    mean_hill_2: -0.1468
+    mean_renyi_0: -0.0760
+    mean_renyi_1: -0.0930
+    mean_renyi_2: -0.0461
+    mean_spectrum_slope: -0.1406
   separator_counts:
-    mean_underscore_count: -0.5711
+    mean_underscore_count: -0.1498
   symbol_density:
-    mean_density: -0.1807
+    mean_density: -0.0474
   vocabulary:
-    mean_mattr: -1.8899
-    mean_raw_ttr: -1.9969
-    mean_unique_identifiers: -2.0000
+    mean_mattr: -0.4957
+    mean_raw_ttr: -0.5237
+    mean_unique_identifiers: -0.5245
   vowel_density:
-    mean_total_chars: 0.3432
+    mean_total_chars: 0.0900
   zipf:
-    mean_exponent: 0.7698
-    mean_vocab_size: -1.3457
+    mean_exponent: 0.2019
+    mean_vocab_size: -0.3529
 

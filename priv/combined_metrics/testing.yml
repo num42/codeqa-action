@@ -2,7 +2,7 @@ reasonable_test_to_code_ratio:
   _doc: "There should be an adequate number of test cases relative to the code being tested."
   _fix_hint: "Add tests for this module to reach a reasonable test-to-code ratio."
   _languages: [elixir]
-  _log_baseline: 14.7212
+  _log_baseline: 14.9255
   branching:
     mean_branch_count: 0.1869
     mean_branching_density: 0.0352
@@ -79,6 +79,10 @@ reasonable_test_to_code_ratio:
     mean_density: 0.3159
     mean_magic_number_count: 0.4248
     mean_string_literal_ratio: 0.2536
+  mtld:
+    mean_mtld: 0.0302
+    mean_mtld_backward: 0.0361
+    mean_mtld_forward: 0.0241
   near_duplicate_blocks_file:
     mean_block_count: 0.3136
     mean_near_dup_block_d0: 0.6699
@@ -144,7 +148,7 @@ test_has_assertion:
   _doc: "Every test body must contain at least one assertion — a test without assertions proves nothing."
   _fix_hint: "Add an assertion — this test currently verifies nothing."
   _languages: [elixir]
-  _log_baseline: -10.5413
+  _log_baseline: -11.0196
   branching:
     mean_branch_count: 0.0918
     mean_branching_density: 0.1642
@@ -214,6 +218,10 @@ test_has_assertion:
     mean_unique_line_ratio: -0.0056
   magic_number_density:
     mean_string_literal_ratio: -0.0139
+  mtld:
+    mean_mtld: -0.0519
+    mean_mtld_backward: -0.0489
+    mean_mtld_forward: -0.0553
   near_duplicate_blocks_file:
     mean_block_count: -0.0376
     mean_near_dup_block_d0: -0.3507
@@ -278,7 +286,7 @@ test_name_describes_behavior:
   _doc: "Test names should describe the expected behaviour, not just the method under test."
   _fix_hint: "Rename this test to describe the behavior it verifies, not the method called."
   _languages: [elixir]
-  _log_baseline: 64.7832
+  _log_baseline: 66.0231
   branching:
     mean_branch_count: 2.0000
     mean_branching_density: -1.5965
@@ -345,6 +353,10 @@ test_name_describes_behavior:
     mean_unique_line_ratio: -0.0535
   magic_number_density:
     mean_string_literal_ratio: -0.1419
+  mtld:
+    mean_mtld: 0.1348
+    mean_mtld_backward: 0.1057
+    mean_mtld_forward: 0.1613
   near_duplicate_blocks_file:
     mean_block_count: 0.0868
     mean_near_dup_block_d0: 0.6309
@@ -401,7 +413,7 @@ test_single_concept:
   _doc: "Each test should verify a single concept — tests covering multiple things are harder to diagnose when they fail."
   _fix_hint: "Split this test so it exercises a single concept."
   _languages: [elixir]
-  _log_baseline: 42.8025
+  _log_baseline: 43.3977
   branching:
     mean_branch_count: 0.3696
     mean_branching_density: -2.0000
@@ -482,6 +494,10 @@ test_single_concept:
     mean_density: -0.0115
     mean_magic_number_count: 0.1534
     mean_string_literal_ratio: 0.3581
+  mtld:
+    mean_mtld: 0.0803
+    mean_mtld_backward: 0.1172
+    mean_mtld_forward: 0.0467
   near_duplicate_blocks_file:
     mean_block_count: 0.5858
     mean_near_dup_block_d0: 0.3696

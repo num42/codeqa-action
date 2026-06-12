@@ -2,7 +2,7 @@ docstring_is_nonempty:
   _doc: "Docstrings must contain meaningful content, not just a placeholder or empty string."
   _fix_hint: "Fill in the empty docstring with a real description of what this does."
   _languages: [elixir]
-  _log_baseline: 32.8089
+  _log_baseline: 35.0701
   branching:
     mean_branch_count: 0.3089
     mean_branching_density: 0.2652
@@ -76,6 +76,10 @@ docstring_is_nonempty:
     mean_density: 0.0693
     mean_magic_number_count: 0.1709
     mean_string_literal_ratio: 0.1078
+  mtld:
+    mean_mtld: 0.2472
+    mean_mtld_backward: 0.2394
+    mean_mtld_forward: 0.2536
   near_duplicate_blocks_file:
     mean_block_count: 0.0907
     mean_near_dup_block_d5: -0.2709
@@ -140,7 +144,7 @@ file_has_license_header:
   _doc: "Source files should begin with a license or copyright header."
   _fix_hint: "Add the project's license header to the top of the file."
   _languages: [elixir]
-  _log_baseline: 10.5212
+  _log_baseline: 10.7745
   branching:
     mean_branching_density: -0.0282
     mean_non_blank_count: 0.0295
@@ -205,6 +209,9 @@ file_has_license_header:
     mean_density: 0.4719
     mean_magic_number_count: 0.4719
     mean_string_literal_ratio: -0.0363
+  mtld:
+    mean_mtld: 0.0275
+    mean_mtld_backward: 0.0670
   near_duplicate_blocks_file:
     mean_block_count: 0.1322
     mean_sub_block_count: 0.0228
@@ -257,7 +264,7 @@ file_has_module_docstring:
   _doc: "Files should have a module-level docstring explaining purpose and usage."
   _fix_hint: "Add a @moduledoc describing this module's responsibility."
   _languages: [elixir]
-  _log_baseline: 27.1624
+  _log_baseline: 28.5461
   branching:
     mean_branch_count: 0.3854
     mean_branching_density: -2.0000
@@ -328,6 +335,10 @@ file_has_module_docstring:
     mean_density: 0.0812
     mean_magic_number_count: 0.1599
     mean_string_literal_ratio: 0.1425
+  mtld:
+    mean_mtld: 0.1761
+    mean_mtld_backward: 0.1503
+    mean_mtld_forward: 0.2022
   near_duplicate_blocks_file:
     mean_block_count: 0.0586
     mean_sub_block_count: 0.0098
@@ -384,7 +395,7 @@ file_has_no_commented_out_code:
   _doc: "Files should not contain commented-out code blocks left from development."
   _fix_hint: "Delete the commented-out code; rely on version control for history."
   _languages: [elixir]
-  _log_baseline: -8.8449
+  _log_baseline: -8.9832
   branching:
     mean_branching_density: 0.0368
     mean_non_blank_count: -0.0367
@@ -456,6 +467,10 @@ file_has_no_commented_out_code:
   magic_number_density:
     mean_density: 2.0000
     mean_string_literal_ratio: -0.0818
+  mtld:
+    mean_mtld: -0.0147
+    mean_mtld_backward: -0.0095
+    mean_mtld_forward: -0.0197
   near_duplicate_blocks_file:
     mean_block_count: -0.0474
     mean_sub_block_count: -0.0454
@@ -514,7 +529,7 @@ function_has_docstring:
   _doc: "Public functions should have a docstring describing behaviour, params, and return value."
   _fix_hint: "Add a @doc explaining this function's contract (args, return, side effects)."
   _languages: [elixir]
-  _log_baseline: 48.9973
+  _log_baseline: 50.6578
   branching:
     mean_branch_count: 0.5279
     mean_branching_density: 0.3832
@@ -593,6 +608,10 @@ function_has_docstring:
     mean_density: 0.1744
     mean_magic_number_count: 0.4104
     mean_string_literal_ratio: 0.5931
+  mtld:
+    mean_mtld: 0.2231
+    mean_mtld_backward: 0.2382
+    mean_mtld_forward: 0.2069
   near_duplicate_blocks_file:
     mean_block_count: 0.2288
     mean_near_dup_block_d6: -0.3105
@@ -659,7 +678,7 @@ function_todo_comment_in_body:
   _doc: "Functions should not contain TODO/FIXME comments indicating unfinished work."
   _fix_hint: "Resolve the TODO in the body or move it to a tracked issue."
   _languages: [elixir]
-  _log_baseline: 8.3599
+  _log_baseline: 7.8236
   branching:
     mean_branch_count: -0.0287
     mean_branching_density: -0.0435
@@ -732,6 +751,10 @@ function_todo_comment_in_body:
   magic_number_density:
     mean_density: -2.0000
     mean_string_literal_ratio: -0.0151
+  mtld:
+    mean_mtld: -0.0606
+    mean_mtld_backward: -0.0217
+    mean_mtld_forward: -0.1034
   near_duplicate_blocks_file:
     mean_block_count: 0.0317
     mean_sub_block_count: 0.0281

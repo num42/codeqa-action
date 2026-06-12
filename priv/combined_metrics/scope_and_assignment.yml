@@ -3,7 +3,7 @@ declared_close_to_use:
   _excludes_block_types: [doc]
   _fix_hint: "Move this declaration closer to where it is first used."
   _languages: [elixir, go, javascript, python, ruby]
-  _log_baseline: -19.0450
+  _log_baseline: -20.7531
   branching:
     mean_branch_count: -0.1629
     mean_branching_density: -0.0595
@@ -78,6 +78,10 @@ declared_close_to_use:
     mean_density: -0.1468
     mean_magic_number_count: -0.2374
     mean_string_literal_ratio: 0.0683
+  mtld:
+    mean_mtld: -0.2031
+    mean_mtld_backward: -0.1852
+    mean_mtld_forward: -0.2204
   near_duplicate_blocks_file:
     mean_block_count: -0.0182
     mean_near_dup_block_d0: -0.4490
@@ -138,7 +142,7 @@ mutated_after_initial_assignment:
   _doc: "Variables should not be reassigned after their initial value — prefer introducing a new name."
   _fix_hint: "Avoid reassigning after the initial binding — use a new binding or pipe the transformation."
   _languages: [elixir]
-  _log_baseline: 5.6587
+  _log_baseline: 5.7016
   branching:
     mean_branch_count: 0.1519
     mean_branching_density: 0.2073
@@ -214,6 +218,10 @@ mutated_after_initial_assignment:
     mean_density: -0.6790
     mean_magic_number_count: -0.7131
     mean_string_literal_ratio: 0.0397
+  mtld:
+    mean_mtld: 0.0057
+    mean_mtld_backward: 0.0433
+    mean_mtld_forward: -0.0272
   near_duplicate_blocks_file:
     mean_sub_block_count: -0.1967
   ngram:
@@ -271,7 +279,7 @@ reassigned_multiple_times:
   _doc: "A variable reassigned many times is a sign the name is too generic or the function does too much."
   _fix_hint: "This {{type}} reassigns the same binding repeatedly — restructure into a transformation chain."
   _languages: [elixir]
-  _log_baseline: -8.0777
+  _log_baseline: -6.2363
   branching:
     mean_max_nesting_depth: 0.0680
     mean_non_blank_count: 0.0226
@@ -349,6 +357,10 @@ reassigned_multiple_times:
     mean_density: -0.1020
     mean_magic_number_count: -0.1906
     mean_string_literal_ratio: 0.1161
+  mtld:
+    mean_mtld: 0.2393
+    mean_mtld_backward: 0.2718
+    mean_mtld_forward: 0.2065
   near_duplicate_blocks_file:
     mean_block_count: 0.0393
     mean_near_dup_block_d1: -0.2586
@@ -414,7 +426,7 @@ scope_is_minimal:
   _doc: "Variables should be scoped as narrowly as possible — not declared at a wider scope than needed."
   _fix_hint: "Narrow this binding's scope to the block that actually uses it."
   _languages: [elixir]
-  _log_baseline: -7.3767
+  _log_baseline: -9.0927
   branching:
     mean_branch_count: -0.1072
     mean_branching_density: -0.0452
@@ -489,6 +501,10 @@ scope_is_minimal:
     mean_unique_line_ratio: -0.0307
   magic_number_density:
     mean_string_literal_ratio: -0.0144
+  mtld:
+    mean_mtld: -0.1902
+    mean_mtld_backward: -0.0955
+    mean_mtld_forward: -0.2695
   near_duplicate_blocks_file:
     mean_block_count: -0.1691
     mean_sub_block_count: 0.0447
@@ -546,7 +562,7 @@ shadowed_by_inner_scope:
   _doc: "Inner-scope names that shadow outer-scope names cause confusion about which value is in play."
   _fix_hint: "Rename the inner binding so it no longer shadows the outer one."
   _languages: [elixir]
-  _log_baseline: -35.1031
+  _log_baseline: -32.4710
   branching:
     mean_branching_density: 2.0000
     mean_max_nesting_depth: -0.1450
@@ -620,6 +636,10 @@ shadowed_by_inner_scope:
   magic_number_density:
     mean_density: 0.1539
     mean_string_literal_ratio: 0.1539
+  mtld:
+    mean_mtld: 0.3175
+    mean_mtld_backward: 0.1672
+    mean_mtld_forward: 0.4280
   ngram:
     mean_bigram_hapax_fraction: 0.0443
     mean_bigram_repeated_unique: -0.2754
@@ -675,7 +695,7 @@ used_only_once:
   _doc: "A variable used only once is a candidate for inlining — it rarely adds clarity over a direct expression."
   _fix_hint: "Inline this single-use binding unless the name aids readability."
   _languages: [elixir, go, javascript, python, ruby]
-  _log_baseline: -16.8441
+  _log_baseline: -14.6513
   branching:
     mean_branch_count: -0.1226
     mean_branching_density: -0.2229
@@ -749,6 +769,10 @@ used_only_once:
     mean_density: -0.3076
     mean_magic_number_count: -0.3809
     mean_string_literal_ratio: 0.0495
+  mtld:
+    mean_mtld: 0.2729
+    mean_mtld_backward: 0.1067
+    mean_mtld_forward: 0.3980
   near_duplicate_blocks_file:
     mean_near_dup_block_d0: 0.2229
     mean_near_dup_block_d1: 0.9849

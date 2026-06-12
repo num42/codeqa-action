@@ -2,7 +2,7 @@ does_not_swallow_errors:
   _doc: "Errors must be handled or re-raised — empty rescue/catch blocks silently hide failures."
   _fix_hint: "Handle or propagate the error instead of discarding it in this {{type}}."
   _languages: [elixir]
-  _log_baseline: 97.5974
+  _log_baseline: 100.8770
   branching:
     mean_branch_count: -0.1041
     mean_branching_density: -0.2095
@@ -73,6 +73,10 @@ does_not_swallow_errors:
     mean_unique_line_ratio: 0.1413
   magic_number_density:
     mean_string_literal_ratio: 0.2524
+  mtld:
+    mean_mtld: 0.3912
+    mean_mtld_backward: 0.3978
+    mean_mtld_forward: 0.3855
   near_duplicate_blocks_file:
     mean_near_dup_block_d0: -0.5405
     mean_near_dup_block_d7: -0.3162
@@ -137,7 +141,7 @@ error_message_is_descriptive:
   _doc: "Error values should carry a meaningful message, not just a bare atom or empty string."
   _fix_hint: "Make the error message state what failed and why, not just that it failed."
   _languages: [elixir]
-  _log_baseline: 33.2003
+  _log_baseline: 34.4257
   branching:
     mean_branch_count: 0.0311
     mean_branching_density: -0.0253
@@ -211,6 +215,10 @@ error_message_is_descriptive:
     mean_unique_line_ratio: 0.0142
   magic_number_density:
     mean_string_literal_ratio: 0.1721
+  mtld:
+    mean_mtld: 0.1412
+    mean_mtld_backward: 0.0351
+    mean_mtld_forward: 0.2560
   near_duplicate_blocks_file:
     mean_near_dup_block_d6: -0.4949
     mean_near_dup_block_d8: -0.3123
@@ -269,7 +277,7 @@ returns_typed_error:
   _doc: "Functions should signal failure via a typed return (e.g. `{:error, reason}`) rather than returning `nil` or `false`."
   _fix_hint: "Return a tagged error ({:error, reason}) instead of a bare value or nil."
   _languages: [elixir]
-  _log_baseline: 135.0751
+  _log_baseline: 130.4562
   branching:
     mean_branch_count: -0.1286
     mean_branching_density: -0.1895
@@ -346,6 +354,10 @@ returns_typed_error:
     mean_unique_line_ratio: 0.1454
   magic_number_density:
     mean_string_literal_ratio: -0.6750
+  mtld:
+    mean_mtld: -0.5701
+    mean_mtld_backward: -0.3967
+    mean_mtld_forward: -0.7045
   near_duplicate_blocks_file:
     mean_block_count: -0.0980
     mean_near_dup_block_d0: -1.4248

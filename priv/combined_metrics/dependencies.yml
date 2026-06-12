@@ -2,7 +2,7 @@ import_count_under_10:
   _doc: "Files should import fewer than 10 modules; high import counts signal excessive coupling."
   _fix_hint: "This {{type}} pulls in too many dependencies — split it or narrow the imports."
   _languages: [elixir]
-  _log_baseline: 6.7444
+  _log_baseline: 8.4274
   branching:
     mean_branch_count: 0.2110
     mean_branching_density: -1.0683
@@ -83,6 +83,10 @@ import_count_under_10:
     mean_density: 0.5219
     mean_magic_number_count: 0.4898
     mean_string_literal_ratio: 0.0265
+  mtld:
+    mean_mtld: 0.2188
+    mean_mtld_backward: 0.2191
+    mean_mtld_forward: 0.2184
   near_duplicate_blocks_file:
     mean_block_count: 0.0765
     mean_sub_block_count: 0.1110
@@ -140,7 +144,7 @@ low_coupling:
   _doc: "Modules should depend on few external symbols — a low unique-operand count relative to total is a proxy for tight coupling."
   _fix_hint: "Reduce this {{type}}'s outbound references; depend on fewer modules or invert the dependency."
   _languages: [elixir]
-  _log_baseline: -47.5342
+  _log_baseline: -48.1287
   branching:
     mean_branch_count: 0.0398
     mean_branching_density: 0.2038
@@ -217,6 +221,10 @@ low_coupling:
   magic_number_density:
     mean_density: -0.1371
     mean_string_literal_ratio: 0.1633
+  mtld:
+    mean_mtld: -0.0708
+    mean_mtld_backward: -0.1308
+    mean_mtld_forward: -0.0189
   near_duplicate_blocks_file:
     mean_block_count: 0.0205
     mean_near_dup_block_d4: -0.1371
@@ -279,7 +287,7 @@ no_wildcard_imports:
   _doc: "Wildcard imports (`import *`, `using Module`) pollute the local namespace and hide dependencies."
   _fix_hint: "Replace the wildcard import with explicit named imports."
   _languages: [elixir]
-  _log_baseline: -8.5722
+  _log_baseline: -7.7716
   branching:
     mean_branching_density: 0.0249
     mean_non_blank_count: -0.0268
@@ -339,6 +347,10 @@ no_wildcard_imports:
     mean_density: 1.1035
     mean_magic_number_count: 1.1312
     mean_string_literal_ratio: -0.3463
+  mtld:
+    mean_mtld: 0.1147
+    mean_mtld_backward: 0.1046
+    mean_mtld_forward: 0.1257
   near_duplicate_blocks_file:
     mean_near_dup_block_d6: -0.3309
     mean_near_dup_block_d7: 0.3309
