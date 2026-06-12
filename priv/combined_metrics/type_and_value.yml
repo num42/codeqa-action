@@ -2,7 +2,7 @@ boolean_assigned_from_comparison:
   _doc: "Boolean variables should be assigned directly from comparisons or predicate calls, not set via conditionals."
   _fix_hint: "Assign the comparison result directly instead of via a redundant if/else."
   _languages: [elixir]
-  _log_baseline: -8.8860
+  _log_baseline: -9.3993
   branching:
     mean_branch_count: -1.5392
     mean_branching_density: 0.7530
@@ -82,6 +82,10 @@ boolean_assigned_from_comparison:
     mean_density: 0.5624
     mean_magic_number_count: 0.6340
     mean_string_literal_ratio: -0.1776
+  mtld:
+    mean_mtld: -0.0673
+    mean_mtld_backward: -0.0483
+    mean_mtld_forward: -0.0800
   near_duplicate_blocks_file:
     mean_block_count: -0.4282
     mean_near_dup_block_d0: 0.1288
@@ -157,7 +161,7 @@ hardcoded_url_or_path:
   _doc: "URLs, file paths, and host names should be configuration values, not inline string literals."
   _fix_hint: "Move the hardcoded URL/path into configuration."
   _languages: [elixir]
-  _log_baseline: 62.5761
+  _log_baseline: 61.5329
   branching:
     mean_max_nesting_depth: 0.4526
   brevity:
@@ -228,6 +232,10 @@ hardcoded_url_or_path:
   magic_number_density:
     mean_density: -0.1946
     mean_string_literal_ratio: -0.0095
+  mtld:
+    mean_mtld: -0.1200
+    mean_mtld_backward: 0.0859
+    mean_mtld_forward: -0.2906
   near_duplicate_blocks_file:
     mean_near_dup_block_d0: -0.7737
     mean_near_dup_block_d7: -2.0000
@@ -287,7 +295,7 @@ no_empty_string_initial:
   _doc: "Initialising a variable to an empty string and reassigning later signals missing structure."
   _fix_hint: "Avoid the empty-string placeholder — initialize with a real value or nil."
   _languages: [elixir]
-  _log_baseline: -4.9964
+  _log_baseline: -5.5876
   branching:
     mean_branch_count: -0.1509
     mean_branching_density: -0.0146
@@ -366,6 +374,10 @@ no_empty_string_initial:
     mean_density: 0.1538
     mean_magic_number_count: 0.1869
     mean_string_literal_ratio: -0.1459
+  mtld:
+    mean_mtld: -0.0688
+    mean_mtld_backward: -0.1208
+    mean_mtld_forward: -0.0158
   near_duplicate_blocks_file:
     mean_block_count: -0.0962
     mean_near_dup_block_d0: -0.5606
@@ -430,7 +442,7 @@ no_implicit_null_initial:
   _doc: "Initialising a variable to `nil`/`null` and assigning it later in a branch signals missing structure."
   _fix_hint: "Avoid the implicit nil initializer — give this a meaningful initial value."
   _languages: [elixir]
-  _log_baseline: -12.9354
+  _log_baseline: -12.0822
   branching:
     mean_branch_count: -0.1283
     mean_branching_density: -0.0936
@@ -508,6 +520,10 @@ no_implicit_null_initial:
     mean_density: 0.0224
     mean_magic_number_count: 0.0188
     mean_string_literal_ratio: 0.0176
+  mtld:
+    mean_mtld: 0.1202
+    mean_mtld_backward: 0.1064
+    mean_mtld_forward: 0.1320
   near_duplicate_blocks_file:
     mean_block_count: -0.1528
     mean_near_dup_block_d0: -0.1314
@@ -578,7 +594,7 @@ no_magic_value_assigned:
   _doc: "Literal strings and numbers assigned to variables should be named constants, not inline values."
   _fix_hint: "Extract this magic value into a named constant."
   _languages: [elixir]
-  _log_baseline: -10.4438
+  _log_baseline: -9.8259
   branching:
     mean_branch_count: -0.2035
     mean_branching_density: -0.1140
@@ -650,6 +666,10 @@ no_magic_value_assigned:
     mean_unique_line_ratio: 0.0086
   magic_number_density:
     mean_string_literal_ratio: -1.7484
+  mtld:
+    mean_mtld: 0.0732
+    mean_mtld_backward: -0.0852
+    mean_mtld_forward: 0.2009
   near_duplicate_blocks_file:
     mean_block_count: 0.1491
     mean_near_dup_block_d0: 0.7737

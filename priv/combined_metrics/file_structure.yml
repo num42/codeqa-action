@@ -2,7 +2,7 @@ has_consistent_indentation:
   _doc: "Files should use a single, consistent indentation style with no mixed tabs and spaces."
   _fix_hint: "Normalize indentation in this {{type}} — no mixed tabs and spaces."
   _languages: [elixir]
-  _log_baseline: 21.4637
+  _log_baseline: 22.9504
   branching:
     mean_branch_count: 0.0582
     mean_branching_density: 0.0172
@@ -85,6 +85,10 @@ has_consistent_indentation:
     mean_density: 0.3180
     mean_magic_number_count: 0.5772
     mean_string_literal_ratio: 0.1274
+  mtld:
+    mean_mtld: 0.1674
+    mean_mtld_backward: 0.2572
+    mean_mtld_forward: 0.0973
   near_duplicate_blocks_file:
     mean_block_count: 0.0684
     mean_near_dup_block_d0: 0.2886
@@ -150,7 +154,7 @@ line_count_under_300:
   _doc: "Files should be under 300 lines; longer files typically violate single responsibility."
   _fix_hint: "This file is too long — split it into focused modules."
   _languages: [elixir]
-  _log_baseline: -52.3251
+  _log_baseline: -53.1821
   branching:
     mean_branch_count: -0.4508
     mean_branching_density: -0.2446
@@ -229,6 +233,10 @@ line_count_under_300:
     mean_density: 1.4051
     mean_magic_number_count: -0.4114
     mean_string_literal_ratio: 0.0039
+  mtld:
+    mean_mtld: -0.1029
+    mean_mtld_backward: -0.0833
+    mean_mtld_forward: -0.1214
   near_duplicate_blocks_file:
     mean_block_count: 0.5617
     mean_near_dup_block_d7: 0.1772
@@ -294,7 +302,7 @@ line_length_under_120:
   _doc: "Lines should be under 120 characters to avoid horizontal scrolling."
   _fix_hint: "Wrap the over-long lines in this {{type}} to stay under the line-length limit."
   _languages: [elixir]
-  _log_baseline: -18.0631
+  _log_baseline: -18.1751
   branching:
     mean_branching_density: -0.0814
     mean_max_nesting_depth: -0.0341
@@ -372,6 +380,10 @@ line_length_under_120:
     mean_density: -0.0271
     mean_magic_number_count: -0.1306
     mean_string_literal_ratio: -0.0529
+  mtld:
+    mean_mtld: -0.0156
+    mean_mtld_backward: -0.0126
+    mean_mtld_forward: -0.0185
   near_duplicate_blocks_file:
     mean_near_dup_block_d7: 0.1772
     mean_sub_block_count: 0.0341
@@ -431,7 +443,7 @@ no_magic_numbers:
   _doc: "Numeric literals should be extracted to named constants rather than used inline."
   _fix_hint: "Extract the magic numbers in this {{type}} into named constants."
   _languages: [elixir]
-  _log_baseline: 122.2481
+  _log_baseline: 133.4783
   branching:
     mean_branch_count: -0.4352
     mean_branching_density: -0.9103
@@ -503,6 +515,10 @@ no_magic_numbers:
     mean_density: -1.2903
     mean_magic_number_count: -0.8032
     mean_string_literal_ratio: -0.5060
+  mtld:
+    mean_mtld: 1.1910
+    mean_mtld_backward: 0.9016
+    mean_mtld_forward: 1.3781
   near_duplicate_blocks_file:
     mean_block_count: -0.1911
     mean_near_dup_block_d0: -1.6546
@@ -562,7 +578,7 @@ single_responsibility:
   _doc: "Each file should have one primary concern — low complexity spread across few, focused functions."
   _fix_hint: "This {{type}} ({{line_count}} lines) does too much — split it along its responsibilities."
   _languages: [elixir]
-  _log_baseline: -40.7700
+  _log_baseline: -41.9377
   branching:
     mean_branch_count: -0.0362
     mean_branching_density: 0.1360
@@ -641,6 +657,10 @@ single_responsibility:
     mean_density: 0.0718
     mean_magic_number_count: -0.0676
     mean_string_literal_ratio: -0.0230
+  mtld:
+    mean_mtld: -0.1417
+    mean_mtld_backward: -0.1687
+    mean_mtld_forward: -0.1166
   near_duplicate_blocks_file:
     mean_block_count: -0.1748
     mean_near_dup_block_d0: 0.0676
