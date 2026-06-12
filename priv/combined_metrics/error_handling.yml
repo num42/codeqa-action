@@ -2,7 +2,7 @@ does_not_swallow_errors:
   _doc: "Errors must be handled or re-raised — empty rescue/catch blocks silently hide failures."
   _fix_hint: "Handle or propagate the error instead of discarding it in this {{type}}."
   _languages: [elixir]
-  _log_baseline: 97.4574
+  _log_baseline: 97.5974
   branching:
     mean_branch_count: -0.1041
     mean_branching_density: -0.2095
@@ -21,6 +21,10 @@ does_not_swallow_errors:
     mean_unique_line_ratio: 0.1028
     mean_zlib_bytes: 0.3399
     mean_zlib_ratio: 0.0419
+  conditional_entropy:
+    mean_conditional_entropy: 0.1453
+    mean_normalized_conditional_entropy: 0.0826
+    mean_perplexity: 0.1637
   entropy:
     mean_char_entropy: 0.0445
     mean_char_max_entropy: 0.0347
@@ -133,7 +137,7 @@ error_message_is_descriptive:
   _doc: "Error values should carry a meaningful message, not just a bare atom or empty string."
   _fix_hint: "Make the error message state what failed and why, not just that it failed."
   _languages: [elixir]
-  _log_baseline: 33.1291
+  _log_baseline: 33.2003
   branching:
     mean_branch_count: 0.0311
     mean_branching_density: -0.0253
@@ -151,6 +155,10 @@ error_message_is_descriptive:
     mean_unique_line_ratio: -0.0059
     mean_zlib_bytes: 0.1298
     mean_zlib_ratio: 0.0120
+  conditional_entropy:
+    mean_conditional_entropy: 0.0268
+    mean_normalized_conditional_entropy: -0.0056
+    mean_perplexity: 0.0355
   entropy:
     mean_char_entropy: 0.0075
     mean_char_max_entropy: 0.0228
@@ -261,7 +269,7 @@ returns_typed_error:
   _doc: "Functions should signal failure via a typed return (e.g. `{:error, reason}`) rather than returning `nil` or `false`."
   _fix_hint: "Return a tagged error ({:error, reason}) instead of a bare value or nil."
   _languages: [elixir]
-  _log_baseline: 134.9286
+  _log_baseline: 135.0751
   branching:
     mean_branch_count: -0.1286
     mean_branching_density: -0.1895
@@ -280,6 +288,10 @@ returns_typed_error:
     mean_unique_line_ratio: 0.1471
     mean_zlib_bytes: 0.3486
     mean_zlib_ratio: 0.0889
+  conditional_entropy:
+    mean_conditional_entropy: 0.1604
+    mean_normalized_conditional_entropy: 0.1068
+    mean_perplexity: 0.1832
   entropy:
     mean_char_entropy: 0.0854
     mean_char_max_entropy: 0.0427

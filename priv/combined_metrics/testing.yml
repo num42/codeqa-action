@@ -2,7 +2,7 @@ reasonable_test_to_code_ratio:
   _doc: "There should be an adequate number of test cases relative to the code being tested."
   _fix_hint: "Add tests for this module to reach a reasonable test-to-code ratio."
   _languages: [elixir]
-  _log_baseline: 14.7166
+  _log_baseline: 14.7212
   branching:
     mean_branch_count: 0.1869
     mean_branching_density: 0.0352
@@ -22,6 +22,10 @@ reasonable_test_to_code_ratio:
     mean_unique_line_ratio: -0.0556
     mean_zlib_bytes: 0.0559
     mean_zlib_ratio: 0.0732
+  conditional_entropy:
+    mean_conditional_entropy: -0.0033
+    mean_normalized_conditional_entropy: -0.0095
+    mean_perplexity: -0.0042
   entropy:
     mean_char_entropy: -0.0074
     mean_char_normalized: -0.0064
@@ -140,7 +144,7 @@ test_has_assertion:
   _doc: "Every test body must contain at least one assertion — a test without assertions proves nothing."
   _fix_hint: "Add an assertion — this test currently verifies nothing."
   _languages: [elixir]
-  _log_baseline: -10.5339
+  _log_baseline: -10.5413
   branching:
     mean_branch_count: 0.0918
     mean_branching_density: 0.1642
@@ -161,6 +165,10 @@ test_has_assertion:
     mean_unique_line_ratio: -0.0037
     mean_zlib_bytes: -0.0369
     mean_zlib_ratio: 0.0229
+  conditional_entropy:
+    mean_conditional_entropy: 0.0047
+    mean_normalized_conditional_entropy: 0.0165
+    mean_perplexity: 0.0066
   entropy:
     mean_char_entropy: 0.0022
     mean_char_max_entropy: -0.0025
@@ -270,7 +278,7 @@ test_name_describes_behavior:
   _doc: "Test names should describe the expected behaviour, not just the method under test."
   _fix_hint: "Rename this test to describe the behavior it verifies, not the method called."
   _languages: [elixir]
-  _log_baseline: 64.7096
+  _log_baseline: 64.7832
   branching:
     mean_branch_count: 2.0000
     mean_branching_density: -1.5965
@@ -287,6 +295,10 @@ test_name_describes_behavior:
     mean_unique_line_ratio: -0.0357
     mean_zlib_bytes: 0.2483
     mean_zlib_ratio: 0.1041
+  conditional_entropy:
+    mean_conditional_entropy: 0.0502
+    mean_normalized_conditional_entropy: 0.0082
+    mean_perplexity: 0.0555
   entropy:
     mean_char_entropy: -0.0171
     mean_char_max_entropy: 0.0138
@@ -389,7 +401,7 @@ test_single_concept:
   _doc: "Each test should verify a single concept — tests covering multiple things are harder to diagnose when they fail."
   _fix_hint: "Split this test so it exercises a single concept."
   _languages: [elixir]
-  _log_baseline: 42.7962
+  _log_baseline: 42.8025
   branching:
     mean_branch_count: 0.3696
     mean_branching_density: -2.0000
@@ -411,6 +423,10 @@ test_single_concept:
     mean_unique_line_ratio: -0.1814
     mean_zlib_bytes: 0.0851
     mean_zlib_ratio: 0.1119
+  conditional_entropy:
+    mean_conditional_entropy: -0.0028
+    mean_normalized_conditional_entropy: -0.0133
+    mean_perplexity: -0.0043
   entropy:
     mean_char_entropy: -0.0169
     mean_char_normalized: -0.0187
