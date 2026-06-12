@@ -21,6 +21,7 @@ defmodule CodeQA.Engine.Analyzer do
             |> Registry.register_file_metric(Metrics.Ngram)
             |> Registry.register_file_metric(Metrics.Halstead)
             |> Registry.register_file_metric(Metrics.Readability)
+            |> Registry.register_file_metric(Metrics.LexicalDensity)
             |> Registry.register_file_metric(Metrics.CasingEntropy)
             |> Registry.register_file_metric(Metrics.IdentifierLengthVariance)
             |> Registry.register_file_metric(Metrics.Indentation)
