@@ -74,7 +74,7 @@ consistent_error_return_shape:
   _doc: "All functions in a module should return errors in the same shape — mixed `nil`, `false`, and `{:error, _}` returns are confusing."
   _fix_hint: "Return errors in one shape everywhere (e.g. {:error, reason})."
   _languages: [elixir]
-  _log_baseline: -3.3807
+  _log_baseline: -4.1574
   branching:
     mean_branch_count: -0.2800
     mean_branching_density: 0.5563
@@ -131,6 +131,9 @@ consistent_error_return_shape:
     mean_simpson_d: 0.0870
     mean_total_tokens: -0.0672
     mean_yule_k: 0.0840
+  lexical_density:
+    mean_function_tokens: -0.0884
+    mean_lexical_density: 0.1958
   line_patterns:
     mean_blank_line_ratio: 0.5151
     mean_max_nesting_depth: -0.4366
@@ -200,7 +203,7 @@ consistent_function_style:
   _doc: "A module should not mix one-liner and multi-clause function definitions for the same concern."
   _fix_hint: "Match the surrounding function-definition style (def vs anonymous, single vs multi-clause)."
   _languages: [elixir]
-  _log_baseline: 60.7969
+  _log_baseline: 63.6086
   branching:
     mean_branch_count: 0.3619
     mean_branching_density: 0.2247
@@ -265,6 +268,10 @@ consistent_function_style:
     mean_simpson_d: -0.2346
     mean_total_tokens: 0.2676
     mean_yule_k: -0.2335
+  lexical_density:
+    mean_content_tokens: 0.3358
+    mean_function_tokens: 0.2295
+    mean_lexical_density: 0.0534
   line_patterns:
     mean_blank_line_ratio: -0.2220
     mean_max_nesting_depth: -0.0629

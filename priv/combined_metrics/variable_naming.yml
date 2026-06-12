@@ -77,7 +77,7 @@ collection_name_is_plural:
   _doc: "Variables holding a collection should use a plural name."
   _fix_hint: "Pluralize this collection's name to signal it holds many items."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 21.8672
+  _log_baseline: 21.3200
   brevity:
     mean_sample_size: -0.5320
   casing_entropy:
@@ -111,6 +111,9 @@ collection_name_is_plural:
   lexical_concentration:
     mean_simpson_d: 0.1910
     mean_yule_k: 0.1761
+  lexical_density:
+    mean_content_tokens: -0.1314
+    mean_lexical_density: -0.1038
   ngram:
     mean_bigram_hapax_fraction: -0.1392
     mean_bigram_repetition_rate: 0.1490
@@ -153,7 +156,7 @@ loop_var_is_single_letter:
   _excludes_block_types: [doc]
   _fix_hint: "Give this loop variable a descriptive name."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -33.3401
+  _log_baseline: -33.2973
   brevity:
     mean_sample_size: -0.1049
   casing_entropy:
@@ -201,6 +204,8 @@ loop_var_is_single_letter:
   lexical_concentration:
     mean_simpson_d: 0.0246
     mean_yule_k: 0.0277
+  lexical_density:
+    mean_function_tokens: 0.0072
   line_patterns:
     mean_unique_line_ratio: -0.0229
   ngram:
@@ -247,7 +252,7 @@ name_contains_and:
   _doc: "Variable names containing `and` signal a variable that holds two concerns."
   _fix_hint: "Split this binding — a name containing 'and' signals it holds two things."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -1.1875
+  _log_baseline: -0.5183
   branching:
     mean_branch_count: -0.3666
     mean_branching_density: -0.3925
@@ -308,6 +313,10 @@ name_contains_and:
     mean_simpson_d: 0.0332
     mean_total_tokens: 0.0583
     mean_yule_k: 0.0335
+  lexical_density:
+    mean_content_tokens: 0.0755
+    mean_function_tokens: 0.0489
+    mean_lexical_density: 0.0216
   line_patterns:
     mean_blank_line_ratio: -0.0595
     mean_string_literal_ratio: -0.3480
@@ -383,7 +392,7 @@ name_contains_type_suffix:
   _doc: "Type suffixes in names (`userString`, `nameList`) are redundant noise."
   _fix_hint: "Drop the type suffix from the name; let the type system carry the type."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -28.3725
+  _log_baseline: -28.5598
   branching:
     mean_branch_count: -0.6581
     mean_branching_density: -0.8807
@@ -431,6 +440,10 @@ name_contains_type_suffix:
   lexical_concentration:
     mean_total_tokens: -0.0113
     mean_yule_k: 0.0086
+  lexical_density:
+    mean_content_tokens: -0.0610
+    mean_function_tokens: 0.0130
+    mean_lexical_density: -0.0421
   line_patterns:
     mean_string_literal_ratio: 0.0103
   ngram:
@@ -482,7 +495,7 @@ name_is_abbreviation:
   _doc: "Abbreviated names (`usr`, `cfg`, `mgr`) reduce readability."
   _fix_hint: "Spell out this abbreviation into a readable name."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 21.9968
+  _log_baseline: 20.7104
   brevity:
     mean_sample_size: -0.0441
   casing_entropy:
@@ -521,6 +534,9 @@ name_is_abbreviation:
     mean_simpson_d: -0.0426
     mean_total_tokens: -0.0955
     mean_yule_k: -0.0546
+  lexical_density:
+    mean_content_tokens: -0.3028
+    mean_lexical_density: -0.1924
   line_patterns:
     mean_string_literal_ratio: -0.0288
     mean_unique_line_ratio: 0.0571
@@ -579,7 +595,7 @@ name_is_generic:
   _doc: "Generic names (`data`, `result`, `tmp`, `val`, `obj`) convey no domain meaning."
   _fix_hint: "Replace this generic name (data/tmp/val) with one stating its purpose."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 44.9220
+  _log_baseline: 45.9785
   branching:
     mean_branch_count: 0.5193
     mean_branching_density: 0.3889
@@ -640,6 +656,10 @@ name_is_generic:
     mean_simpson_d: -0.0256
     mean_total_tokens: 0.0784
     mean_yule_k: -0.0267
+  lexical_density:
+    mean_content_tokens: 0.2139
+    mean_function_tokens: 0.0173
+    mean_lexical_density: 0.1366
   line_patterns:
     mean_blank_line_ratio: 0.0556
     mean_max_nesting_depth: -0.0599
@@ -712,7 +732,7 @@ name_is_number_like:
   _doc: "Number-suffixed names (`var1`, `thing2`) signal a missing abstraction."
   _fix_hint: "Replace the number-suffixed name with a meaningful one."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 3.9691
+  _log_baseline: 3.8657
   brevity:
     mean_sample_size: -0.0262
   casing_entropy:
@@ -757,6 +777,9 @@ name_is_number_like:
     mean_simpson_d: 0.0120
     mean_total_tokens: -0.0075
     mean_yule_k: 0.0133
+  lexical_density:
+    mean_content_tokens: -0.0233
+    mean_lexical_density: -0.0159
   line_patterns:
     mean_string_literal_ratio: 0.0201
   ngram:
@@ -807,7 +830,7 @@ name_is_single_letter:
   _doc: "Single-letter names outside loop indices are too opaque."
   _fix_hint: "Give this single-letter variable a descriptive name."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 32.2399
+  _log_baseline: 31.9771
   branching:
     mean_branching_density: -0.0445
     mean_non_blank_count: 0.0426
@@ -863,6 +886,10 @@ name_is_single_letter:
     mean_simpson_d: -0.1237
     mean_total_tokens: -0.0290
     mean_yule_k: -0.1221
+  lexical_density:
+    mean_content_tokens: 0.0394
+    mean_function_tokens: -0.0689
+    mean_lexical_density: 0.0695
   line_patterns:
     mean_blank_line_ratio: -0.0401
     mean_unique_line_ratio: 0.0990
@@ -921,7 +948,7 @@ name_is_too_long:
   _doc: "Names longer than ~30 characters harm readability."
   _fix_hint: "Shorten this overly long name while keeping it clear."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -10.0545
+  _log_baseline: -9.2696
   branching:
     mean_branch_count: 0.0340
     mean_branching_density: 0.0916
@@ -984,6 +1011,10 @@ name_is_too_long:
     mean_simpson_d: 0.0339
     mean_total_tokens: 0.0756
     mean_yule_k: 0.0351
+  lexical_density:
+    mean_content_tokens: 0.0585
+    mean_function_tokens: 0.0841
+    mean_lexical_density: -0.0146
   line_patterns:
     mean_blank_line_ratio: 0.0206
     mean_max_nesting_depth: 0.0484
@@ -1064,7 +1095,7 @@ name_is_too_short:
   _doc: "Names shorter than 3 characters (outside loops) are too opaque."
   _fix_hint: "Lengthen this name so it states what the value holds."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -5.0614
+  _log_baseline: -5.6138
   branching:
     mean_branch_count: -0.2327
     mean_branching_density: -0.2381
@@ -1116,6 +1147,10 @@ name_is_too_short:
     mean_simpson_d: 0.1271
     mean_total_tokens: -0.0256
     mean_yule_k: 0.1222
+  lexical_density:
+    mean_content_tokens: -0.1943
+    mean_function_tokens: 0.0447
+    mean_lexical_density: -0.1700
   line_patterns:
     mean_string_literal_ratio: 0.0229
   near_duplicate_blocks_file:
@@ -1167,7 +1202,7 @@ negated_boolean_name:
   _doc: "Negated boolean names (`isNotValid`, `notActive`) are harder to reason about."
   _fix_hint: "Rename to the positive form to avoid double negatives at call sites."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -14.0280
+  _log_baseline: -14.3383
   brevity:
     mean_sample_size: -0.0991
   casing_entropy:
@@ -1202,6 +1237,10 @@ negated_boolean_name:
     mean_variance: -0.8704
   lexical_concentration:
     mean_total_tokens: -0.0258
+  lexical_density:
+    mean_content_tokens: -0.0177
+    mean_function_tokens: -0.0293
+    mean_lexical_density: 0.0398
   line_patterns:
     mean_string_literal_ratio: 0.0727
   magic_number_density:
@@ -1262,7 +1301,7 @@ no_hungarian_notation:
   _doc: "Hungarian notation prefixes (`strName`, `bFlag`) add noise without type safety."
   _fix_hint: "Remove the Hungarian-notation prefix from this name."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -8.4145
+  _log_baseline: -8.3669
   brevity:
     mean_sample_size: -0.0295
   casing_entropy:
@@ -1306,6 +1345,10 @@ no_hungarian_notation:
     mean_simpson_d: -0.0742
     mean_total_tokens: 0.0139
     mean_yule_k: -0.0756
+  lexical_density:
+    mean_content_tokens: -0.0778
+    mean_function_tokens: 0.0559
+    mean_lexical_density: -0.0988
   line_patterns:
     mean_blank_line_ratio: -0.0083
     mean_string_literal_ratio: -0.2464
@@ -1365,7 +1408,7 @@ screaming_snake_for_constants:
   _doc: "Module-level constants should use SCREAMING_SNAKE_CASE."
   _fix_hint: "Name this constant in SCREAMING_SNAKE_CASE."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -4.7797
+  _log_baseline: -4.8686
   branching:
     mean_branching_density: 0.0176
     mean_non_blank_count: -0.0180
@@ -1413,6 +1456,10 @@ screaming_snake_for_constants:
   lexical_concentration:
     mean_simpson_d: 0.0045
     mean_total_tokens: -0.0066
+  lexical_density:
+    mean_content_tokens: -0.0144
+    mean_function_tokens: -0.0033
+    mean_lexical_density: -0.0074
   line_patterns:
     mean_blank_line_ratio: 0.0078
     mean_string_literal_ratio: 0.0089

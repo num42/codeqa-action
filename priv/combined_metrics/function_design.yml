@@ -2,7 +2,7 @@ boolean_function_has_question_mark:
   _doc: "Functions returning a boolean should end with `?` (Elixir/Ruby) or start with `is_`/`has_` (JS/Python)."
   _fix_hint: "Rename this predicate to end with ? per the boolean-function convention."
   _languages: [elixir, python, ruby]
-  _log_baseline: -6.2668
+  _log_baseline: -6.0089
   brevity:
     mean_sample_size: 0.0076
   compression:
@@ -30,6 +30,9 @@ boolean_function_has_question_mark:
     mean_simpson_d: 0.0219
     mean_total_tokens: 0.0336
     mean_yule_k: 0.0216
+  lexical_density:
+    mean_function_tokens: 0.0462
+    mean_lexical_density: -0.0384
   line_patterns:
     mean_string_literal_ratio: -0.0157
   magic_number_density:
@@ -84,7 +87,7 @@ cyclomatic_complexity_under_10:
   _doc: "Functions should have a cyclomatic complexity under 10."
   _fix_hint: "Reduce branching in this {{line_count}}-line {{type}} — extract guard clauses or split it."
   _languages: [elixir]
-  _log_baseline: 10.2807
+  _log_baseline: 11.1170
   branching:
     mean_branch_count: -0.2801
     mean_branching_density: -0.1604
@@ -142,6 +145,10 @@ cyclomatic_complexity_under_10:
     mean_simpson_d: 0.0651
     mean_total_tokens: 0.0897
     mean_yule_k: 0.0653
+  lexical_density:
+    mean_content_tokens: 0.0798
+    mean_function_tokens: 0.0927
+    mean_lexical_density: -0.0079
   line_patterns:
     mean_blank_line_ratio: 0.3073
     mean_max_nesting_depth: 0.0807
@@ -246,7 +253,7 @@ is_less_than_20_lines:
   _doc: "Functions should be 20 lines or fewer."
   _fix_hint: "Split this {{line_count}}-line {{type}} into smaller functions."
   _languages: [elixir]
-  _log_baseline: 24.6810
+  _log_baseline: 25.5488
   branching:
     mean_branch_count: -0.0820
     mean_branching_density: -0.1010
@@ -304,6 +311,10 @@ is_less_than_20_lines:
     mean_simpson_d: 0.0571
     mean_total_tokens: 0.0759
     mean_yule_k: 0.0575
+  lexical_density:
+    mean_content_tokens: 0.0951
+    mean_function_tokens: 0.0670
+    mean_lexical_density: 0.0193
   line_patterns:
     mean_blank_line_ratio: -0.0440
     mean_max_nesting_depth: -0.1156
@@ -378,7 +389,7 @@ nesting_depth_under_4:
   _doc: "Code should not nest deeper than 4 levels."
   _fix_hint: "Flatten the deep nesting in this {{type}} by extracting helper functions."
   _languages: [elixir]
-  _log_baseline: 4.4553
+  _log_baseline: 5.3841
   branching:
     mean_branch_count: -0.2707
     mean_branching_density: -0.1450
@@ -437,6 +448,10 @@ nesting_depth_under_4:
     mean_simpson_d: 0.0590
     mean_total_tokens: 0.0991
     mean_yule_k: 0.0587
+  lexical_density:
+    mean_content_tokens: 0.0784
+    mean_function_tokens: 0.1056
+    mean_lexical_density: -0.0145
   line_patterns:
     mean_blank_line_ratio: 0.3953
     mean_string_literal_ratio: -0.1276
@@ -509,7 +524,7 @@ no_boolean_parameter:
   _doc: "Functions should not take boolean parameters — a flag usually means the function does two things."
   _fix_hint: "Replace the boolean parameter with separate functions or an options map."
   _languages: [elixir]
-  _log_baseline: 14.9808
+  _log_baseline: 15.7403
   branching:
     mean_branch_count: -2.0000
     mean_branching_density: 1.0271
@@ -568,6 +583,10 @@ no_boolean_parameter:
     mean_simpson_d: 0.0273
     mean_total_tokens: 0.0692
     mean_yule_k: 0.0274
+  lexical_density:
+    mean_content_tokens: 0.0962
+    mean_function_tokens: 0.0565
+    mean_lexical_density: 0.0270
   line_patterns:
     mean_blank_line_ratio: 0.4402
     mean_max_nesting_depth: -0.3263
@@ -639,7 +658,7 @@ no_magic_numbers:
   _doc: "Numeric literals should be named constants, not inline magic numbers."
   _fix_hint: "Extract the magic numbers in this {{type}} into named constants."
   _languages: [elixir]
-  _log_baseline: 51.3025
+  _log_baseline: 54.1146
   branching:
     mean_branch_count: -0.2708
     mean_branching_density: -0.1682
@@ -695,6 +714,10 @@ no_magic_numbers:
     mean_simpson_d: 0.0432
     mean_total_tokens: 0.2834
     mean_yule_k: 0.0432
+  lexical_density:
+    mean_content_tokens: 0.2987
+    mean_function_tokens: 0.2745
+    mean_lexical_density: 0.0153
   line_patterns:
     mean_blank_line_ratio: 0.2374
     mean_string_literal_ratio: -0.2880
@@ -762,7 +785,7 @@ parameter_count_under_4:
   _doc: "Functions should take fewer than 4 parameters."
   _fix_hint: "This {{type}} takes too many parameters — group related ones into a struct or map."
   _languages: [elixir]
-  _log_baseline: 3.5772
+  _log_baseline: 3.2563
   branching:
     mean_non_blank_count: 0.0967
   brevity:
@@ -822,6 +845,10 @@ parameter_count_under_4:
     mean_simpson_d: -0.1805
     mean_total_tokens: -0.0335
     mean_yule_k: -0.1806
+  lexical_density:
+    mean_content_tokens: -0.0122
+    mean_function_tokens: -0.0416
+    mean_lexical_density: 0.0214
   line_patterns:
     mean_blank_line_ratio: 0.0518
     mean_string_literal_ratio: 0.1674
@@ -887,7 +914,7 @@ uses_ternary_expression:
   _doc: "Simple conditional assignments should use inline expressions rather than full if-blocks."
   _excludes_languages: [elixir]
   _fix_hint: "Replace the ternary with pattern matching or an if/else expression."
-  _log_baseline: 2.5770
+  _log_baseline: 2.6313
   branching:
     mean_branch_count: -0.6221
     mean_branching_density: -0.4433
@@ -947,6 +974,10 @@ uses_ternary_expression:
     mean_simpson_d: -0.0652
     mean_total_tokens: 0.0031
     mean_yule_k: -0.0657
+  lexical_density:
+    mean_content_tokens: 0.0290
+    mean_function_tokens: -0.0057
+    mean_lexical_density: 0.0261
   line_patterns:
     mean_blank_line_ratio: 0.2184
     mean_max_nesting_depth: -0.1820

@@ -2,7 +2,7 @@ has_consistent_indentation:
   _doc: "Files should use a single, consistent indentation style with no mixed tabs and spaces."
   _fix_hint: "Normalize indentation in this {{type}} — no mixed tabs and spaces."
   _languages: [elixir]
-  _log_baseline: 20.2575
+  _log_baseline: 21.4292
   branching:
     mean_branch_count: 0.0582
     mean_branching_density: 0.0172
@@ -69,6 +69,10 @@ has_consistent_indentation:
     mean_simpson_d: 0.0041
     mean_total_tokens: 0.1168
     mean_yule_k: 0.0031
+  lexical_density:
+    mean_content_tokens: 0.1506
+    mean_function_tokens: 0.1017
+    mean_lexical_density: 0.0185
   line_patterns:
     mean_blank_line_ratio: 0.1123
     mean_max_nesting_depth: -0.0362
@@ -142,7 +146,7 @@ line_count_under_300:
   _doc: "Files should be under 300 lines; longer files typically violate single responsibility."
   _fix_hint: "This file is too long — split it into focused modules."
   _languages: [elixir]
-  _log_baseline: -50.0141
+  _log_baseline: -52.1733
   branching:
     mean_branch_count: -0.4508
     mean_branching_density: -0.2446
@@ -205,6 +209,10 @@ line_count_under_300:
     mean_simpson_d: 0.0291
     mean_total_tokens: -0.1807
     mean_yule_k: 0.0290
+  lexical_density:
+    mean_content_tokens: -0.1885
+    mean_function_tokens: -0.1780
+    mean_lexical_density: -0.0079
   line_patterns:
     mean_blank_line_ratio: -0.4899
     mean_string_literal_ratio: 0.0039
@@ -278,7 +286,7 @@ line_length_under_120:
   _doc: "Lines should be under 120 characters to avoid horizontal scrolling."
   _fix_hint: "Wrap the over-long lines in this {{type}} to stay under the line-length limit."
   _languages: [elixir]
-  _log_baseline: -17.4278
+  _log_baseline: -18.0457
   branching:
     mean_branching_density: -0.0814
     mean_max_nesting_depth: -0.0341
@@ -339,6 +347,10 @@ line_length_under_120:
     mean_simpson_d: -0.0143
     mean_total_tokens: -0.0554
     mean_yule_k: -0.0145
+  lexical_density:
+    mean_content_tokens: -0.0514
+    mean_function_tokens: -0.0572
+    mean_lexical_density: 0.0115
   line_patterns:
     mean_blank_line_ratio: 0.0218
     mean_max_nesting_depth: -0.0341
@@ -407,7 +419,7 @@ no_magic_numbers:
   _doc: "Numeric literals should be extracted to named constants rather than used inline."
   _fix_hint: "Extract the magic numbers in this {{type}} into named constants."
   _languages: [elixir]
-  _log_baseline: 116.5271
+  _log_baseline: 122.0171
   branching:
     mean_branch_count: -0.4352
     mean_branching_density: -0.9103
@@ -464,6 +476,10 @@ no_magic_numbers:
     mean_simpson_d: -0.1122
     mean_total_tokens: 0.4877
     mean_yule_k: -0.1119
+  lexical_density:
+    mean_content_tokens: 0.6354
+    mean_function_tokens: 0.4171
+    mean_lexical_density: 0.1477
   line_patterns:
     mean_blank_line_ratio: 0.3137
     mean_string_literal_ratio: -0.5060
@@ -531,7 +547,7 @@ single_responsibility:
   _doc: "Each file should have one primary concern — low complexity spread across few, focused functions."
   _fix_hint: "This {{type}} ({{line_count}} lines) does too much — split it along its responsibilities."
   _languages: [elixir]
-  _log_baseline: -39.2930
+  _log_baseline: -40.6754
   branching:
     mean_branch_count: -0.0362
     mean_branching_density: 0.1360
@@ -595,6 +611,9 @@ single_responsibility:
     mean_simpson_d: 0.0501
     mean_total_tokens: -0.1318
     mean_yule_k: 0.0502
+  lexical_density:
+    mean_content_tokens: -0.1314
+    mean_function_tokens: -0.1319
   line_patterns:
     mean_blank_line_ratio: 0.0442
     mean_string_literal_ratio: -0.0292

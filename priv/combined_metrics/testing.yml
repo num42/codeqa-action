@@ -2,7 +2,7 @@ reasonable_test_to_code_ratio:
   _doc: "There should be an adequate number of test cases relative to the code being tested."
   _fix_hint: "Add tests for this module to reach a reasonable test-to-code ratio."
   _languages: [elixir]
-  _log_baseline: 13.4831
+  _log_baseline: 14.7166
   branching:
     mean_branch_count: 0.1869
     mean_branching_density: 0.0352
@@ -63,6 +63,10 @@ reasonable_test_to_code_ratio:
     mean_simpson_d: -0.0440
     mean_total_tokens: 0.1093
     mean_yule_k: -0.0432
+  lexical_density:
+    mean_content_tokens: 0.1010
+    mean_function_tokens: 0.1130
+    mean_lexical_density: -0.0083
   line_patterns:
     mean_blank_line_ratio: -0.0175
     mean_string_literal_ratio: 0.2536
@@ -136,7 +140,7 @@ test_has_assertion:
   _doc: "Every test body must contain at least one assertion — a test without assertions proves nothing."
   _fix_hint: "Add an assertion — this test currently verifies nothing."
   _languages: [elixir]
-  _log_baseline: -10.4803
+  _log_baseline: -10.5339
   branching:
     mean_branch_count: 0.0918
     mean_branching_density: 0.1642
@@ -192,6 +196,10 @@ test_has_assertion:
   lexical_concentration:
     mean_simpson_d: 0.0252
     mean_yule_k: 0.0257
+  lexical_density:
+    mean_content_tokens: -0.0419
+    mean_function_tokens: 0.0190
+    mean_lexical_density: -0.0418
   line_patterns:
     mean_blank_line_ratio: 0.0261
     mean_string_literal_ratio: -0.0139
@@ -262,7 +270,7 @@ test_name_describes_behavior:
   _doc: "Test names should describe the expected behaviour, not just the method under test."
   _fix_hint: "Rename this test to describe the behavior it verifies, not the method called."
   _languages: [elixir]
-  _log_baseline: 61.6996
+  _log_baseline: 64.7096
   branching:
     mean_branch_count: 2.0000
     mean_branching_density: -1.5965
@@ -315,6 +323,10 @@ test_name_describes_behavior:
     mean_simpson_d: -0.1332
     mean_total_tokens: 0.2704
     mean_yule_k: -0.1326
+  lexical_density:
+    mean_content_tokens: 0.3427
+    mean_function_tokens: 0.2454
+    mean_lexical_density: 0.0722
   line_patterns:
     mean_blank_line_ratio: -0.1184
     mean_string_literal_ratio: -0.1419
@@ -377,7 +389,7 @@ test_single_concept:
   _doc: "Each test should verify a single concept — tests covering multiple things are harder to diagnose when they fail."
   _fix_hint: "Split this test so it exercises a single concept."
   _languages: [elixir]
-  _log_baseline: 40.8775
+  _log_baseline: 42.7962
   branching:
     mean_branch_count: 0.3696
     mean_branching_density: -2.0000
@@ -441,6 +453,10 @@ test_single_concept:
     mean_simpson_d: -0.0371
     mean_total_tokens: 0.1633
     mean_yule_k: -0.0369
+  lexical_density:
+    mean_content_tokens: 0.1664
+    mean_function_tokens: 0.1618
+    mean_lexical_density: 0.0032
   line_patterns:
     mean_blank_line_ratio: -0.0702
     mean_max_nesting_depth: 0.1534
