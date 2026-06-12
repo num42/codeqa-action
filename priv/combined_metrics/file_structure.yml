@@ -2,7 +2,7 @@ has_consistent_indentation:
   _doc: "Files should use a single, consistent indentation style with no mixed tabs and spaces."
   _fix_hint: "Normalize indentation in this {{type}} — no mixed tabs and spaces."
   _languages: [elixir]
-  _log_baseline: 21.4292
+  _log_baseline: 21.4637
   branching:
     mean_branch_count: 0.0582
     mean_branching_density: 0.0172
@@ -24,6 +24,10 @@ has_consistent_indentation:
     mean_unique_line_ratio: -0.0260
     mean_zlib_bytes: 0.1338
     mean_zlib_ratio: 0.0135
+  conditional_entropy:
+    mean_conditional_entropy: 0.0058
+    mean_normalized_conditional_entropy: -0.0177
+    mean_perplexity: 0.0068
   entropy:
     mean_char_entropy: 0.0162
     mean_char_max_entropy: 0.0089
@@ -146,7 +150,7 @@ line_count_under_300:
   _doc: "Files should be under 300 lines; longer files typically violate single responsibility."
   _fix_hint: "This file is too long — split it into focused modules."
   _languages: [elixir]
-  _log_baseline: -52.1733
+  _log_baseline: -52.3251
   branching:
     mean_branch_count: -0.4508
     mean_branching_density: -0.2446
@@ -164,6 +168,10 @@ line_count_under_300:
     mean_unique_line_ratio: 0.0519
     mean_zlib_bytes: -0.2194
     mean_zlib_ratio: -0.0069
+  conditional_entropy:
+    mean_conditional_entropy: -0.0608
+    mean_normalized_conditional_entropy: -0.0170
+    mean_perplexity: -0.0879
   entropy:
     mean_char_entropy: -0.0072
     mean_char_max_entropy: -0.0245
@@ -286,7 +294,7 @@ line_length_under_120:
   _doc: "Lines should be under 120 characters to avoid horizontal scrolling."
   _fix_hint: "Wrap the over-long lines in this {{type}} to stay under the line-length limit."
   _languages: [elixir]
-  _log_baseline: -18.0457
+  _log_baseline: -18.0631
   branching:
     mean_branching_density: -0.0814
     mean_max_nesting_depth: -0.0341
@@ -303,6 +311,10 @@ line_length_under_120:
     mean_unique_line_ratio: 0.0072
     mean_zlib_bytes: -0.0338
     mean_zlib_ratio: -0.0160
+  conditional_entropy:
+    mean_conditional_entropy: -0.0032
+    mean_normalized_conditional_entropy: 0.0072
+    mean_perplexity: -0.0045
   entropy:
     mean_char_entropy: -0.0054
     mean_char_max_entropy: -0.0038
@@ -419,7 +431,7 @@ no_magic_numbers:
   _doc: "Numeric literals should be extracted to named constants rather than used inline."
   _fix_hint: "Extract the magic numbers in this {{type}} into named constants."
   _languages: [elixir]
-  _log_baseline: 122.0171
+  _log_baseline: 122.2481
   branching:
     mean_branch_count: -0.4352
     mean_branching_density: -0.9103
@@ -435,6 +447,9 @@ no_magic_numbers:
     mean_unique_line_ratio: 0.1073
     mean_zlib_bytes: 0.5072
     mean_zlib_ratio: 0.2642
+  conditional_entropy:
+    mean_conditional_entropy: 0.0923
+    mean_perplexity: 0.1250
   entropy:
     mean_char_entropy: 0.0481
     mean_char_normalized: 0.0481
@@ -547,7 +562,7 @@ single_responsibility:
   _doc: "Each file should have one primary concern — low complexity spread across few, focused functions."
   _fix_hint: "This {{type}} ({{line_count}} lines) does too much — split it along its responsibilities."
   _languages: [elixir]
-  _log_baseline: -40.6754
+  _log_baseline: -40.7700
   branching:
     mean_branch_count: -0.0362
     mean_branching_density: 0.1360
@@ -566,6 +581,10 @@ single_responsibility:
     mean_unique_line_ratio: 0.0215
     mean_zlib_bytes: -0.1428
     mean_zlib_ratio: -0.0056
+  conditional_entropy:
+    mean_conditional_entropy: -0.0542
+    mean_normalized_conditional_entropy: -0.0284
+    mean_perplexity: -0.0707
   entropy:
     mean_char_entropy: -0.0035
     mean_char_max_entropy: -0.0135

@@ -3,7 +3,7 @@ declared_close_to_use:
   _excludes_block_types: [doc]
   _fix_hint: "Move this declaration closer to where it is first used."
   _languages: [elixir, go, javascript, python, ruby]
-  _log_baseline: -19.0177
+  _log_baseline: -19.0450
   branching:
     mean_branch_count: -0.1629
     mean_branching_density: -0.0595
@@ -25,6 +25,9 @@ declared_close_to_use:
     mean_redundancy: -0.0185
     mean_zlib_bytes: -0.0916
     mean_zlib_ratio: -0.0242
+  conditional_entropy:
+    mean_normalized_conditional_entropy: 0.0186
+    mean_perplexity: -0.0034
   entropy:
     mean_char_entropy: 0.0036
     mean_char_max_entropy: -0.0045
@@ -135,7 +138,7 @@ mutated_after_initial_assignment:
   _doc: "Variables should not be reassigned after their initial value — prefer introducing a new name."
   _fix_hint: "Avoid reassigning after the initial binding — use a new binding or pipe the transformation."
   _languages: [elixir]
-  _log_baseline: 5.6467
+  _log_baseline: 5.6587
   branching:
     mean_branch_count: 0.1519
     mean_branching_density: 0.2073
@@ -153,6 +156,10 @@ mutated_after_initial_assignment:
     mean_unique_line_ratio: -0.0110
     mean_zlib_bytes: 0.0022
     mean_zlib_ratio: -0.0518
+  conditional_entropy:
+    mean_conditional_entropy: 0.0051
+    mean_normalized_conditional_entropy: 0.0036
+    mean_perplexity: 0.0078
   entropy:
     mean_char_entropy: -0.0034
     mean_char_max_entropy: 0.0039
@@ -264,7 +271,7 @@ reassigned_multiple_times:
   _doc: "A variable reassigned many times is a sign the name is too generic or the function does too much."
   _fix_hint: "This {{type}} reassigns the same binding repeatedly — restructure into a transformation chain."
   _languages: [elixir]
-  _log_baseline: -8.0720
+  _log_baseline: -8.0777
   branching:
     mean_max_nesting_depth: 0.0680
     mean_non_blank_count: 0.0226
@@ -282,6 +289,10 @@ reassigned_multiple_times:
     mean_unique_line_ratio: -0.0222
     mean_zlib_bytes: 0.0248
     mean_zlib_ratio: -0.0851
+  conditional_entropy:
+    mean_conditional_entropy: -0.0147
+    mean_normalized_conditional_entropy: -0.0219
+    mean_perplexity: -0.0188
   entropy:
     mean_char_entropy: 0.0021
     mean_char_max_entropy: 0.0066
@@ -403,7 +414,7 @@ scope_is_minimal:
   _doc: "Variables should be scoped as narrowly as possible — not declared at a wider scope than needed."
   _fix_hint: "Narrow this binding's scope to the block that actually uses it."
   _languages: [elixir]
-  _log_baseline: -7.3910
+  _log_baseline: -7.3767
   branching:
     mean_branch_count: -0.1072
     mean_branching_density: -0.0452
@@ -423,6 +434,10 @@ scope_is_minimal:
     mean_unique_line_ratio: -0.1005
     mean_zlib_bytes: -0.0343
     mean_zlib_ratio: -0.0767
+  conditional_entropy:
+    mean_conditional_entropy: 0.0193
+    mean_normalized_conditional_entropy: 0.0274
+    mean_perplexity: 0.0259
   entropy:
     mean_char_entropy: 0.0481
     mean_char_normalized: 0.0481
@@ -531,7 +546,7 @@ shadowed_by_inner_scope:
   _doc: "Inner-scope names that shadow outer-scope names cause confusion about which value is in play."
   _fix_hint: "Rename the inner binding so it no longer shadows the outer one."
   _languages: [elixir]
-  _log_baseline: -35.0465
+  _log_baseline: -35.1031
   branching:
     mean_branching_density: 2.0000
     mean_max_nesting_depth: -0.1450
@@ -549,6 +564,10 @@ shadowed_by_inner_scope:
     mean_raw_bytes: -0.1107
     mean_unique_line_ratio: -0.0068
     mean_zlib_bytes: -0.1099
+  conditional_entropy:
+    mean_conditional_entropy: -0.0447
+    mean_normalized_conditional_entropy: -0.0266
+    mean_perplexity: -0.0543
   entropy:
     mean_char_entropy: 0.0202
     mean_char_max_entropy: -0.0068
@@ -656,7 +675,7 @@ used_only_once:
   _doc: "A variable used only once is a candidate for inlining — it rarely adds clarity over a direct expression."
   _fix_hint: "Inline this single-use binding unless the name aids readability."
   _languages: [elixir, go, javascript, python, ruby]
-  _log_baseline: -16.7449
+  _log_baseline: -16.8441
   branching:
     mean_branch_count: -0.1226
     mean_branching_density: -0.2229
@@ -676,6 +695,10 @@ used_only_once:
     mean_unique_line_ratio: -0.0274
     mean_zlib_bytes: -0.0935
     mean_zlib_ratio: -0.0353
+  conditional_entropy:
+    mean_conditional_entropy: -0.0496
+    mean_normalized_conditional_entropy: -0.0359
+    mean_perplexity: -0.0710
   entropy:
     mean_token_entropy: -0.0153
     mean_token_max_entropy: -0.0137

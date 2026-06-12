@@ -2,7 +2,7 @@ docstring_is_nonempty:
   _doc: "Docstrings must contain meaningful content, not just a placeholder or empty string."
   _fix_hint: "Fill in the empty docstring with a real description of what this does."
   _languages: [elixir]
-  _log_baseline: 32.7452
+  _log_baseline: 32.8089
   branching:
     mean_branch_count: 0.3089
     mean_branching_density: 0.2652
@@ -20,6 +20,10 @@ docstring_is_nonempty:
     mean_unique_line_ratio: 0.0053
     mean_zlib_bytes: 0.1557
     mean_zlib_ratio: -0.0312
+  conditional_entropy:
+    mean_conditional_entropy: 0.0095
+    mean_normalized_conditional_entropy: -0.0309
+    mean_perplexity: 0.0135
   entropy:
     mean_char_entropy: 0.0065
     mean_char_max_entropy: 0.0102
@@ -136,7 +140,7 @@ file_has_license_header:
   _doc: "Source files should begin with a license or copyright header."
   _fix_hint: "Add the project's license header to the top of the file."
   _languages: [elixir]
-  _log_baseline: 10.4943
+  _log_baseline: 10.5212
   branching:
     mean_branching_density: -0.0282
     mean_non_blank_count: 0.0295
@@ -154,6 +158,9 @@ file_has_license_header:
     mean_redundancy: -0.0251
     mean_zlib_bytes: 0.0651
     mean_zlib_ratio: -0.0263
+  conditional_entropy:
+    mean_normalized_conditional_entropy: -0.0170
+    mean_perplexity: 0.0040
   entropy:
     mean_char_entropy: 0.0113
     mean_char_max_entropy: 0.0194
@@ -250,7 +257,7 @@ file_has_module_docstring:
   _doc: "Files should have a module-level docstring explaining purpose and usage."
   _fix_hint: "Add a @moduledoc describing this module's responsibility."
   _languages: [elixir]
-  _log_baseline: 27.1251
+  _log_baseline: 27.1624
   branching:
     mean_branch_count: 0.3854
     mean_branching_density: -2.0000
@@ -267,6 +274,10 @@ file_has_module_docstring:
     mean_unique_line_ratio: 0.0122
     mean_zlib_bytes: 0.1676
     mean_zlib_ratio: -0.0514
+  conditional_entropy:
+    mean_conditional_entropy: -0.0102
+    mean_normalized_conditional_entropy: -0.0562
+    mean_perplexity: -0.0150
   entropy:
     mean_char_max_entropy: 0.0126
     mean_char_normalized: -0.0120
@@ -373,7 +384,7 @@ file_has_no_commented_out_code:
   _doc: "Files should not contain commented-out code blocks left from development."
   _fix_hint: "Delete the commented-out code; rely on version control for history."
   _languages: [elixir]
-  _log_baseline: -8.8035
+  _log_baseline: -8.8449
   branching:
     mean_branching_density: 0.0368
     mean_non_blank_count: -0.0367
@@ -391,6 +402,10 @@ file_has_no_commented_out_code:
     mean_redundancy: 0.0077
     mean_zlib_bytes: -0.0179
     mean_zlib_ratio: 0.0111
+  conditional_entropy:
+    mean_conditional_entropy: -0.0249
+    mean_normalized_conditional_entropy: -0.0239
+    mean_perplexity: -0.0360
   entropy:
     mean_char_entropy: -0.0026
     mean_char_max_entropy: -0.0061
@@ -499,7 +514,7 @@ function_has_docstring:
   _doc: "Public functions should have a docstring describing behaviour, params, and return value."
   _fix_hint: "Add a @doc explaining this function's contract (args, return, side effects)."
   _languages: [elixir]
-  _log_baseline: 48.8392
+  _log_baseline: 48.9973
   branching:
     mean_branch_count: 0.5279
     mean_branching_density: 0.3832
@@ -519,6 +534,10 @@ function_has_docstring:
     mean_unique_line_ratio: -0.0264
     mean_zlib_bytes: 0.2718
     mean_zlib_ratio: -0.0468
+  conditional_entropy:
+    mean_conditional_entropy: 0.0609
+    mean_normalized_conditional_entropy: 0.0046
+    mean_perplexity: 0.0856
   entropy:
     mean_char_entropy: 0.0081
     mean_char_max_entropy: 0.0163
@@ -640,7 +659,7 @@ function_todo_comment_in_body:
   _doc: "Functions should not contain TODO/FIXME comments indicating unfinished work."
   _fix_hint: "Resolve the TODO in the body or move it to a tracked issue."
   _languages: [elixir]
-  _log_baseline: 8.3419
+  _log_baseline: 8.3599
   branching:
     mean_branch_count: -0.0287
     mean_branching_density: -0.0435
@@ -659,6 +678,10 @@ function_todo_comment_in_body:
     mean_raw_bytes: 0.0082
     mean_unique_line_ratio: 0.0028
     mean_zlib_bytes: 0.0074
+  conditional_entropy:
+    mean_conditional_entropy: 0.0112
+    mean_normalized_conditional_entropy: 0.0129
+    mean_perplexity: 0.0167
   entropy:
     mean_char_entropy: 0.0026
     mean_char_normalized: 0.0026

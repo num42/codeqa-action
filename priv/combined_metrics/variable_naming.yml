@@ -2,7 +2,7 @@ boolean_has_is_has_prefix:
   _doc: "Boolean variables should be prefixed with `is_`, `has_`, or `can_`."
   _fix_hint: "Prefix this boolean with is_/has_ so its meaning is clear."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 22.7733
+  _log_baseline: 22.7461
   brevity:
     mean_sample_size: 0.0752
   casing_entropy:
@@ -14,6 +14,10 @@ boolean_has_is_has_prefix:
     mean_redundancy: 0.0581
     mean_zlib_bytes: 0.0387
     mean_zlib_ratio: 0.1318
+  conditional_entropy:
+    mean_conditional_entropy: -0.0394
+    mean_normalized_conditional_entropy: -0.0571
+    mean_perplexity: -0.0524
   entropy:
     mean_char_entropy: 0.0136
     mean_token_entropy: 0.0198
@@ -77,7 +81,7 @@ collection_name_is_plural:
   _doc: "Variables holding a collection should use a plural name."
   _fix_hint: "Pluralize this collection's name to signal it holds many items."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 21.3200
+  _log_baseline: 21.4003
   brevity:
     mean_sample_size: -0.5320
   casing_entropy:
@@ -89,6 +93,10 @@ collection_name_is_plural:
     mean_redundancy: 0.3207
     mean_zlib_bytes: 0.1239
     mean_zlib_ratio: 0.7180
+  conditional_entropy:
+    mean_conditional_entropy: 0.1151
+    mean_normalized_conditional_entropy: 0.2411
+    mean_perplexity: 0.1716
   entropy:
     mean_token_entropy: -0.1027
     mean_token_max_entropy: -0.1240
@@ -156,7 +164,7 @@ loop_var_is_single_letter:
   _excludes_block_types: [doc]
   _fix_hint: "Give this loop variable a descriptive name."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -33.2973
+  _log_baseline: -33.3227
   brevity:
     mean_sample_size: -0.1049
   casing_entropy:
@@ -171,6 +179,8 @@ loop_var_is_single_letter:
     mean_unique_line_ratio: -0.0195
     mean_zlib_bytes: -0.1067
     mean_zlib_ratio: -0.3218
+  conditional_entropy:
+    mean_normalized_conditional_entropy: 0.0212
   entropy:
     mean_char_normalized: -0.0122
     mean_token_entropy: -0.0181
@@ -252,7 +262,7 @@ name_contains_and:
   _doc: "Variable names containing `and` signal a variable that holds two concerns."
   _fix_hint: "Split this binding — a name containing 'and' signals it holds two things."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -0.5183
+  _log_baseline: -0.4941
   branching:
     mean_branch_count: -0.3666
     mean_branching_density: -0.3925
@@ -273,6 +283,10 @@ name_contains_and:
     mean_unique_line_ratio: 0.0672
     mean_zlib_bytes: -0.0158
     mean_zlib_ratio: -0.0478
+  conditional_entropy:
+    mean_conditional_entropy: 0.0096
+    mean_normalized_conditional_entropy: 0.0070
+    mean_perplexity: 0.0166
   entropy:
     mean_char_max_entropy: 0.0084
     mean_char_normalized: -0.0068
@@ -392,7 +406,7 @@ name_contains_type_suffix:
   _doc: "Type suffixes in names (`userString`, `nameList`) are redundant noise."
   _fix_hint: "Drop the type suffix from the name; let the type system carry the type."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -28.5598
+  _log_baseline: -28.5718
   branching:
     mean_branch_count: -0.6581
     mean_branching_density: -0.8807
@@ -409,6 +423,10 @@ name_contains_type_suffix:
     mean_redundancy: -0.1262
     mean_zlib_bytes: -0.0971
     mean_zlib_ratio: -0.1854
+  conditional_entropy:
+    mean_conditional_entropy: 0.0165
+    mean_normalized_conditional_entropy: 0.0520
+    mean_perplexity: 0.0240
   entropy:
     mean_char_entropy: -0.0090
     mean_char_normalized: -0.0078
@@ -595,7 +613,7 @@ name_is_generic:
   _doc: "Generic names (`data`, `result`, `tmp`, `val`, `obj`) convey no domain meaning."
   _fix_hint: "Replace this generic name (data/tmp/val) with one stating its purpose."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 45.9785
+  _log_baseline: 46.0202
   branching:
     mean_branch_count: 0.5193
     mean_branching_density: 0.3889
@@ -612,6 +630,10 @@ name_is_generic:
     mean_redundancy: 0.0524
     mean_zlib_bytes: 0.2391
     mean_zlib_ratio: 0.1093
+  conditional_entropy:
+    mean_conditional_entropy: -0.0056
+    mean_normalized_conditional_entropy: -0.0514
+    mean_perplexity: -0.0081
   entropy:
     mean_char_entropy: 0.0197
     mean_char_max_entropy: 0.0088
@@ -732,7 +754,7 @@ name_is_number_like:
   _doc: "Number-suffixed names (`var1`, `thing2`) signal a missing abstraction."
   _fix_hint: "Replace the number-suffixed name with a meaningful one."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 3.8657
+  _log_baseline: 3.8686
   brevity:
     mean_sample_size: -0.0262
   casing_entropy:
@@ -745,6 +767,10 @@ name_is_number_like:
     mean_redundancy: 0.0379
     mean_zlib_bytes: 0.0415
     mean_zlib_ratio: 0.0696
+  conditional_entropy:
+    mean_conditional_entropy: 0.0043
+    mean_normalized_conditional_entropy: 0.0097
+    mean_perplexity: 0.0066
   entropy:
     mean_char_entropy: -0.0074
     mean_char_max_entropy: -0.0070
@@ -830,7 +856,7 @@ name_is_single_letter:
   _doc: "Single-letter names outside loop indices are too opaque."
   _fix_hint: "Give this single-letter variable a descriptive name."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: 31.9771
+  _log_baseline: 32.0086
   branching:
     mean_branching_density: -0.0445
     mean_non_blank_count: 0.0426
@@ -848,6 +874,10 @@ name_is_single_letter:
     mean_unique_line_ratio: 0.0952
     mean_zlib_bytes: 0.3372
     mean_zlib_ratio: 0.2802
+  conditional_entropy:
+    mean_conditional_entropy: -0.0178
+    mean_normalized_conditional_entropy: -0.0711
+    mean_perplexity: -0.0255
   entropy:
     mean_char_entropy: 0.0250
     mean_char_max_entropy: 0.0106
@@ -948,7 +978,7 @@ name_is_too_long:
   _doc: "Names longer than ~30 characters harm readability."
   _fix_hint: "Shorten this overly long name while keeping it clear."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -9.2696
+  _log_baseline: -9.2390
   branching:
     mean_branch_count: 0.0340
     mean_branching_density: 0.0916
@@ -970,6 +1000,10 @@ name_is_too_long:
     mean_unique_line_ratio: -0.0154
     mean_zlib_bytes: -0.1618
     mean_zlib_ratio: -0.0643
+  conditional_entropy:
+    mean_conditional_entropy: 0.0312
+    mean_normalized_conditional_entropy: 0.0350
+    mean_perplexity: 0.0407
   entropy:
     mean_token_entropy: -0.0111
     mean_token_max_entropy: -0.0038
@@ -1095,7 +1129,7 @@ name_is_too_short:
   _doc: "Names shorter than 3 characters (outside loops) are too opaque."
   _fix_hint: "Lengthen this name so it states what the value holds."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -5.6138
+  _log_baseline: -5.5324
   branching:
     mean_branch_count: -0.2327
     mean_branching_density: -0.2381
@@ -1113,6 +1147,10 @@ name_is_too_short:
     mean_redundancy: 0.1160
     mean_zlib_bytes: 0.0526
     mean_zlib_ratio: 0.2197
+  conditional_entropy:
+    mean_conditional_entropy: 0.0528
+    mean_normalized_conditional_entropy: 0.0794
+    mean_perplexity: 0.0814
   entropy:
     mean_char_entropy: -0.0115
     mean_char_max_entropy: 0.0191
@@ -1301,7 +1339,7 @@ no_hungarian_notation:
   _doc: "Hungarian notation prefixes (`strName`, `bFlag`) add noise without type safety."
   _fix_hint: "Remove the Hungarian-notation prefix from this name."
   _languages: [elixir, javascript, ruby]
-  _log_baseline: -8.3669
+  _log_baseline: -8.3436
   brevity:
     mean_sample_size: -0.0295
   casing_entropy:
@@ -1315,6 +1353,10 @@ no_hungarian_notation:
     mean_redundancy: -0.0554
     mean_zlib_bytes: -0.0494
     mean_zlib_ratio: -0.0857
+  conditional_entropy:
+    mean_conditional_entropy: 0.0128
+    mean_normalized_conditional_entropy: 0.0167
+    mean_perplexity: 0.0215
   entropy:
     mean_char_entropy: -0.0226
     mean_char_normalized: -0.0276

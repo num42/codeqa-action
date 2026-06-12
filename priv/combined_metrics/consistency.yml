@@ -2,7 +2,7 @@ consistent_casing_within_file:
   _doc: "A file should use one naming convention throughout — no mixing of camelCase and snake_case for the same kind of identifier."
   _fix_hint: "Align identifier casing in this {{type}} with the rest of the file."
   _languages: [elixir]
-  _log_baseline: -0.8912
+  _log_baseline: -0.8970
   brevity:
     mean_sample_size: -0.0471
   casing_entropy:
@@ -14,6 +14,10 @@ consistent_casing_within_file:
     mean_redundancy: 0.0219
     mean_zlib_bytes: -0.0194
     mean_zlib_ratio: 0.0407
+  conditional_entropy:
+    mean_conditional_entropy: 0.0037
+    mean_normalized_conditional_entropy: 0.0140
+    mean_perplexity: 0.0054
   entropy:
     mean_char_entropy: -0.0126
     mean_char_max_entropy: -0.0170
@@ -74,7 +78,7 @@ consistent_error_return_shape:
   _doc: "All functions in a module should return errors in the same shape — mixed `nil`, `false`, and `{:error, _}` returns are confusing."
   _fix_hint: "Return errors in one shape everywhere (e.g. {:error, reason})."
   _languages: [elixir]
-  _log_baseline: -4.1574
+  _log_baseline: -4.1947
   branching:
     mean_branch_count: -0.2800
     mean_branching_density: 0.5563
@@ -92,6 +96,10 @@ consistent_error_return_shape:
     mean_unique_line_ratio: 0.0369
     mean_zlib_bytes: -0.2211
     mean_zlib_ratio: -0.0103
+  conditional_entropy:
+    mean_conditional_entropy: -0.1086
+    mean_normalized_conditional_entropy: -0.0965
+    mean_perplexity: -0.1086
   entropy:
     mean_char_entropy: 0.0605
     mean_char_normalized: 0.0641
@@ -203,7 +211,7 @@ consistent_function_style:
   _doc: "A module should not mix one-liner and multi-clause function definitions for the same concern."
   _fix_hint: "Match the surrounding function-definition style (def vs anonymous, single vs multi-clause)."
   _languages: [elixir]
-  _log_baseline: 63.6086
+  _log_baseline: 63.7248
   branching:
     mean_branch_count: 0.3619
     mean_branching_density: 0.2247
@@ -225,6 +233,10 @@ consistent_function_style:
     mean_unique_line_ratio: -0.0077
     mean_zlib_bytes: 0.3022
     mean_zlib_ratio: 0.0170
+  conditional_entropy:
+    mean_conditional_entropy: 0.0219
+    mean_normalized_conditional_entropy: -0.0621
+    mean_perplexity: 0.0156
   entropy:
     mean_char_max_entropy: 0.0177
     mean_char_normalized: -0.0163
@@ -353,7 +365,7 @@ same_concept_same_name:
   _doc: "The same domain concept should use the same name throughout a file — mixing `user`, `usr`, and `u` for the same thing harms readability."
   _fix_hint: "Use one name for this concept across the file instead of synonyms."
   _languages: [elixir]
-  _log_baseline: -22.1414
+  _log_baseline: -22.7019
   brevity:
     mean_sample_size: -1.3457
   compression:
@@ -362,6 +374,9 @@ same_concept_same_name:
     mean_unique_line_ratio: -0.3251
     mean_zlib_bytes: -0.8263
     mean_zlib_ratio: 1.0033
+  conditional_entropy:
+    mean_conditional_entropy: -0.2157
+    mean_perplexity: -0.2990
   entropy:
     mean_char_entropy: -0.1808
     mean_char_normalized: -0.1800

@@ -2,7 +2,7 @@ class_name_is_noun:
   _doc: "Class and module names should be nouns describing what they represent, not verbs or gerunds."
   _fix_hint: "Rename this module/class to a noun describing what it is."
   _languages: [elixir]
-  _log_baseline: 5.3672
+  _log_baseline: 5.7165
   brevity:
     mean_sample_size: 0.7106
   compression:
@@ -10,6 +10,10 @@ class_name_is_noun:
     mean_redundancy: -0.0605
     mean_zlib_bytes: 0.2139
     mean_zlib_ratio: -0.0794
+  conditional_entropy:
+    mean_conditional_entropy: 0.4087
+    mean_normalized_conditional_entropy: 0.2360
+    mean_perplexity: 0.4434
   entropy:
     mean_token_entropy: 0.1236
     mean_token_max_entropy: 0.1716
@@ -110,7 +114,7 @@ function_name_matches_return_type:
   _doc: "Functions prefixed with `get_`, `fetch_`, or `find_` should return the thing they name."
   _fix_hint: "Align the function name with what it returns (e.g. ? for booleans)."
   _languages: [elixir]
-  _log_baseline: 7.8318
+  _log_baseline: 7.8553
   branching:
     mean_max_nesting_depth: 0.1335
   brevity:
@@ -125,6 +129,10 @@ function_name_matches_return_type:
     mean_unique_line_ratio: -0.0104
     mean_zlib_bytes: 0.0143
     mean_zlib_ratio: -0.0332
+  conditional_entropy:
+    mean_conditional_entropy: 0.0238
+    mean_normalized_conditional_entropy: 0.0177
+    mean_perplexity: 0.0282
   entropy:
     mean_char_entropy: 0.0079
     mean_char_max_entropy: 0.0071
@@ -226,7 +234,7 @@ test_name_starts_with_verb:
   _doc: "Test descriptions should start with a verb: `creates`, `raises`, `returns`, not a noun phrase."
   _fix_hint: "Rename this test to start with a verb describing the behavior under test."
   _languages: [elixir]
-  _log_baseline: 9.5380
+  _log_baseline: 9.5445
   branching:
     mean_branch_count: 1.9977
     mean_branching_density: 2.0000
@@ -240,6 +248,10 @@ test_name_starts_with_verb:
     mean_redundancy: 0.0182
     mean_zlib_bytes: 0.0482
     mean_zlib_ratio: 0.0431
+  conditional_entropy:
+    mean_conditional_entropy: -0.0175
+    mean_normalized_conditional_entropy: -0.0328
+    mean_perplexity: -0.0214
   entropy:
     mean_char_max_entropy: 0.0064
     mean_char_normalized: -0.0121

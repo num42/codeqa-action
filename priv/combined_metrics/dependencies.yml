@@ -2,7 +2,7 @@ import_count_under_10:
   _doc: "Files should import fewer than 10 modules; high import counts signal excessive coupling."
   _fix_hint: "This {{type}} pulls in too many dependencies — split it or narrow the imports."
   _languages: [elixir]
-  _log_baseline: 6.7158
+  _log_baseline: 6.7444
   branching:
     mean_branch_count: 0.2110
     mean_branching_density: -1.0683
@@ -22,6 +22,10 @@ import_count_under_10:
     mean_unique_line_ratio: -0.0046
     mean_zlib_bytes: 0.0144
     mean_zlib_ratio: -0.0277
+  conditional_entropy:
+    mean_conditional_entropy: 0.0209
+    mean_normalized_conditional_entropy: 0.0183
+    mean_perplexity: 0.0280
   entropy:
     mean_char_entropy: 0.0035
     mean_char_max_entropy: 0.0088
@@ -136,7 +140,7 @@ low_coupling:
   _doc: "Modules should depend on few external symbols — a low unique-operand count relative to total is a proxy for tight coupling."
   _fix_hint: "Reduce this {{type}}'s outbound references; depend on fewer modules or invert the dependency."
   _languages: [elixir]
-  _log_baseline: -47.4021
+  _log_baseline: -47.5342
   branching:
     mean_branch_count: 0.0398
     mean_branching_density: 0.2038
@@ -154,6 +158,10 @@ low_coupling:
     mean_unique_line_ratio: -0.0179
     mean_zlib_bytes: -0.1788
     mean_zlib_ratio: -0.0060
+  conditional_entropy:
+    mean_conditional_entropy: -0.1144
+    mean_normalized_conditional_entropy: -0.0871
+    mean_perplexity: -0.1394
   entropy:
     mean_char_entropy: -0.0032
     mean_char_max_entropy: -0.0160
@@ -271,7 +279,7 @@ no_wildcard_imports:
   _doc: "Wildcard imports (`import *`, `using Module`) pollute the local namespace and hide dependencies."
   _fix_hint: "Replace the wildcard import with explicit named imports."
   _languages: [elixir]
-  _log_baseline: -8.5991
+  _log_baseline: -8.5722
   branching:
     mean_branching_density: 0.0249
     mean_non_blank_count: -0.0268
@@ -284,6 +292,10 @@ no_wildcard_imports:
     mean_raw_bytes: 0.0310
     mean_unique_line_ratio: -0.0046
     mean_zlib_bytes: 0.0331
+  conditional_entropy:
+    mean_conditional_entropy: 0.0199
+    mean_normalized_conditional_entropy: 0.0217
+    mean_perplexity: 0.0279
   entropy:
     mean_total_tokens: 0.0131
     mean_vocab_size: -0.0077
