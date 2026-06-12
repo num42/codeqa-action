@@ -2,7 +2,7 @@ import_count_under_10:
   _doc: "Files should import fewer than 10 modules; high import counts signal excessive coupling."
   _fix_hint: "This {{type}} pulls in too many dependencies — split it or narrow the imports."
   _languages: [elixir]
-  _log_baseline: 7.0143
+  _log_baseline: 6.7158
   branching:
     mean_branch_count: 0.2110
     mean_branching_density: -1.0683
@@ -66,6 +66,10 @@ import_count_under_10:
     mean_simpson_d: 0.0455
     mean_total_tokens: -0.0251
     mean_yule_k: 0.0454
+  lexical_density:
+    mean_content_tokens: -0.0482
+    mean_function_tokens: -0.0119
+    mean_lexical_density: -0.0230
   line_patterns:
     mean_blank_line_ratio: 0.1478
     mean_max_nesting_depth: 0.1234
@@ -132,7 +136,7 @@ low_coupling:
   _doc: "Modules should depend on few external symbols — a low unique-operand count relative to total is a proxy for tight coupling."
   _fix_hint: "Reduce this {{type}}'s outbound references; depend on fewer modules or invert the dependency."
   _languages: [elixir]
-  _log_baseline: -45.6308
+  _log_baseline: -47.4021
   branching:
     mean_branch_count: 0.0398
     mean_branching_density: 0.2038
@@ -193,6 +197,10 @@ low_coupling:
     mean_simpson_d: -0.0133
     mean_total_tokens: -0.1708
     mean_yule_k: -0.0134
+  lexical_density:
+    mean_content_tokens: -0.1972
+    mean_function_tokens: -0.1569
+    mean_lexical_density: -0.0291
   line_patterns:
     mean_blank_line_ratio: -0.0722
     mean_max_nesting_depth: -0.0850
@@ -263,7 +271,7 @@ no_wildcard_imports:
   _doc: "Wildcard imports (`import *`, `using Module`) pollute the local namespace and hide dependencies."
   _fix_hint: "Replace the wildcard import with explicit named imports."
   _languages: [elixir]
-  _log_baseline: -8.7732
+  _log_baseline: -8.5991
   branching:
     mean_branching_density: 0.0249
     mean_non_blank_count: -0.0268
@@ -308,6 +316,9 @@ no_wildcard_imports:
     mean_simpson_d: -0.0054
     mean_total_tokens: 0.0131
     mean_yule_k: -0.0057
+  lexical_density:
+    mean_content_tokens: 0.0376
+    mean_lexical_density: 0.0245
   line_patterns:
     mean_blank_line_ratio: 0.0763
     mean_string_literal_ratio: -0.3463

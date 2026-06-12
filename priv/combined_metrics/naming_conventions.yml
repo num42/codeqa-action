@@ -110,7 +110,7 @@ function_name_matches_return_type:
   _doc: "Functions prefixed with `get_`, `fetch_`, or `find_` should return the thing they name."
   _fix_hint: "Align the function name with what it returns (e.g. ? for booleans)."
   _languages: [elixir]
-  _log_baseline: 7.8218
+  _log_baseline: 7.8318
   branching:
     mean_max_nesting_depth: 0.1335
   brevity:
@@ -155,6 +155,10 @@ function_name_matches_return_type:
     mean_simpson_d: 0.0214
     mean_total_tokens: 0.0030
     mean_yule_k: 0.0209
+  lexical_density:
+    mean_content_tokens: -0.0186
+    mean_function_tokens: 0.0134
+    mean_lexical_density: -0.0217
   line_patterns:
     mean_max_nesting_depth: 0.1335
     mean_string_literal_ratio: -0.0027
@@ -222,7 +226,7 @@ test_name_starts_with_verb:
   _doc: "Test descriptions should start with a verb: `creates`, `raises`, `returns`, not a noun phrase."
   _fix_hint: "Rename this test to start with a verb describing the behavior under test."
   _languages: [elixir]
-  _log_baseline: 8.8394
+  _log_baseline: 9.5380
   branching:
     mean_branch_count: 1.9977
     mean_branching_density: 2.0000
@@ -265,6 +269,10 @@ test_name_starts_with_verb:
     mean_simpson_d: -0.0988
     mean_total_tokens: 0.0600
     mean_yule_k: -0.0982
+  lexical_density:
+    mean_content_tokens: 0.1072
+    mean_function_tokens: 0.0393
+    mean_lexical_density: 0.0476
   line_patterns:
     mean_string_literal_ratio: -0.0611
   magic_number_density:

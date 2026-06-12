@@ -2,7 +2,7 @@ does_not_swallow_errors:
   _doc: "Errors must be handled or re-raised — empty rescue/catch blocks silently hide failures."
   _fix_hint: "Handle or propagate the error instead of discarding it in this {{type}}."
   _languages: [elixir]
-  _log_baseline: 92.2460
+  _log_baseline: 97.4574
   branching:
     mean_branch_count: -0.1041
     mean_branching_density: -0.2095
@@ -58,6 +58,10 @@ does_not_swallow_errors:
     mean_variance: 0.3416
   lexical_concentration:
     mean_total_tokens: 0.4926
+  lexical_density:
+    mean_content_tokens: 0.4821
+    mean_function_tokens: 0.4971
+    mean_lexical_density: -0.0106
   line_patterns:
     mean_blank_line_ratio: 0.0451
     mean_max_nesting_depth: 0.5405
@@ -129,7 +133,7 @@ error_message_is_descriptive:
   _doc: "Error values should carry a meaningful message, not just a bare atom or empty string."
   _fix_hint: "Make the error message state what failed and why, not just that it failed."
   _languages: [elixir]
-  _log_baseline: 31.4470
+  _log_baseline: 33.1291
   branching:
     mean_branch_count: 0.0311
     mean_branching_density: -0.0253
@@ -188,6 +192,10 @@ error_message_is_descriptive:
     mean_simpson_d: -0.0788
     mean_total_tokens: 0.1406
     mean_yule_k: -0.0786
+  lexical_density:
+    mean_content_tokens: 0.2378
+    mean_function_tokens: 0.1077
+    mean_lexical_density: 0.0972
   line_patterns:
     mean_blank_line_ratio: -0.0514
     mean_max_nesting_depth: 0.1827
@@ -253,7 +261,7 @@ returns_typed_error:
   _doc: "Functions should signal failure via a typed return (e.g. `{:error, reason}`) rather than returning `nil` or `false`."
   _fix_hint: "Return a tagged error ({:error, reason}) instead of a bare value or nil."
   _languages: [elixir]
-  _log_baseline: 128.1260
+  _log_baseline: 134.9286
   branching:
     mean_branch_count: -0.1286
     mean_branching_density: -0.1895
@@ -315,6 +323,10 @@ returns_typed_error:
     mean_simpson_d: 0.1982
     mean_total_tokens: 0.6727
     mean_yule_k: 0.2006
+  lexical_density:
+    mean_content_tokens: 0.4776
+    mean_function_tokens: 0.7141
+    mean_lexical_density: -0.1947
   line_patterns:
     mean_blank_line_ratio: -0.1515
     mean_max_nesting_depth: 1.1292

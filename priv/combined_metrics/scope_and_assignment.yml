@@ -3,7 +3,7 @@ declared_close_to_use:
   _excludes_block_types: [doc]
   _fix_hint: "Move this declaration closer to where it is first used."
   _languages: [elixir, go, javascript, python, ruby]
-  _log_baseline: -17.9452
+  _log_baseline: -19.0177
   branching:
     mean_branch_count: -0.1629
     mean_branching_density: -0.0595
@@ -64,6 +64,10 @@ declared_close_to_use:
     mean_simpson_d: 0.0908
     mean_total_tokens: -0.0964
     mean_yule_k: 0.0896
+  lexical_density:
+    mean_content_tokens: -0.1495
+    mean_function_tokens: -0.0645
+    mean_lexical_density: -0.0552
   line_patterns:
     mean_blank_line_ratio: 0.0283
     mean_string_literal_ratio: 0.0683
@@ -131,7 +135,7 @@ mutated_after_initial_assignment:
   _doc: "Variables should not be reassigned after their initial value — prefer introducing a new name."
   _fix_hint: "Avoid reassigning after the initial binding — use a new binding or pipe the transformation."
   _languages: [elixir]
-  _log_baseline: 6.0995
+  _log_baseline: 5.6467
   branching:
     mean_branch_count: 0.1519
     mean_branching_density: 0.2073
@@ -190,6 +194,10 @@ mutated_after_initial_assignment:
     mean_simpson_d: -0.0039
     mean_total_tokens: -0.0392
     mean_yule_k: -0.0035
+  lexical_density:
+    mean_content_tokens: -0.0649
+    mean_function_tokens: -0.0244
+    mean_lexical_density: -0.0257
   line_patterns:
     mean_blank_line_ratio: -0.1139
     mean_max_nesting_depth: 0.0856
@@ -256,7 +264,7 @@ reassigned_multiple_times:
   _doc: "A variable reassigned many times is a sign the name is too generic or the function does too much."
   _fix_hint: "This {{type}} reassigns the same binding repeatedly — restructure into a transformation chain."
   _languages: [elixir]
-  _log_baseline: -7.1302
+  _log_baseline: -8.0720
   branching:
     mean_max_nesting_depth: 0.0680
     mean_non_blank_count: 0.0226
@@ -317,6 +325,10 @@ reassigned_multiple_times:
     mean_simpson_d: 0.0170
     mean_total_tokens: -0.0838
     mean_yule_k: 0.0167
+  lexical_density:
+    mean_content_tokens: -0.1125
+    mean_function_tokens: -0.0704
+    mean_lexical_density: -0.0302
   line_patterns:
     mean_blank_line_ratio: 0.0585
     mean_max_nesting_depth: 0.0680
@@ -391,7 +403,7 @@ scope_is_minimal:
   _doc: "Variables should be scoped as narrowly as possible — not declared at a wider scope than needed."
   _fix_hint: "Narrow this binding's scope to the block that actually uses it."
   _languages: [elixir]
-  _log_baseline: -7.4444
+  _log_baseline: -7.3910
   branching:
     mean_branch_count: -0.1072
     mean_branching_density: -0.0452
@@ -452,6 +464,10 @@ scope_is_minimal:
     mean_simpson_d: -0.1080
     mean_total_tokens: 0.0143
     mean_yule_k: -0.1071
+  lexical_density:
+    mean_content_tokens: -0.0577
+    mean_function_tokens: 0.0409
+    mean_lexical_density: -0.0721
   line_patterns:
     mean_blank_line_ratio: -0.1076
     mean_string_literal_ratio: -0.0144
@@ -515,7 +531,7 @@ shadowed_by_inner_scope:
   _doc: "Inner-scope names that shadow outer-scope names cause confusion about which value is in play."
   _fix_hint: "Rename the inner binding so it no longer shadows the outer one."
   _languages: [elixir]
-  _log_baseline: -33.4708
+  _log_baseline: -35.0465
   branching:
     mean_branching_density: 2.0000
     mean_max_nesting_depth: -0.1450
@@ -573,6 +589,10 @@ shadowed_by_inner_scope:
     mean_simpson_d: 0.0671
     mean_total_tokens: -0.1540
     mean_yule_k: 0.0660
+  lexical_density:
+    mean_content_tokens: -0.2116
+    mean_function_tokens: -0.1201
+    mean_lexical_density: -0.0577
   line_patterns:
     mean_blank_line_ratio: 0.0798
     mean_max_nesting_depth: -0.1450
@@ -636,7 +656,7 @@ used_only_once:
   _doc: "A variable used only once is a candidate for inlining — it rarely adds clarity over a direct expression."
   _fix_hint: "Inline this single-use binding unless the name aids readability."
   _languages: [elixir, go, javascript, python, ruby]
-  _log_baseline: -15.6996
+  _log_baseline: -16.7449
   branching:
     mean_branch_count: -0.1226
     mean_branching_density: -0.2229
@@ -693,6 +713,10 @@ used_only_once:
     mean_simpson_d: 0.0415
     mean_total_tokens: -0.0941
     mean_yule_k: 0.0409
+  lexical_density:
+    mean_content_tokens: -0.1364
+    mean_function_tokens: -0.0763
+    mean_lexical_density: -0.0453
   line_patterns:
     mean_blank_line_ratio: 0.0498
     mean_max_nesting_depth: 0.1850
