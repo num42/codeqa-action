@@ -20,7 +20,7 @@ jobs:
     outputs:
       elixir: ${{ steps.filter.outputs.elixir }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
         id: filter
         with:
@@ -48,7 +48,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Elixir with shared cache
         uses: ./.github/actions/setup-elixir
