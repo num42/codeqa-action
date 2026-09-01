@@ -161,6 +161,19 @@ defmodule CodeQA.CollectorTest do
       refute Map.has_key?(files, "test/app_test.exs")
     end
 
+    test "excludes built assets under priv/static by default", %{tmp_dir: tmp_dir} do
+      File.mkdir_p!(Path.join(tmp_dir, "priv/static/assets"))
+      File.mkdir_p!(Path.join(tmp_dir, "apps/web/priv/static/assets"))
+      File.write!(Path.join(tmp_dir, "priv/static/assets/app.js"), "var a=1")
+      File.write!(Path.join(tmp_dir, "apps/web/priv/static/assets/app.js"), "var a=1")
+
+      files = Collector.collect_files(tmp_dir)
+
+      assert Map.has_key?(files, "lib/app.ex")
+      refute Map.has_key?(files, "priv/static/assets/app.js")
+      refute Map.has_key?(files, "apps/web/priv/static/assets/app.js")
+    end
+
     test "respects ignore_paths from .codeqa.yml", %{tmp_dir: tmp_dir} do
       File.mkdir_p!(Path.join(tmp_dir, "generated"))
       File.write!(Path.join(tmp_dir, "generated/schema.ex"), "defmodule Schema do\nend")
