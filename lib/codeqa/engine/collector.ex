@@ -10,7 +10,8 @@ defmodule CodeQA.Engine.Collector do
     .next coverage
   ])
 
-  @default_ignore_patterns ~w[**/*.md **/*.mdx]
+  # priv/static holds build output, so its bundles skew line-length and duplication metrics.
+  @default_ignore_patterns ~w[**/*.md **/*.mdx priv/static/** **/priv/static/**]
 
   @spec source_extensions() :: MapSet.t()
   def source_extensions,
