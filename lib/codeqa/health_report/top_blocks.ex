@@ -5,9 +5,11 @@ defmodule CodeQA.HealthReport.TopBlocks do
   alias CodeQA.CombinedMetrics.Scorer
 
   @min_tokens 10
-  @severity_critical 0.50
-  @severity_high 0.25
-  @severity_medium 0.10
+  # Block deltas sit near the file baseline after the floor subtraction, so the
+  # old 0.50/0.25/0.10 gates classified every real finding as medium and dropped it.
+  @severity_critical 0.25
+  @severity_high 0.10
+  @severity_medium 0.04
   @gap_floor 0.01
   @top_n 10
   @default_min_lines 3
