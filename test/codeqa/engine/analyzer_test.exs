@@ -33,7 +33,8 @@ defmodule CodeQA.Engine.AnalyzerTest do
         keys
         |> Enum.each(fn {key, val} ->
           assert String.starts_with?(key, "mean_") or String.starts_with?(key, "std_") or
-                   String.starts_with?(key, "min_") or String.starts_with?(key, "max_")
+                   String.starts_with?(key, "min_") or String.starts_with?(key, "max_") or
+                   String.starts_with?(key, "p90_")
 
           assert is_float(val) or is_integer(val)
         end)

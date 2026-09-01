@@ -174,13 +174,19 @@ defmodule CodeQA.HealthReport.Grader do
         aggregate,
         scale \\ Categories.default_grade_scale()
       ) do
-    # Convert aggregate format (mean_X keys) to file-metric-like format
+    # Convert aggregate format to file-metric-like format. mean_X is exposed as X so
+    # categories read it as a plain metric; p90_X keeps its prefix so a category can
+    # ask for the outlier tail instead of the average.
     file_like =
       Map.new(aggregate, fn {source, stats} ->
         values =
           stats
-          |> Enum.filter(fn {k, _v} -> String.starts_with?(k, "mean_") end)
-          |> Map.new(fn {"mean_" <> key, v} -> {key, v} end)
+          |> Enum.flat_map(fn
+            {"mean_" <> key, v} -> [{key, v}]
+            {"p90_" <> _ = key, v} -> [{key, v}]
+            _other -> []
+          end)
+          |> Map.new()
 
         {source, values}
       end)

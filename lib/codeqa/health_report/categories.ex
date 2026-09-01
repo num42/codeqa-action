@@ -68,6 +68,10 @@ defmodule CodeQA.HealthReport.Categories do
         ],
         name: "Readability"
       },
+      # Halstead runs per FILE here, not per function, so these are anchored on measured
+      # file sizes rather than the function-level figures from the literature: a = a
+      # 100-LOC file (the common case), d = a 500-LOC file (the largest still tolerated).
+      # Past d the score falls off a cliff, which is where files over 500 LOC land.
       %{
         key: :complexity,
         metrics: [
@@ -77,7 +81,7 @@ defmodule CodeQA.HealthReport.Categories do
             good: :low,
             name: "difficulty",
             source: "halstead",
-            thresholds: %{a: 10, b: 20, c: 35, d: 50},
+            thresholds: %{a: 35, b: 50, c: 60, d: 70},
             weight: 0.35
           },
           %{
@@ -86,7 +90,7 @@ defmodule CodeQA.HealthReport.Categories do
             good: :low,
             name: "effort",
             source: "halstead",
-            thresholds: %{a: 5000, b: 20_000, c: 50_000, d: 100_000},
+            thresholds: %{a: 130_000, b: 440_000, c: 920_000, d: 1_850_000},
             weight: 0.3
           },
           %{
@@ -95,7 +99,7 @@ defmodule CodeQA.HealthReport.Categories do
             good: :low,
             name: "volume",
             source: "halstead",
-            thresholds: %{a: 300, b: 1000, c: 3000, d: 8000},
+            thresholds: %{a: 4_000, b: 8_700, c: 16_600, d: 25_000},
             weight: 0.2
           },
           %{
@@ -103,11 +107,47 @@ defmodule CodeQA.HealthReport.Categories do
             good: :low,
             name: "estimated_bugs",
             source: "halstead",
-            thresholds: %{a: 0.1, b: 0.5, c: 1.0, d: 3.0},
+            thresholds: %{a: 1.35, b: 2.9, c: 5.5, d: 8.4},
             weight: 0.15
           }
         ],
         name: "Complexity"
+      },
+      # The mean says how big a typical file is; this says how bad the tail is. p90 is
+      # the value the worst 10% of files stay under, so a repo of uniformly sized files
+      # scores the same here as on Complexity, while one with a handful of monsters does
+      # not. Anchored on the same LOC bands: a = 200 LOC, d = 800 LOC.
+      %{
+        key: :complexity_outliers,
+        metrics: [
+          %{
+            fix_hint:
+              "The largest 10% of files carry far more logic than the rest — split the worst offenders",
+            good: :low,
+            name: "p90_volume",
+            source: "halstead",
+            thresholds: %{a: 8_700, b: 16_600, c: 25_000, d: 38_000},
+            weight: 0.4
+          },
+          %{
+            fix_hint:
+              "The largest files repeat the same operands heavily — extract named intermediates there",
+            good: :low,
+            name: "p90_difficulty",
+            source: "halstead",
+            thresholds: %{a: 50, b: 60, c: 70, d: 85},
+            weight: 0.35
+          },
+          %{
+            fix_hint: "The largest files dominate total implementation effort — decompose them",
+            good: :low,
+            name: "p90_effort",
+            source: "halstead",
+            thresholds: %{a: 440_000, b: 920_000, c: 1_850_000, d: 3_200_000},
+            weight: 0.25
+          }
+        ],
+        name: "Complexity Outliers"
       },
       %{
         key: :structure,

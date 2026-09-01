@@ -62,14 +62,14 @@ defmodule CodeQA.HealthReport.CategoriesTest do
       end)
     end
 
-    test "has exactly 24 metrics across 6 categories" do
+    test "has exactly 27 metrics across 7 categories" do
       categories = Categories.defaults()
 
-      assert length(categories) == 6
+      assert length(categories) == 7
 
       metrics = categories |> Enum.flat_map(& &1.metrics)
 
-      assert length(metrics) == 24
+      assert length(metrics) == 27
     end
   end
 end
