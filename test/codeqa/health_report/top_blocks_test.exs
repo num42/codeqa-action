@@ -63,27 +63,27 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
     do: %{{"function_design", "cyclomatic_complexity_under_10"} => cosine}
 
   describe "severity classification" do
-    test ":critical when severity_ratio > 0.50" do
-      # gap = max(0.01, 1.0 - 0.0) = 1.0, ratio = 0.60 / 1.0 = 0.60 > 0.50
-      [block] = TopBlocks.build(make_results([make_node(0.60)]), [], lookup())
+    test ":critical when severity_ratio > 0.25" do
+      # gap = max(0.01, 1.0 - 0.0) = 1.0, ratio = 0.30 / 1.0 = 0.30 > 0.25
+      [block] = TopBlocks.build(make_results([make_node(0.30)]), [], lookup())
       assert hd(block.potentials).severity == :critical
     end
 
-    test ":high when severity_ratio > 0.25 and <= 0.50" do
-      # ratio = 0.30 / 1.0 = 0.30
-      [block] = TopBlocks.build(make_results([make_node(0.30)]), [], lookup())
+    test ":high when severity_ratio > 0.10 and <= 0.25" do
+      # ratio = 0.15 / 1.0 = 0.15
+      [block] = TopBlocks.build(make_results([make_node(0.15)]), [], lookup())
       assert hd(block.potentials).severity == :high
     end
 
-    test ":medium when severity_ratio > 0.10 and <= 0.25" do
-      # ratio = 0.15 / 1.0 = 0.15
-      [block] = TopBlocks.build(make_results([make_node(0.15)]), [], lookup())
+    test ":medium when severity_ratio > 0.04 and <= 0.10" do
+      # ratio = 0.05 / 1.0 = 0.05
+      [block] = TopBlocks.build(make_results([make_node(0.05)]), [], lookup())
       assert hd(block.potentials).severity == :medium
     end
 
-    test "filtered when severity_ratio <= 0.10" do
-      # ratio = 0.05 / 1.0 = 0.05 — block should not appear
-      assert TopBlocks.build(make_results([make_node(0.05)]), [], lookup()) == []
+    test "filtered when severity_ratio <= 0.04" do
+      # ratio = 0.02 / 1.0 = 0.02 — block should not appear
+      assert TopBlocks.build(make_results([make_node(0.02)]), [], lookup()) == []
     end
 
     test "gap floor prevents division by zero when codebase_cosine = 1.0" do
@@ -94,8 +94,8 @@ defmodule CodeQA.HealthReport.TopBlocksTest do
 
     test "gap handles negative codebase_cosine" do
       # codebase_cosine = -0.5, gap = max(0.01, 1.0 - (-0.5)) = 1.5
-      # ratio = 0.60 / 1.5 = 0.40 → :high
-      [block] = TopBlocks.build(make_results([make_node(0.60)]), [], lookup(-0.5))
+      # ratio = 0.30 / 1.5 = 0.20 → :high
+      [block] = TopBlocks.build(make_results([make_node(0.30)]), [], lookup(-0.5))
       assert hd(block.potentials).severity == :high
     end
 
