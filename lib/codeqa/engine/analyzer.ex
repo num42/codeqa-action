@@ -230,14 +230,15 @@ defmodule CodeQA.Engine.Analyzer do
           "mean_#{key}" => stats.mean,
           "std_#{key}" => stats.std,
           "min_#{key}" => stats.min,
-          "max_#{key}" => stats.max
+          "max_#{key}" => stats.max,
+          "p90_#{key}" => stats.p90
         })
 
       Map.put(acc, metric, updated)
     end)
   end
 
-  defp compute_stats([]), do: %{max: 0.0, mean: 0.0, min: 0.0, std: 0.0}
+  defp compute_stats([]), do: %{max: 0.0, mean: 0.0, min: 0.0, p90: 0.0, std: 0.0}
 
   defp compute_stats(values) do
     n = length(values)
@@ -250,7 +251,15 @@ defmodule CodeQA.Engine.Analyzer do
       max: Float.round(Enum.max(values) * 1.0, 4),
       mean: Float.round(mean * 1.0, 4),
       min: Float.round(Enum.min(values) * 1.0, 4),
+      p90: Float.round(percentile(values, 0.9) * 1.0, 4),
       std: Float.round(std * 1.0, 4)
     }
+  end
+
+  # Nearest-rank percentile: the value the worst (1 - q) share of files stays under.
+  defp percentile(values, q) do
+    sorted = Enum.sort(values)
+    index = (length(sorted) * q) |> Float.floor() |> trunc() |> min(length(sorted) - 1)
+    Enum.at(sorted, index)
   end
 end
